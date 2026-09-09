@@ -181,6 +181,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 .kds-btn--accent:hover { background: var(--cc-red-700); opacity: 1; }
 .kds-btn--block { width: 100%; }
 .kds-btn--sm { min-height: 36px; padding: .4rem .8rem; }
+@media (max-width: 767px) { .kds-btn--sm { min-height: 44px; } }
 
 /* badges */
 .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; background: var(--cc-navy-100); color: var(--cc-navy-700); white-space: nowrap; }
