@@ -12,7 +12,7 @@
       <section class="card card--flat">
         <h2 class="h3">No longer available</h2>
         <ul class="list-plain">
-          <% gone.forEach(j => { %><li class="list-plain__item"><div><%= j.title %><div class="small muted"><%= j.company_name %> · saved <%= h.formatDate(j.saved_at) %></div></div><form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Remove</button></form></li><% }) %>
+          <% gone.forEach(j => { %><li class="list-plain__item"><div><%= j.title %><div class="small muted"><%= j.company_name %> · <span class="nowrap">saved <%= h.formatDate(j.saved_at) %></span></div></div><form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Remove</button></form></li><% }) %>
         </ul>
       </section>
     <% } %>

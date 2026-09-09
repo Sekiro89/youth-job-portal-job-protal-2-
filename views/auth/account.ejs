@@ -11,7 +11,7 @@
         <h2 class="auth__section">Your details</h2>
         <dl class="auth-meta">
           <div><dt>Account type</dt><dd><span class="badge badge--teal"><%= roleLabel %></span></dd></div>
-          <div><dt>Email</dt><dd><%= user.email %> <span class="small muted">(contact us to change)</span></dd></div>
+          <div><dt>Email</dt><dd><span class="auth-meta__email"><%= user.email %></span><br><span class="small muted">Contact us to change it</span></dd></div>
           <div><dt>Member since</dt><dd><%= h.formatDate(user.created_at) %></dd></div>
         </dl>
         <%- include('_form-errors', { errors }) %>

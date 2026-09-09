@@ -10,6 +10,14 @@ const { runRenewals } = require('./renewals');
   try {
     const counts = await runRenewals();
     console.log(`[renewals] done in ${Date.now() - started}ms:`, JSON.stringify(counts));
+    if (process.env.JOBBANK_SYNC !== '0') {
+      try {
+        const { syncJobBank } = require('./jobbank-sync');
+        const t = Date.now();
+        const r = await syncJobBank();
+        console.log(`[jobbank] done in ${Date.now() - t}ms:`, JSON.stringify(r));
+      } catch (e) { console.error('[jobbank] failed', e.message); }
+    }
     await db.pool.end();
     process.exit(counts.errors ? 1 : 0);
   } catch (e) {

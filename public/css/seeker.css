@@ -31,6 +31,11 @@ fieldset.card > legend + * { clear: both; }
 .seeker-side-wrap.is-scrolled-end::after { opacity: 0; }
 @media (min-width: 1024px) { .seeker-side-wrap::after { display: none; } .seeker-side-wrap { position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; } .seeker-side-wrap .dash__side { position: static; } }
 
+/* profile form: two check-groups share a .form-row; do not stretch the shorter group's boxes to the taller one's height */
+.profile-form .form-row > fieldset.field { align-self: start; }
+.profile-form .checks { align-content: start; }
+.nowrap { white-space: nowrap; }
+
 /* ---------- profile completeness ---------- */
 .meter-card__pct { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .meter { height: 10px; border-radius: 999px; background: var(--cc-navy-100); overflow: hidden; margin: 12px 0; }

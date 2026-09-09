@@ -57,7 +57,25 @@ Format: scenario → result → bug → fix → verification. "OK" = behaved as 
 | **Logout everywhere** | Did not exist: after a password change the other device stayed signed in. **Fixed**: `endOtherSessions()` in `routes/auth.js` deletes the user's other rows from `"session"` on password change (keeps current device), on reset and deactivate (all devices), plus a "Sign out of all other devices" form on `/account` (`views/auth/account.ejs`). Verified: second jar → 302 `/login` after each |
 | Cross-site POST (`Origin: https://evil.example`, or Referer only) | OK: 403 "Cross-site request blocked", row unchanged |
 
-## D. Responsive (390/768/1024/1440) — see `shots/t2/d-REPORT.txt` and the D section below
+## D. Responsive (390/768/1024/1440)
+
+Harness: `BASE_URL=http://localhost:3912 node shots/t2/shoot.js --pages=shots/t2/pages.json --prefix=d-` → 25 pages × 4 widths
+(`shots/t2/d-*.png`, empty-state pages as `e-*.png`, re-checks `n-*`/`f-*`/`g-*`). Every capture: no horizontal overflow, no console errors,
+2xx. Final re-check after fixes: `g-REPORT.txt` 36/36 OK. PNGs inspected: landing, dashboard (full + empty), profile, apply (profile resume /
+no resume / already applied), applications, saved, alerts, notifications, login, signup chooser, 3 signup forms, forgot, reset, account.
+
+| Finding | Fix |
+|---|---|
+| Auth card touched the screen edge at 390 (login/signup/forgot/reset/account) — `.auth { padding: 24px 0 40px }` shorthand wiped `.container`'s side gutters | `public/css/auth.css`: padding-top/bottom only (`f-login-390.png`) |
+| Account "Your details" meta grid at 768: 3 fixed columns, email broke mid-word, badge misaligned | `auth.css`: `auto-fit minmax(200px)`, `overflow-wrap: anywhere`, `align-content: start` (`f-account-768.png`) |
+| Seeker side nav < 1024 is a horizontal pill strip; the active tab (e.g. Notifications with its unread badge) was off-screen with no hint that it scrolls | `views/seeker/_nav.ejs` wrapper + `seeker.css` right-edge fade + `seeker.js` scrolls the active tab into view (`n-notifications-390.png`) |
+| Applications stacked table at 390: company + location rendered side by side in the "Company" cell; Action cell had an empty label | `views/seeker/applications.ejs` (`n-applications-390.png`) |
+| Profile ≥1024: "Work arrangement" check boxes stretched to the height of the 4-row "Job types" column (`d-profile-empty-1440.png`) | `seeker.css`: `align-self/align-content: start` on the paired fieldsets (`h-profile-empty-1440.png`) |
+| Account meta labels sat on the section rule; email + "(contact us to change)" wrapped mid-parenthesis at 390 | `auth.css` `.auth-meta` top margin; `account.ejs` hint on its own line (`h-account-390/768.png`) |
+| Saved "No longer available" meta broke between "saved" and the date at 390 | `saved.ejs` `.nowrap` span (`h-saved-390.png`) |
+| Not changed: dashboard/applications "Find jobs" header button sits under the H1 at 390 on every seeker page (consistent, `.split` from theme); notifications "Mark all as read" vs "1 unread" baseline (cosmetic) | — |
+| Sticky "Save profile" / "Send application" bar appears mid-page in full-page PNGs | Not a bug — `position: sticky; bottom: 0` pinned to the 844px emulated viewport; in flow at the end of the form on a real device |
+
 
 ## E. Copy
 

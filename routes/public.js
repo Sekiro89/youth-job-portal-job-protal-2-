@@ -14,7 +14,7 @@ const JS = ['/js/public.js'];
 
 // Card-level columns shared by every listing; detail page selects jobs.* on top.
 const JOB_COLS = `jobs.id, jobs.title, jobs.slug, jobs.category, jobs.job_type, jobs.work_arrangement, jobs.experience_level,
-  jobs.city, jobs.province, jobs.salary_min, jobs.salary_max, jobs.salary_period, jobs.audiences, jobs.published_at, jobs.expires_at,
+  jobs.city, jobs.province, jobs.salary_min, jobs.salary_max, jobs.salary_period, jobs.audiences, jobs.published_at, jobs.expires_at, jobs.source, jobs.source_url,
   p.company_name, p.slug AS company_slug`;
 const JOB_FROM = `FROM jobs JOIN employer_profiles p ON p.id = jobs.employer_profile_id`;
 // Hourly rates are annualised (2080 h) so salary sort/filter can compare hour vs year postings.

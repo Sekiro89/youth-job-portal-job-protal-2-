@@ -1,5 +1,5 @@
 /* Canada Careers — auth pages (signup / login / forgot / reset / account). Mobile first. */
-.auth { padding: 24px 0 40px; }
+.auth { padding-top: 24px; padding-bottom: 40px; } /* top/bottom only — a `padding` shorthand would wipe .container's side gutters (card touched the screen edge at 390px) */
 .auth__card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 24px 20px; box-shadow: 0 1px 2px rgba(27, 43, 63, .04); }
 .auth__card--wide { max-width: 640px; }
 .auth__card--plain { background: transparent; border: 0; box-shadow: none; padding: 0; }
@@ -53,8 +53,9 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .role-hint.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 
 /* account */
-.auth-meta { display: grid; gap: 10px; margin: 0 0 16px; }
-.auth-meta div { display: grid; gap: 2px; }
+.auth-meta { display: grid; gap: 10px; margin: 14px 0 16px; }
+.auth-meta div { display: grid; gap: 2px; align-content: start; min-width: 0; }
+.auth-meta dd { overflow-wrap: anywhere; }
 .auth-meta dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-muted); font-weight: 600; }
 .auth-meta dd { margin: 0; }
 .danger-zone { border-color: #f3b1b1; background: #fffafa; }
@@ -63,9 +64,9 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .kds-btn--danger:hover { background: var(--cc-red-700); }
 
 @media (min-width: 640px) {
-  .auth { padding: 40px 0 56px; }
+  .auth { padding-top: 40px; padding-bottom: 56px; }
   .auth__card { padding: 32px; }
-  .auth-meta { grid-template-columns: repeat(3, 1fr); }
+  .auth-meta { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; }
   .form-actions .kds-btn--block { width: auto; min-width: 240px; margin: 0 auto; }
 }
 @media (min-width: 768px) {
@@ -73,4 +74,4 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
   .role-card { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; grid-template-areas: "icon" "title" "desc" "cta"; padding: 28px 24px; row-gap: 10px; }
   .role-card__cta { align-self: end; } /* CTAs line up across the three cards */
 }
-@media (min-width: 1024px) { .auth { padding: 56px 0 72px; } }
+@media (min-width: 1024px) { .auth { padding-top: 56px; padding-bottom: 72px; } }

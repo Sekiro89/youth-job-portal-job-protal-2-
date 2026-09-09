@@ -73,7 +73,9 @@ function storeResume(userId, file) {
   fs.mkdirSync(RESUME_DIR, { recursive: true });
   const rel = path.posix.join('resumes', `${userId}-${crypto.randomBytes(6).toString('hex')}${ext}`);
   fs.writeFileSync(path.join(UPLOAD_DIR, rel), file.buffer);
-  return { path: rel, name: clean(file.originalname, 120) || `resume${ext}` };
+  let orig = file.originalname || '';
+  try { orig = Buffer.from(orig, 'latin1').toString('utf8'); } catch (_) {}
+  return { path: rel, name: clean(orig, 120) || `resume${ext}` };
 }
 /** Delete an old resume file — unless an application still references it (employers must keep their copy). */
 async function removeFile(rel) {

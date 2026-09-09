@@ -49,8 +49,19 @@ function logoMiddleware(req, res, next) {
     next();
   });
 }
+/** Sniff the real image type from the bytes; returns the extension or null. */
+function sniffImage(buf) {
+  if (!buf || buf.length < 12) return null;
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return '.png';
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return '.jpg';
+  if (buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP') return '.webp';
+  const head = buf.slice(0, 512).toString('utf8').trim().toLowerCase();
+  if (head.includes('<svg') && !/<script|onload=|onerror=/i.test(buf.toString('utf8'))) return '.svg';
+  return null;
+}
 async function saveLogo(profileId, file, oldPath) {
-  const ext = LOGO_MIME[file.mimetype];
+  const ext = sniffImage(file.buffer);
+  if (!ext) { const e = new Error('Logo must be a real PNG, JPG, SVG or WebP image.'); e.code = 'BAD_IMAGE'; throw e; }
   const dir = path.join(UPLOAD_DIR, 'logos');
   await fs.promises.mkdir(dir, { recursive: true });
   const rel = path.posix.join('logos', `${profileId}-${crypto.randomBytes(4).toString('hex')}${ext}`);
@@ -319,8 +330,10 @@ async function upsertProfile(req, existing, v) {
       [req.user.id, v.company_name, slug, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null])).id;
   }
   if (req.file) {
-    const rel = await saveLogo(id, req.file, existing && existing.logo_path);
-    await db.query('UPDATE employer_profiles SET logo_path=$2, updated_at=now() WHERE id=$1', [id, rel]);
+    try {
+      const rel = await saveLogo(id, req.file, existing && existing.logo_path);
+      await db.query('UPDATE employer_profiles SET logo_path=$2, updated_at=now() WHERE id=$1', [id, rel]);
+    } catch (e) { if (e.code !== 'BAD_IMAGE') throw e; req.flash('error', e.message); }
   } else if (req.body.remove_logo === '1' && existing && existing.logo_path) {
     fs.promises.unlink(path.join(UPLOAD_DIR, existing.logo_path)).catch(() => {});
     await db.query('UPDATE employer_profiles SET logo_path=NULL, updated_at=now() WHERE id=$1', [id]);
@@ -471,6 +484,8 @@ area.get('/jobs/:id(\\d+)', loadJob, async (req, res, next) => {
 });
 async function publish(req, res, next, id) {
   try {
+    const owner = await db.one('SELECT p.archived FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.id=$1', [id]);
+    if (owner && owner.archived) { req.flash('error', 'This posting belongs to an archived company. Restore the company before publishing.'); return res.redirect(`${res.locals.base}/jobs/${id}`); }
     await db.query(`UPDATE jobs SET status='pending_payment', updated_at=now() WHERE id=$1 AND status IN ('draft','pending_payment')`, [id]);
     await auth.audit(req.user.id, 'job.publish', 'job', id, null);
     res.redirect(`/billing/checkout/${id}`);

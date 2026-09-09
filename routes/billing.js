@@ -57,6 +57,11 @@ async function ownedJob(req, res) {
   if (!(await jobs.userCanManageJob(req.user, id))) { req.flash('error', 'You can only manage your own postings.'); res.redirect(`${baseFor(req.user)}/jobs`); return null; }
   const job = await billing.loadJob(id);
   if (!job) { res.status(404).render('error', { title: 'Page not found', code: 404, message: 'That posting does not exist.', noindex: true }); return null; }
+  const prof = await db.one('SELECT archived FROM employer_profiles WHERE id=$1', [job.employer_profile_id]);
+  if (prof && prof.archived && ['GET', 'POST'].includes(req.method) && /\/billing\/checkout\//.test(req.path)) {
+    req.flash('error', 'This posting belongs to an archived company profile. Restore the company first, then publish.');
+    res.redirect(`${baseFor(req.user)}/jobs/${job.id}`); return null;
+  }
   return job;
 }
 function backTo(req, fallback) {
