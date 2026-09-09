@@ -1,7 +1,34 @@
+<style>
+  /* Print stylesheet for the receipt: only the receipt document prints, on one clean sheet. Lives here (not in
+     billing.css) so a printed/PDF receipt never depends on which stylesheet bundle the page loaded. */
+  @media print {
+    @page { size: auto; margin: 14mm; }
+    html, body { background: #fff !important; }
+    body > *:not(main), main > *:not(.bill-receipt), .site-header, .site-nav, .site-footer, .flash, .bill-no-print, .skip-link { display: none !important; }
+    main, .bill-receipt { display: block !important; padding: 0 !important; margin: 0 !important; max-width: none !important; }
+    .bill-receipt__doc { border: 0 !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; max-width: none !important; width: 100% !important; gap: 14px !important; break-inside: avoid; }
+    .bill-receipt__doc, .bill-receipt__doc * { color: #0b1f33 !important; }
+    .bill-receipt__doc .muted, .bill-receipt__doc .small { color: #4a5a6a !important; }
+    .bill-receipt__head { grid-template-columns: 1fr auto !important; }
+    .bill-receipt__id { text-align: right !important; }
+    .bill-receipt__parties { grid-template-columns: 1fr 1fr !important; }
+    .bill-receipt__lines th, .bill-receipt__lines td { border-color: #c9d2dc !important; }
+    .bill-receipt__lines tfoot td { border-top: 2px solid #0b1f33 !important; }
+    .badge { border: 1px solid #0b1f33 !important; background: none !important; }
+    a { text-decoration: none !important; }
+    a[href^="/"]::after, a[href^="http"]::after { content: "" !important; }
+  }
+</style>
 <section class="container section-pad bill-receipt">
   <div class="bill-receipt__actions bill-no-print">
     <a class="kds-btn kds-btn--ghost" href="<%= base === '/admin' ? '/admin/payments' : '/billing' %>">← <%= base === '/admin' ? 'Payments' : 'Billing' %></a>
-    <button type="button" class="kds-btn kds-btn--brand" data-print>Print / save as PDF</button>
+    <div class="cluster">
+      <button type="button" class="kds-btn kds-btn--ghost" data-print>Print</button>
+      <button type="button" class="kds-btn kds-btn--brand" data-print title="Opens the print dialog — choose “Save as PDF” as the destination">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download receipt (PDF)
+      </button>
+    </div>
   </div>
   <article class="bill-receipt__doc card">
     <header class="bill-receipt__head">
@@ -19,17 +46,17 @@
     <div class="bill-receipt__parties">
       <div>
         <h3>Bill to</h3>
-        <p><strong><%= r.payer_name %></strong><br><%= r.payer_email %><br><%= r.company_name %><% if (r.company_city) { %><br><%= [r.company_city, r.company_province].filter(Boolean).join(', ') %><% } %></p>
+        <p><strong><%= r.payer_name %></strong><br><%= r.payer_email %><br><%= r.company_name %><% if (r.operating_name && r.operating_name.trim() && r.operating_name.trim() !== (r.company_name || '').trim()) { %> (operating as <%= r.operating_name.trim() %>)<% } %><% if (r.company_city) { %><br><%= [r.company_city, r.company_province].filter(Boolean).join(', ') %><% } %></p>
       </div>
       <div>
         <h3>Payment</h3>
-        <p>Paid via <strong><%= providerName(r.provider) %></strong><br>Date <%= h.formatDateTime(r.paid_at) %><br>Billing period <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %></p>
+        <p>Paid via <strong><%= providerName(r.provider) %></strong><br>Date <%= h.formatDateTime(r.paid_at) %><br>Billing period <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %><br>Rate: <%= rateLabel %></p>
       </div>
     </div>
     <table class="bill-receipt__lines" aria-label="Line items">
       <thead><tr><th>Description</th><th class="bill-lines__amt">Amount</th></tr></thead>
       <tbody>
-        <tr><td>Job posting — <strong><%= r.job_title %></strong><div class="small muted"><%= r.company_name %> · <%= h.location(r) %> · monthly fee for <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %></div></td><td class="bill-lines__amt"><%= h.money(r.amount_cents) %></td></tr>
+        <tr><td>Job posting — <strong><%= r.job_title %></strong><div class="small muted"><%= r.company_name %> · <%= h.location(r) %> · monthly fee (<%= rateLabel %>) for <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %></div></td><td class="bill-lines__amt"><%= h.money(r.amount_cents) %></td></tr>
         <tr><td><%= gstLabel(r.tax_rate) %></td><td class="bill-lines__amt"><%= h.money(r.tax_cents) %></td></tr>
       </tbody>
       <tfoot>
@@ -37,8 +64,9 @@
       </tfoot>
     </table>
     <footer class="bill-receipt__foot small muted">
-      <p>This posting renews monthly at <%= h.money(r.total_cents) %> CAD until cancelled. Questions about this receipt? <a href="/contact">Contact us</a> quoting <%= r.receipt_number %>.</p>
+      <p>This posting renews monthly at <%= h.money(r.total_cents) %> CAD (the rate locked in when it was published) until cancelled. All receipts are available from your login under Billing. Questions about this receipt? <a href="/contact">Contact us</a> quoting <%= r.receipt_number %>.</p>
       <p>Canada Careers · Jobs for every Canadian. Opportunities for all.</p>
     </footer>
   </article>
 </section>
+<% if (autoprint) { %><script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 250); });</script><% } %>

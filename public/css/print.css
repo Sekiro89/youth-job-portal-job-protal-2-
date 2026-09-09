@@ -1,0 +1,58 @@
+/* Canada Careers — printable job posting ("Print / save as PDF"). Loaded with media="print" from views/public/job.ejs
+   and additionally wrapped in @media print so it can never leak into the screen render. One clean sheet: title,
+   operating + legal name, every work address, salary/type/arrangement, dates, description, requirements, benefits,
+   how to apply, and a "Printed from … on …" footer. */
+@media print {
+  @page { margin: 14mm 14mm 16mm; }
+  html, body { background: #fff !important; color: #000 !important; font-size: 11pt; line-height: 1.4; }
+  body.has-applybar { padding-bottom: 0 !important; }
+
+  /* chrome that has no place on paper */
+  .site-header, .site-footer, .skip-link, .flash, .crumbs, .applybar, .related, .share,
+  .apply-card__save, .apply-card__primary, .apply-card__print, .apply-card > a.kds-btn, .apply-card__note,
+  .job-head__aud, .job-attribution .kds-btn, .job-about-co a, .locations__note { display: none !important; }
+  .print-only { display: block !important; }
+
+  /* single column, no cards */
+  .container { max-width: none; padding: 0; margin: 0; }
+  .page-head { background: none !important; border: 0; padding: 0 0 8pt; margin: 0; }
+  .job-head__title { font-size: 20pt; margin: 0 0 4pt; }
+  .job-head__company { font-size: 12pt; margin: 0 0 2pt; }
+  .job-head__company a { font-weight: 700; }
+  .job-head__legal { margin: 0 0 6pt; font-size: 10pt; color: #333 !important; }
+  .job-head__ref { margin: 0 0 6pt; }
+  .badge--ref { border: 1px solid #000; background: none !important; color: #000 !important; }
+  .job-head__meta { margin: 6pt 0 4pt; gap: 6pt; }
+  .job-head__meta li { border: 1px solid #777; background: none !important; color: #000 !important; padding: 2pt 8pt; font-size: 10pt; }
+  .job-head__salary { font-weight: 700; }
+  .print-dates { margin: 0; font-size: 10pt; color: #333; }
+
+  .job-layout { display: block !important; padding: 0 !important; }
+  .job-main { display: block; }
+  .job-section { margin: 0 0 10pt; }
+  .job-section h2 { font-size: 12.5pt; margin: 10pt 0 4pt; padding-bottom: 2pt; border-bottom: 1px solid #000; break-after: avoid; }
+  .job-locations { break-inside: avoid; }
+  .locations { display: block; }
+  .locations__item { display: block; border: 0; padding: 1pt 0; background: none; break-inside: avoid; }
+  .locations__item svg { display: none; }
+  .locations__addr { font-weight: 500; }
+  .prose p { margin: 0 0 6pt; orphans: 3; widows: 3; }
+  .tags { gap: 4pt; }
+  .tag { border: 1px solid #777; background: none; padding: 1pt 6pt; font-size: 9.5pt; }
+  .job-about-co { background: none !important; padding: 0; border-radius: 0; }
+  .job-attribution { border: 1px solid #000; padding: 6pt 8pt; margin-bottom: 8pt; box-shadow: none; }
+  .print-apply { border: 1px solid #000; padding: 6pt 8pt; break-inside: avoid; }
+  .print-apply h2 { border: 0; margin-top: 0; }
+  .print-apply p { margin: 0; overflow-wrap: anywhere; }
+
+  /* the facts sidebar becomes a compact two-column details block */
+  .job-side { position: static !important; margin-top: 8pt; break-inside: avoid; }
+  .apply-card { display: block; border: 0; padding: 0; box-shadow: none; background: none; }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 3pt 14pt; padding-top: 6pt; border-top: 1px solid #000; }
+  .facts > div { grid-template-columns: 78pt 1fr; gap: 4pt; font-size: 10pt; }
+  .facts dt { color: #333 !important; }
+  .facts dd { color: #000 !important; }
+
+  a { color: #000 !important; text-decoration: none; }
+  .print-foot { margin: 14pt 0 0; padding-top: 5pt; border-top: 1px solid #777; font-size: 9pt; color: #444; }
+}

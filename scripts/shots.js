@@ -5,6 +5,7 @@
 //   BASE_URL=http://localhost:3900 node scripts/shots.js            # all pages × [390, 768, 1024, 1440]
 //   node scripts/shots.js --only=home,jobs --widths=390,1440         # subset (page keys / widths)
 //   node scripts/shots.js --url=/some/path                            # one ad-hoc URL (guest)
+//   node scripts/shots.js --seed-extra                                 # first ensure the DB has the fixtures the new pages need
 //
 // For every URL × width: Emulation.setDeviceMetricsOverride (mobile + DSF 2 at 390), navigate, wait for load + 1.5s,
 // read {scrollWidth, innerWidth, scrollHeight} and flag horizontal overflow (scrollWidth > innerWidth) as FAIL, then
@@ -31,7 +32,9 @@ const WIDTHS = argv.widths ? String(argv.widths).split(',').map(Number).filter(B
 
 // ---------------------------------------------------------------- page list (key, path, role|null)
 // Add a page: push { key, path, as, expect? } here. `as` = null (guest) | employer | consultant | seeker | admin; `expect` = a non-2xx status that is correct for that page; `redirect: true` if landing on another URL is expected.
-// {slug} is replaced with a live job slug discovered from /sitemap.xml (or DATABASE_URL as fallback).
+// {slug} is replaced with a live job slug discovered from /sitemap.xml (or DATABASE_URL as fallback). {multislug} (a live job
+// with >= 2 job_locations), {employerJob} / {consultantJob} (an unpaid draft/pending job owned by that login) and {receiptId}
+// (a payment owned by the employer) come from DATABASE_URL; `--seed-extra` creates them when missing (never on production).
 function pageList() {
   return [
     { key: 'home', path: '/' }, { key: 'jobs', path: '/jobs' }, { key: 'jobs-search', path: '/jobs?q=nurse&province=SK' },
@@ -47,6 +50,11 @@ function pageList() {
     { key: 'seeker-dashboard', path: '/jobseeker/dashboard', as: 'seeker' }, { key: 'seeker-profile', path: '/jobseeker/profile', as: 'seeker' },
     { key: 'seeker-applications', path: '/jobseeker/applications', as: 'seeker' }, { key: 'seeker-alerts', path: '/jobseeker/alerts', as: 'seeker' },
     { key: 'apply', path: '/jobs/{slug}/apply', as: 'seeker' },
+    // client round 2026-09-09: multi-location detail, guest apply interstitial, role-priced checkouts, receipt
+    { key: 'job-detail-multi', path: '/jobs/{multislug}' }, { key: 'apply-guest', path: '/jobs/{slug}/apply' },
+    { key: 'checkout-employer', path: '/billing/checkout/{employerJob}', as: 'employer' },
+    { key: 'checkout-consultant', path: '/billing/checkout/{consultantJob}', as: 'consultant' },
+    { key: 'receipt', path: '/billing/receipt/{receiptId}', as: 'employer' },
     { key: 'admin', path: '/admin', as: 'admin' }, { key: 'admin-messages', path: '/admin/messages', as: 'admin' },
     { key: 'admin-jobs', path: '/admin/jobs', as: 'admin' },
   ];
@@ -68,6 +76,41 @@ async function liveJobSlug() {
   return null;
 }
 
+/** Resolve the DB-backed placeholders; with seed=true create what is missing (tagged "[qa]" / a second address). */
+async function dbFixtures(seed) {
+  const out = {};
+  if (!process.env.DATABASE_URL) return out;
+  const { Pool } = require('pg'); const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+  const one = (sql, p) => pool.query(sql, p).then(r => r.rows[0] || null);
+  try {
+    const live = "status='active' AND expires_at > now() AND source IS NULL";
+    let multi = await one(`SELECT j.slug FROM jobs j WHERE ${live} AND (SELECT count(*) FROM job_locations l WHERE l.job_id=j.id) >= 2 ORDER BY j.id LIMIT 1`);
+    if (!multi && seed) {
+      const j = await one(`SELECT id, slug, city, province FROM jobs j WHERE ${live} ORDER BY id LIMIT 1`);
+      if (j) { await pool.query('INSERT INTO job_locations(job_id, street_address, unit, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,$6,1)', [j.id, '7100 Airport Rd', '12', j.city, j.province, 'L4T 2H3']); multi = j; console.log(`seed-extra: added a second work location to job#${j.id} (${j.slug})`); }
+    }
+    if (multi) out.multislug = multi.slug;
+    for (const [key, email] of [['employerJob', LOGINS.employer], ['consultantJob', LOGINS.consultant]]) {
+      const owner = `SELECT id FROM users WHERE email=$1`;
+      let j = await one(`SELECT j.id FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=(${owner}) AND p.archived IS NOT TRUE AND j.status IN ('draft','pending_payment') AND j.source IS NULL ORDER BY j.id LIMIT 1`, [email]);
+      if (!j && seed) {
+        const p = await one(`SELECT id FROM employer_profiles WHERE owner_user_id=(${owner}) AND archived IS NOT TRUE ORDER BY id LIMIT 1`, [email]);
+        if (p) {
+          j = await one(`INSERT INTO jobs(employer_profile_id, created_by, title, slug, description, category, job_type, work_arrangement, city, province, status)
+            SELECT $1, (${owner}), '[qa] Checkout fixture', 'qa-checkout-fixture-' || substr(md5(random()::text), 1, 6), 'Fixture posting for QA screenshots of the checkout page.', 'administration', 'full_time', 'on_site', 'Mississauga', 'ON', 'draft' RETURNING id`, [p.id, email]);
+          if (j) { await pool.query('INSERT INTO job_locations(job_id, street_address, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,0)', [j.id, '2400 Derry Rd E', 'Mississauga', 'ON', 'L5S 1B1']); console.log(`seed-extra: created draft job#${j.id} for ${email}`); }
+        }
+      }
+      if (j) out[key] = String(j.id);
+    }
+    // skip payments of smoke.js jobs: a concurrent smoke run deletes them mid-capture
+    const pay = await one("SELECT p.id FROM payments p JOIN jobs j ON j.id=p.job_id WHERE p.payer_user_id=(SELECT id FROM users WHERE email=$1) AND j.title NOT LIKE '[smoke]%' ORDER BY p.id DESC LIMIT 1", [LOGINS.employer]);
+    if (pay) out.receiptId = String(pay.id);
+  } catch (e) { console.log(`db fixtures: ${e.message}`); }
+  await pool.end().catch(() => {});
+  return out;
+}
+
 // ---------------------------------------------------------------- main
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
@@ -81,7 +124,12 @@ async function main() {
 
   const slug = pages.some(p => p.path.includes('{slug}')) ? await liveJobSlug() : null;
   if (pages.some(p => p.path.includes('{slug}'))) console.log(`live job slug: ${slug || '(none found — {slug} pages will be skipped)'}`);
-  pages = pages.filter(p => !(p.path.includes('{slug}') && !slug)).map(p => ({ ...p, path: p.path.replace('{slug}', slug || '') }));
+  const vars = { slug, ...(pages.some(p => /\{(multislug|employerJob|consultantJob|receiptId)\}/.test(p.path)) ? await dbFixtures(!!argv['seed-extra']) : {}) };
+  pages = pages.filter(p => {
+    const missing = [...p.path.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(k => !vars[k]);
+    if (missing.length) console.log(`skip ${p.key}: no fixture for {${missing.join('}, {')}}${process.env.DATABASE_URL ? ' (run with --seed-extra)' : ' (set DATABASE_URL)'}`);
+    return !missing.length;
+  }).map(p => ({ ...p, path: p.path.replace(/\{(\w+)\}/g, (_, k) => vars[k]) }));
 
   // Log in once per role over HTTP; keep the raw cc_session cookie for Network.setCookie.
   const sessions = {};

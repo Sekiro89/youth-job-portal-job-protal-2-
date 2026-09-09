@@ -14,10 +14,11 @@
       <% live.forEach(p => { %>
         <article class="card company-card">
           <div class="company-card__head">
-            <% if (p.logo_path) { %><img class="logo-md" src="/consultant/logos/<%= p.id %>" alt=""><% } else { %><div class="logo-md logo-md--placeholder" aria-hidden="true"><%= (p.company_name || '?').trim()[0].toUpperCase() %></div><% } %>
+            <% if (p.logo_path) { %><img class="logo-md" src="/consultant/logos/<%= p.id %>" alt=""><% } else { %><div class="logo-md logo-md--placeholder" aria-hidden="true"><%= (h.displayCompany(p) || '?').trim()[0].toUpperCase() %></div><% } %>
             <div>
-              <h2 class="card__title"><%= p.company_name %></h2>
-              <div class="small muted"><%= [p.industry, h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
+              <h2 class="card__title"><%= h.displayCompany(p) %></h2>
+              <% if (h.legalNameNote(p)) { %><div class="small muted"><%= h.legalNameNote(p) %></div><% } %>
+              <div class="small muted"><%= [p.industry, p.street_address ? h.fullAddress(p) : h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
             </div>
           </div>
           <div class="company-card__stats">
@@ -43,7 +44,7 @@
       <summary><strong>Archived companies (<%= archived.length %>)</strong></summary>
       <ul class="list-plain">
         <% archived.forEach(p => { %>
-          <li class="split"><span><%= p.company_name %> <span class="small muted">· <%= p.total_jobs %> job<%= p.total_jobs === 1 ? '' : 's' %> all time</span></span>
+          <li class="split"><span><%= h.displayCompany(p) %> <span class="small muted">· <%= p.total_jobs %> job<%= p.total_jobs === 1 ? '' : 's' %> all time</span></span>
             <form class="inline-form" method="post" action="/consultant/profiles/<%= p.id %>/unarchive"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Restore</button></form></li>
         <% }) %>
       </ul>

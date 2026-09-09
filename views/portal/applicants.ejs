@@ -4,7 +4,7 @@
   <div class="dash__main">
     <div class="split">
       <div>
-        <p class="eyebrow"><%= scope === 'job' ? job.company_name : 'All companies' %></p>
+        <p class="eyebrow"><%= scope === 'job' ? h.displayCompany(job) : 'All companies' %></p>
         <h1><%= scope === 'job' ? 'Applicants — ' + job.title : 'Applicants' %></h1>
         <p class="muted"><%= list.length %> application<%= list.length === 1 ? '' : 's' %><%= filters.status ? ' · ' + APP_STATUS_NAME[filters.status].toLowerCase() : '' %>. Changing a status notifies the applicant by email and in their dashboard.</p>
       </div>
@@ -17,7 +17,7 @@
         <label for="f-job">Job</label>
         <select class="input" id="f-job" name="job" data-autosubmit>
           <option value="">All jobs</option>
-          <% jobsList.forEach(j => { %><option value="<%= j.id %>" <%= String(filters.job) === String(j.id) ? 'selected' : '' %>><%= j.title %><%= isConsultant ? ' — ' + j.company_name : '' %> (<%= j.n %>)</option><% }) %>
+          <% jobsList.forEach(j => { %><option value="<%= j.id %>" <%= String(filters.job) === String(j.id) ? 'selected' : '' %>><%= j.title %><%= isConsultant ? ' — ' + h.displayCompany(j) : '' %> (<%= j.n %>)</option><% }) %>
         </select>
       </div>
       <% } %>
@@ -36,7 +36,7 @@
     <% } else { %>
     <div class="table-wrap">
       <table class="table table--stack table--applicants">
-        <thead><tr><th>Applicant</th><% if (scope === 'all') { %><th>Job</th><% } %><th>Applied</th><th>Resume</th><th>Status &amp; notes</th></tr></thead>
+        <thead><tr><th>Applicant</th><% if (scope === 'all') { %><th>Job</th><% } %><th>Applied</th><th>Documents</th><th>Status &amp; notes</th></tr></thead>
         <tbody>
           <% list.forEach(a => { %>
             <tr>
@@ -45,9 +45,14 @@
                 <div class="small"><a href="mailto:<%= a.email %>"><%= a.email %></a><% if (a.phone) { %> · <a href="tel:<%= a.phone %>"><%= a.phone %></a><% } %></div>
                 <% if (a.cover_letter) { %><details class="small cover"><summary>Cover letter</summary><div class="prose"><%- h.paragraphs(a.cover_letter) %></div></details><% } %>
               </td>
-              <% if (scope === 'all') { %><td data-label="Job"><a href="<%= base %>/jobs/<%= a.job_id %>"><%= a.job_title %></a><% if (isConsultant) { %><div class="small muted"><%= a.company_name %></div><% } %></td><% } %>
+              <% if (scope === 'all') { %><td data-label="Job"><a href="<%= base %>/jobs/<%= a.job_id %>"><%= a.job_title %></a><% if (isConsultant) { %><div class="small muted"><%= h.displayCompany(a) %></div><% } %></td><% } %>
               <td data-label="Applied"><%= h.formatDate(a.created_at) %><div class="small muted"><%= h.timeAgo(a.created_at) %></div></td>
-              <td data-label="Resume"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/applications/<%= a.id %>/resume">⬇ Download</a><div class="small muted"><%= a.resume_name %></div></td>
+              <td data-label="Documents">
+                <div class="doc-links">
+                  <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/applications/<%= a.id %>/resume" title="<%= a.resume_name %>">⬇ Resume</a>
+                  <% if (a.cover_letter_path) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/applications/<%= a.id %>/cover" title="<%= a.cover_letter_name || 'Cover sheet' %>">⬇ Cover sheet</a><% } else { %><span class="small muted">No cover sheet</span><% } %>
+                </div>
+              </td>
               <td data-label="Status">
                 <form class="status-form" method="post" action="<%= base %>/applications/<%= a.id %>/status"><input type="hidden" name="return_to" value="<%= returnTo %>">
                   <label class="visually-hidden" for="st-<%= a.id %>">Status for <%= a.name %></label>

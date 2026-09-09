@@ -5,15 +5,20 @@ const C = require('../lib/constants');
 
 const router = express.Router();
 
-const PRICE = '$9.99';
-const GST = '$0.50';
-const TOTAL = '$10.49';
+// Role-based pricing (client decision 2026-09-09): employers $14.99, third party consultants $9.99, + 5% GST. Source: lib/constants.
+const dollars = (c) => '$' + (c / 100).toFixed(2);
+const gstOf = (c) => Math.round(c * C.PRICING.gst_rate);
+const rate = (role) => { const base = C.priceCentsFor(role); return { cents: base, base: dollars(base), gst: dollars(gstOf(base)), total: dollars(base + gstOf(base)), totalCents: base + gstOf(base) }; };
+const EMP = rate('employer');
+const CON = rate('consultant');
+const PRICE = EMP.base, GST = EMP.gst, TOTAL = EMP.total;          // employer rate — the headline price everywhere on this page
 
 // "Quick answers" — short, quotable answers for answer engines. Rendered near the top of the page.
 const QUICK_ANSWERS = [
   { q: 'What is Canada Careers?', a: 'Canada Careers is a Canadian job bank where employers and third-party consultants post jobs and job seekers across Canada search, apply online and receive matched job alerts — with a focus on professionals, new immigrants, Indigenous peoples, refugees and youth.' },
   { q: 'Who can post jobs on Canada Careers?', a: 'Any Canadian employer can post directly, and third-party consultants (recruiters, staffing agencies and HR consultants) can post on behalf of the many employers they represent from one account.' },
-  { q: 'How much does a job posting cost?', a: `A job posting costs ${PRICE} CAD plus GST (${TOTAL} with 5% GST) per posting per month, billed monthly until you cancel.` },
+  { q: 'How much does a job posting cost?', a: `Employers pay ${EMP.base} CAD per posting per month plus GST (${EMP.total} with 5% GST); third-party consultants pay ${CON.base} per posting per month plus GST (${CON.total}). Billed monthly until you cancel.` },
+  { q: 'What does a job posting on Canada Careers include?', a: 'Every posting carries at least one full work address (street, city, province and postal code — several addresses on one posting are allowed), the employer’s operating name shown to job seekers, salary with its pay period, education and experience levels, an industry category and an optional NOC code.' },
   { q: 'Is Canada Careers free for job seekers?', a: 'Yes. Job seekers sign up free, upload a resume, apply online and receive job alerts at no cost — there are no paid tiers for candidates.' },
   { q: 'How do job alerts work?', a: 'When a new job is published, Canada Careers compares it with each job seeker’s profile — category, province, city, work arrangement, experience and audience — and emails matching candidates, on the frequency they choose.' },
   { q: 'Who does Canada Careers serve?', a: 'Five audiences from our logo: Professionals, New Immigrants, Indigenous peoples, Refugees and Youth — in all 13 Canadian provinces and territories.' },
@@ -23,16 +28,19 @@ const QUICK_ANSWERS = [
 // `more` is an optional follow-up link shown after the answer (not part of the schema text).
 const FAQ = [
   { q: 'How much does it cost to post a job on Canada Careers?',
-    a: `Each job posting costs ${PRICE} CAD per month plus 5% GST (${GST}), for a total of ${TOTAL} CAD per posting per month. There are no setup fees, no per-applicant fees and no contracts.`,
+    a: `Employers pay ${EMP.base} CAD per posting per month plus 5% GST (${EMP.gst}), for a total of ${EMP.total} CAD per posting per month. Third-party consultants posting on behalf of clients pay ${CON.base} plus 5% GST (${CON.gst}), for a total of ${CON.total}. The rate is set by the account that pays. There are no setup fees, no per-applicant fees and no contracts.`,
     more: { href: '/employer#pricing', label: 'See employer pricing' } },
   { q: 'Does the price include GST?',
-    a: `The advertised price of ${PRICE} is before tax. GST at 5% is added at checkout, so you pay ${TOTAL} CAD per posting per month, and every payment comes with a numbered receipt for your records.` },
+    a: `The advertised prices of ${EMP.base} (employers) and ${CON.base} (third-party consultants) are before tax. GST at 5% is added at checkout, so employers pay ${EMP.total} and consultants ${CON.total} CAD per posting per month, and every payment comes with a numbered receipt you can view or download as a PDF from Billing at any time.` },
+  { q: 'Does a job posting need a full work address?',
+    a: 'Yes. Every posting created on Canada Careers needs at least one complete work location — street address, city, province and postal code — and a posting may list several addresses when the job is offered at more than one site. Job seekers see each address in full on the posting, Job Bank style. The employer’s operating (trade) name is shown first, with the legal company name beneath it.',
+    more: { href: '/employer', label: 'See what a posting needs' } },
   { q: 'How does monthly renewal work, and can I cancel?',
     a: 'A posting renews automatically every month until you cancel it. You can cancel at any time from your dashboard: choose to keep the job live until the end of the current paid period, or take it down immediately. There is no cancellation fee.' },
   { q: 'What happens to a job posting when it expires, is cancelled or is paused?',
     a: 'Expired, cancelled and inactive (paused) postings are archived: they disappear from search results, job alerts, the sitemap and their public page, but the posting and its applicants stay in your dashboard so you can review applications or duplicate the job and post it again.' },
   { q: 'Can a third-party consultant or recruiter post jobs for multiple employers?',
-    a: 'Yes. A third-party consultant account can hold many employer profiles — one for each client company — and post, manage and renew jobs for all of them from a single sign-in. Each posting is billed at the same ' + PRICE + ' plus GST per month.',
+    a: `Yes. A third-party consultant account can hold many employer profiles — one for each client company — and post, manage and renew jobs for all of them from a single sign-in. Each posting is billed at the consultant rate of ${CON.base} plus GST (${CON.total}) per month, with one list of receipts across every client.`,
     more: { href: '/consultant', label: 'Learn about consultant accounts' } },
   { q: 'Is Canada Careers free for job seekers?',
     a: 'Yes. Creating a job seeker profile, uploading a resume, applying to jobs, saving jobs and receiving job alerts are all free. Job seekers are never charged.',
@@ -68,6 +76,24 @@ const KNOWS_ABOUT = [
   'Employment in British Columbia', 'Employment in Alberta', 'Employment in Quebec',
 ];
 
+const offer = (name, description, cents, url) => ({
+  '@type': 'Offer',
+  name, description,
+  price: (cents / 100).toFixed(2),
+  priceCurrency: C.PRICING.currency,
+  priceSpecification: {
+    '@type': 'UnitPriceSpecification',
+    price: (cents / 100).toFixed(2),
+    priceCurrency: C.PRICING.currency,
+    valueAddedTaxIncluded: false,
+    billingIncrement: 1,
+    unitCode: 'MON',
+    referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' },
+  },
+  availability: 'https://schema.org/InStock',
+  url,
+});
+
 function buildJsonLd(PUBLIC_URL) {
   const url = `${PUBLIC_URL}/about`;
   const orgId = `${PUBLIC_URL}/#organization`;
@@ -81,7 +107,7 @@ function buildJsonLd(PUBLIC_URL) {
     url: PUBLIC_URL,
     logo: `${PUBLIC_URL}/img/logo-stacked.svg`,
     slogan: 'Jobs for every Canadian. Opportunities for all.',
-    description: 'Canada Careers is a Canadian job bank where employers and third-party consultants post jobs for $9.99 + GST per posting per month and job seekers — professionals, new immigrants, Indigenous peoples, refugees and youth — search, apply online and receive matched job alerts free of charge.',
+    description: `Canada Careers is a Canadian job bank where employers post jobs for ${EMP.base} + GST per posting per month, third-party consultants for ${CON.base} + GST, and job seekers — professionals, new immigrants, Indigenous peoples, refugees and youth — search, apply online and receive matched job alerts free of charge.`,
     sameAs: [],
     areaServed: { '@type': 'Country', name: 'Canada' },
     knowsAbout: KNOWS_ABOUT,
@@ -92,24 +118,10 @@ function buildJsonLd(PUBLIC_URL) {
       areaServed: 'CA',
       availableLanguage: ['English'],
     }],
-    makesOffer: {
-      '@type': 'Offer',
-      name: 'Job posting on Canada Careers',
-      description: 'One job posting on Canada Careers, renewed monthly until cancelled. GST is added at checkout.',
-      price: (C.PRICING.price_cents / 100).toFixed(2),
-      priceCurrency: C.PRICING.currency,
-      priceSpecification: {
-        '@type': 'UnitPriceSpecification',
-        price: (C.PRICING.price_cents / 100).toFixed(2),
-        priceCurrency: C.PRICING.currency,
-        valueAddedTaxIncluded: false,
-        billingIncrement: 1,
-        unitCode: 'MON',
-        referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' },
-      },
-      availability: 'https://schema.org/InStock',
-      url: `${PUBLIC_URL}/employer`,
-    },
+    makesOffer: [
+      offer('Job posting on Canada Careers — employer', 'One job posting by an employer on Canada Careers, renewed monthly until cancelled. GST is added at checkout.', EMP.cents, `${PUBLIC_URL}/employer`),
+      offer('Job posting on Canada Careers — third party consultant', 'One job posting by a third-party consultant on behalf of a client, renewed monthly until cancelled. GST is added at checkout.', CON.cents, `${PUBLIC_URL}/consultant`),
+    ],
   };
   const website = {
     '@context': 'https://schema.org',
@@ -166,14 +178,14 @@ router.get('/about', (req, res) => {
   const PUBLIC_URL = res.locals.PUBLIC_URL;
   res.render('about/about', {
     title: 'About Us — Canada’s inclusive job bank',
-    metaDescription: `Canada Careers is Canada’s inclusive job bank: employers and consultants post jobs for ${PRICE} + GST a month; job seekers apply free and get matched alerts.`,
+    metaDescription: `Canada Careers is Canada’s inclusive job bank: employers post jobs for ${EMP.base} + GST a month, consultants for ${CON.base} + GST; job seekers apply free with matched alerts.`,
     extraCss: ['/css/about.css'],
     jsonLd: buildJsonLd(PUBLIC_URL),
     bodyClass: 'page-about',
     quick: QUICK_ANSWERS,
     faq: FAQ,
     cities: CITIES,
-    price: { base: PRICE, gst: GST, total: TOTAL },
+    price: { base: PRICE, gst: GST, total: TOTAL, employer: EMP, consultant: CON },
   });
 });
 

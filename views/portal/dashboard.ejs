@@ -6,7 +6,7 @@
         <p class="eyebrow"><%= isConsultant ? 'Consultant dashboard' : 'Employer dashboard' %></p>
         <h1>Welcome back, <%= (user.name || '').split(' ')[0] %></h1>
         <p class="muted">
-          <% if (isConsultant) { %><%= profiles.length %> compan<%= profiles.length === 1 ? 'y' : 'ies' %> under your account.<% } else if (profiles[0]) { %><%= profiles[0].company_name %><% if (profiles[0].city) { %> · <%= h.location(profiles[0]) %><% } %><% } else { %>Set up your company profile to start posting.<% } %>
+          <% if (isConsultant) { %><%= profiles.length %> compan<%= profiles.length === 1 ? 'y' : 'ies' %> under your account.<% } else if (profiles[0]) { %><%= h.displayCompany(profiles[0]) %><% if (h.legalNameNote(profiles[0])) { %> <span class="small">(<%= h.legalNameNote(profiles[0]) %>)</span><% } %><% if (profiles[0].city) { %> · <%= h.location(profiles[0]) %><% } %><% } else { %>Set up your company profile to start posting.<% } %>
         </p>
       </div>
       <div class="cluster">
@@ -41,7 +41,7 @@
           <tbody>
             <% byCompany.forEach(c => { %>
               <tr>
-                <td data-label="Company"><span class="company-cell"><% if (c.logo_path) { %><img class="logo-sm" src="/logos/<%= c.id %>" alt=""><% } %><strong><%= c.company_name %></strong></span></td>
+                <td data-label="Company"><span class="company-cell"><% if (c.logo_path) { %><img class="logo-sm" src="/logos/<%= c.id %>" alt=""><% } %><span><strong><%= h.displayCompany(c) %></strong><% if (h.legalNameNote(c)) { %><div class="small muted"><%= h.legalNameNote(c) %></div><% } %></span></span></td>
                 <td data-label="Active"><%= c.active %></td>
                 <td data-label="Awaiting payment"><%= c.pending %></td>
                 <td data-label="Applicants"><%= c.applicants %></td>
@@ -82,7 +82,7 @@
               <li class="applicant-row">
                 <div>
                   <a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a>
-                  <div class="small muted"><% if (isConsultant) { %><%= job.company_name %> · <% } %><%= h.location(job) %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
+                  <div class="small muted"><% if (isConsultant) { %><%= h.displayCompany(job) %> · <% } %><%= h.location(job) %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
                 </div>
                 <div class="stack-tight">
                   <%- include('partials/status-badge', { job }) %>

@@ -6,15 +6,22 @@
 //   node scripts/stripe-setup.js --create-webhook   # also create the webhook endpoint via the API and print its secret ONCE
 //   node scripts/stripe-setup.js --url https://jobs.khosha.tech   # override PUBLIC_URL for the webhook address
 //
-// What it creates (found again by lookup_key / metadata on later runs, so nothing is duplicated):
-//   Product "Job posting (monthly)"  + Price 999 CAD / month, lookup_key cc_posting_monthly  (tax_behavior exclusive)
-//   Product "GST (5%)"               + Price  50 CAD / month, lookup_key cc_gst_monthly      (skipped with STRIPE_TAX=1)
-// lib/billing.js resolves those lookup_keys at checkout time (cached 10 min) and only uses a Price whose amount matches
-// the configured pricing (POSTING_PRICE_CENTS / GST_RATE); otherwise it falls back to inline price_data. If the price
-// changes, re-run this script: it creates a new Price and moves the lookup_key to it (transfer_lookup_key).
+// What it creates (found again by lookup_key / metadata on later runs, so nothing is duplicated) — one pair per payer role:
+//   Product "Job posting (monthly) — employer"                + Price 1499 CAD / month, lookup_key cc_posting_employer_monthly   (tax_behavior exclusive)
+//   Product "GST (5%) — employer posting"                     + Price   75 CAD / month, lookup_key cc_gst_employer_monthly       (skipped with STRIPE_TAX=1)
+//   Product "Job posting (monthly) — third party consultant"  + Price  999 CAD / month, lookup_key cc_posting_consultant_monthly (tax_behavior exclusive)
+//   Product "GST (5%) — consultant posting"                   + Price   50 CAD / month, lookup_key cc_gst_consultant_monthly     (skipped with STRIPE_TAX=1)
+// lib/billing.js resolves the payer role's lookup_keys at checkout time (cached 10 min) and only uses a Price whose amount
+// matches the subscription's price snapshot (EMPLOYER_PRICE_CENTS / CONSULTANT_PRICE_CENTS / GST_RATE); otherwise it falls
+// back to inline price_data. If a price changes, re-run this script: it creates a new Price and moves the lookup_key to it
+// (transfer_lookup_key). Existing Stripe subscriptions keep the Price they were created with — renewals never re-price.
 const path = require('node:path');
 
-const LOOKUP_KEYS = { posting: 'cc_posting_monthly', gst: 'cc_gst_monthly' };
+const LOOKUP_KEYS = {
+  employer: { posting: 'cc_posting_employer_monthly', gst: 'cc_gst_employer_monthly' },
+  consultant: { posting: 'cc_posting_consultant_monthly', gst: 'cc_gst_consultant_monthly' },
+};
+const ROLE_LABEL = { employer: 'employer', consultant: 'third party consultant' };
 const WEBHOOK_EVENTS = ['checkout.session.completed', 'invoice.paid', 'invoice.payment_failed', 'customer.subscription.updated', 'customer.subscription.deleted'];
 
 async function findProduct(stripe, key) {
@@ -40,11 +47,19 @@ async function ensureLine(stripe, { key, name, description, lookupKey, cents, ta
   return price;
 }
 
-/** Idempotently create the catalog for the given pricing snapshot. Returns { posting, gst } Prices (gst null with STRIPE_TAX=1). */
-async function ensureCatalog(stripe, pricing, { log = console.log, stripeTax = /^(1|true|yes)$/i.test(process.env.STRIPE_TAX || '') } = {}) {
-  const posting = await ensureLine(stripe, { key: 'posting', name: 'Job posting (monthly)', description: 'One job posting on Canada Careers, renewed monthly until cancelled.', lookupKey: LOOKUP_KEYS.posting, cents: pricing.price_cents, taxBehavior: 'exclusive' }, log);
-  const gst = stripeTax ? null : await ensureLine(stripe, { key: 'gst', name: pricing.gst_label || 'GST (5%)', description: 'Goods and Services Tax (Canada), charged on the posting fee.', lookupKey: LOOKUP_KEYS.gst, cents: pricing.tax_cents }, log);
+/** Idempotently create the catalog for ONE role's pricing. Returns { posting, gst } Prices (gst null with STRIPE_TAX=1). */
+async function ensureRoleCatalog(stripe, role, pricing, { log = console.log, stripeTax = /^(1|true|yes)$/i.test(process.env.STRIPE_TAX || '') } = {}) {
+  const keys = LOOKUP_KEYS[role]; if (!keys) throw new Error(`unknown pricing role ${role}`);
+  const posting = await ensureLine(stripe, { key: `posting_${role}`, name: `Job posting (monthly) — ${ROLE_LABEL[role]}`, description: `One job posting on Canada Careers at the ${ROLE_LABEL[role]} rate, renewed monthly until cancelled.`, lookupKey: keys.posting, cents: pricing.price_cents, taxBehavior: 'exclusive' }, log);
+  const gst = stripeTax ? null : await ensureLine(stripe, { key: `gst_${role}`, name: `${pricing.gst_label || 'GST (5%)'} — ${role} posting`, description: `Goods and Services Tax (Canada), charged on the ${ROLE_LABEL[role]} posting fee.`, lookupKey: keys.gst, cents: pricing.tax_cents }, log);
   return { posting, gst };
+}
+/** Idempotently create the whole catalog: `pricings` = { employer, consultant } from billing.getAllPricing().
+ *  Returns { employer: { posting, gst }, consultant: { posting, gst } }. */
+async function ensureCatalog(stripe, pricings, opts = {}) {
+  const out = {};
+  for (const role of Object.keys(LOOKUP_KEYS)) { if (pricings[role]) out[role] = await ensureRoleCatalog(stripe, role, pricings[role], opts); }
+  return out;
 }
 
 /** Find the webhook endpoint for `url` or create it (the signing secret is only returned on creation). */
@@ -58,7 +73,7 @@ async function ensureWebhook(stripe, url, { log = console.log, create = true } =
   return ep;
 }
 
-module.exports = { ensureCatalog, ensureWebhook, LOOKUP_KEYS, WEBHOOK_EVENTS };
+module.exports = { ensureCatalog, ensureRoleCatalog, ensureWebhook, LOOKUP_KEYS, WEBHOOK_EVENTS };
 if (require.main !== module) return;
 
 (async () => {
@@ -72,13 +87,17 @@ if (require.main !== module) return;
   const webhookUrl = `${publicUrl}/billing/webhook`;
   const stripe = require('stripe')(key, { appInfo: { name: 'Canada Careers setup' } });
   const billing = require('../lib/billing');
-  const pricing = await billing.getPricing();
-  console.log(`Stripe setup — ${live ? 'LIVE' : 'TEST'} mode key, pricing ${pricing.price_cents} + ${pricing.tax_cents} = ${pricing.total_cents} CAD cents / month${billing.useStripeTax() ? ' (STRIPE_TAX=1: GST line skipped, Stripe Tax will compute tax)' : ''}\n`);
+  const pricings = await billing.getAllPricing();
+  console.log(`Stripe setup — ${live ? 'LIVE' : 'TEST'} mode key${billing.useStripeTax() ? ' (STRIPE_TAX=1: GST lines skipped, Stripe Tax will compute tax)' : ''}`);
+  for (const role of Object.keys(pricings)) console.log(`  ${role.padEnd(10)} ${pricings[role].price_cents} + ${pricings[role].tax_cents} = ${pricings[role].total_cents} CAD cents / month`);
+  console.log('');
 
-  const { posting, gst } = await ensureCatalog(stripe, pricing);
+  const catalog = await ensureCatalog(stripe, pricings);
   console.log(`\nPrices in use (resolved automatically by lookup_key; optionally pin them in .env):`);
-  console.log(`  STRIPE_PRICE_POSTING=${posting.id}`);
-  if (gst) console.log(`  STRIPE_PRICE_GST=${gst.id}`);
+  for (const role of Object.keys(catalog)) {
+    console.log(`  STRIPE_PRICE_POSTING_${role.toUpperCase()}=${catalog[role].posting.id}`);
+    if (catalog[role].gst) console.log(`  STRIPE_PRICE_GST_${role.toUpperCase()}=${catalog[role].gst.id}`);
+  }
 
   console.log(`\nWebhook endpoint:\n  URL     ${webhookUrl}\n  Events  ${WEBHOOK_EVENTS.join(', ')}`);
   const wantCreate = argv.includes('--create-webhook');
@@ -95,6 +114,6 @@ if (require.main !== module) return;
       console.log(`  STRIPE_WEBHOOK_SECRET is empty. Either add the endpoint in Dashboard → Developers → Webhooks (URL + events above) and copy its signing secret,\n  or re-run with --create-webhook to create it via the API and print the secret here.`);
     }
   }
-  console.log(`\nThen: restart the app (sudo systemctl restart canada-careers) and test a posting with card 4242 4242 4242 4242 (test mode).`);
+  console.log(`\nThen: restart the app (sudo systemctl restart canada-careers) and test one employer posting ($15.74) and one consultant posting ($10.49) with card 4242 4242 4242 4242 (test mode).`);
   await require('../lib/db').pool.end().catch(() => {});
 })().catch((e) => { console.error('stripe-setup failed:', e.message); process.exit(1); });

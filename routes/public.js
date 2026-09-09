@@ -15,11 +15,17 @@ const JS = ['/js/public.js'];
 // Card-level columns shared by every listing; detail page selects jobs.* on top.
 const JOB_COLS = `jobs.id, jobs.title, jobs.slug, jobs.category, jobs.job_type, jobs.work_arrangement, jobs.experience_level,
   jobs.city, jobs.province, jobs.salary_min, jobs.salary_max, jobs.salary_period, jobs.audiences, jobs.published_at, jobs.expires_at, jobs.source, jobs.source_url,
-  p.company_name, p.slug AS company_slug`;
+  p.company_name, p.operating_name, p.slug AS company_slug,
+  (SELECT count(*) FROM job_locations l WHERE l.job_id = jobs.id)::int AS location_count`;
 const JOB_FROM = `FROM jobs JOIN employer_profiles p ON p.id = jobs.employer_profile_id`;
-// Hourly rates are annualised (2080 h) so salary sort/filter can compare hour vs year postings.
-const ANNUAL = `((CASE WHEN jobs.salary_period = 'hour' THEN 2080 ELSE 1 END) * COALESCE(jobs.salary_max, jobs.salary_min))`;
+// Every salary period is annualised with C.SALARY_PERIOD_TO_YEAR (hour ×2080, day ×260, week ×52, biweekly ×26, month ×12)
+// so salary sort/filter can compare postings that quote different periods. Unknown/legacy periods count as yearly.
+const ANNUAL = `((CASE jobs.salary_period ${Object.entries(C.SALARY_PERIOD_TO_YEAR).map(([k, n]) => `WHEN '${k}' THEN ${n}`).join(' ')} ELSE 1 END) * COALESCE(jobs.salary_max, jobs.salary_min))`;
 const NEWEST = `jobs.published_at DESC NULLS LAST, jobs.id DESC`;
+// A job's work locations, primary first. Imported (Job Bank) rows only have city/province.
+const LOCATIONS_SQL = `SELECT id, street_address, unit, city, province, postal_code, sort_order FROM job_locations WHERE job_id = $1 ORDER BY sort_order, id`;
+// schema.org QuantitativeValue.unitText only allows HOUR/DAY/WEEK/MONTH/YEAR — bi-weekly figures are halved into WEEK.
+const SALARY_UNIT = { hour: 'HOUR', day: 'DAY', week: 'WEEK', biweekly: 'WEEK', month: 'MONTH', year: 'YEAR' };
 
 const first = (v) => (Array.isArray(v) ? v[0] : v);
 // NUL bytes are stripped: Postgres rejects them in text parameters (would 500).
@@ -61,7 +67,7 @@ router.get('/', async (req, res, next) => {
 
     res.render('public/home', {
       title: 'Find jobs across Canada',
-      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Canada Careers connects professionals, new immigrants, Indigenous peoples, refugees and youth with opportunities in every province. Employers post for $9.99/month + GST.`,
+      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Canada Careers connects professionals, new immigrants, Indigenous peoples, refugees and youth with opportunities in every province. Post a job from $${(C.PRICING.consultant_price_cents / 100).toFixed(2)}/month + GST.`,
       extraCss: CSS, extraJs: JS, bodyClass: 'page-home',
       jsonLd: [
         {
@@ -147,12 +153,15 @@ router.get('/jobs', async (req, res, next) => {
     if (f.q) {
       params.push(f.q); const a = params.length;
       params.push('%' + f.q.replace(/[%_\\]/g, '\\$&') + '%'); const b = params.length;
+      // Keyword also matches the operating (trade) name and the city of ANY work location, not just the primary one.
       where.push(`(to_tsvector('english', jobs.title || ' ' || jobs.description || ' ' || coalesce(jobs.requirements,'')) @@ plainto_tsquery('english', $${a})
-        OR jobs.title ILIKE $${b} OR p.company_name ILIKE $${b} OR EXISTS (SELECT 1 FROM unnest(jobs.skills) s WHERE s ILIKE $${b}))`);
+        OR jobs.title ILIKE $${b} OR p.company_name ILIKE $${b} OR p.operating_name ILIKE $${b} OR EXISTS (SELECT 1 FROM unnest(jobs.skills) s WHERE s ILIKE $${b})
+        OR jobs.city ILIKE $${b} OR EXISTS (SELECT 1 FROM job_locations l WHERE l.job_id = jobs.id AND l.city ILIKE $${b}))`);
     }
     if (f.category) { params.push(f.category); where.push(`jobs.category = $${params.length}`); }
     if (f.province) { params.push(f.province); where.push(`jobs.province = $${params.length}`); }
-    if (f.city) { params.push('%' + f.city.replace(/[%_\\]/g, '\\$&') + '%'); where.push(`jobs.city ILIKE $${params.length}`); }
+    // City filter: a posting with several work locations is found by any of them (jobs.city is the primary one and is kept in sync).
+    if (f.city) { params.push('%' + f.city.replace(/[%_\\]/g, '\\$&') + '%'); where.push(`(jobs.city ILIKE $${params.length} OR EXISTS (SELECT 1 FROM job_locations l WHERE l.job_id = jobs.id AND l.city ILIKE $${params.length}))`); }
     if (f.job_type) { params.push(f.job_type); where.push(`jobs.job_type = $${params.length}`); }
     if (f.work_arrangement) { params.push(f.work_arrangement); where.push(`jobs.work_arrangement = $${params.length}`); }
     if (f.audience.length) { params.push(f.audience); where.push(`jobs.audiences && $${params.length}::text[]`); }
@@ -203,26 +212,45 @@ const EMPLOYMENT_TYPE = { full_time: 'FULL_TIME', part_time: 'PART_TIME', contra
 router.get('/jobs/:slug', async (req, res, next) => {
   try {
     if (!SLUG_RE.test(req.params.slug)) return notFound(res, 'This job posting is no longer available. It may have closed, expired or been removed by the employer.');
-    const job = await db.one(`SELECT jobs.*, p.company_name, p.slug AS company_slug, p.website AS company_website, p.industry AS company_industry,
+    const job = await db.one(`SELECT jobs.*, p.company_name, p.operating_name, p.slug AS company_slug, p.website AS company_website, p.industry AS company_industry,
         p.city AS company_city, p.province AS company_province, p.company_size, p.description AS company_description
       ${JOB_FROM} WHERE jobs.slug = $1 AND ${PUBLIC_WHERE}`, [req.params.slug]);
     if (!job) return notFound(res, 'This job posting is no longer available. It may have closed, expired or been removed by the employer.');
     db.query('UPDATE jobs SET views = views + 1 WHERE id = $1', [job.id]).catch(e => console.error('[views]', e.message));
 
-    const [more, savedRow] = await Promise.all([
+    const [more, savedRow, locRows] = await Promise.all([
       db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.employer_profile_id = $1 AND jobs.id <> $2 AND ${PUBLIC_WHERE} ORDER BY ${NEWEST} LIMIT 4`, [job.employer_profile_id, job.id]),
       req.user && req.user.role === 'seeker' ? db.one('SELECT 1 FROM saved_jobs WHERE user_id = $1 AND job_id = $2', [req.user.id, job.id]) : null,
+      db.many(LOCATIONS_SQL, [job.id]),
     ]);
+    // A posting always has at least one location row (schema backfill); fall back to jobs.city/province just in case.
+    const locations = locRows.length ? locRows : [{ city: job.city, province: job.province, postal_code: job.postal_code }];
     // Similar = same category, same province first, excluding this job and anything already shown under "more from company".
     const similar = await db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.category = $1 AND jobs.id <> ALL($2::bigint[]) AND ${PUBLIC_WHERE} ORDER BY (jobs.province = $3) DESC, ${NEWEST} LIMIT 4`,
       [job.category, [job.id, ...more.map(j => j.id)], job.province]);
 
     const url = `${res.locals.PUBLIC_URL}/jobs/${job.slug}`;
+    const companyName = h.displayCompany(job);          // operating (trade) name first
+    const legalName = job.company_name;
+    // Education / experience: keys map to names; legacy rows may hold free text (shown raw); "other" adds the free-text detail.
+    const educationText = job.education ? h.educationName(job.education) + (job.education === 'other' && job.education_other ? ': ' + job.education_other : '') : '';
+    const experienceText = job.experience_level ? h.experienceName(job.experience_level) + (job.experience_level === 'other' && job.experience_other ? ': ' + job.experience_other : '') : '';
+    const half = (n) => (n == null ? n : Math.round(n / 2));
+    const biweekly = job.salary_period === 'biweekly';
+    const sMin = biweekly ? half(job.salary_min) : job.salary_min, sMax = biweekly ? half(job.salary_max) : job.salary_max;
     const salaryValue = job.salary_min || job.salary_max ? {
       '@type': 'MonetaryAmount', currency: 'CAD',
-      value: Object.assign({ '@type': 'QuantitativeValue', unitText: job.salary_period === 'hour' ? 'HOUR' : 'YEAR' },
-        job.salary_min && job.salary_max && job.salary_min !== job.salary_max ? { minValue: job.salary_min, maxValue: job.salary_max } : { value: job.salary_min || job.salary_max }),
+      value: Object.assign({ '@type': 'QuantitativeValue', unitText: SALARY_UNIT[job.salary_period] || 'YEAR' },
+        sMin && sMax && sMin !== sMax ? { minValue: sMin, maxValue: sMax } : { value: sMin || sMax }),
     } : undefined;
+    const placeFor = (l) => ({
+      '@type': 'Place',
+      address: Object.assign({ '@type': 'PostalAddress' },
+        l.street_address ? { streetAddress: l.unit ? `${l.street_address}, Unit ${l.unit}` : l.street_address } : {},
+        { addressLocality: l.city, addressRegion: l.province },
+        l.postal_code ? { postalCode: l.postal_code } : {},
+        { addressCountry: 'CA' }),
+    });
     const posting = {
       '@context': 'https://schema.org', '@type': 'JobPosting',
       title: job.title,
@@ -230,19 +258,16 @@ router.get('/jobs/:slug', async (req, res, next) => {
       datePosted: isoDate(job.published_at || job.created_at),
       validThrough: new Date(job.expires_at).toISOString(),
       employmentType: EMPLOYMENT_TYPE[job.job_type] || 'OTHER',
-      identifier: { '@type': 'PropertyValue', name: job.company_name, value: job.slug },
+      identifier: { '@type': 'PropertyValue', name: companyName, value: job.slug },
       url, directApply: true,
-      hiringOrganization: Object.assign({ '@type': 'Organization', name: job.company_name, url: `${res.locals.PUBLIC_URL}/companies/${job.company_slug}` }, job.company_website ? { sameAs: job.company_website } : {}),
-      jobLocation: {
-        '@type': 'Place',
-        address: Object.assign({ '@type': 'PostalAddress', addressLocality: job.city, addressRegion: job.province, addressCountry: 'CA' }, job.postal_code ? { postalCode: job.postal_code } : {}),
-      },
+      hiringOrganization: Object.assign({ '@type': 'Organization', name: companyName, legalName, url: `${res.locals.PUBLIC_URL}/companies/${job.company_slug}` }, job.company_website ? { sameAs: job.company_website } : {}),
+      jobLocation: locations.map(placeFor),
       industry: h.categoryName(job.category),
       totalJobOpenings: job.vacancies,
     };
     if (salaryValue) posting.baseSalary = salaryValue;
-    if (job.experience_level) posting.experienceRequirements = h.experienceName(job.experience_level);
-    if (job.education) posting.educationRequirements = job.education;
+    if (experienceText) posting.experienceRequirements = experienceText;
+    if (educationText) posting.educationRequirements = educationText;
     if (job.skills && job.skills.length) posting.skills = job.skills.join(', ');
     if (job.work_arrangement === 'remote') {
       posting.jobLocationType = 'TELECOMMUTE';
@@ -259,11 +284,13 @@ router.get('/jobs/:slug', async (req, res, next) => {
     };
     const shortDesc = String(job.description || '').replace(/\s+/g, ' ').trim().slice(0, 150);
     res.render('public/job', {
-      title: `${job.title} job in ${job.city}, ${h.provinceName(job.province)} — ${job.company_name}`,
-      metaDescription: `${job.company_name} is hiring a ${job.title} in ${job.city}, ${h.provinceName(job.province)} (${h.jobTypeName(job.job_type)}, ${h.workArrangementName(job.work_arrangement)}). ${h.formatSalary(job)}. ${shortDesc}`.slice(0, 300),
+      title: `${job.title} job in ${job.city}, ${h.provinceName(job.province)} — ${companyName}`,
+      metaDescription: `${companyName} is hiring a ${job.title} in ${job.city}, ${h.provinceName(job.province)} (${h.jobTypeName(job.job_type)}, ${h.workArrangementName(job.work_arrangement)}). ${h.formatSalary(job)}. ${shortDesc}`.slice(0, 300),
       extraCss: CSS, extraJs: JS, bodyClass: 'page-job has-applybar',
       jsonLd: [posting, breadcrumbs],
-      job, more, similar, saved: !!savedRow, url,
+      job, more, similar, saved: !!savedRow, url, locations, companyName, legalName, educationText, experienceText,
+      // For the print footer: "Printed from jobs.khosha.tech/jobs/<slug> on <date>" (host without scheme).
+      printHost: String(res.locals.PUBLIC_URL || '').replace(/^https?:\/\//, ''), printedOn: h.formatDate(new Date(), { month: 'long' }),
     });
   } catch (e) { next(e); }
 });
@@ -276,16 +303,19 @@ router.get('/companies/:slug', async (req, res, next) => {
     if (!co) return notFound(res, 'We could not find that employer.');
     const jobs = await db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.employer_profile_id = $1 AND ${PUBLIC_WHERE} ORDER BY ${NEWEST}`, [co.id]);
     const url = `${res.locals.PUBLIC_URL}/companies/${co.slug}`;
-    const org = Object.assign({ '@context': 'https://schema.org', '@type': 'Organization', name: co.company_name, url },
+    const companyName = h.displayCompany(co);
+    const address = co.street_address || co.city || co.province ? h.fullAddress(co) : '';
+    const org = Object.assign({ '@context': 'https://schema.org', '@type': 'Organization', name: companyName, legalName: co.company_name, url },
       co.website ? { sameAs: co.website } : {},
       co.description ? { description: co.description } : {},
-      co.city || co.province ? { address: { '@type': 'PostalAddress', addressLocality: co.city || undefined, addressRegion: co.province || undefined, addressCountry: 'CA' } } : {});
+      co.city || co.province ? { address: Object.assign({ '@type': 'PostalAddress' }, co.street_address ? { streetAddress: co.street_address } : {},
+        { addressLocality: co.city || undefined, addressRegion: co.province || undefined }, co.postal_code ? { postalCode: co.postal_code } : {}, { addressCountry: 'CA' }) } : {});
     res.render('public/company', {
-      title: `${co.company_name} — jobs and company profile`,
-      metaDescription: `${co.company_name}${co.industry ? ' (' + co.industry + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Canada Careers. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
+      title: `${companyName} — jobs and company profile`,
+      metaDescription: `${companyName}${co.industry ? ' (' + co.industry + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Canada Careers. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
       extraCss: CSS, extraJs: JS, bodyClass: 'page-company',
       jsonLd: [org],
-      co, jobs, url,
+      co, jobs, url, companyName, address,
     });
   } catch (e) { next(e); }
 });
@@ -326,7 +356,7 @@ router.get('/privacy', (req, res) => res.render('public/privacy', {
 }));
 router.get('/terms', (req, res) => res.render('public/terms', {
   title: 'Terms of use',
-  metaDescription: 'The terms that govern use of Canada Careers, including job posting rules, the $9.99/month + GST subscription, acceptable use and Canadian governing law.',
+  metaDescription: 'The terms that govern use of Canada Careers, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
   extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 

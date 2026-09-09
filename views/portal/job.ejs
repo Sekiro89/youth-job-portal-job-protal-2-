@@ -12,11 +12,11 @@
   <div class="dash__main">
     <div class="split">
       <div>
-        <p class="eyebrow"><%= job.company_name %></p>
+        <div class="company-head"><p class="eyebrow"><%= h.displayCompany(job) %></p><% if (h.legalNameNote(job)) { %><span class="legal-note"><%= h.legalNameNote(job) %></span><% } %></div>
         <h1><%= job.title %></h1>
         <p class="cluster">
           <%- include('partials/status-badge', { job: Object.assign({}, job, { cancel_at_period_end: sub && sub.cancel_at_period_end, current_period_end: sub && sub.current_period_end }) }) %>
-          <span class="muted small"><%= h.location(job) %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
+          <span class="muted small"><%= h.location(job) %><%= (job.locations || []).length > 1 ? ' +' + (job.locations.length - 1) + ' more' : '' %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
           <% if (isLivePublic) { %><a class="small" href="/jobs/<%= job.slug %>" target="_blank" rel="noopener">View public posting ↗</a><% } %>
         </p>
       </div>
@@ -53,18 +53,23 @@
         <h2 class="card__title">Preview</h2>
         <p class="small muted">This is how job seekers see the posting.</p>
         <article class="job-card job-card--preview">
-          <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div class="job-card__company"><%= job.company_name %> · <%= h.location(job) %></div></div>
+          <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= (job.locations || []).length > 1 ? ' (+' + (job.locations.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
           <h3 class="job-card__title"><%= job.title %></h3>
-          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (job.experience_level) { %><span><%= h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
           <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
           <div class="job-card__foot"><span><%= job.published_at ? 'Posted ' + h.timeAgo(job.published_at) : 'Not published yet' %></span><span><%= h.categoryName(job.category) %></span></div>
         </article>
         <dl class="facts">
+          <div><dt>Work location<%= (job.locations || []).length === 1 ? '' : 's' %></dt><dd>
+            <% if (job.locations && job.locations.length) { %><ul class="addr-list"><% job.locations.forEach(l => { %><li><%= l.street_address ? h.fullAddress(l) : h.location(l) %></li><% }) %></ul>
+            <% } else { %><%= h.location(job) %><% } %>
+          </dd></div>
+          <div><dt>Pay</dt><dd><%= h.formatSalary(job) %></dd></div>
           <% if (job.vacancies > 1) { %><div><dt>Positions</dt><dd><%= job.vacancies %></dd></div><% } %>
           <% if (job.languages && job.languages.length) { %><div><dt>Languages</dt><dd><%= job.languages.join(', ') %></dd></div><% } %>
-          <% if (job.education) { %><div><dt>Education</dt><dd><%= job.education %></dd></div><% } %>
+          <% if (job.experience_level) { %><div><dt>Experience</dt><dd><%= h.experienceName(job.experience_level) %><%= job.experience_level === 'other' && job.experience_other ? ' — ' + job.experience_other : '' %></dd></div><% } %>
+          <% if (job.education) { %><div><dt>Education</dt><dd><%= h.educationName(job.education) %><%= job.education === 'other' && job.education_other ? ' — ' + job.education_other : '' %></dd></div><% } %>
           <% if (job.noc_code) { %><div><dt>NOC</dt><dd><%= job.noc_code %></dd></div><% } %>
-          <% if (job.postal_code) { %><div><dt>Postal code</dt><dd><%= job.postal_code %></dd></div><% } %>
           <% if (job.skills && job.skills.length) { %><div><dt>Skills</dt><dd><%= job.skills.join(', ') %></dd></div><% } %>
           <% if (job.apply_email) { %><div><dt>Apply email</dt><dd><%= job.apply_email %></dd></div><% } %>
           <% if (job.apply_url) { %><div><dt>Apply link</dt><dd><a href="<%= job.apply_url %>" rel="noopener" target="_blank"><%= job.apply_url %></a></dd></div><% } %>

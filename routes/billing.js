@@ -83,9 +83,9 @@ router.get('/billing/checkout/:jobId', owners, wrap(async (req, res) => {
     req.flash('success', `Your posting is live again — it is already paid through ${new Date(existing.current_period_end).toLocaleDateString('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: 'short', day: 'numeric' })}.`);
     return res.redirect(`${base}/jobs/${job.id}`);
   }
-  const sub = await billing.ensureSubscription(job, req.user);
-  const pricing = await billing.getPricing();
-  res.render('billing/checkout', page({ title: `Checkout — ${job.title}`, metaDescription: 'Pay for your job posting on Canada Careers.', job, sub, pricing, base, mode: billing.mode() }));
+  const sub = await billing.ensureSubscription(job, req.user);            // snapshots the price for the payer's role
+  const pricing = await billing.snapshotPricing(sub, req.user.role);       // what the page shows = what will be charged
+  res.render('billing/checkout', page({ title: `Checkout — ${job.title}`, metaDescription: 'Pay for your job posting on Canada Careers.', job, sub, pricing, base, mode: billing.mode(), rateLabel: pricing.role === 'consultant' ? 'Third party consultant rate' : 'Employer rate' }));
 }));
 
 router.post('/billing/checkout/:jobId', owners, wrap(async (req, res) => {
@@ -120,7 +120,7 @@ async function sandboxContext(req, res) {
 }
 router.get('/billing/sandbox/:checkoutId', owners, wrap(async (req, res) => {
   const ctx = await sandboxContext(req, res); if (!ctx) return;
-  const pricing = await billing.getPricing();
+  const pricing = await billing.snapshotPricing(ctx.sub, req.user.role);
   res.render('billing/sandbox', page({ title: 'Sandbox payment', metaDescription: 'Simulated card payment.', job: ctx.job, sub: ctx.sub, pricing, checkoutId: req.params.checkoutId, base: baseFor(req.user), error: null, values: { name: req.user.name || '', number: '', exp: '', cvc: '' } }));
 }));
 router.post('/billing/sandbox/:checkoutId', owners, wrap(async (req, res) => {
@@ -128,7 +128,7 @@ router.post('/billing/sandbox/:checkoutId', owners, wrap(async (req, res) => {
   const { sub, job } = ctx;
   const values = { name: String(req.body.name || '').trim(), number: String(req.body.number || '').replace(/\D/g, ''), exp: String(req.body.exp || '').trim(), cvc: String(req.body.cvc || '').replace(/\D/g, '') };
   const fail = async (error, fields) => {
-    const pricing = await billing.getPricing();
+    const pricing = await billing.snapshotPricing(sub, req.user.role);
     res.status(422).render('billing/sandbox', page({ title: 'Sandbox payment', metaDescription: 'Simulated card payment.', job, sub, pricing, checkoutId: req.params.checkoutId, base: baseFor(req.user), error, fields: fields || {}, values: Object.assign({}, values, { number: values.number.replace(/(\d{4})(?=\d)/g, '$1 ') }) }));
   };
   const fields = {};
@@ -234,9 +234,10 @@ router.get('/billing', owners, wrap(async (req, res) => {
     const row = byCompanyMap.get(s.company_name) || { company_name: s.company_name, count: 0, monthly: 0 };
     row.count += 1; if (!s.cancel_at_period_end) row.monthly += s.total_cents; byCompanyMap.set(s.company_name, row);
   }
-  const pricing = await billing.getPricing();
+  const pricing = await billing.getPricing(req.user.role);               // the rate THIS payer gets on new postings
+  const allPricing = await billing.getAllPricing();                       // both rates, for the explanatory note
   const hasStripeCustomer = billing.mode() === 'stripe' && !!(await billing.findStripeCustomerId(req.user.id));
-  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode: billing.mode(), hasStripeCustomer, money }));
+  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, allPricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode: billing.mode(), hasStripeCustomer, money }));
 }));
 
 // ---------------------------------------------------------------- receipt (owner or admin)
@@ -246,8 +247,9 @@ router.get('/billing/receipt/:paymentId', auth.requireAuth('employer', 'consulta
   if (!r || (req.user.role !== 'admin' && r.owner_user_id !== req.user.id && r.payer_user_id !== req.user.id)) {
     return res.status(404).render('error', { title: 'Receipt not found', code: 404, message: 'We could not find that receipt.', noindex: true });
   }
-  const pricing = await billing.getPricing();
-  res.render('billing/receipt', page({ title: `Receipt ${r.receipt_number}`, metaDescription: 'Payment receipt.', r, pricing, base: req.user.role === 'admin' ? '/admin' : baseFor(req.user), bodyClass: 'is-receipt', gstLabel: billing.gstLabel, providerName: billing.providerName, extraJs: [] }));
+  const pricing = await billing.getPricing(r.payer_role);                // only gst_number is read; amounts come from the payment row
+  const autoprint = req.query.print === '1';                               // /billing "Download (PDF)" link opens the print dialog on load
+  res.render('billing/receipt', page({ title: `Receipt ${r.receipt_number}`, metaDescription: 'Payment receipt.', r, pricing, base: req.user.role === 'admin' ? '/admin' : baseFor(req.user), bodyClass: 'is-receipt', gstLabel: billing.gstLabel, providerName: billing.providerName, rateLabel: billing.pricingRole(r.payer_role) === 'consultant' ? 'third party consultant rate' : 'employer rate', autoprint, extraJs: [] }));
 }));
 
 module.exports = router;

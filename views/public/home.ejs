@@ -99,14 +99,14 @@
     <div class="grid grid--3">
       <article class="cta-card cta-card--employer">
         <h3>For employers</h3>
-        <p class="cta-card__price"><strong>$9.99</strong><span>/month + GST per posting</span></p>
+        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('employer') / 100).toFixed(2) %></strong><span>/month + GST per posting</span></p>
         <p>Reach candidates from every community in Canada. Post in minutes, manage applicants in one place and cancel any time.</p>
         <ul class="ticks"><li>Unlimited applicants</li><li>Renews monthly, no contracts</li><li>Receipts for every charge</li></ul>
         <a class="kds-btn kds-btn--brand kds-btn--block" href="/employer">Post a job</a>
       </article>
       <article class="cta-card cta-card--consultant">
         <h3>For consultants</h3>
-        <p class="cta-card__price"><strong>$9.99</strong><span>/month + GST per posting</span></p>
+        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('consultant') / 100).toFixed(2) %></strong><span>/month + GST per posting</span></p>
         <p>Recruiters and third-party consultants manage many client companies from one account, each with its own public profile.</p>
         <ul class="ticks"><li>Multiple company profiles</li><li>One dashboard, one invoice trail</li><li>Duplicate postings in a click</li></ul>
         <a class="kds-btn kds-btn--brand kds-btn--block" href="/consultant">Manage clients</a>

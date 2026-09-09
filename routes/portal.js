@@ -21,8 +21,11 @@ const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const APP_STATUSES = ['submitted', 'viewed', 'shortlisted', 'rejected', 'hired'];
 const APP_STATUS_NAME = { submitted: 'Submitted', viewed: 'Viewed', shortlisted: 'Shortlisted', rejected: 'Not selected', hired: 'Hired' };
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
-const PRICE = C.PRICING.price_cents, GST = Math.round(C.PRICING.price_cents * C.PRICING.gst_rate), TOTAL = PRICE + GST;
+/** Price is decided by the PAYER's role: employers $14.99, third-party consultants $9.99, + 5% GST. */
+const pricingFor = (role) => { const PRICE = C.priceCentsFor(role); const GST = Math.round(PRICE * C.PRICING.gst_rate); return { PRICE, GST, TOTAL: PRICE + GST }; };
+const $ = (cents) => (cents / 100).toFixed(2);
 const PROFILE_TABS = { all: 'All', active: 'Active', pending_payment: 'Awaiting payment', draft: 'Drafts', archived: 'Archived' };
+const MAX_LOCATIONS = 20;
 
 const isProd = process.env.NODE_ENV === 'production';
 const baseFor = (user) => user.role === 'consultant' ? '/consultant' : '/employer';
@@ -79,9 +82,10 @@ function sendLogo(res, profile) {
 }
 
 // ------------------------------------------------------------------ public routes
+const EP = pricingFor('employer'), CP = pricingFor('consultant');
 const landingFaq = {
   employer: [
-    ['How much does it cost to post a job?', 'Each posting is $9.99 per month plus 5% GST — $10.49 CAD in total. It renews automatically every month until you cancel. There are no setup fees and no contracts.'],
+    ['How much does it cost to post a job?', `Each posting is $${$(EP.PRICE)} per month plus 5% GST — $${$(EP.TOTAL)} CAD in total. It renews automatically every month until you cancel. There are no setup fees and no contracts.`],
     ['Can I cancel at any time?', 'Yes. Cancel from your dashboard with one click. Your posting stays live until the end of the paid month and is then archived. You can also cancel immediately.'],
     ['How long does approval take?', 'There is no approval queue. Your posting goes live the moment your payment is confirmed — usually within a few seconds.'],
     ['Who will see my posting?', 'Everyone who searches Canada Careers, plus every job seeker whose saved profile matches your posting gets an instant email alert. Postings are indexed by Google for Jobs.'],
@@ -91,10 +95,10 @@ const landingFaq = {
   consultant: [
     ['Who is the consultant account for?', 'Recruitment agencies, staffing firms, HR consultants and immigration consultants who post jobs on behalf of more than one employer.'],
     ['How many employer profiles can I add?', 'Unlimited. Each client gets its own company profile with logo, description and contact details, and each posting is published under the client company name.'],
-    ['How is billing handled?', 'Every posting is $9.99 + GST per month, billed to your account. Billing shows one list of subscriptions and receipts across all your clients, so you can pass costs through cleanly.'],
+    ['How is billing handled?', `Every posting is $${$(CP.PRICE)} + GST ($${$(CP.TOTAL)}) per month, billed to your account. Billing shows one list of subscriptions and receipts across all your clients, so you can pass costs through cleanly.`],
     ['Can my clients see the applicants?', 'Applicants land in your dashboard. You can download resumes and update statuses; forward what you need to your client. Client logins for shared access are on our roadmap.'],
     ['Can I switch between companies quickly?', 'Yes — a company selector appears on every job list, and the posting form asks which client you are posting for.'],
-    ['Is there a volume discount?', 'Not yet. Pricing is a flat $9.99 + GST per posting per month for everyone, with no contracts.'],
+    ['Is there a volume discount?', `Not yet. Pricing is a flat $${$(CP.PRICE)} + GST per posting per month for third-party consultants, with no contracts.`],
   ],
 };
 const faqJsonLd = (items) => ({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
@@ -102,19 +106,19 @@ const faqJsonLd = (items) => ({ '@context': 'https://schema.org', '@type': 'FAQP
 router.get('/employer', (req, res) => {
   if (req.user && ['employer', 'consultant'].includes(req.user.role)) return res.redirect(baseFor(req.user) + '/dashboard');
   res.render('portal/landing-employer', {
-    title: 'Post a Job in Canada for $9.99/month — Employers',
-    metaDescription: 'Post a job on Canada Careers for $9.99 + GST per month. Reach professionals, new immigrants, Indigenous peoples, refugees and youth across Canada. No contracts, cancel any time.',
+    title: `Post a Job in Canada for $${$(EP.PRICE)}/month — Employers`,
+    metaDescription: `Post a job on Canada Careers for $${$(EP.PRICE)} + GST per month. Reach professionals, new immigrants, Indigenous peoples, refugees and youth across Canada. No contracts, cancel any time.`,
     extraCss: ['/css/portal.css'], extraJs: ['/js/portal.js'], bodyClass: 'portal-landing',
-    faq: landingFaq.employer, jsonLd: [faqJsonLd(landingFaq.employer)], PRICE, GST, TOTAL,
+    faq: landingFaq.employer, jsonLd: [faqJsonLd(landingFaq.employer)], ...EP,
   });
 });
 router.get('/consultant', (req, res) => {
   if (req.user && ['employer', 'consultant'].includes(req.user.role)) return res.redirect(baseFor(req.user) + '/dashboard');
   res.render('portal/landing-consultant', {
     title: 'Third Party Consultants & Recruiters — Post Jobs for All Your Clients',
-    metaDescription: 'One login, unlimited employer profiles. Recruiters, staffing agencies and immigration consultants post jobs on behalf of any client for $9.99 + GST per posting per month.',
+    metaDescription: `One login, unlimited employer profiles. Recruiters, staffing agencies and immigration consultants post jobs on behalf of any client for $${$(CP.PRICE)} + GST per posting per month.`,
     extraCss: ['/css/portal.css'], extraJs: ['/js/portal.js'], bodyClass: 'portal-landing',
-    faq: landingFaq.consultant, jsonLd: [faqJsonLd(landingFaq.consultant)], PRICE, GST, TOTAL,
+    faq: landingFaq.consultant, jsonLd: [faqJsonLd(landingFaq.consultant)], ...CP,
   });
 });
 
@@ -155,7 +159,7 @@ function guard(base) {
     res.locals.bodyClass = 'portal';
     res.locals.APP_STATUSES = APP_STATUSES;
     res.locals.APP_STATUS_NAME = APP_STATUS_NAME;
-    res.locals.PRICE = PRICE; res.locals.GST = GST; res.locals.TOTAL = TOTAL;
+    Object.assign(res.locals, pricingFor(req.user.role));
     try { req.profiles = res.locals.profiles = await profilesFor(req.user); } catch (e) { return next(e); }
     next();
   }];
@@ -165,10 +169,11 @@ function guard(base) {
 async function loadJob(req, res, next) {
   try {
     if (!(await jobs.userCanManageJob(req.user, req.params.id))) return res.status(404).render('error', { title: 'Job not found', code: 404, message: 'That posting does not exist or is not yours.', noindex: true });
-    req.job = await db.one(`SELECT j.*, p.company_name, p.slug AS company_slug, p.logo_path,
+    req.job = await db.one(`SELECT j.*, p.company_name, p.operating_name, p.slug AS company_slug, p.logo_path,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.id=$1`, [req.params.id]);
     if (!req.job) return res.status(404).render('error', { title: 'Job not found', code: 404, message: 'That posting does not exist.', noindex: true });
+    req.job.locations = await db.many('SELECT * FROM job_locations WHERE job_id=$1 ORDER BY sort_order, id', [req.job.id]);
     next();
   } catch (e) { next(e); }
 }
@@ -189,14 +194,14 @@ area.get('/dashboard', async (req, res, next) => {
     const recent = await db.many(`SELECT a.id, a.status, a.created_at, u.name, u.email, j.id AS job_id, j.title
       FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id
       WHERE p.owner_user_id=$1 ORDER BY a.created_at DESC LIMIT 6`, [uid]);
-    const active = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, p.company_name,
+    const active = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, p.company_name, p.operating_name,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
       WHERE p.owner_user_id=$1 AND j.status IN ('active','pending_payment','draft') ORDER BY (j.status='active') DESC, j.updated_at DESC LIMIT 8`, [uid]);
     let byCompany = [];
     if (req.user.role === 'consultant') {
-      byCompany = await db.many(`SELECT p.id, p.company_name, p.logo_path,
+      byCompany = await db.many(`SELECT p.id, p.company_name, p.operating_name, p.logo_path,
           count(j.id) FILTER (WHERE j.status='active' AND j.expires_at > now())::int AS active,
           count(j.id) FILTER (WHERE j.status='pending_payment')::int AS pending,
           coalesce(sum((SELECT count(*) FROM applications a WHERE a.job_id=j.id)),0)::int AS applicants,
@@ -303,12 +308,14 @@ area.post('/profiles/:id(\\d+)/unarchive', consultantOnly, loadOwnProfile, async
 function validateProfile(req) {
   const b = req.body || {};
   const values = {
-    company_name: clean(b.company_name, 120), website: clean(b.website, 200), industry: clean(b.industry, 120),
-    company_size: clean(b.company_size, 20), city: clean(b.city, 80), province: clean(b.province, 2).toUpperCase(),
+    company_name: clean(b.company_name, 120), operating_name: clean(b.operating_name, 120), website: clean(b.website, 200), industry: clean(b.industry, 120),
+    company_size: clean(b.company_size, 20), street_address: clean(b.street_address, 200), city: clean(b.city, 80), province: clean(b.province, 2).toUpperCase(), postal_code: clean(b.postal_code, 10).toUpperCase(),
     description: clean(b.description, 4000), contact_name: clean(b.contact_name, 120), contact_email: clean(b.contact_email, 160).toLowerCase(), contact_phone: clean(b.contact_phone, 40),
   };
   const errors = {};
   if (values.company_name.length < 2) errors.company_name = 'Enter the company name.';
+  if (values.postal_code && !C.POSTAL_CODE_RE.test(values.postal_code)) errors.postal_code = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
+  else if (values.postal_code) values.postal_code = h.formatPostal(values.postal_code);
   if (values.website && !/^https?:\/\//i.test(values.website)) values.website = 'https://' + values.website;
   if (values.website && !URL_RE.test(values.website)) errors.website = 'Enter a valid website address (https://…).';
   if (values.company_size && !COMPANY_SIZES.includes(values.company_size)) errors.company_size = 'Choose a company size.';
@@ -320,14 +327,14 @@ function validateProfile(req) {
 async function upsertProfile(req, existing, v) {
   let id;
   if (existing) {
-    await db.query(`UPDATE employer_profiles SET company_name=$2, website=$3, industry=$4, company_size=$5, city=$6, province=$7, description=$8, contact_name=$9, contact_email=$10, contact_phone=$11, updated_at=now() WHERE id=$1`,
-      [existing.id, v.company_name, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null]);
+    await db.query(`UPDATE employer_profiles SET company_name=$2, website=$3, industry=$4, company_size=$5, city=$6, province=$7, description=$8, contact_name=$9, contact_email=$10, contact_phone=$11, operating_name=$12, street_address=$13, postal_code=$14, updated_at=now() WHERE id=$1`,
+      [existing.id, v.company_name, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.street_address || null, v.postal_code || null]);
     id = existing.id;
   } else {
     const slug = await jobs.uniqueProfileSlug(v.company_name);
-    id = (await db.one(`INSERT INTO employer_profiles(owner_user_id, company_name, slug, website, industry, company_size, city, province, description, contact_name, contact_email, contact_phone)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
-      [req.user.id, v.company_name, slug, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null])).id;
+    id = (await db.one(`INSERT INTO employer_profiles(owner_user_id, company_name, slug, website, industry, company_size, city, province, description, contact_name, contact_email, contact_phone, operating_name, street_address, postal_code)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
+      [req.user.id, v.company_name, slug, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.street_address || null, v.postal_code || null])).id;
   }
   if (req.file) {
     try {
@@ -351,7 +358,7 @@ area.get('/jobs', async (req, res, next) => {
     if (status === 'archived') where.push(`j.status IN ('expired','cancelled','inactive')`);
     else if (status !== 'all') where.push(`j.status='${status}'`);
     if (profileId) { params.push(profileId); where.push(`j.employer_profile_id=$${params.length}`); }
-    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, p.company_name,
+    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, p.company_name, p.operating_name,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.status AS sub_status, s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
@@ -364,23 +371,52 @@ area.get('/jobs', async (req, res, next) => {
 });
 
 // ---- job form (new + edit)
+const LOC_FIELDS = ['street_address', 'unit', 'city', 'province', 'postal_code'];
+const blankLoc = () => ({ street_address: '', unit: '', city: '', province: '', postal_code: '' });
+/** Default first work location for a NEW posting = the company profile's address (when it has one). */
+function locFromProfile(p) {
+  if (!p) return blankLoc();
+  return { street_address: p.street_address || '', unit: '', city: p.city || '', province: p.province || '', postal_code: p.postal_code || '' };
+}
 function blankJob(req) {
-  return { title: '', category: '', job_type: 'full_time', work_arrangement: 'on_site', experience_level: '', education: '', city: '', province: '', postal_code: '',
+  const profileId = intOrNull(req.query.profile) || (req.profiles.length === 1 ? req.profiles[0].id : '');
+  const profile = req.profiles.find(p => p.id === profileId);
+  return { title: '', category: '', job_type: 'full_time', work_arrangement: 'on_site', experience_level: '', experience_other: '', education: '', education_other: '',
+    locations: [locFromProfile(profile)],
     salary_min: '', salary_max: '', salary_period: 'year', vacancies: 1, languages: ['English'], language_other: '', skills: '', audiences: [],
-    description: '', requirements: '', benefits: '', apply_email: req.user.email, apply_url: '', noc_code: '', employer_profile_id: intOrNull(req.query.profile) || (req.profiles.length === 1 ? req.profiles[0].id : '') };
+    description: '', requirements: '', benefits: '', apply_email: req.user.email, apply_url: '', noc_code: '', employer_profile_id: profileId };
 }
 function jobToValues(j) {
   const langs = j.languages || [];
   const other = langs.filter(l => !['English', 'French'].includes(l));
-  return Object.assign({}, j, { languages: langs.filter(l => ['English', 'French'].includes(l)).concat(other.length ? ['Other'] : []), language_other: other.join(', '), skills: (j.skills || []).join(', '), salary_min: j.salary_min ?? '', salary_max: j.salary_max ?? '' });
+  const v = Object.assign({}, j, { languages: langs.filter(l => ['English', 'French'].includes(l)).concat(other.length ? ['Other'] : []), language_other: other.join(', '), skills: (j.skills || []).join(', '), salary_min: j.salary_min ?? '', salary_max: j.salary_max ?? '' });
+  // Legacy rows hold free-text education: show it under "Other (specify)".
+  if (v.education && !C.EDUCATION_LEVEL_NAME[v.education]) { v.education_other = v.education_other || v.education; v.education = 'other'; }
+  v.education_other = v.education_other || ''; v.experience_other = v.experience_other || ''; v.experience_level = v.experience_level || ''; v.education = v.education || '';
+  const locs = (j.locations || []).map(l => ({ street_address: l.street_address || '', unit: l.unit || '', city: l.city || '', province: l.province || '', postal_code: l.postal_code || '' }));
+  v.locations = locs.length ? locs : [{ street_address: '', unit: '', city: j.city || '', province: j.province || '', postal_code: j.postal_code || '' }];
+  return v;
 }
+/** Parse the repeatable location blocks: loc_street_address[] / loc_unit[] / loc_city[] / loc_province[] / loc_postal_code[] (parallel arrays). */
+function parseLocations(b) {
+  const cols = Object.fromEntries(LOC_FIELDS.map(f => { let v = b['loc_' + f]; if (v && typeof v === 'object' && !Array.isArray(v)) v = Object.values(v); return [f, arr(v)]; }));
+  const n = Math.min(MAX_LOCATIONS, Math.max(...LOC_FIELDS.map(f => cols[f].length), 0));
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    out.push({ street_address: clean(cols.street_address[i], 200), unit: clean(cols.unit[i], 40), city: clean(cols.city[i], 80), province: clean(cols.province[i], 2).toUpperCase(), postal_code: clean(cols.postal_code[i], 10).toUpperCase() });
+  }
+  return out;
+}
+const locIsBlank = (l) => LOC_FIELDS.every(f => !l[f]);
+const locKey = (l) => [l.street_address.toLowerCase().replace(/\s+/g, ' '), l.unit.toLowerCase().replace(/\s+/g, ''), l.city.toLowerCase().replace(/\s+/g, ' '), l.province, h.formatPostal(l.postal_code)].join('|');
 function validateJob(req) {
   const b = req.body || {};
   const langs = arr(b.languages).filter(l => ['English', 'French', 'Other'].includes(l));
   const values = {
     title: clean(b.title, 120), category: clean(b.category, 60), job_type: clean(b.job_type, 30), work_arrangement: clean(b.work_arrangement, 20),
-    experience_level: clean(b.experience_level, 30), education: clean(b.education, 160), city: clean(b.city, 80), province: clean(b.province, 2).toUpperCase(),
-    postal_code: clean(b.postal_code, 10).toUpperCase(), salary_min: clean(b.salary_min, 12), salary_max: clean(b.salary_max, 12), salary_period: b.salary_period === 'hour' ? 'hour' : 'year',
+    experience_level: clean(b.experience_level, 30), experience_other: clean(b.experience_other, 120), education: clean(b.education, 30), education_other: clean(b.education_other, 160),
+    locations: parseLocations(b),
+    salary_min: clean(b.salary_min, 12), salary_max: clean(b.salary_max, 12), salary_period: C.SALARY_PERIOD_NAME[b.salary_period] ? String(b.salary_period) : 'year',
     vacancies: clean(b.vacancies, 5), languages: langs, language_other: clean(b.language_other, 120), skills: clean(b.skills, 600),
     audiences: arr(b.audiences).filter(a => C.AUDIENCE_NAME[a]), description: clean(b.description, 12000), requirements: clean(b.requirements, 6000), benefits: clean(b.benefits, 6000),
     apply_email: clean(b.apply_email, 160).toLowerCase(), apply_url: clean(b.apply_url, 300), noc_code: clean(b.noc_code, 10),
@@ -395,9 +431,28 @@ function validateJob(req) {
   if (!C.JOB_TYPE_NAME[values.job_type]) errors.job_type = 'Choose a job type.';
   if (!C.WORK_ARRANGEMENT_NAME[values.work_arrangement]) errors.work_arrangement = 'Choose a work arrangement.';
   if (values.experience_level && !C.EXPERIENCE_LEVEL_NAME[values.experience_level]) errors.experience_level = 'Choose an experience level.';
-  if (values.city.length < 2) errors.city = 'Enter the city.';
-  if (!C.PROVINCE_NAME[values.province]) errors.province = 'Choose a province or territory.';
-  if (values.postal_code && !/^[A-Z]\d[A-Z] ?\d[A-Z]\d$/.test(values.postal_code)) errors.postal_code = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
+  if (values.experience_level === 'other' && !values.experience_other) errors.experience_other = 'Describe the experience you are looking for.';
+  if (values.education && !C.EDUCATION_LEVEL_NAME[values.education]) errors.education = 'Choose an education level.';
+  if (values.education === 'other' && !values.education_other) errors.education_other = 'Describe the education or training required.';
+  // Work locations: at least one complete address; every non-blank block must be complete; no duplicates.
+  const locs = [];
+  const seen = new Map();
+  values.locations.forEach((l, i) => {
+    if (locIsBlank(l)) return;
+    const k = (f) => `loc_${i}_${f}`;
+    if (l.street_address.length < 3) errors[k('street_address')] = 'Enter the street address (number and street).';
+    if (l.city.length < 2) errors[k('city')] = 'Enter the city.';
+    if (!C.PROVINCE_NAME[l.province]) errors[k('province')] = 'Choose a province or territory.';
+    if (!l.postal_code) errors[k('postal_code')] = 'Enter the postal code.';
+    else if (!C.POSTAL_CODE_RE.test(l.postal_code)) errors[k('postal_code')] = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
+    else l.postal_code = h.formatPostal(l.postal_code);
+    const key = locKey(l);
+    if (seen.has(key)) errors[k('street_address')] = `This address is the same as location ${seen.get(key) + 1}. Each work location must be different.`;
+    else seen.set(key, locs.length);
+    locs.push(l);
+  });
+  if (!locs.length) errors.locations = 'Add at least one work location — the full address where the person will work.';
+  else if (Object.keys(errors).some(k => k.startsWith('loc_'))) errors.locations = 'Complete every work location (street, city, province and postal code) or clear the block.';
   const smin = values.salary_min === '' ? null : intOrNull(values.salary_min), smax = values.salary_max === '' ? null : intOrNull(values.salary_max);
   if (values.salary_min !== '' && (smin == null || smin < 0)) errors.salary_min = 'Enter a whole number.';
   if (values.salary_max !== '' && (smax == null || smax < 0)) errors.salary_max = 'Enter a whole number.';
@@ -411,14 +466,25 @@ function validateJob(req) {
   if (values.apply_url && !URL_RE.test(values.apply_url)) errors.apply_url = 'Enter a valid link (https://…).';
   if (values.noc_code && !/^\d{4,5}$/.test(values.noc_code)) errors.noc_code = 'NOC codes are 5 digits (2021 NOC).';
   if (!values.employer_profile_id || !req.profiles.some(p => p.id === values.employer_profile_id)) errors.employer_profile_id = req.user.role === 'consultant' ? 'Choose which company this posting is for.' : 'Create your company profile first.';
+  const first = locs[0] || blankLoc();
   const row = {
-    title: values.title, category: values.category, job_type: values.job_type, work_arrangement: values.work_arrangement, experience_level: values.experience_level || null,
-    education: values.education || null, city: values.city, province: values.province, postal_code: values.postal_code || null, salary_min: smin, salary_max: smax, salary_period: values.salary_period,
+    title: values.title, category: values.category, job_type: values.job_type, work_arrangement: values.work_arrangement,
+    experience_level: values.experience_level || null, experience_other: values.experience_level === 'other' ? values.experience_other : null,
+    education: values.education || null, education_other: values.education === 'other' ? values.education_other : null,
+    city: first.city, province: first.province, postal_code: first.postal_code || null, salary_min: smin, salary_max: smax, salary_period: values.salary_period,
     vacancies: vac || 1, languages: langs.filter(l => l !== 'Other').concat(langs.includes('Other') ? values.language_other.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []),
     skills: values.skills.split(/[,;\n]/).map(s => s.trim()).filter(Boolean).slice(0, 30), audiences: values.audiences, description: values.description, requirements: values.requirements || null,
     benefits: values.benefits || null, apply_email: values.apply_email || null, apply_url: values.apply_url || null, noc_code: values.noc_code || null, employer_profile_id: values.employer_profile_id,
   };
-  return { values, errors, row };
+  return { values, errors, row, locations: locs };
+}
+/** Replace a job's work locations inside the caller's transaction (jobs.city/province already come from the first one). */
+async function saveLocations(c, jobId, locs) {
+  await c.query('DELETE FROM job_locations WHERE job_id=$1', [jobId]);
+  for (let i = 0; i < locs.length; i++) {
+    const l = locs[i];
+    await c.query('INSERT INTO job_locations(job_id, street_address, unit, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7)', [jobId, l.street_address || null, l.unit || null, l.city, l.province, l.postal_code || null, i]);
+  }
 }
 const jobFormLocals = (req, extra) => Object.assign({ nav: 'post', errors: {}, COMPANY_SIZES }, extra);
 
@@ -432,7 +498,7 @@ area.get('/jobs/new', (req, res) => {
 area.post('/jobs/new', async (req, res, next) => {
   try {
     if (!req.profiles.length) return res.redirect(res.locals.base + '/jobs/new');
-    const { values, errors, row } = validateJob(req);
+    const { values, errors, row, locations } = validateJob(req);
     if (Object.keys(errors).length) return res.status(422).render('portal/job-form', jobFormLocals(req, { title: 'Post a job', values, errors, job: null }));
     // Double submit guard (double-click / retry): an identical draft created by this user in the last 20 s is reused instead of duplicated.
     // A per-user advisory lock serialises two simultaneous POSTs so the second one sees the first one's row.
@@ -443,13 +509,14 @@ area.post('/jobs/new', async (req, res, next) => {
       const d = (await c.query(`SELECT id, status FROM jobs WHERE created_by=$1 AND employer_profile_id=$2 AND title=$3 AND description=$4 AND created_at > now() - interval '20 seconds' ORDER BY id LIMIT 1`, [req.user.id, row.employer_profile_id, row.title, row.description])).rows[0];
       if (d) return { id: d.id, dup: d };
       const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, created_by, slug, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, 'draft') RETURNING id`, [...cols.map(c => row[c]), req.user.id, slug]);
+      await saveLocations(c, r.rows[0].id, locations);
       return { id: r.rows[0].id, dup: null };
     });
     if (dup) {
       if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(dup.status)) return publish(req, res, next, dup.id);
       return res.redirect(`${res.locals.base}/jobs/${dup.id}`);
     }
-    await auth.audit(req.user.id, 'job.create', 'job', id, { title: row.title, employer_profile_id: row.employer_profile_id });
+    await auth.audit(req.user.id, 'job.create', 'job', id, { title: row.title, employer_profile_id: row.employer_profile_id, locations: locations.length });
     if (req.body.action === 'publish') return publish(req, res, next, id);
     req.flash('success', 'Draft saved. Publish it whenever you are ready.');
     res.redirect(`${res.locals.base}/jobs/${id}`);
@@ -458,12 +525,15 @@ area.post('/jobs/new', async (req, res, next) => {
 area.get('/jobs/:id(\\d+)/edit', loadJob, (req, res) => res.render('portal/job-form', jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', values: jobToValues(req.job), job: req.job })));
 area.post('/jobs/:id(\\d+)/edit', loadJob, async (req, res, next) => {
   try {
-    const { values, errors, row } = validateJob(req);
+    const { values, errors, row, locations } = validateJob(req);
     if (Object.keys(errors).length) return res.status(422).render('portal/job-form', jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', values, errors, job: req.job }));
     if (['active', 'pending_payment'].includes(req.job.status)) row.employer_profile_id = req.job.employer_profile_id; // company is locked once billing exists
     const cols = Object.keys(row);
-    await db.query(`UPDATE jobs SET ${cols.map((c, i) => `${c}=$${i + 2}`).join(', ')}, updated_at=now() WHERE id=$1`, [req.job.id, ...cols.map(c => row[c])]);
-    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status });
+    await db.tx(async (c) => {
+      await c.query(`UPDATE jobs SET ${cols.map((c, i) => `${c}=$${i + 2}`).join(', ')}, updated_at=now() WHERE id=$1`, [req.job.id, ...cols.map(c => row[c])]);
+      await saveLocations(c, req.job.id, locations);
+    });
+    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status, locations: locations.length });
     if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(req.job.status)) return publish(req, res, next, req.job.id);
     req.flash('success', req.job.status === 'active' ? 'Posting updated — changes are live.' : 'Posting updated.');
     res.redirect(`${res.locals.base}/jobs/${req.job.id}`);
@@ -519,12 +589,16 @@ area.post('/jobs/:id(\\d+)/reactivate', loadJob, async (req, res, next) => {
 area.post('/jobs/:id(\\d+)/duplicate', loadJob, async (req, res, next) => {
   try {
     const j = req.job;
-    const cols = ['employer_profile_id', 'description', 'requirements', 'benefits', 'category', 'noc_code', 'job_type', 'work_arrangement', 'experience_level', 'education', 'city', 'province', 'postal_code', 'salary_min', 'salary_max', 'salary_period', 'vacancies', 'languages', 'skills', 'audiences', 'apply_email', 'apply_url'];
+    const cols = ['employer_profile_id', 'description', 'requirements', 'benefits', 'category', 'noc_code', 'job_type', 'work_arrangement', 'experience_level', 'experience_other', 'education', 'education_other', 'city', 'province', 'postal_code', 'salary_min', 'salary_max', 'salary_period', 'vacancies', 'languages', 'skills', 'audiences', 'apply_email', 'apply_url'];
     const title = j.title.replace(/\s*\(copy\)$/i, '') + ' (copy)';
     const slug = await jobs.uniqueJobSlug(j.title, j.city);
-    const id = (await db.one(`INSERT INTO jobs(${cols.join(',')}, title, slug, created_by, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, $${cols.length + 3}, 'draft') RETURNING id`,
-      [...cols.map(c => j[c]), title, slug, req.user.id])).id;
-    await auth.audit(req.user.id, 'job.duplicate', 'job', id, { from: j.id });
+    const id = await db.tx(async (c) => {
+      const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, title, slug, created_by, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, $${cols.length + 3}, 'draft') RETURNING id`,
+        [...cols.map(c => j[c]), title, slug, req.user.id]);
+      await saveLocations(c, r.rows[0].id, j.locations || []);   // every work location comes along
+      return r.rows[0].id;
+    });
+    await auth.audit(req.user.id, 'job.duplicate', 'job', id, { from: j.id, locations: (j.locations || []).length });
     req.flash('success', 'Copy created as a draft. Review it, then publish.');
     res.redirect(`${res.locals.base}/jobs/${id}/edit`);
   } catch (e) { next(e); }
@@ -541,8 +615,8 @@ area.post('/jobs/:id(\\d+)/delete', loadJob, async (req, res, next) => {
 });
 
 // ---- applicants
-const APPLICANT_SQL = `SELECT a.id, a.status, a.created_at, a.updated_at, a.viewed_at, a.employer_notes, a.resume_name, a.resume_path, a.seeker_user_id, a.cover_letter,
-    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name
+const APPLICANT_SQL = `SELECT a.id, a.status, a.created_at, a.updated_at, a.viewed_at, a.employer_notes, a.resume_name, a.resume_path, a.seeker_user_id, a.cover_letter, a.cover_letter_path, a.cover_letter_name,
+    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name, p.operating_name
   FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id`;
 area.get('/jobs/:id(\\d+)/applicants', loadJob, async (req, res, next) => {
   try {
@@ -559,7 +633,7 @@ area.get('/applicants', async (req, res, next) => {
     if (status) { params.push(status); where.push(`a.status=$${params.length}`); }
     if (jobId) { params.push(jobId); where.push(`a.job_id=$${params.length}`); }
     const list = await db.many(`${APPLICANT_SQL} WHERE ${where.join(' AND ')} ORDER BY a.created_at DESC LIMIT 300`, params);
-    const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
+    const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, p.operating_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
     res.render('portal/applicants', { title: 'Applicants', nav: 'applicants', list, job: null, jobsList, filters: { status, job: jobId }, scope: 'all', returnTo: req.originalUrl });
   } catch (e) { next(e); }
 });
@@ -573,7 +647,7 @@ async function loadApplication(req, res, next) {
 }
 area.post('/applications/:id(\\d+)/status', loadApplication, async (req, res, next) => {
   try {
-    const a = req.application;
+    const a = Object.assign({}, req.application, { company_name: h.displayCompany(req.application) });   // seekers know the operating name
     const status = APP_STATUSES.includes(req.body.status) ? req.body.status : a.status;
     const notes = clean(req.body.employer_notes, 4000) || null;
     const changed = status !== a.status;
@@ -606,6 +680,18 @@ area.get('/applications/:id(\\d+)/resume', loadApplication, async (req, res, nex
     if (!a.viewed_at) await db.query(`UPDATE applications SET viewed_at=now(), status = CASE WHEN status='submitted' THEN 'viewed'::application_status ELSE status END, updated_at=now() WHERE id=$1`, [a.id]);
     await auth.audit(req.user.id, 'application.resume_download', 'application', a.id, null);
     res.download(abs, a.resume_name || path.basename(a.resume_path), (err) => { if (err && !res.headersSent) next(err); });
+  } catch (e) { next(e); }
+});
+/** Cover sheet uploaded with the application (optional; stored under UPLOAD_DIR/covers/ by the apply flow). Owner only; 404 when none. */
+area.get('/applications/:id(\\d+)/cover', loadApplication, async (req, res, next) => {
+  try {
+    const a = req.application;
+    if (!a.cover_letter_path) return res.status(404).render('error', { title: 'No cover sheet', code: 404, message: 'This applicant did not attach a cover sheet.', noindex: true });
+    const abs = path.join(UPLOAD_DIR, a.cover_letter_path);
+    if (!abs.startsWith(UPLOAD_DIR + path.sep)) return res.status(404).end();
+    if (!a.viewed_at) await db.query(`UPDATE applications SET viewed_at=now(), status = CASE WHEN status='submitted' THEN 'viewed'::application_status ELSE status END, updated_at=now() WHERE id=$1`, [a.id]);
+    await auth.audit(req.user.id, 'application.cover_download', 'application', a.id, null);
+    res.download(abs, a.cover_letter_name || path.basename(a.cover_letter_path), (err) => { if (err && !res.headersSent) { if (err.code === 'ENOENT') return res.status(404).render('error', { title: 'Cover sheet missing', code: 404, message: 'The cover sheet file is no longer available.', noindex: true }); next(err); } });
   } catch (e) { next(e); }
 });
 

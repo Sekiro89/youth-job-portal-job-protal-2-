@@ -203,3 +203,32 @@
   .applicant-row .stack-tight, .applicant-row .cluster { justify-items: start; }
 }
 @media (max-width: 639px) { .table--stack td[data-label="Status"] .status-form, .table--stack td[data-label="Resume"] > * { width: 100%; min-width: 0; } .table--stack td[data-label="Resume"] { flex-direction: column; align-items: flex-start; gap: 4px; } }
+
+/* ---------- client round 1 (2026-09-09): work locations, "other" sub-fields, cover sheets ---------- */
+.hint--lead { margin: -6px 0 0; font-size: .875rem; }
+.error--block { padding: 10px 12px; border-radius: 10px; background: var(--cc-red-100); color: var(--kds-danger); font-weight: 500; font-size: .875rem; }
+.loc-list { display: grid; gap: 12px; }
+.loc-block { border: 1px solid var(--kds-border); border-radius: 12px; padding: 12px; margin: 0; min-width: 0; display: grid; gap: 12px; background: var(--cc-surface); }
+.loc-block--invalid { border-color: var(--kds-danger); box-shadow: inset 3px 0 0 var(--kds-danger); }
+.loc-block__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 0 4px; font: 700 .95rem var(--cc-font-display); color: var(--cc-navy); }
+.loc-block__note { font-weight: 400; font-family: var(--cc-font-body, inherit); }
+.loc-block__actions { display: flex; justify-content: flex-end; }
+.loc-block__actions:has(> [hidden]) { display: none; }
+.loc-add { display: grid; gap: 8px; justify-items: start; }
+@media (min-width: 640px) { .loc-row--unit { grid-template-columns: minmax(120px, 1fr) 2fr; } }
+.field--sub { margin-top: 2px; padding: 10px; border-radius: 10px; background: var(--cc-surface); }
+.field--sub label { font-size: .85rem; }
+/* profile: address row */
+.addr-row { grid-template-columns: 1fr; }
+@media (min-width: 640px) { .addr-row { grid-template-columns: 2fr 1fr; } }
+/* job detail: company block + addresses */
+.company-head { display: grid; gap: 2px; }
+.company-head .eyebrow { margin: 0; }
+.legal-note { color: var(--kds-fg-muted); font-size: .8125rem; }
+.addr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.addr-list li { padding-left: 20px; position: relative; }
+.addr-list li::before { content: "📍"; position: absolute; left: 0; top: 0; font-size: .8rem; }
+/* applicants: document links */
+.doc-links { display: grid; gap: 6px; justify-items: start; }
+.doc-links .small { max-width: 220px; overflow-wrap: anywhere; }
+@media (max-width: 639px) { .doc-links, .doc-links > * { width: 100%; } .doc-links .small { max-width: none; } }

@@ -2,7 +2,7 @@
   <div class="container">
     <p class="eyebrow">Step 2 of 2 · Payment</p>
     <h1>Post your job</h1>
-    <p class="muted">One monthly fee per posting. It renews automatically until you cancel.</p>
+    <p class="muted">One monthly fee per posting at the <%= rateLabel.toLowerCase() %>. It renews automatically until you cancel.</p>
   </div>
 </div>
 <section class="container section-pad bill-checkout">
@@ -16,13 +16,13 @@
     </div>
     <table class="bill-lines" aria-label="Price breakdown">
       <tbody>
-        <tr><td>Monthly posting fee</td><td class="bill-lines__amt"><%= h.money(pricing.price_cents) %></td></tr>
-        <tr><td><%= pricing.gst_label %></td><td class="bill-lines__amt"><%= h.money(pricing.tax_cents) %></td></tr>
-        <tr class="bill-lines__total"><td>Total per month</td><td class="bill-lines__amt"><%= h.money(pricing.total_cents) %> <span class="bill-cur">CAD</span></td></tr>
+        <tr><td>Monthly posting fee <span class="small muted">(<%= rateLabel %>)</span></td><td class="bill-lines__amt"><%= h.money(sub.price_cents) %></td></tr>
+        <tr><td><%= pricing.gst_label %></td><td class="bill-lines__amt"><%= h.money(sub.tax_cents) %></td></tr>
+        <tr class="bill-lines__total"><td>Total per month</td><td class="bill-lines__amt"><%= h.money(sub.total_cents) %> <span class="bill-cur">CAD</span></td></tr>
       </tbody>
     </table>
     <p class="bill-renew"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-      <span>Renews automatically every month until you cancel. Cancel any time from <a href="/billing">Billing</a> — no fees, no notice period.</span></p>
+      <span>Renews automatically every month at <%= h.money(sub.total_cents) %> — the price you see today, locked in for this posting — until you cancel. Cancel any time from <a href="/billing">Billing</a> — no fees, no notice period.</span></p>
     <form method="post" action="/billing/checkout/<%= job.id %>" class="bill-cta">
       <button type="submit" class="kds-btn kds-btn--brand kds-btn--block kds-btn--lg" data-busy="Redirecting…">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -43,7 +43,7 @@
         <li>Shown to matching job seekers and sent as job alerts</li>
         <li>Unlimited applicants, managed from your dashboard</li>
         <li>Edit the posting any time while it is live</li>
-        <li>Itemised receipt with GST for every payment</li>
+        <li>Itemised GST receipt for every payment — view or download as PDF any time from Billing</li>
       </ul>
     </div>
     <div class="card card--flat">
@@ -54,7 +54,7 @@
         <dt>Company</dt><dd><%= job.company_name %></dd>
         <dt>Currency</dt><dd>Canadian dollars (CAD)</dd>
       </dl>
-      <p class="small muted">Receipts are emailed to this address and kept under <a href="/billing">Billing</a>.</p>
+      <p class="small muted">Receipts are emailed to this address; all receipts are available from your login under <a href="/billing">Billing</a>.</p>
     </div>
   </aside>
 </section>

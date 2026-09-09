@@ -1,7 +1,7 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting ($9.99 + 5% GST = $10.49 CAD per month). Receipts open in a printable page.</p></div>
+    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting (employers $14.99 + 5% GST = $15.74, consultants $9.99 + 5% GST = $10.49 CAD per posting per month). Receipts open in a printable page.</p></div>
 
     <div class="stats">
       <div class="stat"><div class="stat__value"><%= h.money(totals.total) %></div><div class="stat__label">Collected, all time (<%= totals.n %> payments)</div></div>

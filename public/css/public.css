@@ -251,3 +251,20 @@ body.has-applybar { padding-bottom: 84px; }
 
 /* ---------- print ---------- */
 @media print { .applybar, .share, .apply-card__save, .related, .filters { display: none !important; } body.has-applybar { padding-bottom: 0; } }
+
+/* ---------- client round 1 (2026-09-09): operating name, work locations, reference postings, print ---------- */
+.print-only { display: none !important; }              /* revealed by /css/print.css (media="print") */
+.job-head__legal { margin: -6px 0 12px; }
+.job-head__more, .job-card__more { color: var(--kds-fg-muted); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
+.job-head__ref { margin: 0 0 12px; }
+.badge--ref { white-space: normal; text-align: left; line-height: 1.35; display: inline-block; max-width: 100%; }
+.locations { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.locations__item { display: flex; gap: 10px; align-items: flex-start; min-width: 0; padding: 10px 12px; border: 1px solid var(--kds-border); border-radius: 10px; background: #fff; }
+.locations__item svg { flex: none; margin-top: 2px; color: var(--cc-red); }
+.locations__addr { font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
+.locations__note { margin: 8px 0 0; }
+.apply-card__print { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.job-card__ref { margin: 8px 0 0; padding: 6px 10px; border-left: 3px solid var(--cc-teal); background: var(--cc-surface); color: var(--kds-fg-muted); border-radius: 0 8px 8px 0; }
+.co-head__text { min-width: 0; }
+.co-head__legal { margin: -4px 0 6px; }
+.co-head__addr { overflow-wrap: anywhere; }

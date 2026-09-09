@@ -47,7 +47,7 @@
           <ul class="list-plain">
             <% applications.forEach(a => { %>
               <li class="list-plain__item">
-                <div><% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><%= a.title %></a><% } else { %><span><%= a.title %></span><% } %><div class="small muted"><%= a.company_name %> · <%= h.formatDate(a.created_at) %></div></div>
+                <div><% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><%= a.title %></a><% } else { %><span><%= a.title %></span><% } %><div class="small muted"><%= h.displayCompany(a) %> · <%= h.formatDate(a.created_at) %></div></div>
                 <span class="badge badge--<%= ({submitted:'',viewed:'teal',shortlisted:'positive',rejected:'danger',hired:'positive'})[a.status] %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span>
               </li>
             <% }) %>

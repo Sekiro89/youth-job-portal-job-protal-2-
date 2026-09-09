@@ -302,7 +302,8 @@ router.get('/admin/outbox/:id', wrap(async (req, res, next) => {
 // ---------------------------------------------------------------- settings
 const SETTING_DEFS = [
   { key: 'support_email', label: 'Support email (where Contact Us messages go)', env: 'SUPPORT_EMAIL', type: 'email' },
-  { key: 'posting_price_cents', label: 'Posting price per month, in cents (before GST)', env: 'POSTING_PRICE_CENTS', type: 'int' },
+  { key: 'employer_price_cents', label: 'Employer posting price per month, in cents (before GST)', env: 'EMPLOYER_PRICE_CENTS', type: 'int' },
+  { key: 'consultant_price_cents', label: 'Consultant posting price per month, in cents (before GST)', env: 'CONSULTANT_PRICE_CENTS', type: 'int' },
   { key: 'gst_rate', label: 'GST rate (0.05 = 5%)', env: 'GST_RATE', type: 'rate' },
 ];
 async function loadSettings() {

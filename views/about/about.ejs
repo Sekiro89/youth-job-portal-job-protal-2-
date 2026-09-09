@@ -19,11 +19,12 @@ const toc = [
     <p class="lead about-hero__lead">Canada Careers is a Canadian job bank built for everyone who works here — professionals, new immigrants, Indigenous peoples, refugees and youth — and for the employers and third-party consultants who hire them. Our promise is in our tagline: <strong>Jobs for every Canadian. Opportunities for all.</strong></p>
     <div class="about-hero__cta">
       <a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs across Canada</a>
-      <a class="kds-btn kds-btn--accent" href="/employer">Post a job — <%= price.base %>/month</a>
+      <a class="kds-btn kds-btn--accent" href="/employer">Post a job — <%= price.employer.base %>/month + GST</a>
       <a class="kds-btn kds-btn--ghost" href="/jobseeker">Join free as a job seeker</a>
     </div>
     <ul class="about-facts" aria-label="Canada Careers at a glance">
-      <li><strong><%= price.base %> + GST</strong><span>per posting, per month</span></li>
+      <li><strong><%= price.employer.base %> + GST</strong><span>per employer posting, per month (<%= price.employer.total %>)</span></li>
+      <li><strong><%= price.consultant.base %> + GST</strong><span>per consultant posting, per month (<%= price.consultant.total %>)</span></li>
       <li><strong>5 audiences</strong><span>one inclusive job bank</span></li>
       <li><strong>13</strong><span>provinces &amp; territories</span></li>
       <li><strong><%= C.CATEGORIES.length %></strong><span>job categories</span></li>
@@ -48,17 +49,19 @@ const toc = [
     <section class="about-section prose" id="mission" aria-labelledby="mission-h">
       <h2 id="mission-h">Our mission: a job bank in Canada that leaves nobody out</h2>
       <p>Canada’s labour market is one of the most diverse in the world, yet most job boards are built around a single kind of candidate. Canada Careers was created to be different. We are a <strong>Canadian job bank</strong> designed from the start for the people who are too often overlooked in hiring — newcomers whose credentials are still being recognised, Indigenous job seekers far from any head office, refugees rebuilding a career, young people looking for a first role — alongside professionals who simply want a clear, honest place to find their next job in Canada.</p>
-      <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price to post a job. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
+      <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price per posting — <%= price.employer.base %> + GST for employers, <%= price.consultant.base %> + GST for consultants posting on behalf of clients. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
       <p>Our name says exactly what we do: <strong>Canada Careers</strong> connects careers with Canadians, from Toronto and Vancouver to the smallest community in Nunavut.</p>
     </section>
 
     <%- include('_audiences', { cities }) %>
 
     <section class="about-section prose" id="employers" aria-labelledby="employers-h">
-      <h2 id="employers-h">For employers: post a job in Canada for <%= price.base %> a month</h2>
+      <h2 id="employers-h">For employers: post a job in Canada for <%= price.employer.base %> a month + GST</h2>
       <p>Canada Careers is a <strong>job board for employers in Canada</strong> of every size — a family restaurant in Halifax, a trucking company in Winnipeg, a hospital network in Ontario or a software start-up in Vancouver. Create an employer account, describe your company once, and post as many jobs as you need.</p>
       <h3>Transparent job posting pricing</h3>
-      <p>A <strong><%= price.base %> job posting</strong> is exactly that: <strong><%= price.base %> CAD per posting per month, plus 5% GST (<%= price.gst %>)</strong>, for a total of <strong><%= price.total %> CAD</strong>. The price is the same for every business in every province, and every payment produces a numbered receipt for your books.</p>
+      <p>A <strong><%= price.employer.base %> job posting</strong> is exactly that: <strong><%= price.employer.base %> CAD per posting per month, plus 5% GST (<%= price.employer.gst %>)</strong>, for a total of <strong><%= price.employer.total %> CAD</strong>. The price is the same for every business in every province, it is locked in for the life of the posting, and every payment produces a numbered GST receipt you can view or download as a PDF from Billing — all receipts are available from your login.</p>
+      <h3>What every posting includes</h3>
+      <p>Postings on Canada Careers follow the Job Bank format job seekers already trust: at least one <strong>full work address</strong> (street, city, province and postal code — and a posting may list <strong>several addresses</strong> when the job is offered at more than one site), your <strong>operating name</strong> shown first with the legal company name beneath it, salary with its pay period, education and experience from standard lists, an industry category and an optional NOC code. Job seekers can print any posting to a single clean sheet.</p>
       <h3>Monthly renewal you control</h3>
       <p>Each posting renews automatically every month so a live job never quietly disappears mid-search. Cancel at any time from your dashboard — at the end of the current paid month (the job stays live until then) or immediately. No contracts, no cancellation fees.</p>
       <h3>What happens to expired, cancelled and inactive postings</h3>
@@ -69,7 +72,7 @@ const toc = [
     <section class="about-section prose" id="consultants" aria-labelledby="consultants-h">
       <h2 id="consultants-h">For third-party consultants and recruiters</h2>
       <p>Staffing agencies, recruitment firms, immigration consultants helping newcomers find work, and HR consultants hiring on behalf of clients use Canada Careers as a <strong>third-party recruiter job posting</strong> platform. A Third Party Consultant account holds <strong>many employer profiles</strong> — one for each client — so you can post, renew and manage jobs for all of your clients from a single sign-in, with applicants organised by client company.</p>
-      <p>Consultants pay the same flat rate as employers: <%= price.base %> plus GST per posting per month, billed per posting and cancellable at any time. Your billing page shows every subscription and payment across all of your profiles in one place.</p>
+      <p>Consultants pay a dedicated consultant rate: <strong><%= price.consultant.base %> CAD per posting per month plus 5% GST (<%= price.consultant.gst %>), <%= price.consultant.total %> in total</strong> — billed per posting and cancellable at any time. Each client profile carries the client’s operating name, so job seekers see the business they know, never your agency. Your billing page shows every subscription and receipt across all of your profiles in one place, each downloadable as a PDF.</p>
       <p><a href="/consultant">See how consultant accounts work →</a></p>
     </section>
 
@@ -87,8 +90,8 @@ const toc = [
           <h3>Posting a job (employers and consultants)</h3>
           <ol class="about-steps__list">
             <li><strong>Create your account.</strong> Employers add their company profile; consultants add a profile for each client they represent.</li>
-            <li><strong>Write the posting.</strong> Title, description, category, location, job type, salary range and the audiences you want to reach.</li>
-            <li><strong>Publish and pay.</strong> Check out for <%= price.base %> + GST. The job goes live immediately, matching job seekers are alerted, and the posting renews monthly until you cancel.</li>
+            <li><strong>Write the posting.</strong> Title, description, category, full work address (one or several), job type, salary with its period and the audiences you want to reach.</li>
+            <li><strong>Publish and pay.</strong> Check out for <%= price.employer.base %> + GST as an employer or <%= price.consultant.base %> + GST as a third-party consultant. The job goes live immediately, matching job seekers are alerted, and the posting renews monthly until you cancel.</li>
           </ol>
         </div>
         <div class="about-steps__col">
@@ -135,7 +138,7 @@ const toc = [
       <h2 id="close-h">Jobs for every Canadian. Opportunities for all.</h2>
       <p class="lead">Whether you are hiring in Calgary, recruiting for clients across Quebec, or looking for your first job in Ottawa, Canada Careers is ready for you.</p>
       <div class="about-hero__cta">
-        <a class="kds-btn kds-btn--accent" href="/employer">Post a job — <%= price.base %> + GST</a>
+        <a class="kds-btn kds-btn--accent" href="/employer">Post a job — <%= price.employer.base %> + GST</a>
         <a class="kds-btn kds-btn--brand" href="/jobseeker">Sign up free</a>
         <a class="kds-btn kds-btn--ghost" href="/contact">Contact us</a>
       </div>

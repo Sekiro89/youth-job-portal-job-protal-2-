@@ -16,6 +16,7 @@ const matching = require('../lib/matching');
 const router = express.Router();
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'data', 'uploads');
 const RESUME_DIR = path.join(UPLOAD_DIR, 'resumes');
+const COVER_DIR = path.join(UPLOAD_DIR, 'covers');
 const EXT_OK = new Set(Object.values(C.RESUME_MIME));
 const COVER_MAX = 3000;
 
@@ -35,21 +36,29 @@ function resumeExt(file) {
   if (EXT_OK.has(byName) && (byMime || file.mimetype === 'application/octet-stream')) return byName;
   return null;
 }
-/** multer in memory so validation errors never leave orphan files on disk. */
+/** multer in memory so validation errors never leave orphan files on disk. Two optional fields: `resume` and `cover_file`
+ *  (the apply form). Errors land on req.uploadError (resume) / req.coverError (cover sheet) keyed by field name. */
+const FILE_LABEL = { resume: 'resume', cover_file: 'cover sheet' };
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: C.RESUME_MAX_BYTES, files: 1 },
+  limits: { fileSize: C.RESUME_MAX_BYTES, files: 2 },
   fileFilter: (req, file, cb) => {
     if (resumeExt(file)) return cb(null, true);
-    req.uploadError = 'That file type is not accepted. Please upload a PDF, DOC or DOCX resume.';
+    setUploadError(req, file.fieldname, `That file type is not accepted. Please upload a PDF, DOC or DOCX ${FILE_LABEL[file.fieldname] || 'file'}.`);
     cb(null, false);
   },
-}).single('resume');
+}).fields([{ name: 'resume', maxCount: 1 }, { name: 'cover_file', maxCount: 1 }]);
+function setUploadError(req, field, msg) { if (field === 'cover_file') req.coverError = msg; else req.uploadError = msg; }
 function resumeUpload(req, res, next) {
   upload(req, res, (err) => {
-    if (err && err.code === 'LIMIT_FILE_SIZE') req.uploadError = `Resume must be ${Math.round(C.RESUME_MAX_BYTES / 1024 / 1024)} MB or smaller.`;
-    else if (err) req.uploadError = 'We could not read that file. Please upload a PDF, DOC or DOCX.';
+    const field = (err && err.field) || 'resume';
+    if (err && err.code === 'LIMIT_FILE_SIZE') setUploadError(req, field, `${field === 'cover_file' ? 'Cover sheet' : 'Resume'} must be ${Math.round(C.RESUME_MAX_BYTES / 1024 / 1024)} MB or smaller.`);
+    else if (err) setUploadError(req, field, 'We could not read that file. Please upload a PDF, DOC or DOCX.');
+    // normalise multer's fields() shape to the single-file shape the rest of this router uses
+    req.file = (req.files && req.files.resume && req.files.resume[0]) || null;
+    req.coverFile = (req.files && req.files.cover_file && req.files.cover_file[0]) || null;
     checkResumeFile(req);
+    checkCoverFile(req);
     next();
   });
 }
@@ -67,16 +76,23 @@ function checkResumeFile(req) {
   if (!req.file.buffer || !req.file.buffer.length) { req.uploadError = 'That file is empty. Please upload your resume as a PDF, DOC or DOCX.'; req.file = null; return; }
   if (!resumeMagicOk(req.file)) { req.uploadError = 'That file does not look like a real PDF, DOC or DOCX. Please export your resume again and upload it.'; req.file = null; }
 }
-/** Write an in-memory upload to resumes/<userId>-<rand>.<ext>; returns { path (relative), name }. */
-function storeResume(userId, file) {
+function checkCoverFile(req) {
+  if (req.coverError || !req.coverFile) return;
+  if (!req.coverFile.buffer || !req.coverFile.buffer.length) { req.coverError = 'That cover sheet is empty. Please upload it as a PDF, DOC or DOCX.'; req.coverFile = null; return; }
+  if (!resumeMagicOk(req.coverFile)) { req.coverError = 'That cover sheet does not look like a real PDF, DOC or DOCX. Please export it again and upload it.'; req.coverFile = null; }
+}
+/** Write an in-memory upload to <kind>/<userId>-<rand>.<ext> (kind = resumes | covers); returns { path (relative), name }. */
+function storeUpload(userId, file, kind) {
   const ext = resumeExt(file);
-  fs.mkdirSync(RESUME_DIR, { recursive: true });
-  const rel = path.posix.join('resumes', `${userId}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  fs.mkdirSync(kind === 'covers' ? COVER_DIR : RESUME_DIR, { recursive: true });
+  const rel = path.posix.join(kind, `${userId}-${crypto.randomBytes(6).toString('hex')}${ext}`);
   fs.writeFileSync(path.join(UPLOAD_DIR, rel), file.buffer);
   let orig = file.originalname || '';
   try { orig = Buffer.from(orig, 'latin1').toString('utf8'); } catch (_) {}
-  return { path: rel, name: clean(orig, 120) || `resume${ext}` };
+  return { path: rel, name: clean(orig, 120) || `${kind === 'covers' ? 'cover-sheet' : 'resume'}${ext}` };
 }
+const storeResume = (userId, file) => storeUpload(userId, file, 'resumes');
+const storeCover = (userId, file) => storeUpload(userId, file, 'covers');
 /** Delete an old resume file — unless an application still references it (employers must keep their copy). */
 async function removeFile(rel) {
   if (!rel || rel.startsWith('seed/')) return;
@@ -85,6 +101,16 @@ async function removeFile(rel) {
   if (await db.one('SELECT 1 FROM applications WHERE resume_path=$1', [rel])) return;
   await fs.promises.unlink(abs).catch(() => {});
 }
+/** Resolve a stored upload (resumes/… or covers/…) to an absolute path inside UPLOAD_DIR, or null. */
+function uploadAbs(rel, kind) {
+  if (!rel) return null;
+  const abs = path.join(UPLOAD_DIR, rel);
+  const root = kind ? path.join(UPLOAD_DIR, kind) + path.sep : UPLOAD_DIR + path.sep;
+  return abs.startsWith(root) && fs.existsSync(abs) ? abs : null;
+}
+/** Locations of a job, primary first. Imported reference postings may have only city/province. */
+const jobLocations = (jobId) => db.many('SELECT * FROM job_locations WHERE job_id=$1 ORDER BY sort_order, id', [jobId]);
+const LOCATION_COUNT = `(SELECT count(*)::int FROM job_locations l WHERE l.job_id = jobs.id) AS location_count`;
 
 async function getProfile(userId) {
   return (await db.one('SELECT * FROM seeker_profiles WHERE user_id=$1', [userId])) || {
@@ -106,7 +132,7 @@ function completeness(p) {
   return { items, done, total: items.length, percent: Math.round((done / items.length) * 100) };
 }
 async function publicJob(slug) {
-  return db.one(`SELECT jobs.*, ep.company_name, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id
+  return db.one(`SELECT jobs.*, ep.company_name, ep.operating_name, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id, ${LOCATION_COUNT}
                  FROM jobs JOIN employer_profiles ep ON ep.id = jobs.employer_profile_id WHERE jobs.slug=$1 AND ${PUBLIC_WHERE}`, [slug]);
 }
 const backTo = (req, fallback) => {
@@ -172,7 +198,7 @@ router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
       getProfile(uid),
       matching.matchesForSeeker(uid, 6),
       matching.countMatchesForSeeker(uid),
-      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ep.company_name, (${PUBLIC_WHERE}) AS is_public
+      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ep.company_name, ep.operating_name, (${PUBLIC_WHERE}) AS is_public
                FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
                WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]),
       db.many('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 5', [uid]),
@@ -255,41 +281,49 @@ router.get('/jobseeker/resume', seekerOnly, async (req, res, next) => {
 });
 
 // ------------------------------------------------------------------ 4. apply
+const applyLocals = (res) => { res.locals.noindex = true; res.locals.extraCss = ['/css/seeker.css']; res.locals.extraJs = ['/js/seeker.js']; };
+/** Loads the public job and decides who may apply. Guests see an in-page interstitial (GET) or are sent to sign in (POST);
+ *  employers/consultants get a clear in-page message. Seekers continue. */
 async function applyGate(req, res, next) {
   try {
     const job = await publicJob(req.params.slug);
     if (!job) return next('route');  // falls through to the public router / 404
+    req.job = job; applyLocals(res);
+    const applyPath = `/jobs/${job.slug}/apply`;
     if (!req.user) {
-      req.session.returnTo = `/jobs/${job.slug}/apply`;
-      req.flash('info', 'Sign in or create a free job seeker account to apply.');
-      return res.redirect('/login');
+      req.session.returnTo = applyPath;   // login + seeker signup both honour returnTo (lib/auth.login)
+      if (req.method !== 'GET') { req.flash('info', 'Sign in or create a free job seeker account to apply.'); return res.redirect(`/login?next=${encodeURIComponent(applyPath)}`); }
+      job.locations = await jobLocations(job.id);
+      return res.render('seeker/apply', { title: `Apply — ${job.title}`, job, gate: 'guest', returnTo: applyPath });
     }
     if (req.user.role !== 'seeker') {
-      req.flash('error', 'Only job seeker accounts can apply to postings.');
-      return res.redirect(`/jobs/${job.slug}`);
+      job.locations = await jobLocations(job.id);
+      return res.status(403).render('seeker/apply', { title: `Apply — ${job.title}`, job, gate: 'role' });
     }
-    req.job = job;
-    res.locals.noindex = true; res.locals.extraCss = ['/css/seeker.css']; res.locals.extraJs = ['/js/seeker.js'];
     next();
   } catch (e) { next(e); }
 }
 function renderApply(res, req, extra) {
-  return res.render('seeker/apply', Object.assign({ title: `Apply — ${req.job.title}`, job: req.job, bodyClass: 'has-sticky-submit', values: { cover_letter: '', resume_choice: 'profile', save_to_profile: true }, errors: {} }, extra));
+  return res.render('seeker/apply', Object.assign({ title: `Apply — ${req.job.title}`, job: req.job, gate: null, bodyClass: 'has-sticky-submit', values: { cover_letter: '', resume_choice: 'profile', save_to_profile: true }, errors: {} }, extra));
 }
 router.get('/jobs/:slug/apply', applyGate, async (req, res, next) => {
   try {
-    const [profile, existing] = await Promise.all([getProfile(req.user.id), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [req.job.id, req.user.id])]);
+    const [profile, existing, locations] = await Promise.all([getProfile(req.user.id), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [req.job.id, req.user.id]), jobLocations(req.job.id)]);
+    req.job.locations = locations;
     renderApply(res, req, { profile, existing, values: { cover_letter: '', resume_choice: profile.resume_path ? 'profile' : 'upload', save_to_profile: true } });
   } catch (e) { next(e); }
 });
 router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next) => {
   try {
     const uid = req.user.id; const job = req.job;
-    const [profile, existing] = await Promise.all([getProfile(uid), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [job.id, uid])]);
+    const [profile, existing, locations] = await Promise.all([getProfile(uid), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [job.id, uid]), jobLocations(job.id)]);
+    job.locations = locations;
+    const company = h.displayCompany(job);
     if (existing) { req.flash('info', `You already applied to this job on ${h.formatDate(existing.created_at)}.`); return res.redirect('/jobseeker/applications'); }
     const values = { cover_letter: clean(req.body.cover_letter, COVER_MAX + 1), resume_choice: req.body.resume_choice === 'upload' ? 'upload' : 'profile', save_to_profile: !!req.body.save_to_profile };
     const errors = {};
     if (values.cover_letter.length > COVER_MAX) errors.cover_letter = `Cover letter must be ${COVER_MAX} characters or fewer.`;
+    if (req.coverError) errors.cover_file = req.coverError;
     if (values.resume_choice === 'profile' && !profile.resume_path) { values.resume_choice = 'upload'; errors.resume = 'You have no resume on file yet — upload one to apply.'; }
     else if (values.resume_choice === 'upload') {
       if (req.uploadError) errors.resume = req.uploadError;
@@ -305,30 +339,33 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
         if (profile.resume_path) await removeFile(profile.resume_path);
       }
     }
-    const app = await db.one('INSERT INTO applications(job_id, seeker_user_id, resume_path, resume_name, cover_letter) VALUES ($1,$2,$3,$4,$5) RETURNING id, created_at',
-      [job.id, uid, resume.path, resume.name, values.cover_letter || null]);
+    const cover = req.coverFile ? storeCover(uid, req.coverFile) : { path: null, name: null };
+    const app = await db.one('INSERT INTO applications(job_id, seeker_user_id, resume_path, resume_name, cover_letter, cover_letter_path, cover_letter_name) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at',
+      [job.id, uid, resume.path, resume.name, values.cover_letter || null, cover.path, cover.name]);
     await db.query(`INSERT INTO notifications(user_id, type, title, body, link, job_id) VALUES ($1,'application_update',$2,$3,'/jobseeker/applications',$4)`,
-      [uid, 'Application sent', `Your application for ${job.title} at ${job.company_name} was sent.`, job.id]);
+      [uid, 'Application sent', `Your application for ${job.title} at ${company} was sent.`, job.id]);
     const jobLink = `${mail.PUBLIC_URL}/jobs/${job.slug}`;
+    const attached = `your resume (<strong>${h.escapeHtml(resume.name)}</strong>)${cover.path ? ` and cover sheet (<strong>${h.escapeHtml(cover.name)}</strong>)` : ''}`;
     await mail.send({
       to: req.user.email,
-      subject: `Application sent: ${job.title} at ${job.company_name}`,
-      html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and resume (<strong>${h.escapeHtml(resume.name)}</strong>) to <strong>${h.escapeHtml(job.company_name)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${h.escapeHtml(h.location(job))}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
-      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${job.company_name} was sent with resume ${resume.name}.\n${jobLink}\n\nTrack it: ${mail.PUBLIC_URL}/jobseeker/applications`,
+      subject: `Application sent: ${job.title} at ${company}`,
+      html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and ${attached} to <strong>${h.escapeHtml(company)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${h.escapeHtml(h.location(job))}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
+      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${company} was sent with resume ${resume.name}${cover.path ? ` and cover sheet ${cover.name}` : ''}.\n${jobLink}\n\nTrack it: ${mail.PUBLIC_URL}/jobseeker/applications`,
     });
     const employerTo = job.apply_email || job.contact_email || (await db.one('SELECT email FROM users WHERE id=$1', [job.owner_user_id]) || {}).email;
     if (employerTo) {
       const applicantsHref = `${mail.PUBLIC_URL}/employer/jobs/${job.id}/applicants`;
-      const cover = values.cover_letter ? `<div style="border-left:3px solid #E1E7EF;padding-left:12px;margin:12px 0">${h.paragraphs(values.cover_letter)}</div>` : '';
+      const note = values.cover_letter ? `<div style="border-left:3px solid #E1E7EF;padding-left:12px;margin:12px 0">${h.paragraphs(values.cover_letter)}</div>` : '';
+      const files = `Their resume (<strong>${h.escapeHtml(resume.name)}</strong>)${cover.path ? ` and cover sheet (<strong>${h.escapeHtml(cover.name)}</strong>) are` : ' is'} available on your applicants page.`;
       await mail.send({
         to: employerTo,
         subject: `New applicant for ${job.title}`,
-        html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(job.company_name)}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${cover}<p>Their resume (<strong>${h.escapeHtml(resume.name)}</strong>) is available on your applicants page.</p>`, { href: applicantsHref, label: 'View applicants' }),
-        text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${job.company_name}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}View applicants: ${applicantsHref}`,
+        html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(company)}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${note}<p>${files}</p>`, { href: applicantsHref, label: 'View applicants' }),
+        text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${company}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}Resume: ${resume.name}${cover.path ? `\nCover sheet: ${cover.name}` : ''}\nView applicants: ${applicantsHref}`,
       });
     }
-    await auth.audit(uid, 'application.create', 'application', app.id, { job_id: job.id, resume: resume.path });
-    req.flash('success', `Your application for ${job.title} was sent to ${job.company_name}.`);
+    await auth.audit(uid, 'application.create', 'application', app.id, { job_id: job.id, resume: resume.path, cover_sheet: cover.path });
+    req.flash('success', `Your application for ${job.title} was sent to ${company}.`);
     res.redirect('/jobseeker/applications');
   } catch (e) {
     if (e.code === '23505') { req.flash('info', 'You have already applied to this job.'); return res.redirect('/jobseeker/applications'); }
@@ -339,10 +376,21 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
 // ------------------------------------------------------------------ 5. applications
 router.get('/jobseeker/applications', seekerOnly, async (req, res, next) => {
   try {
-    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ep.company_name, (${PUBLIC_WHERE}) AS is_public
+    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ep.company_name, ep.operating_name, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT}
       FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
       WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC`, [req.user.id]);
     res.render('seeker/applications', { title: 'My applications', nav: 'applications', applications });
+  } catch (e) { next(e); }
+});
+/** Download the cover sheet you attached to one of YOUR applications (404 for anyone else's). */
+router.get('/jobseeker/applications/:id/cover', seekerOnly, async (req, res, next) => {
+  try {
+    if (!isId(req.params.id)) return next();
+    const a = await db.one('SELECT id, cover_letter_path, cover_letter_name FROM applications WHERE id=$1 AND seeker_user_id=$2', [req.params.id, req.user.id]);
+    if (!a || !a.cover_letter_path) return next();
+    const abs = uploadAbs(a.cover_letter_path, 'covers');
+    if (!abs) { req.flash('error', 'That cover sheet file could not be found.'); return res.redirect('/jobseeker/applications'); }
+    res.download(abs, a.cover_letter_name || path.basename(abs), (err) => { if (err && !res.headersSent) next(err); });
   } catch (e) { next(e); }
 });
 router.post('/jobseeker/applications/:id/withdraw', seekerOnly, async (req, res, next) => {
@@ -381,7 +429,7 @@ router.post('/jobs/:slug/unsave', saveGate, async (req, res, next) => {
 });
 router.get('/jobseeker/saved', seekerOnly, async (req, res, next) => {
   try {
-    const jobs = await db.many(`SELECT jobs.*, ep.company_name, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public,
+    const jobs = await db.many(`SELECT jobs.*, ep.company_name, ep.operating_name, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT},
         EXISTS (SELECT 1 FROM applications a WHERE a.job_id=jobs.id AND a.seeker_user_id=s.user_id) AS applied
       FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
       WHERE s.user_id=$1 ORDER BY s.created_at DESC`, [req.user.id]);

@@ -4,7 +4,7 @@
   <span class="company-picker__label">Company</span>
   <div class="company-picker__chips">
     <a class="chip <%= !selected ? 'is-active' : '' %>" href="<%= hrefFor(null) %>"<%- !selected ? ' aria-current="true"' : '' %>>All companies</a>
-    <% profiles.forEach(p => { %><a class="chip <%= selected === p.id ? 'is-active' : '' %>" href="<%= hrefFor(p.id) %>"<%- selected === p.id ? ' aria-current="true"' : '' %>><%= p.company_name %></a><% }) %>
+    <% profiles.forEach(p => { %><a class="chip <%= selected === p.id ? 'is-active' : '' %>" href="<%= hrefFor(p.id) %>"<%- selected === p.id ? ' aria-current="true"' : '' %>><%= h.displayCompany(p) %></a><% }) %>
   </div>
 </div>
 <% } %>

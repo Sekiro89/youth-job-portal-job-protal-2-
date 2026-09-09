@@ -39,10 +39,11 @@
     sw.addEventListener('change', sync); sync();
   }
 
-  // Show chosen file name hint
+  // Client-side size guard for resume / cover sheet uploads (the server re-checks size, type and magic bytes)
   document.querySelectorAll('input[type=file]').forEach(function (f) {
     f.addEventListener('change', function () {
-      if (f.files && f.files[0] && f.files[0].size > 5 * 1024 * 1024) { alert('That file is larger than 5 MB. Please choose a smaller resume.'); f.value = ''; }
+      var what = f.name === 'cover_file' ? 'cover sheet' : 'resume';
+      if (f.files && f.files[0] && f.files[0].size > 5 * 1024 * 1024) { alert('That file is larger than 5 MB. Please choose a smaller ' + what + '.'); f.value = ''; }
     });
   });
 })();

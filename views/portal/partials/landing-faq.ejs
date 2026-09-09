@@ -1,7 +1,9 @@
+<%# optional: audienceLabel ('employers' | 'consultants') for the heading %>
+<% const faqWho = typeof audienceLabel === 'string' && audienceLabel ? audienceLabel : 'employers'; %>
 <section class="landing-section landing-section--alt" id="faq">
   <div class="container container--narrow">
     <p class="eyebrow">FAQ</p>
-    <h2>Questions employers ask us</h2>
+    <h2>Questions <%= faqWho %> ask us</h2>
     <div class="faq">
       <% faq.forEach(([q, a], i) => { %>
         <details class="faq__item" <%= i === 0 ? 'open' : '' %>>

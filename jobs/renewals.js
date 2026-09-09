@@ -24,6 +24,9 @@ async function runRenewals({ log = console.log } = {}) {
 
   // 2) Sandbox renewals: the "charge" always succeeds. New period starts where the old one ended
   //    (or now, if it lapsed by more than a month so the customer never pays for dead time).
+  //    The amount is the subscription's price SNAPSHOT (price_cents/tax_cents/total_cents taken at checkout for the
+  //    payer's role) — recordPayment() defaults to it — never the current getPricing() value, so a price change
+  //    only affects postings published after it. Stripe renewals likewise bill the Price attached at checkout.
   const due = await db.many(`SELECT * FROM subscriptions WHERE provider='sandbox' AND status='active' AND cancel_at_period_end=false AND current_period_end <= now()`);
   for (const s of due) {
     try {
@@ -32,7 +35,7 @@ async function runRenewals({ log = console.log } = {}) {
       if (period_end <= now) { period_start = now; period_end = billing.addMonth(now); }
       const pay = await billing.recordPayment(s.id, { provider: 'sandbox', provider_payment_id: `sandbox_renewal_${s.id}_${period_start.toISOString().slice(0, 10)}`, period_start, period_end });
       counts.renewed++;
-      log(`[renewals] renewed subscription ${s.id} (job ${s.job_id}) -> ${pay.receipt_number}, until ${period_end.toISOString()}`);
+      log(`[renewals] renewed subscription ${s.id} (job ${s.job_id}) -> ${pay.receipt_number}, ${pay.total_cents} cents (snapshot), until ${period_end.toISOString()}`);
     } catch (e) { counts.errors++; console.error('[renewals] renewal failed', s.id, e.message); }
   }
 

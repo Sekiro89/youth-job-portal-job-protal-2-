@@ -21,21 +21,30 @@
         <h2 class="form-section__title">Company</h2>
         <div class="form-row">
           <div class="field">
-            <label for="company_name">Company name <span class="req">*</span></label>
-            <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization"<%- inv('company_name') %>>
+            <label for="company_name">Legal company name <span class="req">*</span></label>
+            <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization" placeholder="e.g. 1234567 Ontario Inc."<%- inv('company_name') %>>
+            <div class="hint">The registered business name — printed on receipts.</div>
             <%- err('company_name') %>
           </div>
+          <div class="field">
+            <label for="operating_name">Operating / trade name <span class="muted">(optional)</span></label>
+            <input class="input" id="operating_name" name="operating_name" value="<%= v.operating_name || '' %>" maxlength="120" placeholder="e.g. Flying Pig"<%- inv('operating_name') %>>
+            <div class="hint">The name job seekers know you by, e.g. Flying Pig. Shown first on every posting; the legal name appears underneath.</div>
+            <%- err('operating_name') %>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="field">
             <label for="website">Website</label>
             <input class="input" id="website" name="website" value="<%= v.website || '' %>" maxlength="200" placeholder="https://…" inputmode="url" autocomplete="url"<%- inv('website') %>>
             <%- err('website') %>
           </div>
-        </div>
-        <div class="form-row form-row--3">
           <div class="field">
             <label for="industry">Industry</label>
             <input class="input" id="industry" name="industry" value="<%= v.industry || '' %>" maxlength="120" placeholder="e.g. Healthcare">
           </div>
+        </div>
+        <div class="form-row">
           <div class="field">
             <label for="company_size">Company size</label>
             <select class="input" id="company_size" name="company_size"<%- inv('company_size') %>>
@@ -43,20 +52,6 @@
               <% COMPANY_SIZES.forEach(s => { %><option value="<%= s %>" <%= v.company_size === s ? 'selected' : '' %>><%= s %> employees</option><% }) %>
             </select>
             <%- err('company_size') %>
-          </div>
-          <div class="field">
-            <label for="p-province">Province / territory</label>
-            <select class="input" id="p-province" name="province"<%- inv('province') %>>
-              <option value="">Choose…</option>
-              <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
-            </select>
-            <%- err('province') %>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="p-city">City</label>
-            <input class="input" id="p-city" name="city" value="<%= v.city || '' %>" maxlength="80" autocomplete="address-level2">
           </div>
           <div class="field">
             <label for="logo">Logo <span class="muted">(PNG, JPG, SVG or WebP · max 2 MB)</span></label>
@@ -74,6 +69,37 @@
         <div class="field">
           <label for="p-description">About the company</label>
           <textarea class="input" id="p-description" name="description" rows="6" maxlength="4000" placeholder="What you do, where you operate, what it is like to work with you…"><%= v.description || '' %></textarea>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">Business address</h2>
+        <p class="small muted">Used as the first work location on every new posting (you can change it per job) and shown on your public company page as city and province.</p>
+        <div class="form-row addr-row">
+          <div class="field">
+            <label for="p-street">Street address</label>
+            <input class="input" id="p-street" name="street_address" value="<%= v.street_address || '' %>" maxlength="200" placeholder="e.g. 2400 Derry Rd E, Unit 4" autocomplete="street-address"<%- inv('street_address') %>>
+            <%- err('street_address') %>
+          </div>
+          <div class="field">
+            <label for="p-postal">Postal code</label>
+            <input class="input" id="p-postal" name="postal_code" value="<%= v.postal_code || '' %>" maxlength="7" placeholder="A1A 1A1" autocomplete="postal-code"<%- inv('postal_code') %>>
+            <%- err('postal_code') %>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="p-city">City</label>
+            <input class="input" id="p-city" name="city" value="<%= v.city || '' %>" maxlength="80" autocomplete="address-level2">
+          </div>
+          <div class="field">
+            <label for="p-province">Province / territory</label>
+            <select class="input" id="p-province" name="province"<%- inv('province') %>>
+              <option value="">Choose…</option>
+              <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('province') %>
+          </div>
         </div>
       </section>
 

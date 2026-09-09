@@ -19,7 +19,11 @@
       </div>
 
       <h2 class="auth__section">Your company</h2>
-      <%- include('_field', { f: { name: 'company_name', label: 'Company name', value: values.company_name, error: errors.company_name, autocomplete: 'organization' } }) %>
+      <div class="form-row">
+        <%- include('_field', { f: { name: 'company_name', label: 'Legal company name', value: values.company_name, error: errors.company_name, autocomplete: 'organization', hint: 'The registered business name, as on your invoices.' } }) %>
+        <%- include('_field', { f: { name: 'operating_name', label: 'Operating name', value: values.operating_name, error: errors.operating_name, required: false, placeholder: 'e.g. Flying Pig', hint: 'Operating / trade name — the name job seekers know you by. Shown first on your postings.' } }) %>
+      </div>
+      <%- include('_field', { f: { name: 'street_address', label: 'Street address', value: values.street_address, error: errors.street_address, autocomplete: 'street-address', required: false, placeholder: '123 Main St, Unit 4', hint: 'Used as the default work location when you post a job — you can add more locations per posting.' } }) %>
       <div class="form-row">
         <%- include('_field', { f: { name: 'city', label: 'City', value: values.city, error: errors.city, autocomplete: 'address-level2' } }) %>
         <div class="field">
@@ -31,7 +35,10 @@
           <% if (errors.province) { %><span class="error" id="err-province"><%= errors.province %></span><% } %>
         </div>
       </div>
-      <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
+      <div class="form-row">
+        <%- include('_field', { f: { name: 'postal_code', label: 'Postal code', value: values.postal_code, error: errors.postal_code, autocomplete: 'postal-code', required: false, placeholder: 'A1A 1A1' } }) %>
+        <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
+      </div>
 
       <label class="check <%= errors.agree ? 'check--error' : '' %>" for="agree">
         <input type="checkbox" id="agree" name="agree" value="1" <%= values.agree ? 'checked' : '' %> required>
@@ -42,7 +49,7 @@
       <div class="form-actions">
         <button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Create employer account</button>
       </div>
-      <p class="small muted auth__note">Posting a job costs $9.99 + GST per month per posting. Creating an account is free — you only pay when you publish.</p>
+      <p class="small muted auth__note">Posting a job costs $14.99 per posting per month + GST. Creating an account is free — you only pay when you publish.</p>
     </form>
     <p class="auth__foot">Already have an account? <a href="/login?role=employer">Sign in</a></p>
   </div>

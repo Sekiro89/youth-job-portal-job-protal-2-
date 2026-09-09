@@ -14,9 +14,12 @@
 //   2. The lifecycle test: checkout create → checkout.session.completed → invoice.paid (job live, receipt, email)
 //      → duplicate invoice.paid (no double record) → subscription.updated (cancel at period end) → resume/cancel via
 //      Stripe → invoice.payment_failed (past_due + email) → subscription.deleted (cancelled, job archived, public 404)
-//      → bad signature → API-version drift parsing → Stripe Tax variant → lookup_key Prices (via stripe-setup.js)
-//      → renewals reconciliation → and the same over HTTP against a freshly spawned server (raw body + signature,
-//      500-on-handler-failure, /billing/success reconciliation, /billing/portal, receipt with GST number).
+//      → bad signature → API-version drift parsing → Stripe Tax variant → lookup_key Prices for BOTH roles (via
+//      stripe-setup.js) → consultant checkout at $9.99 + $0.50 → pricing precedence (env > settings > constants)
+//      → renewals charge the snapshot, not the current price → renewals reconciliation → and the same over HTTP
+//      against a freshly spawned server (raw body + signature, 500-on-handler-failure, /billing/success
+//      reconciliation, /billing/portal, receipt with GST number, role-priced checkout pages, PDF receipt links).
+// Pricing under test (lib/constants + settings): employers 1499 + 75 = 1574 cents, consultants 999 + 50 = 1049.
 // Prints PASS/FAIL per step and exits 1 on any failure.
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -179,7 +182,8 @@ if (require.main !== module) return;
   process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_fake_offline';
   process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_' + crypto.randomBytes(12).toString('hex');
   process.env.GST_NUMBER = process.env.GST_NUMBER || '123456789 RT0001';
-  delete process.env.STRIPE_TAX; delete process.env.STRIPE_PRICE_POSTING; delete process.env.STRIPE_PRICE_GST;
+  delete process.env.STRIPE_TAX; delete process.env.POSTING_PRICE_CENTS; delete process.env.EMPLOYER_PRICE_CENTS; delete process.env.CONSULTANT_PRICE_CENTS;
+  for (const k of Object.keys(process.env)) if (/^STRIPE_PRICE_/.test(k)) delete process.env[k];
   const ROOT = path.join(__dirname, '..');
   if (!process.env.DATABASE_URL) {
     const pw = fs.readFileSync(path.join(ROOT, 'docs', '.dbpw'), 'utf8').trim().split('=').pop();
@@ -219,20 +223,40 @@ if (require.main !== module) return;
   const user = await db.one("SELECT id, email, role, name FROM users WHERE email='employer@example.com'");
   const profile = await db.one('SELECT * FROM employer_profiles WHERE owner_user_id=$1 ORDER BY id LIMIT 1', [user.id]);
   assert(user && profile, 'seed employer@example.com + profile required');
+  const consultant = await db.one("SELECT id, email, role, name FROM users WHERE email='consultant@example.com'");
+  const cprofile = consultant && await db.one('SELECT * FROM employer_profiles WHERE owner_user_id=$1 AND NOT archived ORDER BY id LIMIT 1', [consultant.id]);
+  assert(consultant && cprofile, 'seed consultant@example.com + profile required');
   const tag = `stripe-test-${Date.now()}`;
   const fixtures = [];
-  async function newJob(title) {
+  async function newJobFor(u, prof, title) {
     const j = await db.one(`INSERT INTO jobs(employer_profile_id, created_by, title, slug, description, category, job_type, work_arrangement, city, province, audiences, status)
                             VALUES ($1,$2,$3,$4,'Offline Stripe lifecycle test posting. Safe to delete.','it','full_time','remote','Toronto','ON','{professionals}','draft') RETURNING *`,
-      [profile.id, user.id, title, `${tag}-${fixtures.length + 1}`]);
+      [prof.id, u.id, title, `${tag}-${fixtures.length + 1}`]);
     fixtures.push(j.id);
-    return { ...j, company_name: profile.company_name, owner_user_id: profile.owner_user_id };
+    return { ...j, company_name: prof.company_name, owner_user_id: prof.owner_user_id };
   }
+  const newJob = (title) => newJobFor(user, profile, title);
   const mailCount = (subjectLike) => db.one('SELECT count(*)::int AS n FROM mail_outbox WHERE to_email=$1 AND subject ILIKE $2', [user.email, subjectLike]).then(r => r.n);
 
   try {
     console.log(`Offline Stripe proof — SDK ${Stripe.PACKAGE_VERSION || require('stripe/package.json').version}, DB ${process.env.DATABASE_URL.replace(/:[^:@]+@/, ':***@')}, fake store ${process.env.BILLING_FAKE_STRIPE_STORE}`);
     eq(billing.mode(), 'stripe', 'billing.mode()'); assert(fake._fake, 'fake client injected');
+
+    await step('getPricing(role): employer 1499 + 75 = 1574, consultant 999 + 50 = 1049; env override wins over settings; legacy POSTING_PRICE_CENTS ignored', async () => {
+      billing.resetPricingCache();
+      const e = await billing.getPricing('employer'), c = await billing.getPricing('consultant'), u = await billing.getPricing(user), d = await billing.getPricing(undefined);
+      eq(e.price_cents, 1499, 'employer price'); eq(e.tax_cents, 75, 'employer GST'); eq(e.total_cents, 1574, 'employer total'); eq(e.role, 'employer', 'role');
+      eq(c.price_cents, 999, 'consultant price'); eq(c.tax_cents, 50, 'consultant GST'); eq(c.total_cents, 1049, 'consultant total'); eq(c.role, 'consultant', 'role');
+      eq(u.price_cents, 1499, 'user object → employer'); eq(d.price_cents, 1499, 'no role → employer');
+      const all = await billing.getAllPricing(); eq(all.employer.total_cents, 1574, 'getAllPricing employer'); eq(all.consultant.total_cents, 1049, 'getAllPricing consultant');
+      process.env.CONSULTANT_PRICE_CENTS = '1299'; process.env.POSTING_PRICE_CENTS = '100'; billing.resetPricingCache();
+      try {
+        const c2 = await billing.getPricing('consultant'); eq(c2.price_cents, 1299, 'env consultant price'); eq(c2.tax_cents, 65, 'GST rounded to the cent (64.95 → 65)'); eq(c2.total_cents, 1364, 'total');
+        eq((await billing.getPricing('employer')).price_cents, 1499, 'employer unaffected by CONSULTANT_PRICE_CENTS / POSTING_PRICE_CENTS');
+      } finally { delete process.env.CONSULTANT_PRICE_CENTS; delete process.env.POSTING_PRICE_CENTS; billing.resetPricingCache(); }
+      eq((await billing.getPricing('consultant')).price_cents, 999, 'back to settings after env removed');
+      return 'employer 1574 / consultant 1049; env override + rounding ok';
+    });
 
     // ============================================================ in-process lifecycle (job A)
     const A = await newJob('Stripe test A — bilingual support analyst');
@@ -243,7 +267,8 @@ if (require.main !== module) return;
       assert(/^https:\/\/checkout\.stripe\.com\//.test(out.url), `hosted url: ${out.url}`);
       const call = fake._calls('checkout.sessions.create').pop().args[0];
       eq(call.mode, 'subscription', 'mode'); eq(call.currency, 'cad', 'currency'); eq(call.locale, 'en', 'locale'); eq(call.billing_address_collection, 'auto', 'billing_address_collection');
-      eq(call.line_items.length, 2, 'line items'); eq(call.line_items[0].price_data.unit_amount, 999, 'posting cents'); eq(call.line_items[1].price_data.unit_amount, 50, 'GST cents');
+      eq(call.line_items.length, 2, 'line items'); eq(call.line_items[0].price_data.unit_amount, 1499, 'posting cents (employer rate)'); eq(call.line_items[1].price_data.unit_amount, 75, 'GST cents');
+      eq(call.metadata.payer_role, 'employer', 'metadata.payer_role');
       for (const li of call.line_items) { eq(li.price_data.currency, 'cad', 'li currency'); eq(li.price_data.recurring.interval, 'month', 'li interval'); }
       assert(call.line_items[1].price_data.product_data.name.startsWith('GST'), 'GST line label');
       eq(call.metadata.job_id, String(A.id), 'metadata.job_id'); eq(call.metadata.subscription_id, String(subA.id), 'metadata.subscription_id'); eq(call.metadata.user_id, String(user.id), 'metadata.user_id');
@@ -254,7 +279,7 @@ if (require.main !== module) return;
       assert(/^cus_/.test(call.customer), 'customer passed'); eq(call.customer_update.address, 'auto', 'customer_update.address');
       const cust = fake._calls('customers.create').pop().args[0]; eq(cust.email, user.email, 'customer email'); eq(cust.metadata.user_id, String(user.id), 'customer metadata');
       eq(subA.provider, 'stripe', 'sub.provider'); eq(subA.provider_checkout_id, sessA.id, 'sub.provider_checkout_id'); eq(subA.provider_customer_id, call.customer, 'sub.provider_customer_id'); eq(subA.status, 'pending', 'sub.status');
-      eq(subA.price_cents + subA.tax_cents, 1049, 'snapshot total'); eq((await jobRow(A.id)).status, 'draft', 'job untouched by checkout create (route sets pending_payment)');
+      eq(subA.price_cents, 1499, 'snapshot price'); eq(subA.tax_cents, 75, 'snapshot GST'); eq(subA.total_cents, 1574, 'snapshot total'); eq((await jobRow(A.id)).status, 'draft', 'job untouched by checkout create (route sets pending_payment)');
       return `${sessA.id} for sub ${subA.id}, customer ${call.customer}`;
     });
     await db.query("UPDATE jobs SET status='pending_payment' WHERE id=$1", [A.id]);   // what POST /billing/checkout does
@@ -277,10 +302,11 @@ if (require.main !== module) return;
       eq(j.status, 'active', 'job active'); assert(near(j.expires_at, s.current_period_end), 'job.expires_at = period_end'); assert(await isPublic(A.id), 'job publicly visible');
       const p = await db.one('SELECT * FROM payments WHERE job_id=$1', [A.id]); receiptA = p;
       eq(p.provider, 'stripe', 'payment.provider'); eq(p.provider_payment_id, paidA.invoice.id, 'payment.provider_payment_id = invoice id');
-      assert(/^CC-\d{6}-\d{6}$/.test(p.receipt_number), `receipt number ${p.receipt_number}`); eq(p.amount_cents, 999, 'amount'); eq(p.tax_cents, 50, 'tax'); eq(p.total_cents, 1049, 'total');
+      assert(/^CC-\d{6}-\d{6}$/.test(p.receipt_number), `receipt number ${p.receipt_number}`); eq(p.amount_cents, 1499, 'amount'); eq(p.tax_cents, 75, 'tax'); eq(p.total_cents, 1574, 'total');
       eq(await mailCount('Receipt CC-%'), before + 1, 'receipt email queued');
       const m = await db.one('SELECT html, text FROM mail_outbox WHERE to_email=$1 ORDER BY id DESC LIMIT 1', [user.email]);
       assert(m.html.includes('123456789 RT0001') && m.text.includes('123456789 RT0001'), 'GST number on the emailed receipt');
+      assert(m.html.includes('$15.74') && m.html.includes('employer rate') && /\/billing"/.test(m.html), 'email shows $15.74 at the employer rate + a Billing link for downloads');
       return `${out}; ${p.receipt_number}`;
     });
     await step('invoice.paid replayed with the same invoice id is idempotent', async () => {
@@ -329,7 +355,7 @@ if (require.main !== module) return;
       threw = null; try { fake.webhooks.constructEvent(Buffer.from(stale.payload), stale.header, SECRET); } catch (e) { threw = e; }
       assert(threw && /timestamp/i.test(threw.message), 'stale timestamp (replay) must be rejected');
       const tampered = fake._signed('invoice.paid', paidA.invoice);
-      threw = null; try { fake.webhooks.constructEvent(Buffer.from(tampered.payload.replace('"amount_paid":1049', '"amount_paid":1')), tampered.header, SECRET); } catch (e) { threw = e; }
+      threw = null; try { fake.webhooks.constructEvent(Buffer.from(tampered.payload.replace('"amount_paid":1574', '"amount_paid":1')), tampered.header, SECRET); } catch (e) { threw = e; }
       assert(threw, 'tampered payload must be rejected');
       return 'wrong secret, stale timestamp, tampered body all rejected';
     });
@@ -353,9 +379,9 @@ if (require.main !== module) return;
         eq(call.line_items.length, 1, 'one line item'); eq(call.automatic_tax.enabled, true, 'automatic_tax'); eq(call.customer, (await subRow(A.id)).provider_customer_id, 'same Stripe customer reused for the same user');
         eq(fake._calls('customers.create').length, 1, 'customers.create called once across checkouts');
         const paid = fake._pay(out.session.id);
-        eq(paid.invoice.tax, 50, 'fake Stripe Tax computed 5%'); eq(paid.invoice.amount_paid, 1049, 'total');
+        eq(paid.invoice.tax, 75, 'fake Stripe Tax computed 5%'); eq(paid.invoice.amount_paid, 1574, 'total');
         await deliver('checkout.session.completed', paid.session); await deliver('invoice.paid', paid.invoice);
-        const p = await db.one('SELECT * FROM payments WHERE job_id=$1', [B.id]); eq(p.amount_cents, 999, 'amount'); eq(p.tax_cents, 50, 'tax from invoice'); eq(p.total_cents, 1049, 'total');
+        const p = await db.one('SELECT * FROM payments WHERE job_id=$1', [B.id]); eq(p.amount_cents, 1499, 'amount'); eq(p.tax_cents, 75, 'tax from invoice'); eq(p.total_cents, 1574, 'total');
         eq((await jobRow(B.id)).status, 'active', 'job active');
         return `invoice ${paid.invoice.id}`;
       } finally { delete process.env.STRIPE_TAX; }
@@ -363,20 +389,77 @@ if (require.main !== module) return;
 
     // ============================================================ lookup-key Prices via stripe-setup.js (job C)
     const C = await newJob('Stripe test C — lookup_key prices');
-    await step('scripts/stripe-setup.js creates Product + Prices idempotently; checkout then uses `price:` ids', async () => {
+    let catalog;
+    await step('scripts/stripe-setup.js creates 2 Products + 2 Prices PER ROLE idempotently (4 lookup keys); employer checkout then uses `price:` ids', async () => {
       const setup = require('./stripe-setup');
-      const r1 = await setup.ensureCatalog(fake, await billing.getPricing(), { log: () => {} });
-      const r2 = await setup.ensureCatalog(fake, await billing.getPricing(), { log: () => {} });
-      eq(r1.posting.id, r2.posting.id, 'posting price stable'); eq(r1.gst.id, r2.gst.id, 'gst price stable'); eq(r1.posting.lookup_key, billing.LOOKUP_KEYS.posting, 'lookup key'); eq(r1.gst.unit_amount, 50, 'gst amount');
-      eq(fake._calls('prices.create').length, 2, 'prices created once');
+      const r1 = await setup.ensureCatalog(fake, await billing.getAllPricing(), { log: () => {} });
+      const r2 = await setup.ensureCatalog(fake, await billing.getAllPricing(), { log: () => {} });
+      catalog = r1;
+      for (const role of ['employer', 'consultant']) {
+        eq(r1[role].posting.id, r2[role].posting.id, `${role} posting price stable`); eq(r1[role].gst.id, r2[role].gst.id, `${role} gst price stable`);
+        eq(r1[role].posting.lookup_key, billing.LOOKUP_KEYS[role].posting, `${role} posting lookup key`); eq(r1[role].gst.lookup_key, billing.LOOKUP_KEYS[role].gst, `${role} gst lookup key`);
+      }
+      eq(r1.employer.posting.unit_amount, 1499, 'employer posting amount'); eq(r1.employer.gst.unit_amount, 75, 'employer gst amount');
+      eq(r1.consultant.posting.unit_amount, 999, 'consultant posting amount'); eq(r1.consultant.gst.unit_amount, 50, 'consultant gst amount');
+      eq(fake._calls('prices.create').length, 4, 'four prices created once'); eq(fake._calls('products.create').length, 4, 'four products created once');
       billing.setStripeClient(fake);            // clears the price cache
       const out = await billing.createCheckout(C, user, { company_name: profile.company_name });
       const call = fake._calls('checkout.sessions.create').pop().args[0];
-      eq(call.line_items[0].price, r1.posting.id, 'posting by price id'); eq(call.line_items[1].price, r1.gst.id, 'gst by price id'); assert(!call.line_items[0].price_data, 'no price_data');
-      const paid = fake._pay(out.session.id); eq(paid.invoice.amount_paid, 1049, 'invoice total from catalog prices');
+      eq(call.line_items[0].price, r1.employer.posting.id, 'posting by EMPLOYER price id'); eq(call.line_items[1].price, r1.employer.gst.id, 'gst by employer price id'); assert(!call.line_items[0].price_data, 'no price_data');
+      const paid = fake._pay(out.session.id); eq(paid.invoice.amount_paid, 1574, 'invoice total from catalog prices');
       const wh = await setup.ensureWebhook(fake, `${process.env.PUBLIC_URL}/billing/webhook`, { log: () => {} });
       assert(/^whsec_/.test(wh.secret), 'webhook endpoint created with a secret'); eq(wh.enabled_events.length, billing.WEBHOOK_EVENTS.length, 'events');
-      return `${r1.posting.id}, ${r1.gst.id}, ${wh.id}`;
+      return `${r1.employer.posting.id}, ${r1.consultant.posting.id}, ${wh.id}`;
+    });
+
+    // ============================================================ consultant pricing (job G, paid by consultant@example.com)
+    const G = await newJobFor(consultant, cprofile, 'Stripe test G — consultant rate');
+    await step('consultant checkout: snapshot 999 + 50 = 1049, CONSULTANT lookup-key Prices, own Stripe customer; invoice.paid records $10.49 + emails the consultant-rate receipt', async () => {
+      const out = await billing.createCheckout(G, consultant, { company_name: cprofile.company_name });
+      const s = await subRow(G.id);
+      eq(s.payer_user_id, consultant.id, 'payer'); eq(s.price_cents, 999, 'snapshot price'); eq(s.tax_cents, 50, 'snapshot GST'); eq(s.total_cents, 1049, 'snapshot total');
+      const call = fake._calls('checkout.sessions.create').pop().args[0];
+      eq(call.line_items[0].price, catalog.consultant.posting.id, 'posting by CONSULTANT price id'); eq(call.line_items[1].price, catalog.consultant.gst.id, 'gst by consultant price id');
+      eq(call.metadata.payer_role, 'consultant', 'metadata.payer_role'); assert(call.customer !== (await subRow(A.id)).provider_customer_id, 'a different Stripe customer than the employer');
+      const before = await db.one('SELECT count(*)::int AS n FROM mail_outbox WHERE to_email=$1', [consultant.email]).then(r => r.n);
+      const paid = fake._pay(out.session.id); eq(paid.invoice.amount_paid, 1049, 'invoice total');
+      await deliver('checkout.session.completed', paid.session); await deliver('invoice.paid', paid.invoice);
+      const p = await db.one('SELECT * FROM payments WHERE job_id=$1', [G.id]); eq(p.amount_cents, 999, 'amount'); eq(p.tax_cents, 50, 'tax'); eq(p.total_cents, 1049, 'total'); eq((await jobRow(G.id)).status, 'active', 'job active');
+      const m = await db.one('SELECT html, text FROM mail_outbox WHERE to_email=$1 ORDER BY id DESC LIMIT 1', [consultant.email]);
+      eq(await db.one('SELECT count(*)::int AS n FROM mail_outbox WHERE to_email=$1', [consultant.email]).then(r => r.n), before + 1, 'receipt emailed to the consultant');
+      assert(m.html.includes('$10.49') && m.html.includes('third party consultant rate') && !m.html.includes('$15.74'), 'email shows $10.49 at the consultant rate');
+      return `${p.receipt_number} for ${consultant.email}`;
+    });
+    await step('inline price_data fallback carries the role snapshot when the catalog does not match (price changed after setup)', async () => {
+      const H = await newJobFor(consultant, cprofile, 'Stripe test H — stale catalog');
+      process.env.CONSULTANT_PRICE_CENTS = '1099'; billing.resetPricingCache();
+      try {
+        await billing.createCheckout(H, consultant, { company_name: cprofile.company_name });
+        const s = await subRow(H.id); eq(s.price_cents, 1099, 'snapshot at the new price'); eq(s.tax_cents, 55, 'GST 54.95 → 55'); eq(s.total_cents, 1154, 'total');
+        const call = fake._calls('checkout.sessions.create').pop().args[0];
+        assert(call.line_items[0].price_data && call.line_items[0].price_data.unit_amount === 1099, 'posting sent inline at 1099 (catalog Price is 999, so it is NOT used)');
+        assert(call.line_items[1].price_data && call.line_items[1].price_data.unit_amount === 55, 'GST sent inline at 55');
+        eq(call.line_items[0].price_data.product_data.metadata.payer_role, 'consultant', 'role on the inline product');
+      } finally { delete process.env.CONSULTANT_PRICE_CENTS; billing.resetPricingCache(); }
+      return 'inline 1099 + 55';
+    });
+    await step('renewals charge the SNAPSHOT: a sandbox subscription at 1574 renews at 1574 even after EMPLOYER_PRICE_CENTS changes to 1999', async () => {
+      const S = await newJob('Stripe test S — sandbox renewal snapshot');
+      const sub = await billing.ensureSubscription(S, user);                                      // snapshot 1499/75/1574
+      eq(sub.total_cents, 1574, 'snapshot');
+      await db.query("UPDATE subscriptions SET provider='sandbox', status='active', current_period_start=now() - interval '32 days', current_period_end=now() - interval '1 day' WHERE id=$1", [sub.id]);
+      await db.query("UPDATE jobs SET status='active', expires_at=now() - interval '1 day', published_at=now() - interval '32 days' WHERE id=$1", [S.id]);
+      process.env.EMPLOYER_PRICE_CENTS = '1999'; billing.resetPricingCache();
+      try {
+        eq((await billing.getPricing('employer')).total_cents, 2099, 'current price is now 2099');
+        const counts = await runRenewals({ log: () => {} });
+        assert(counts.renewed >= 1, `renewed ${counts.renewed}`); eq(counts.errors, 0, 'no errors');
+        const p = await db.one('SELECT * FROM payments WHERE job_id=$1 ORDER BY id DESC LIMIT 1', [S.id]);
+        eq(p.amount_cents, 1499, 'renewal amount = snapshot'); eq(p.tax_cents, 75, 'renewal GST = snapshot'); eq(p.total_cents, 1574, 'renewal total = snapshot, not 2099');
+        const s2 = await subRow(S.id); assert(new Date(s2.current_period_end) > new Date(), 'period extended'); eq(s2.total_cents, 1574, 'snapshot untouched');
+        eq((await jobRow(S.id)).status, 'active', 'job active');
+      } finally { delete process.env.EMPLOYER_PRICE_CENTS; billing.resetPricingCache(); }
+      return 'renewed at 1574 while current price was 2099';
     });
     await step('/billing/success reconciliation (no webhook yet): retrieve session -> link + record + activate', async () => {
       const s0 = await subRow(C.id); eq(s0.status, 'pending', 'pending before');
@@ -399,6 +482,7 @@ if (require.main !== module) return;
       const s2 = await subRow(C.id), j2 = await jobRow(C.id);
       eq(await payCount(C.id), 2, 'second payment recorded'); assert(new Date(s2.current_period_end) > new Date(), 'period extended'); eq(j2.status, 'active', 'job still active'); assert(await isPublic(C.id), 'public');
       eq((await subRow(D.id)).status, 'active', 'orphan checkout activated'); eq((await jobRow(D.id)).status, 'active', 'job D active');
+      const p2 = await db.one('SELECT * FROM payments WHERE job_id=$1 ORDER BY id DESC LIMIT 1', [C.id]); eq(p2.total_cents, 1574, 'renewal invoice recorded at the employer snapshot');
       const again = await runRenewals({ log: () => {} }); eq(again.stripe_reconciled, 0, 'second run is a no-op'); eq(await payCount(C.id), 2, 'no duplicate on re-run');
       return JSON.stringify(counts);
     });
@@ -489,11 +573,39 @@ if (require.main !== module) return;
       const r = await request(BASE, `/billing/sandbox/${s.provider_checkout_id}`, { jar }); eq(r.status, 404, 'status');
       return 'ok';
     });
+    await step('HTTP: checkout page shows $14.99 + $0.75 = $15.74 to the employer and $9.99 + $0.50 = $10.49 to the consultant', async () => {
+      const E2 = await newJob('Stripe test E2 — employer checkout page');
+      const r = await request(BASE, `/billing/checkout/${E2.id}`, { jar }); eq(r.status, 200, 'employer checkout');
+      const lines = (html) => (html.match(/<table class="bill-lines"[\s\S]*?<\/table>/) || [''])[0];   // the order summary only (the site footer mentions the from-price)
+      assert(/\$14\.99/.test(lines(r.text)) && /\$0\.75/.test(lines(r.text)) && /\$15\.74/.test(lines(r.text)) && /Employer rate/.test(lines(r.text)), 'employer amounts + rate label');
+      assert(!/\$9\.99/.test(lines(r.text)) && !/\$10\.49/.test(lines(r.text)), 'no consultant amounts in the employer order summary');
+      const cjar = new CookieJar();
+      const l = await request(BASE, `/billing-dev-login/${encodeURIComponent(consultant.email)}?next=/billing`, { jar: cjar }); eq(l.status, 302, 'consultant dev login');
+      const G2 = await newJobFor(consultant, cprofile, 'Stripe test G2 — consultant checkout page');
+      const c = await request(BASE, `/billing/checkout/${G2.id}`, { jar: cjar }); eq(c.status, 200, 'consultant checkout');
+      assert(/\$9\.99/.test(lines(c.text)) && /\$0\.50/.test(lines(c.text)) && /\$10\.49/.test(lines(c.text)) && /Third party consultant rate/.test(lines(c.text)), 'consultant amounts + rate label');
+      assert(!/\$14\.99/.test(lines(c.text)) && !/\$15\.74/.test(lines(c.text)), 'no employer amounts in the consultant order summary');
+      eq((await subRow(E2.id)).total_cents, 1574, 'employer snapshot'); eq((await subRow(G2.id)).total_cents, 1049, 'consultant snapshot');
+      const b = await request(BASE, '/billing', { jar: cjar }); eq(b.status, 200, 'consultant /billing');
+      assert(/As a third party consultant, each job posting costs <strong>\$9\.99/.test(b.text) && /employers pay \$14\.99/.test(b.text), 'consultant pricing note');
+      return 'both pages priced by the payer role';
+    });
+    await step('HTTP: /billing lists every receipt with View + Download (PDF); ?print=1 opens the receipt with the print dialog; print stylesheet inline', async () => {
+      const p = await db.one('SELECT id FROM payments WHERE job_id=$1', [E.id]);
+      const b = await request(BASE, '/billing', { jar }); eq(b.status, 200, 'billing');
+      assert(b.text.includes(`href="/billing/receipt/${p.id}"`) && b.text.includes(`href="/billing/receipt/${p.id}?print=1"`) && /Download \(PDF\)/.test(b.text), 'view + download links');
+      assert(/All receipts are available from your login/.test(b.text), 'receipts-from-your-login copy');
+      const r = await request(BASE, `/billing/receipt/${p.id}?print=1`, { jar }); eq(r.status, 200, 'receipt');
+      assert(/window\.print\(\)/.test(r.text) && /Download receipt \(PDF\)/.test(r.text) && /data-print/.test(r.text), 'autoprint + download button');
+      assert(/@media print/.test(r.text) && /\$15\.74/.test(r.text) && /employer rate/.test(r.text), 'print stylesheet + snapshot amounts + rate label');
+      const plain = await request(BASE, `/billing/receipt/${p.id}`, { jar }); assert(!/window\.print\(\)/.test(plain.text), 'no autoprint without ?print=1');
+      return `/billing/receipt/${p.id}?print=1`;
+    });
   } catch (e) {
     results.push([false, 'harness', e.message]); console.log('FAIL  harness —', e.stack);
   } finally {
     if (server) server.kill();
-    if (!process.env.KEEP) { for (const id of fixtures) await db.query('DELETE FROM jobs WHERE id=$1', [id]); await db.query("DELETE FROM mail_outbox WHERE to_email=$1 AND created_at > now() - interval '10 minutes' AND (subject ILIKE '%Stripe test%')", [user.email]); }
+    if (!process.env.KEEP) { for (const id of fixtures) await db.query('DELETE FROM jobs WHERE id=$1', [id]); await db.query("DELETE FROM mail_outbox WHERE to_email = ANY($1) AND created_at > now() - interval '10 minutes' AND (subject ILIKE '%Stripe test%')", [[user.email, consultant.email]]); }
     else console.log('KEEP=1: fixture job ids', fixtures.join(', '));
     fs.rmSync(scratch, { recursive: true, force: true });
     await db.pool.end();

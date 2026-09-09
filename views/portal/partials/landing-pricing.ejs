@@ -1,28 +1,43 @@
-<%# expects: signupHref, audienceLabel %>
+<%#
+  expects: signupHref, audienceLabel ('employer' | 'consultant').
+  optional: priceCents (defaults to C.priceCentsFor(audienceLabel)), otherLabel + otherCents (the other role's rate, shown as a footnote).
+  Pricing is role-based (client decision 2026-09-09): employers $14.99, third party consultants $9.99, + 5% GST, per posting per month.
+%>
+<%
+const pGst = (c) => Math.round(c * C.PRICING.gst_rate), pDollars = (c) => '$' + (c / 100).toFixed(2);
+const pBase = typeof priceCents === 'number' ? priceCents : C.priceCentsFor(audienceLabel);
+const pTotal = pBase + pGst(pBase);
+const pOtherCents = typeof otherCents === 'number' ? otherCents : null;
+const pRoleName = audienceLabel === 'consultant' ? 'Third party consultant rate' : 'Employer rate';
+%>
 <section class="landing-section" id="pricing">
   <div class="container">
     <p class="eyebrow">Pricing</p>
-    <h2>One simple price. No contracts.</h2>
+    <h2>One simple price per posting. No contracts.</h2>
     <div class="pricing">
       <div class="pricing__card">
-        <div class="pricing__amount"><span class="pricing__currency">$</span><%= (PRICE/100).toFixed(2) %><span class="pricing__per">/month + GST</span></div>
-        <p class="pricing__total">= <strong>$<%= (TOTAL/100).toFixed(2) %> CAD</strong> with GST, per posting</p>
+        <p class="eyebrow"><%= pRoleName %></p>
+        <div class="pricing__amount"><span class="pricing__currency">$</span><%= (pBase / 100).toFixed(2) %><span class="pricing__per">/month + GST</span></div>
+        <p class="pricing__total"><%= pDollars(pBase) %> per posting per month + GST = <strong><%= pDollars(pTotal) %> CAD</strong></p>
         <ul class="pricing__list">
           <li>Live within seconds of payment — no approval queue</li>
-          <li>Renews monthly, cancel any time from your dashboard</li>
-          <li>Unlimited applicants, resumes in your dashboard</li>
+          <li>Renews monthly at the price you paid, cancel any time from your dashboard</li>
+          <li>Full work address on every posting — several addresses on one posting allowed</li>
+          <li>Your operating name shown to job seekers, legal name beneath it</li>
+          <li>Unlimited applicants, resumes and cover sheets in your dashboard</li>
           <li>Instant email alerts to matching job seekers</li>
           <li>Indexed by Google for Jobs</li>
-          <li>GST receipt for every charge</li>
+          <li>GST receipt for every charge — view or download as PDF from your login</li>
         </ul>
         <a class="kds-btn kds-btn--accent kds-btn--block" href="<%= signupHref %>">Create <%= audienceLabel %> account</a>
         <p class="small muted pricing__note">Pay by card. Nothing is charged until you publish a posting.</p>
       </div>
       <div class="pricing__aside">
-        <h3>What $<%= (TOTAL/100).toFixed(2) %> gets you</h3>
+        <h3>What <%= pDollars(pTotal) %> gets you</h3>
         <p>A posting stays live for a full month and renews automatically. Pause it when you have enough applicants; cancel it the moment the role is filled — you are never locked in.</p>
         <p>Compare: most Canadian job boards charge $200–$500 for a single 30-day posting.</p>
         <div class="divider-maple" aria-hidden="true">🍁</div>
+        <% if (pOtherCents !== null) { %><p class="small muted"><%= otherLabel %>: <%= pDollars(pOtherCents) %> per posting per month + GST (<%= pDollars(pOtherCents + pGst(pOtherCents)) %>). The rate is set by the account that pays.</p><% } %>
         <p class="small muted">Prices in Canadian dollars. GST (5%) applies to all postings. No PST/HST is charged.</p>
       </div>
     </div>

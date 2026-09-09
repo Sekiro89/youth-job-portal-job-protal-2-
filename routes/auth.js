@@ -5,7 +5,7 @@ const db = require('../lib/db');
 const auth = require('../lib/auth');
 const mail = require('../lib/mail');
 const C = require('../lib/constants');
-const { escapeHtml } = require('../lib/helpers');
+const { escapeHtml, formatPostal } = require('../lib/helpers');
 const { uniqueProfileSlug } = require('../lib/jobs');
 
 const router = express.Router();
@@ -35,6 +35,10 @@ const page = (extra) => Object.assign({ extraCss: ['/css/auth.css'], extraJs: ['
 const s = (v) => String(v ?? '').trim();
 const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(s);
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const isSafeReturn = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//') && u.length < 500;
+/** `?next=/jobs/x/apply` on a login/signup link (e.g. the apply-page interstitial) becomes the post-login target; lib/auth.login consumes it. */
+function rememberNext(req) { if (isSafeReturn(req.query.next)) req.session.returnTo = req.query.next; }
+const PRICE = { employer: '$14.99 per posting per month + GST', consultant: '$9.99 per posting per month + GST' };
 
 /** Shared checks for every signup form. Returns { errors, values }. */
 async function validateSignup(body, opts = {}) {
@@ -68,8 +72,8 @@ async function createUser(client, v, role) {
 async function welcome(user, role) {
   const first = escapeHtml(user.name.split(' ')[0]);
   const bodies = {
-    employer: [`<p>Hi ${first}, your employer account is ready.</p><p>Post your first job in minutes — every posting is <strong>$9.99 + GST per month</strong>, reaches professionals, new immigrants, Indigenous peoples, refugees and youth across Canada, and you can cancel any time.</p>`, { href: `${PUBLIC_URL}/employer/jobs/new`, label: 'Post a job' }],
-    consultant: [`<p>Hi ${first}, your Third Party Consultant account is ready.</p><p>Add the employers you represent as company profiles, then post and manage jobs for each of them under this one login.</p>`, { href: `${PUBLIC_URL}/consultant/profiles/new`, label: 'Add your first employer' }],
+    employer: [`<p>Hi ${first}, your employer account is ready.</p><p>Post your first job in minutes — every posting is <strong>${PRICE.employer}</strong>, reaches professionals, new immigrants, Indigenous peoples, refugees and youth across Canada, and you can cancel any time.</p>`, { href: `${PUBLIC_URL}/employer/jobs/new`, label: 'Post a job' }],
+    consultant: [`<p>Hi ${first}, your Third Party Consultant account is ready.</p><p>Add the employers you represent as company profiles, then post and manage jobs for each of them under this one login — ${PRICE.consultant}.</p>`, { href: `${PUBLIC_URL}/consultant/profiles/new`, label: 'Add your first employer' }],
     seeker: [`<p>Hi ${first}, welcome to Canada Careers.</p><p>Upload your resume, set your job preferences and we will email you when new postings match. Applying takes one click.</p>`, { href: `${PUBLIC_URL}/jobseeker/profile`, label: 'Complete your profile' }],
   };
   const [html, cta] = bodies[role];
@@ -83,17 +87,19 @@ async function welcome(user, role) {
 // ---------------------------------------------------------------- signup
 router.get('/signup', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
-  res.render('auth/signup', page({ title: 'Create your account', metaDescription: 'Join Canada Careers as an employer, third party consultant or job seeker. Post jobs for $9.99/month or apply to jobs across Canada for free.' }));
+  rememberNext(req);
+  res.render('auth/signup', page({ title: 'Create your account', metaDescription: 'Join Canada Careers as an employer ($14.99 per posting per month + GST), third party consultant ($9.99 + GST) or job seeker — applying is always free.' }));
 });
 
 const signupPage = { employer: 'auth/signup-employer', consultant: 'auth/signup-consultant', seeker: 'auth/signup-seeker' };
 const signupMeta = {
-  employer: { title: 'Sign up as an employer', metaDescription: 'Create a Canada Careers employer account and post jobs for your company for $9.99 + GST per month.' },
+  employer: { title: 'Sign up as an employer', metaDescription: 'Create a Canada Careers employer account and post jobs for your company for $14.99 per posting per month + GST.' },
   consultant: { title: 'Sign up as a third party consultant', metaDescription: 'Create a Canada Careers consultant account to manage job postings for many employers under one login.' },
   seeker: { title: 'Sign up as a job seeker', metaDescription: 'Create a free Canada Careers job seeker account. Upload your resume, apply online and get job alerts by email.' },
 };
 router.get('/signup/:role(employer|consultant|seeker)', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
+  rememberNext(req);
   res.render(signupPage[req.params.role], page({ ...signupMeta[req.params.role], values: { notify_email: true }, errors: {} }));
 });
 
@@ -101,19 +107,26 @@ router.post('/signup/employer', wrap(async (req, res) => {
   const { errors, values } = await validateSignup(req.body);
   const loc = validateLocation(req.body, errors, true);
   const company_name = s(req.body.company_name);
+  const operating_name = s(req.body.operating_name).slice(0, 160);
+  const street_address = s(req.body.street_address).slice(0, 200);
+  let postal_code = s(req.body.postal_code);
   let website = s(req.body.website);
   if (company_name.length < 2) errors.company_name = 'Please enter your company name.';
+  if (/[<>]/.test(operating_name)) errors.operating_name = 'Operating name cannot contain < or >.';
+  if (/[<>]/.test(street_address)) errors.street_address = 'Street address cannot contain < or >.';
+  if (postal_code && !C.POSTAL_CODE_RE.test(postal_code)) errors.postal_code = 'Please enter a valid Canadian postal code (e.g. M5V 1A1).';
+  else if (postal_code) postal_code = formatPostal(postal_code);
   if (website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
   if (website && !/^https?:\/\/[^\s/]+\.[^\s]{2,}$/i.test(website)) errors.website = 'Please enter a valid website address.';
-  const vals = { ...values, ...loc, company_name, website };
+  const vals = { ...values, ...loc, company_name, operating_name, street_address, postal_code, website };
   if (Object.keys(errors).length) return res.status(422).render(signupPage.employer, page({ ...signupMeta.employer, values: vals, errors }));
 
   const slug = await uniqueProfileSlug(company_name);
   const { user, profile } = await db.tx(async (client) => {
     const user = await createUser(client, vals, 'employer');
     const profile = (await client.query(
-      'INSERT INTO employer_profiles(owner_user_id,company_name,slug,website,city,province,contact_name,contact_email,contact_phone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id',
-      [user.id, company_name, slug, website || null, loc.city, loc.province, vals.name, vals.email, vals.phone || null])).rows[0];
+      'INSERT INTO employer_profiles(owner_user_id,company_name,operating_name,slug,website,street_address,city,province,postal_code,contact_name,contact_email,contact_phone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id',
+      [user.id, company_name, operating_name || null, slug, website || null, street_address || null, loc.city, loc.province, postal_code || null, vals.name, vals.email, vals.phone || null])).rows[0];
     return { user, profile };
   });
   await auth.audit(user.id, 'signup', 'user', user.id, { role: 'employer', profile_id: profile.id });
@@ -155,6 +168,7 @@ router.post('/signup/seeker', wrap(async (req, res) => {
 const loginMeta = { title: 'Sign in', metaDescription: 'Sign in to your Canada Careers account to post jobs, manage employer profiles, or apply to jobs and manage your alerts.' };
 router.get('/login', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
+  rememberNext(req);
   const role = ['employer', 'consultant', 'seeker'].includes(req.query.role) ? req.query.role : null;
   res.render('auth/login', page({ ...loginMeta, values: { email: '', remember: true }, errors: {}, roleHint: role }));
 });

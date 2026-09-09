@@ -1,14 +1,20 @@
+<%
+// Pricing copy is computed from lib/constants (the contract source), never from route locals: employers $14.99, consultants $9.99, + 5% GST.
+const _gst = (c) => Math.round(c * C.PRICING.gst_rate), _d = (c) => '$' + (c / 100).toFixed(2);
+const EMP = C.priceCentsFor('employer'), CON = C.priceCentsFor('consultant');
+const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON), TOTAL_CON = _d(CON + _gst(CON));
+%>
 <section class="landing-hero">
   <div class="container landing-hero__inner">
     <div>
       <p class="eyebrow">For employers</p>
-      <h1>Post a job across Canada for $<%= (PRICE/100).toFixed(2) %> a month.</h1>
+      <h1>Post a job across Canada for <%= PRICE_EMP %> a month.</h1>
       <p class="lead">Reach professionals, new immigrants, Indigenous peoples, refugees and youth — the people who are ready to work and hard to find on the big boards. Live in seconds, cancel any time.</p>
       <div class="cluster landing-hero__cta">
         <a class="kds-btn kds-btn--accent kds-btn--lg" href="/signup/employer">Post a job</a>
         <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/login?role=employer">Employer sign in</a>
       </div>
-      <p class="small muted">$<%= (TOTAL/100).toFixed(2) %> with GST · renews monthly · no contracts</p>
+      <p class="small muted"><%= PRICE_EMP %> per posting per month + GST (<%= TOTAL_EMP %>) · renews monthly · no contracts</p>
     </div>
     <div class="landing-hero__art" aria-hidden="true">
       <div class="mock-card">
@@ -30,13 +36,26 @@
     <h2>Three steps. Ten minutes.</h2>
     <ol class="steps">
       <li class="step"><span class="step__n">1</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
-      <li class="step"><span class="step__n">2</span><h3>Write the posting</h3><p>Title, location, pay, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
-      <li class="step"><span class="step__n">3</span><h3>Pay $<%= (PRICE/100).toFixed(2) %> + GST and go live</h3><p>Your posting is live instantly and renews every month for $<%= (TOTAL/100).toFixed(2) %>. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
+      <li class="step"><span class="step__n">2</span><h3>Write the posting</h3><p>Title, the full work address (add more than one if the job is offered at several sites), pay with its period, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
+      <li class="step"><span class="step__n">3</span><h3>Pay <%= PRICE_EMP %> + GST and go live</h3><p>Your posting is live instantly and renews every month for <%= TOTAL_EMP %> — the price you pay at checkout stays locked in for that posting. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
     </ol>
   </div>
 </section>
 
-<%- include('partials/landing-pricing', { signupHref: '/signup/employer', audienceLabel: 'employer' }) %>
+
+<section class="landing-section">
+  <div class="container">
+    <p class="eyebrow">What every posting needs</p>
+    <h2>Job Bank-style postings job seekers can trust</h2>
+    <div class="grid grid--3">
+      <div class="card"><h3>A full work address</h3><p class="muted">Every posting carries at least one complete work location — street address, city, province and postal code. If the job is offered at several sites, add more than one address to the same posting; seekers see each one listed in full.</p></div>
+      <div class="card"><h3>Your operating name</h3><p class="muted">Tell seekers the name they know you by (e.g. “Flying Pig”). The operating name is shown first on the posting and your company page, with the legal name beneath it.</p></div>
+      <div class="card"><h3>Clear pay and requirements</h3><p class="muted">Salary with its period (per hour, day, week, bi-weekly, month or year), education and experience picked from standard lists, an industry category and an optional NOC code — printable on one clean sheet.</p></div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/landing-pricing', { signupHref: '/signup/employer', audienceLabel: 'employer', priceCents: EMP, otherLabel: 'Third party consultants', otherCents: CON }) %>
 
 <section class="landing-section">
   <div class="container">
@@ -45,10 +64,10 @@
     <div class="grid grid--3">
       <div class="card"><h3>Applicant tracking</h3><p class="muted">See every applicant, download resumes, shortlist and mark hires. Candidates are notified automatically as their status changes.</p></div>
       <div class="card"><h3>Pause, duplicate, repost</h3><p class="muted">Pause when you have enough applicants, duplicate a posting for a similar role, reactivate any time within the paid month.</p></div>
-      <div class="card"><h3>Billing you can hand to accounting</h3><p class="muted">Every charge has a numbered GST receipt. See all subscriptions and payments under Billing.</p></div>
+      <div class="card"><h3>Billing you can hand to accounting</h3><p class="muted">Every charge has a numbered GST receipt you can view or download as a PDF any time from Billing — all receipts are available from your login.</p></div>
     </div>
-    <p class="cluster landing-cta-row"><a class="kds-btn kds-btn--brand" href="/signup/employer">Create an employer account</a> <span class="muted">Hiring for several clients? <a href="/consultant">See the consultant account</a>.</span></p>
+    <p class="cluster landing-cta-row"><a class="kds-btn kds-btn--brand" href="/signup/employer">Create an employer account</a> <span class="muted">Hiring for several clients? <a href="/consultant">See the consultant account</a> — <%= PRICE_CON %> + GST per posting.</span></p>
   </div>
 </section>
 
-<%- include('partials/landing-faq') %>
+<%- include('partials/landing-faq', { audienceLabel: 'employers' }) %>

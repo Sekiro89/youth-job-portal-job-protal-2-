@@ -1,13 +1,18 @@
 # Job Bank importer
 
 Brings **real, current postings from Job Bank** (jobbank.gc.ca — Employment and Social Development Canada's public job
-board) into Canada Careers so the portal launches with genuine content. Imported postings are free, attributed,
-link back to the original, and are never mixed up with paid postings.
+board) into Canada Careers so the portal launches with genuine content.
+
+> **`jobs.source = 'jobbank'` rows are reference postings — not the client's, no payment, link back only.**
+> They were never posted on Canada Careers, carry no subscription/payment rows, can't be applied to here (the CTA goes
+> to Job Bank), and are labelled "Reference posting from Job Bank (Government of Canada) — not posted on Canada
+> Careers". If the client wants them gone: `node scripts/import-jobbank.js --purge` (see [Purge](#purge--kill-switch)).
 
 Files: `lib/jobbank.js` (fetch + parse + upsert), `scripts/import-jobbank.js` (CLI), `jobs/jobbank-sync.js`
 (daily `syncJobBank()`), `views/public/job.ejs` + `views/public/_job-card.ejs` (attribution UI),
 `data/jobbank-cache/` (raw HTML cache, gitignored). Schema: the `source*` columns on `jobs` and `source` on
-`employer_profiles` (bottom of `db/schema.sql`).
+`employer_profiles`, the `job_locations` table, `jobs.education_other`, `employer_profiles.operating_name`
+(bottom of `db/schema.sql`).
 
 ## Sources used (verified 2026-09-09)
 
@@ -58,7 +63,7 @@ convenience, not as our own inventory, so every imported posting:
 | Canada Careers | Job Bank | Rule |
 |---|---|---|
 | `users` (1 row) | — | `jobbank-import@canadacareers.local`, name "Job Bank (Government of Canada)", role consultant, `is_active=false`. |
-| `employer_profiles` (1 per employer name) | hiringOrganization name | `source='jobbank'`, slug via `uniqueProfileSlug`, city/province from the first posting seen, description "Employer listed on Job Bank, the Government of Canada's job board." Matched case-insensitively on name. |
+| `employer_profiles` (1 per employer) | hiringOrganization name | `source='jobbank'`, slug via `uniqueProfileSlug`, city/province from the first posting seen, description "Employer listed on Job Bank, the Government of Canada's job board." Matched case-insensitively on `company_name`. **Operating name:** Job Bank prints one string; when it is "`<Legal> o/a <Trade>`" (also `operating as`, `dba`/`d.b.a.`/`d/b/a`, `c.o.b.`, `trading as`, `t/a`) `splitEmployerName()` stores `company_name` = legal part and `operating_name` = trade part (`h.displayCompany` shows the trade name first). `street_address`/`postal_code` on the profile = the first posting's street/postal when Job Bank printed one. Re-mapped on every refresh, so profiles created before this existed get their names split too. `jobs.source_employer` keeps the string exactly as printed. |
 | `title` | `property="title"` | Job Bank titles are lower-case; `titleCase()` capitalises words, keeps acronyms like RN / (R.N.) / CNC. Partner "original title" is prepended to the description when it differs. |
 | `description` | native: Tasks, Work setting, Supervision, Additional information, Employment groups …; partner: `property="description"` blob | HTML → plain paragraphs, list items as `- ` lines (`htmlToText`). Native pages' hidden flattened summary is used only when the sections are empty. |
 | `requirements` | Languages, Education, Experience, Credentials, Experience and specialization, Personal suitability, Work conditions, Screening questions, "Who can apply" | Section title + text blocks. |
@@ -68,9 +73,9 @@ convenience, not as our own inventory, so every imported posting:
 | `job_type` | employmentType | Permanent/Full time → `full_time`; Part time / Casual → `part_time`; Term or contract → `contract`; Temporary → `temporary`; Seasonal → `seasonal`; apprenticeship/internship when stated. |
 | `work_arrangement` | "Work location" (On site / Remote / Hybrid) | default `on_site`. |
 | `experience_level` | Experience | "No experience / will train / < 2 years" → entry; 2–5 years → intermediate; 5+ → senior. |
-| `education` | Education | first 200 chars. |
-| `city`, `province`, `postal_code` | addressLocality / addressRegion / postalCode (fallback: feed "City (XX)") | province must be a `C.PROVINCES` code or the posting is skipped. |
-| `salary_min/max`, `salary_period` | baseSalary minValue/maxValue/unitText (fallback: feed salary text) | HOUR → `hour`; YEAR → `year`; weekly ×52, bi-weekly ×26, semi-monthly ×24, monthly ×12, daily ×260 → `year`. Whole CAD. Guard: a non-hourly figure under $150 is an employer typo ("$24.87 weekly / 74 hours per week" is real Job Bank data) and is stored as hourly. |
+| `education`, `education_other` | Education (`ul[property="educationRequirements"]` lines) | `educationFor()` → a `C.EDUCATION_LEVELS` **key**: "No degree, certificate or diploma" → `none`; "Secondary (high) school graduation certificate" → `secondary`; "College/CEGEP", "College, CEGEP or other non-university certificate or diploma …", "Other trades certificate or diploma", "University certificate …" → `certificate`; "Registered Apprenticeship certificate" / journeyperson / Red Seal → `apprenticeship`; "Bachelor's degree" → `bachelor`; "Master's degree" → `master`; "Earned doctorate degree" → `doctorate`; "Degree in medicine, dentistry, veterinary medicine or optometry" → `professional`. First mappable line wins (modifier lines like "or equivalent experience" are ignored); anything unrecognised → `other` + `education_other` = raw text; no Education section (partner postings) → NULL. The raw line is always kept verbatim in `requirements` ("Education: …"). |
+| `job_locations` (≥1 row), `city`, `province`, `postal_code` | every `property="address" typeof="PostalAddress"` block in the Location `<li>` (streetAddress / addressLocality / addressRegion / postalCode); "Various locations" postings list all of them in `span.list-city`; the `#variouslocation-dialog` modal is the fallback | `parseLocations()` → one `job_locations` row per address in page order (`sort_order` 0…n), `street_address` + `unit` (split out of the street by `splitUnit()`: "UNIT 4-11 VERVAIN DRIVE", "948 Homer Street suite 400", "205-105 Southbank Boulevard") + `postal_code` (validated with `C.POSTAL_CODE_RE`, stored "A1A 1A1") when Job Bank printed them, else city/province only. `jobs.city/province/postal_code` = the first row. Province must be a `C.PROVINCES` code or the address is dropped (posting skipped if none is left). **Upsert replaces the job's location rows** (delete + insert inside one transaction). |
+| `salary_min/max`, `salary_period` | baseSalary minValue/maxValue/unitText (fallback: feed salary text) | HOUR → `hour`, DAY → `day`, WEEK(LY) → `week`, BIWEEKLY → `biweekly`, MONTH(LY) → `month`, YEAR/ANNUALLY → `year` — **amounts stored as printed** (a "$1,200 weekly" posting is `1200 / week`; search/sort annualises with `C.SALARY_PERIOD_TO_YEAR`). Only semi-monthly (no period key) is converted: ×24 → `year`. Whole CAD; `content="10,000"` thousands separators are stripped. Guard kept: a non-hourly figure under $150 is an employer typo ("$24.87 weekly / 74 hours per week" and "software developer $101.00 daily" are real Job Bank data) and is stored as hourly. |
 | `vacancies` | "N vacancies" | default 1. |
 | `languages` | Languages | Bilingual / "English or French" → both; default English. |
 | `audiences` | Employment groups (`Support for youths` → youth; `… newcomers and refugees` → new_immigrants + refugees; `… Indigenous people` → indigenous) + NOC TEER 0–1 (2nd digit) → professionals | |
@@ -81,7 +86,8 @@ convenience, not as our own inventory, so every imported posting:
 | `created_by` | — | the system user. |
 
 Upsert key: unique index `jobs_source_uid (source, source_id)`. Updates refresh title/description/requirements/
-benefits/salary/expiry/`source_synced_at`; the slug never changes.
+benefits/salary/education/expiry/`source_synced_at`, replace the `job_locations` rows and re-sync the employer
+profile's legal/operating name; the job slug and profile slug never change.
 
 ## How to run
 
@@ -97,13 +103,38 @@ node scripts/import-jobbank.js                       # ≈ 25–30 min at the 5 
 node scripts/import-jobbank.js --limit 50 --per-query 1 --queries "cook,welder" --provinces "NS,NB"
 node scripts/import-jobbank.js --refresh             # also re-check every live imported posting afterwards
 
+# 2b. after a parser/mapping change: re-map every imported row from the on-disk cache, import nothing new, no network
+node scripts/import-jobbank.js --refresh --from-cache --limit 0
+
 # 3. daily sync (the cron runner calls this; also runnable by hand)
 node -e "require('./jobs/jobbank-sync').syncJobBank().then(r => console.log(JSON.stringify(r)))"
 ```
 
-Options: `--queries a,b` · `--provinces ON,BC` · `--limit N` (max new postings) · `--per-query N` (max new per
-keyword × province, default 2) · `--max-requests N` (HTTP budget, default 600) · `--dry-run` · `--refresh`.
-Env: `JOBBANK_DELAY_MS` (default 5000 = robots Crawl-delay; floor 1000).
+Options: `--queries a,b` · `--provinces ON,BC` · `--limit N` (max new postings; **0 = import nothing new**) ·
+`--per-query N` (max new per keyword × province, default 2) · `--max-requests N` (HTTP budget, default 600) ·
+`--dry-run` · `--refresh` · `--from-cache` (with `--refresh`: use cached pages of any age) · `--purge` · `--enable`.
+Env: `JOBBANK_DELAY_MS` (default 5000 = robots Crawl-delay; floor 1000), `JOBBANK_SYNC=off` (kill switch, see below).
+
+### Purge / kill switch
+
+If the client decides the reference postings should not appear at all:
+
+```bash
+node scripts/import-jobbank.js --purge
+```
+
+archives every imported posting (`status='expired'`, `archived_at=now()` — nothing is deleted, nothing paid is touched)
+and writes `settings.jobbank_sync = 'off'`. While that flag is set (or env `JOBBANK_SYNC=off`), `syncJobBank()` returns
+`{ skipped: '…' }` without fetching anything and `scripts/import-jobbank.js` refuses to run (exit 3) — otherwise the
+daily sync would quietly revive them (the upsert revives an expired row whose `validThrough` is still ahead). The 235
+auto-created employer profiles stay (they list no live postings, so they're not linked from anywhere). To undo:
+
+```bash
+node scripts/import-jobbank.js --enable            # clears the flag + re-activates purged rows whose Job Bank expiry is still ahead
+```
+
+Rows that had genuinely expired stay archived; the next sync re-checks every revived row against Job Bank within 20 h.
+Verified on cc_import 2026-09-09: purge → 266 archived, sync skipped, import exit 3; `--enable` → 266 active again.
 
 The run prints a per-query table (query, province, found, inserted, updated, existing, skipped), totals, counts by
 category and province, and the request/cache-hit count. `existing` = already imported and left to the sync to
@@ -120,7 +151,8 @@ at 5 s. `syncJobBank()` spends 70 % of its budget re-checking live postings (~30
 ### Cron wiring (orchestrator)
 
 `jobs/jobbank-sync.js` exports `syncJobBank({ log, limit, perQuery, maxRequests })` and returns
-`{ refresh: {checked, expired, refreshed, errors}, import: {found, inserted, updated, existing, skipped, errors}, requests, seconds }`.
+`{ refresh: {checked, expired, refreshed, errors}, import: {found, inserted, updated, existing, skipped, errors}, requests, seconds }`
+(or `{ skipped: 'settings.jobbank_sync=off', … zeros }` when the kill switch is on).
 Call it from the daily runner after `runRenewals()`; it is safe to run concurrently with the web app (row-level
 updates only, no truncation, no touching of paid rows: every write is scoped `WHERE source='jobbank'`).
 
@@ -132,7 +164,13 @@ updates only, no truncation, no touching of paid rows: every write is scoped `WH
   `d.externalUrl` but we deliberately link to the Job Bank page, not the partner.
 - **French postings** (mostly QC) are imported as-is; category mapping relies on the NOC code for those, and the
   keyword fallback is English-only.
-- **"Various locations"** postings take the first location only.
+- **"Various locations"** postings get one `job_locations` row per city (3 of 296 cached postings: 3, 2 and 7
+  cities); Job Bank prints no street/postal for those, so the rows are city/province only.
+- **Operating names** are only detected when Job Bank prints them inside the employer name ("X Ltd. o/a Y"); the
+  employer-details block shows the same single string, there is no separate "Business name" field on the posting page.
+  1 of 235 imported employers has one (Weldwork Fabricators Ltd. o/a Weldwork Fabricators).
+- **Education** is NULL for partner postings (no structured Education section — 146 of 266) and `other` is not hit
+  by any of the current vocabulary; if Job Bank adds a phrase, it lands in `education_other` verbatim.
 - **Salary "to be negotiated"** with no figures → salary null ("Salary not disclosed").
 - `job_type` collapses Job Bank's two-axis terms (Permanent/Term/Casual/Seasonal × Full/Part time) to one key;
   "Term or contract + Full time" becomes `contract`.

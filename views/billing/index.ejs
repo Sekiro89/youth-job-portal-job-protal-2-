@@ -77,13 +77,14 @@
   </div>
 
   <div class="bill-section">
-    <div class="split"><h2 class="bill-h2">Payment history</h2><span class="small muted"><%= payments.length %> receipt<%= payments.length === 1 ? '' : 's' %></span></div>
+    <div class="split"><h2 class="bill-h2">Receipts</h2><span class="small muted"><%= payments.length %> receipt<%= payments.length === 1 ? '' : 's' %></span></div>
+    <p class="small muted bill-receipts-note">All receipts are available from your login, any time. <strong>View</strong> opens the receipt; <strong>Download (PDF)</strong> opens it with the print dialog ready — choose “Save as PDF”.</p>
     <% if (!payments.length) { %>
       <div class="empty">No payments yet.</div>
     <% } else { %>
     <div class="table-wrap">
       <table class="table table--stack bill-table">
-        <thead><tr><th>Receipt</th><th>Date</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Period</th><th>Total</th><th></th></tr></thead>
+        <thead><tr><th>Receipt</th><th>Date</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Period</th><th>Total</th><th>Open</th></tr></thead>
         <tbody>
         <% payments.forEach(p => { %>
           <tr>
@@ -92,8 +93,8 @@
             <td data-label="Posting"><%= p.job_title %></td>
             <% if (isConsultant) { %><td data-label="Company"><%= p.company_name %></td><% } %>
             <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
-            <td data-label="Total"><%= money(p.total_cents) %> <% if (p.status !== 'paid') { %><span class="badge badge--danger"><%= p.status %></span><% } %></td>
-            <td data-label="Receipt link"><a href="/billing/receipt/<%= p.id %>">View receipt</a></td>
+            <td data-label="Total"><%= money(p.total_cents) %> <span class="small muted">(<%= money(p.amount_cents) %> + GST <%= money(p.tax_cents) %>)</span><% if (p.status !== 'paid') { %> <span class="badge badge--danger"><%= p.status %></span><% } %></td>
+            <td data-label="Receipt" class="bill-actions-cell"><div class="bill-actions bill-actions--links"><a href="/billing/receipt/<%= p.id %>">View</a><a href="/billing/receipt/<%= p.id %>?print=1" title="Opens the receipt with the print dialog — choose Save as PDF">Download (PDF)</a></div></td>
           </tr>
         <% }) %>
         </tbody>
@@ -104,6 +105,6 @@
 
   <div class="card card--flat bill-pricing-note">
     <h3>How pricing works</h3>
-    <p>Each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong>, charged on the day you publish and then every month on the same date until you cancel. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST<% if (pricing.gst_number) { %> (registration no. <%= pricing.gst_number %>)<% } %>.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } else { %> Cards are processed by Stripe; use <a href="/billing/portal">Manage card &amp; invoices</a> to update your card or download Stripe invoices.<% } %></p>
+    <p>As <%= isConsultant ? 'a third party consultant' : 'an employer' %>, each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong> (<%= isConsultant ? 'employers pay ' + money(allPricing.employer.price_cents) : 'third party consultants pay ' + money(allPricing.consultant.price_cents) %> + GST), charged on the day you publish and then every month on the same date until you cancel. The price you pay at checkout is locked in for that posting — later price changes never alter an existing subscription. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST<% if (pricing.gst_number) { %> (registration no. <%= pricing.gst_number %>)<% } %>, viewable and downloadable as PDF from this page.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } else { %> Cards are processed by Stripe; use <a href="/billing/portal">Manage card &amp; invoices</a> to update your card or download Stripe invoices.<% } %></p>
   </div>
 </section>
