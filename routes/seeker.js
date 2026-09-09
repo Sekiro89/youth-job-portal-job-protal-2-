@@ -8,6 +8,7 @@ const multer = require('multer');
 const db = require('../lib/db');
 const auth = require('../lib/auth');
 const mail = require('../lib/mail');
+const settings = require('../lib/settings');
 const C = require('../lib/constants');
 const h = require('../lib/helpers');
 const { PUBLIC_WHERE } = require('../lib/jobs');
@@ -111,6 +112,10 @@ function uploadAbs(rel, kind) {
 /** Locations of a job, primary first. Imported reference postings may have only city/province. */
 const jobLocations = (jobId) => db.many('SELECT * FROM job_locations WHERE job_id=$1 ORDER BY sort_order, id', [jobId]);
 const LOCATION_COUNT = `(SELECT count(*)::int FROM job_locations l WHERE l.job_id = jobs.id) AS location_count`;
+/** Company columns for anything shown to a seeker: the operating name chosen for THIS posting wins over the profile default
+ *  (h.displayCompany then falls back to company_name). Listed AFTER jobs.* so ep.operating_name never overwrites jobs.operating_name. */
+const JOB_COMPANY = `ep.company_name, COALESCE(NULLIF(jobs.operating_name, ''), ep.operating_name) AS operating_name, jobs.hours_amount, jobs.hours_period`;
+const publicUrl = async () => (await settings.get('public_url')).replace(/\/$/, '');
 
 async function getProfile(userId) {
   return (await db.one('SELECT * FROM seeker_profiles WHERE user_id=$1', [userId])) || {
@@ -132,7 +137,7 @@ function completeness(p) {
   return { items, done, total: items.length, percent: Math.round((done / items.length) * 100) };
 }
 async function publicJob(slug) {
-  return db.one(`SELECT jobs.*, ep.company_name, ep.operating_name, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id, ${LOCATION_COUNT}
+  return db.one(`SELECT jobs.*, ${JOB_COMPANY}, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id, ${LOCATION_COUNT}
                  FROM jobs JOIN employer_profiles ep ON ep.id = jobs.employer_profile_id WHERE jobs.slug=$1 AND ${PUBLIC_WHERE}`, [slug]);
 }
 const backTo = (req, fallback) => {
@@ -198,7 +203,7 @@ router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
       getProfile(uid),
       matching.matchesForSeeker(uid, 6),
       matching.countMatchesForSeeker(uid),
-      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ep.company_name, ep.operating_name, (${PUBLIC_WHERE}) AS is_public
+      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public
                FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
                WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]),
       db.many('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 5', [uid]),
@@ -344,21 +349,25 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
       [job.id, uid, resume.path, resume.name, values.cover_letter || null, cover.path, cover.name]);
     await db.query(`INSERT INTO notifications(user_id, type, title, body, link, job_id) VALUES ($1,'application_update',$2,$3,'/jobseeker/applications',$4)`,
       [uid, 'Application sent', `Your application for ${job.title} at ${company} was sent.`, job.id]);
-    const jobLink = `${mail.PUBLIC_URL}/jobs/${job.slug}`;
+    const PUBLIC_URL = await publicUrl();
+    const jobLink = `${PUBLIC_URL}/jobs/${job.slug}`;
+    const hours = h.formatHours(job);
+    const jobLine = `${h.escapeHtml(h.location(job))}${hours ? ` · ${h.escapeHtml(hours)}` : ''}`;
     const attached = `your resume (<strong>${h.escapeHtml(resume.name)}</strong>)${cover.path ? ` and cover sheet (<strong>${h.escapeHtml(cover.name)}</strong>)` : ''}`;
     await mail.send({
       to: req.user.email,
       subject: `Application sent: ${job.title} at ${company}`,
-      html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and ${attached} to <strong>${h.escapeHtml(company)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${h.escapeHtml(h.location(job))}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
-      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${company} was sent with resume ${resume.name}${cover.path ? ` and cover sheet ${cover.name}` : ''}.\n${jobLink}\n\nTrack it: ${mail.PUBLIC_URL}/jobseeker/applications`,
+      html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and ${attached} to <strong>${h.escapeHtml(company)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${jobLine}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
+      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${company} was sent with resume ${resume.name}${cover.path ? ` and cover sheet ${cover.name}` : ''}.\n${jobLink}\n\nTrack it: ${PUBLIC_URL}/jobseeker/applications`,
     });
     const employerTo = job.apply_email || job.contact_email || (await db.one('SELECT email FROM users WHERE id=$1', [job.owner_user_id]) || {}).email;
     if (employerTo) {
-      const applicantsHref = `${mail.PUBLIC_URL}/employer/jobs/${job.id}/applicants`;
+      const applicantsHref = `${PUBLIC_URL}/employer/jobs/${job.id}/applicants`;
       const note = values.cover_letter ? `<div style="border-left:3px solid #E1E7EF;padding-left:12px;margin:12px 0">${h.paragraphs(values.cover_letter)}</div>` : '';
       const files = `Their resume (<strong>${h.escapeHtml(resume.name)}</strong>)${cover.path ? ` and cover sheet (<strong>${h.escapeHtml(cover.name)}</strong>) are` : ' is'} available on your applicants page.`;
       await mail.send({
         to: employerTo,
+        replyTo: `${req.user.name.replace(/["<>\r\n]/g, '')} <${req.user.email}>`,   // "Reply" in the employer's mail client goes to the applicant, never to the system sender
         subject: `New applicant for ${job.title}`,
         html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(company)}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${note}<p>${files}</p>`, { href: applicantsHref, label: 'View applicants' }),
         text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${company}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}Resume: ${resume.name}${cover.path ? `\nCover sheet: ${cover.name}` : ''}\nView applicants: ${applicantsHref}`,
@@ -376,7 +385,7 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
 // ------------------------------------------------------------------ 5. applications
 router.get('/jobseeker/applications', seekerOnly, async (req, res, next) => {
   try {
-    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ep.company_name, ep.operating_name, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT}
+    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT}
       FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
       WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC`, [req.user.id]);
     res.render('seeker/applications', { title: 'My applications', nav: 'applications', applications });
@@ -429,7 +438,7 @@ router.post('/jobs/:slug/unsave', saveGate, async (req, res, next) => {
 });
 router.get('/jobseeker/saved', seekerOnly, async (req, res, next) => {
   try {
-    const jobs = await db.many(`SELECT jobs.*, ep.company_name, ep.operating_name, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT},
+    const jobs = await db.many(`SELECT jobs.*, ${JOB_COMPANY}, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT},
         EXISTS (SELECT 1 FROM applications a WHERE a.job_id=jobs.id AND a.seeker_user_id=s.user_id) AS applied
       FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
       WHERE s.user_id=$1 ORDER BY s.created_at DESC`, [req.user.id]);

@@ -6,7 +6,7 @@
         <p class="eyebrow"><%= isConsultant ? 'Consultant dashboard' : 'Employer dashboard' %></p>
         <h1>Welcome back, <%= (user.name || '').split(' ')[0] %></h1>
         <p class="muted">
-          <% if (isConsultant) { %><%= profiles.length %> compan<%= profiles.length === 1 ? 'y' : 'ies' %> under your account.<% } else if (profiles[0]) { %><%= h.displayCompany(profiles[0]) %><% if (h.legalNameNote(profiles[0])) { %> <span class="small">(<%= h.legalNameNote(profiles[0]) %>)</span><% } %><% if (profiles[0].city) { %> · <%= h.location(profiles[0]) %><% } %><% } else { %>Set up your company profile to start posting.<% } %>
+          <% if (isConsultant) { %><%= profiles.length %> compan<%= profiles.length === 1 ? 'y' : 'ies' %> under your account.<% } else if (profiles[0]) { %><%= h.displayCompany(profiles[0]) %><% if (h.legalNameNote(profiles[0])) { %> <span class="small">(<%= h.legalNameNote(profiles[0]) %>)</span><% } %><% if (profiles[0].industry) { %> · <%= h.industryName(profiles[0].industry) %><% } %><% if (profiles[0].city) { %> · <%= h.location(profiles[0]) %><% } %><% } else { %>Set up your company profile to start posting.<% } %>
         </p>
       </div>
       <div class="cluster">
@@ -82,7 +82,7 @@
               <li class="applicant-row">
                 <div>
                   <a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a>
-                  <div class="small muted"><% if (isConsultant) { %><%= h.displayCompany(job) %> · <% } %><%= h.location(job) %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
+                  <div class="small muted"><% if (isConsultant) { %><%= h.displayCompany(job) %> · <% } %><%= h.location(job) %><% if (h.formatHours(job)) { %> · <%= h.formatHours(job) %><% } %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
                 </div>
                 <div class="stack-tight">
                   <%- include('partials/status-badge', { job }) %>

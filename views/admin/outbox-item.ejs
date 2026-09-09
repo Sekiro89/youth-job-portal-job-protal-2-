@@ -9,7 +9,7 @@
       <dl class="dl dl--inline">
         <dt>To</dt><dd><%= m.to_email %></dd>
         <dt>From</dt><dd><%= mailFrom %></dd>
-        <dt>Status</dt><dd><span class="badge badge--<%= badge[m.status] || '' %>"><%= m.status %></span><% if (m.status === 'logged') { %> <span class="muted small">— not delivered (SMTP not configured); this is what the recipient would have received</span><% } %></dd>
+        <dt>Status</dt><dd><span class="badge badge--<%= badge[m.status] || '' %>"><%= m.status %></span><% if (m.status === 'logged') { %> <span class="muted small">— not delivered (no email provider configured); this is what the recipient would have received</span><% } %></dd>
         <dt>Created</dt><dd><%= h.formatDateTime(m.created_at) %></dd>
         <% if (m.sent_at) { %><dt>Sent</dt><dd><%= h.formatDateTime(m.sent_at) %></dd><% } %>
         <% if (m.error) { %><dt>Error</dt><dd style="color:var(--kds-danger)"><%= m.error %></dd><% } %>

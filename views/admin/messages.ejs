@@ -3,7 +3,7 @@
   <%- include('_nav') %>
   <div class="dash__main">
     <div class="split">
-      <div><p class="eyebrow">Support inbox</p><h1>Messages</h1><p class="muted">Every Contact Us submission lands here and is emailed to <%= supportName %> at <%= supportEmail %>.</p></div>
+      <div><p class="eyebrow">Support inbox</p><h1>Messages</h1><p class="muted">Every Contact Us submission lands here<% if (supportEmails.length) { %> and is emailed to <%= supportEmail %><% } else { %>. <strong>No recipient is set</strong> — nobody is emailed (<a href="/admin/integrations#support">fix in Integrations</a>)<% } %>.</p></div>
     </div>
 
     <div class="filter-tabs" role="tablist" aria-label="Filter by status">

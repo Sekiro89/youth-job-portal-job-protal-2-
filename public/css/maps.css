@@ -1,0 +1,83 @@
+/* Canada Careers — maps (Leaflet/OSM or Google), search map view, address autocomplete. Tokens only. Loaded on
+   job / jobs / company pages and by the portal's location forms (add /css/maps.css + /js/maps.js to the page). */
+
+/* ---------- map surface ---------- */
+.cc-map { position: relative; width: 100%; min-height: 260px; height: 320px; border-radius: 14px; overflow: hidden; border: 1px solid var(--kds-border); background: var(--cc-navy-50); isolation: isolate; }
+.cc-map--failed { display: grid; place-items: center; }
+.cc-map__empty { position: absolute; inset: auto 12px 12px 12px; z-index: 500; margin: 0 auto; max-width: 360px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--kds-border); box-shadow: var(--kds-shadow-2); font-size: .8125rem; color: var(--kds-fg-muted); text-align: center; }
+.cc-map--failed .cc-map__empty { position: static; }
+.leaflet-container { font-family: inherit; font-size: .875rem; }
+.leaflet-container a { color: var(--cc-navy); }
+.leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: var(--kds-shadow-2); }
+.leaflet-popup-content { margin: 12px 14px; line-height: 1.35; }
+.leaflet-control-attribution { font-size: .6875rem; }
+.cc-popup { display: grid; gap: 3px; min-width: 160px; }
+.cc-popup__title { font-weight: 700; color: var(--cc-navy); text-decoration: none; font-size: .9375rem; }
+.cc-popup__co { font-weight: 500; }
+.cc-popup__addr, .cc-popup__meta { color: var(--kds-fg-muted); font-size: .8125rem; }
+.cc-popup__link { margin-top: 4px; font-weight: 600; color: var(--cc-red); text-decoration: none; }
+
+/* ---------- job page: work locations + map ---------- */
+.map-block { margin-top: 12px; display: grid; gap: 10px; }
+.map-block .cc-map { height: 300px; }
+.map-block__note { margin: 0; }
+.locations__item { flex-wrap: wrap; }
+.locations__addr { flex: 1 1 200px; }
+.locations__map-link { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--kds-border); background: var(--cc-surface); color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.locations__map-link:hover { border-color: var(--cc-navy); }
+.locations__dist { flex: none; font-size: .8125rem; color: var(--kds-fg-muted); font-weight: 600; }
+
+/* ---------- search: near me / radius ---------- */
+.near { display: grid; gap: 8px; }
+.near__row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.near__row .input { min-width: 0; }
+.near__radius { width: auto; }
+.near__btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; white-space: nowrap; }
+.near__status { margin: 0; min-height: 1em; }
+.near__status.is-error { color: var(--kds-danger, #b32222); }
+.near__point { display: flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--kds-fg-muted); }
+.near__point strong { color: var(--cc-ink); }
+.job-card__dist { color: var(--cc-navy); font-weight: 700; }
+
+/* ---------- search: list / map toggle + map pane ---------- */
+.view-toggle { display: inline-flex; border: 1px solid var(--kds-border); border-radius: 10px; overflow: hidden; background: #fff; }
+.view-toggle button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); cursor: pointer; }
+.view-toggle button[aria-pressed="true"] { background: var(--cc-navy); color: #fff; }
+.view-toggle button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
+.results__map { display: none; min-width: 0; }
+.results__map .cc-map { height: min(70vh, 560px); }
+.results.is-map .results__map { display: block; }
+.results.is-map .results__list, .results.is-map .pager, .results.is-map .results__empty { display: none; }
+.results__map-note { margin: 6px 0 0; }
+.no-js .view-toggle { display: none; }
+@media (min-width: 1024px) {
+  .view-toggle { display: none; }
+  .results__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 38%); gap: 20px; align-items: start; }
+  .results__main { min-width: 0; }
+  .results__map { display: block; position: sticky; top: calc(var(--cc-header-h) + 16px); }
+  .results__map .cc-map { height: calc(100vh - var(--cc-header-h) - 32px); min-height: 380px; max-height: 820px; }
+  .results.is-map .results__list, .results.is-map .pager, .results.is-map .results__empty { display: grid; }
+  .results.is-map .pager { display: flex; }
+}
+@media (min-width: 1280px) { .results__body .results__list { grid-template-columns: 1fr; } }
+@media (min-width: 1440px) { .results__body .results__list { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- company page ---------- */
+.co-map { display: grid; gap: 10px; margin-bottom: 20px; }
+.co-map .cc-map { height: 280px; }
+.co-locations { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .9rem; }
+.co-locations li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.co-locations__label { font-weight: 600; }
+
+/* ---------- address autocomplete (OSM fallback list + Google element) ---------- */
+.cc-suggest-host { position: relative; }
+.cc-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 600; margin: 4px 0 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--kds-border); border-radius: 12px; box-shadow: var(--kds-shadow-2); max-height: 280px; overflow: auto; }
+.cc-suggest__item { display: grid; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.cc-suggest__item:hover, .cc-suggest__item.is-active { background: var(--cc-navy-50); }
+.cc-suggest__main { font-weight: 600; color: var(--cc-ink); font-size: .9375rem; }
+.cc-suggest__sub { font-size: .75rem; color: var(--kds-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+gmp-place-autocomplete.cc-pac { display: block; width: 100%; margin-bottom: 8px; border-radius: 10px; --gmpx-color-surface: #fff; }
+.cc-pac__target { }
+
+/* ---------- print: never print a map ---------- */
+@media print { .cc-map, .map-block, .results__map, .view-toggle, .locations__map-link, .cc-suggest, .co-map .cc-map { display: none !important; } }

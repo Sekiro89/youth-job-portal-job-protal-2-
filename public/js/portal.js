@@ -1,5 +1,8 @@
 (function () {
   var jf = document.querySelector('form.job-form'), dirty = false, submitting = false;
+  // Anything meant only for no-JS users goes away; anything meant only for JS users appears.
+  document.querySelectorAll('[data-nojs-only]').forEach(function (el) { el.hidden = true; });
+  document.querySelectorAll('[data-nojs-hide]').forEach(function (el) { el.hidden = false; });
   // Character counter (description min 100)
   document.querySelectorAll('[data-counter]').forEach(function (ta) {
     var out = document.getElementById(ta.getAttribute('data-counter'));
@@ -14,7 +17,7 @@
     var sync = function () { target.hidden = !cb.checked; if (cb.checked) { var i = target.querySelector('input'); if (i && document.activeElement === cb) i.focus(); } };
     cb.addEventListener('change', sync); sync();
   });
-  // <select> that reveals a dependent field when a given value is chosen (Education / Experience "Other (specify)").
+  // <select> that reveals a dependent field when a given value is chosen (Education / Experience "Other (specify)", operating name "Add new…").
   // Without JS the field is always visible (data-nojs-visible); with JS it only shows for the trigger value.
   document.querySelectorAll('select[data-select-toggles]').forEach(function (sel) {
     var target = document.getElementById(sel.getAttribute('data-select-toggles'));
@@ -23,54 +26,81 @@
     var sync = function (fromUser) { var on = sel.value === want; target.hidden = !on; if (on && fromUser) { var i = target.querySelector('input'); if (i) i.focus(); } };
     sel.addEventListener('change', function () { sync(true); }); sync(false);
   });
-  // Repeatable work-location blocks on the job form. Server renders >= 3 blocks for no-JS users; with JS we drop the
-  // untouched spares, offer "Add another location" (clones the last block) and "Remove" (never below one block).
-  var locList = document.getElementById('loc-list');
-  if (locList) {
-    var addBtn = document.getElementById('loc-add');
-    var max = parseInt(locList.getAttribute('data-max'), 10) || 20;
-    var FIELDS = ['street_address', 'unit', 'city', 'province', 'postal_code'];
-    var blocks = function () { return Array.prototype.slice.call(locList.querySelectorAll('[data-loc-block]')); };
-    var fieldOf = function (el) { var m = /^loc_(\w+)\[\]$/.exec(el.name || ''); return m ? m[1] : null; };
+
+  // ---- Profile form: repeatable operating names (operating_names[]; first = default). Server renders 3 boxes for no-JS users.
+  var namesList = document.getElementById('names-list');
+  if (namesList) {
+    var namesAdd = document.getElementById('names-add');
+    var nmax = parseInt(namesList.getAttribute('data-max'), 10) || 10;
+    var rows = function () { return Array.prototype.slice.call(namesList.querySelectorAll('[data-name-row]')); };
     var reindex = function () {
-      var bs = blocks();
-      bs.forEach(function (b, i) {
-        b.querySelectorAll('input,select').forEach(function (el) { var f = fieldOf(el); if (!f) return; var id = 'loc_' + i + '_' + f; var lab = b.querySelector('label[for="' + el.id + '"]'); el.id = id; if (lab) lab.setAttribute('for', id); });
-        var n = b.querySelector('[data-loc-n]'); if (n) n.textContent = String(i + 1);
-        var note = b.querySelector('[data-loc-first-note]'); if (note) note.hidden = i !== 0;
-        var rm = b.querySelector('[data-loc-remove]'); if (rm) rm.hidden = bs.length <= 1;
+      var rs = rows();
+      rs.forEach(function (r, i) {
+        var inp = r.querySelector('input'); var lab = r.querySelector('label'); inp.id = 'opname-' + i; if (lab) { lab.setAttribute('for', inp.id); lab.textContent = 'Operating name ' + (i + 1); }
+        inp.placeholder = i === 0 ? 'e.g. Flying Pig' : 'Another name (optional)';
+        var d = r.querySelector('[data-name-default]'); if (d) d.hidden = i !== 0;
+        var rm = r.querySelector('[data-name-remove]'); if (rm) rm.hidden = rs.length <= 1;
       });
-      if (addBtn) addBtn.hidden = bs.length >= max;
+      if (namesAdd) namesAdd.hidden = rs.length >= nmax;
     };
-    // drop untouched spare blocks (server marks them), keep every block that has content or an error
-    blocks().forEach(function (b) { if (b.classList.contains('loc-block--spare')) b.parentNode.removeChild(b); });
-    document.querySelectorAll('[data-nojs-only]').forEach(function (el) { el.hidden = true; });
-    if (addBtn) {
-      addBtn.hidden = false;
-      addBtn.addEventListener('click', function () {
-        var bs = blocks(); if (bs.length >= max) return;
-        var clone = bs[bs.length - 1].cloneNode(true);
-        clone.classList.remove('loc-block--invalid', 'loc-block--spare');
-        clone.querySelectorAll('.error').forEach(function (e) { e.parentNode.removeChild(e); });
-        clone.querySelectorAll('input,select').forEach(function (el) { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = ''; });
-        var note = clone.querySelector('[data-loc-first-note]'); if (note) note.parentNode.removeChild(note);
-        locList.appendChild(clone); reindex();
-        var first = clone.querySelector('input'); if (first) first.focus();
-        clone.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        if (jf) dirty = true;
+    rows().forEach(function (r) { if (r.classList.contains('names-row--spare')) r.parentNode.removeChild(r); });
+    if (namesAdd) {
+      namesAdd.hidden = false;
+      namesAdd.addEventListener('click', function () {
+        var rs = rows(); if (rs.length >= nmax) return;
+        var clone = rs[rs.length - 1].cloneNode(true);
+        clone.classList.remove('names-row--spare'); clone.querySelector('input').value = '';
+        namesList.appendChild(clone); reindex(); clone.querySelector('input').focus();
       });
     }
-    locList.addEventListener('click', function (e) {
-      var btn = e.target.closest && e.target.closest('[data-loc-remove]'); if (!btn) return;
-      var bs = blocks(); if (bs.length <= 1) return;
-      var b = btn.closest('[data-loc-block]');
-      var filled = Array.prototype.some.call(b.querySelectorAll('input,select'), function (el) { return el.value; });
-      if (filled && !window.confirm('Remove this work location?')) return;
-      b.parentNode.removeChild(b); reindex();
-      if (jf) dirty = true;
+    namesList.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-name-remove]'); if (!btn) return;
+      var rs = rows(); if (rs.length <= 1) return;
+      var r = btn.closest('[data-name-row]');
+      if (r.querySelector('input').value && !window.confirm('Remove this operating name? Postings that already use it keep it.')) return;
+      r.parentNode.removeChild(r); reindex();
     });
     reindex();
   }
+  // ---- Profile form: the location editor is collapsed behind "+ Add location" once the profile has locations.
+  var locEditor = document.getElementById('loc-editor');
+  if (locEditor) {
+    var openEditor = function () { locEditor.classList.remove('is-collapsed'); locEditor.hidden = false; var i = locEditor.querySelector('input'); if (i) i.focus(); locEditor.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+    document.querySelectorAll('[data-loc-open]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); openEditor(); a.hidden = true; }); });
+    document.querySelectorAll('[data-loc-cancel]').forEach(function (a) {
+      if (locEditor.getAttribute('action').match(/\/\d+$/)) return;   // edit mode: Cancel is a real link back to the plain form
+      a.addEventListener('click', function (e) { e.preventDefault(); locEditor.classList.add('is-collapsed'); locEditor.querySelectorAll('input:not([type=checkbox]),select').forEach(function (i) { i.value = ''; }); document.querySelectorAll('[data-loc-open]').forEach(function (b) { b.hidden = false; }); });
+    });
+    if (location.hash === '#loc-editor') openEditor();
+  }
+
+  // ---- Job form
+  if (jf) {
+    // Consultant: the company select drives which address-book list / operating-name select is shown, and the default application email.
+    var sel = document.getElementById('employer_profile_id');
+    var applyEmail = document.getElementById('apply_email');
+    var showProfile = function (pid) {
+      document.querySelectorAll('[data-profile]').forEach(function (el) { el.hidden = !pid || String(el.getAttribute('data-profile')) !== String(pid); });
+      document.querySelectorAll('[data-profile-none]').forEach(function (el) { el.hidden = !!pid; });
+    };
+    if (sel) {
+      var optEmail = function () { var o = sel.options[sel.selectedIndex]; return o ? (o.getAttribute('data-contact-email') || '') : ''; };
+      var prevDefault = applyEmail ? (applyEmail.getAttribute('data-apply-default') || '') : '';
+      sel.addEventListener('change', function () {
+        showProfile(sel.value);
+        var d = optEmail();
+        if (applyEmail && (!applyEmail.value || applyEmail.value === prevDefault)) { applyEmail.value = d; applyEmail.setAttribute('data-apply-default', d); }
+        prevDefault = d;
+      });
+      showProfile(sel.value);
+    }
+    // "Add a new location" block: Clear empties it and folds it back.
+    var newLoc = document.getElementById('loc-new'); var clearBtn = document.getElementById('loc-new-clear');
+    if (newLoc && clearBtn) clearBtn.addEventListener('click', function () { newLoc.querySelectorAll('input,select').forEach(function (i) { i.value = ''; }); newLoc.open = false; dirty = true; });
+    // A ticked location list that is hidden (other company) must not submit: the server ignores foreign ids anyway, this just keeps the payload honest.
+    jf.addEventListener('submit', function () { document.querySelectorAll('.loc-choice[hidden] input[type=checkbox]').forEach(function (cb) { cb.checked = false; }); });
+  }
+
   // Every other POST form: ignore a second submit while the first is in flight (publish / pay / status buttons)
   document.querySelectorAll('form[method=post]:not(.job-form)').forEach(function (f) {
     f.addEventListener('submit', function (e) {

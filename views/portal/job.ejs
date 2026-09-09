@@ -55,16 +55,19 @@
         <article class="job-card job-card--preview">
           <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= (job.locations || []).length > 1 ? ' (+' + (job.locations.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
           <h3 class="job-card__title"><%= job.title %></h3>
-          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (h.formatHours(job)) { %><span><%= h.formatHours(job) %></span><% } %><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
           <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
           <div class="job-card__foot"><span><%= job.published_at ? 'Posted ' + h.timeAgo(job.published_at) : 'Not published yet' %></span><span><%= h.categoryName(job.category) %></span></div>
         </article>
         <dl class="facts">
+          <div><dt>Company</dt><dd><%= h.displayCompany(job) %><% if (h.legalNameNote(job)) { %> <span class="legal-note">· <%= h.legalNameNote(job) %></span><% } %></dd></div>
+          <% if (job.industry) { %><div><dt>Industry</dt><dd><%= h.industryName(job.industry) %></dd></div><% } %>
           <div><dt>Work location<%= (job.locations || []).length === 1 ? '' : 's' %></dt><dd>
             <% if (job.locations && job.locations.length) { %><ul class="addr-list"><% job.locations.forEach(l => { %><li><%= l.street_address ? h.fullAddress(l) : h.location(l) %></li><% }) %></ul>
             <% } else { %><%= h.location(job) %><% } %>
           </dd></div>
           <div><dt>Pay</dt><dd><%= h.formatSalary(job) %></dd></div>
+          <% if (h.formatHours(job)) { %><div><dt>Hours</dt><dd><%= h.formatHours(job) %></dd></div><% } %>
           <% if (job.vacancies > 1) { %><div><dt>Positions</dt><dd><%= job.vacancies %></dd></div><% } %>
           <% if (job.languages && job.languages.length) { %><div><dt>Languages</dt><dd><%= job.languages.join(', ') %></dd></div><% } %>
           <% if (job.experience_level) { %><div><dt>Experience</dt><dd><%= h.experienceName(job.experience_level) %><%= job.experience_level === 'other' && job.experience_other ? ' — ' + job.experience_other : '' %></dd></div><% } %>

@@ -5,7 +5,7 @@
     </div>
     <div class="bill-pay__head">
       <div>
-        <p class="eyebrow">Canada Careers</p>
+        <p class="eyebrow"><%= (typeof site !== "undefined" && site.site_name) || "Canada Careers" %></p>
         <h1 class="bill-pay__title">Pay <%= h.money(pricing.total_cents) %> <span class="bill-cur">CAD</span> / month</h1>
         <p class="muted small">Job posting: <strong><%= job.title %></strong> · <%= job.company_name %></p>
       </div>

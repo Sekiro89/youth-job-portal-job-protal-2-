@@ -18,7 +18,8 @@
             <div>
               <h2 class="card__title"><%= h.displayCompany(p) %></h2>
               <% if (h.legalNameNote(p)) { %><div class="small muted"><%= h.legalNameNote(p) %></div><% } %>
-              <div class="small muted"><%= [p.industry, p.street_address ? h.fullAddress(p) : h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
+              <div class="small muted"><%= [p.industry && h.industryName(p.industry), p.street_address ? h.fullAddress(p) : h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
+              <% if ((p.operating_names || []).length > 1) { %><div class="small muted">Also operates as <%= p.operating_names.slice(1).join(', ') %></div><% } %>
             </div>
           </div>
           <div class="company-card__stats">

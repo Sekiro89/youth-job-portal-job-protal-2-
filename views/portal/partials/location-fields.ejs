@@ -1,0 +1,44 @@
+<%# One address block. Expects: prefix (field-name prefix, e.g. 'loc_' or 'new_loc_'), vals (object keyed without prefix), errs (object keyed WITH prefix), idp (id prefix), showLabel (bool)
+    Inputs carry data-address-part so an address-autocomplete script (public/js/maps.js, maps agent) can fill them. %>
+<% const lv = vals || {}; const le = errs || {}; const lid = (f) => idp + f; const lname = (f) => prefix + f;
+   const lerr = (f) => le[lname(f)] ? `<div class="error" id="err-${lid(f)}">${h.escapeHtml(le[lname(f)])}</div>` : '';
+   const linv = (f) => le[lname(f)] ? ` aria-invalid="true" aria-describedby="err-${lid(f)}"` : ''; %>
+<div class="addr-fields" data-address-form>
+  <% if (showLabel !== false) { %>
+  <div class="field">
+    <label for="<%= lid('label') %>">Label <span class="muted">(optional)</span></label>
+    <input class="input" id="<%= lid('label') %>" name="<%= lname('label') %>" value="<%= lv.label || '' %>" maxlength="80" placeholder="e.g. Head office, Airport Rd warehouse" autocomplete="off">
+  </div>
+  <% } %>
+  <div class="field">
+    <label for="<%= lid('street_address') %>">Street address <span class="req">*</span></label>
+    <input class="input" id="<%= lid('street_address') %>" name="<%= lname('street_address') %>" value="<%= lv.street_address || '' %>" maxlength="200" placeholder="e.g. 2400 Derry Rd E" autocomplete="off" data-address-part="street_address"<%- linv('street_address') %>>
+    <%- lerr('street_address') %>
+  </div>
+  <div class="form-row loc-row--unit">
+    <div class="field">
+      <label for="<%= lid('unit') %>">Unit / suite <span class="muted">(optional)</span></label>
+      <input class="input" id="<%= lid('unit') %>" name="<%= lname('unit') %>" value="<%= lv.unit || '' %>" maxlength="40" placeholder="e.g. 4" autocomplete="off" data-address-part="unit">
+    </div>
+    <div class="field">
+      <label for="<%= lid('city') %>">City <span class="req">*</span></label>
+      <input class="input" id="<%= lid('city') %>" name="<%= lname('city') %>" value="<%= lv.city || '' %>" maxlength="80" autocomplete="off" data-address-part="city"<%- linv('city') %>>
+      <%- lerr('city') %>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="field">
+      <label for="<%= lid('province') %>">Province / territory <span class="req">*</span></label>
+      <select class="input" id="<%= lid('province') %>" name="<%= lname('province') %>" data-address-part="province"<%- linv('province') %>>
+        <option value="">Choose…</option>
+        <% C.PROVINCES.forEach(([pk, pn]) => { %><option value="<%= pk %>" <%= lv.province === pk ? 'selected' : '' %>><%= pn %></option><% }) %>
+      </select>
+      <%- lerr('province') %>
+    </div>
+    <div class="field">
+      <label for="<%= lid('postal_code') %>">Postal code <span class="req">*</span></label>
+      <input class="input" id="<%= lid('postal_code') %>" name="<%= lname('postal_code') %>" value="<%= lv.postal_code || '' %>" maxlength="7" placeholder="A1A 1A1" autocomplete="off" data-address-part="postal_code"<%- linv('postal_code') %>>
+      <%- lerr('postal_code') %>
+    </div>
+  </div>
+</div>

@@ -4,16 +4,19 @@ const express = require('express');
 const db = require('../lib/db');
 const auth = require('../lib/auth');
 const mail = require('../lib/mail');
+const settings = require('../lib/settings');
 const C = require('../lib/constants');
 const { escapeHtml, formatPostal } = require('../lib/helpers');
 const { uniqueProfileSlug } = require('../lib/jobs');
 
 const router = express.Router();
-const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3900}`;
+/** Links in emails use the client-configurable public URL (admin panel > env > default). */
+const publicUrl = async () => (await settings.get('public_url')).replace(/\/$/, '');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PROVINCE_CODES = C.PROVINCES.map(([k]) => k);
 const AUDIENCE_KEYS = C.AUDIENCES.map(([k]) => k);
+const INDUSTRY_KEYS = C.INDUSTRIES.map(([k]) => k);
 const ROLE_LABEL = { employer: 'Employer', consultant: 'Third Party Consultant', seeker: 'Job Seeker', admin: 'Administrator' };
 const MAX_FAILS = 5, FAIL_WINDOW_MS = 10 * 60 * 1000;
 
@@ -71,6 +74,7 @@ async function createUser(client, v, role) {
 }
 async function welcome(user, role) {
   const first = escapeHtml(user.name.split(' ')[0]);
+  const PUBLIC_URL = await publicUrl();
   const bodies = {
     employer: [`<p>Hi ${first}, your employer account is ready.</p><p>Post your first job in minutes — every posting is <strong>${PRICE.employer}</strong>, reaches professionals, new immigrants, Indigenous peoples, refugees and youth across Canada, and you can cancel any time.</p>`, { href: `${PUBLIC_URL}/employer/jobs/new`, label: 'Post a job' }],
     consultant: [`<p>Hi ${first}, your Third Party Consultant account is ready.</p><p>Add the employers you represent as company profiles, then post and manage jobs for each of them under this one login — ${PRICE.consultant}.</p>`, { href: `${PUBLIC_URL}/consultant/profiles/new`, label: 'Add your first employer' }],
@@ -97,10 +101,13 @@ const signupMeta = {
   consultant: { title: 'Sign up as a third party consultant', metaDescription: 'Create a Canada Careers consultant account to manage job postings for many employers under one login.' },
   seeker: { title: 'Sign up as a job seeker', metaDescription: 'Create a free Canada Careers job seeker account. Upload your resume, apply online and get job alerts by email.' },
 };
+/** The employer form carries the address-autocomplete widget (public/js/maps.js, maps agent) on top of the auth script. */
+const employerPage = (extra) => page({ ...extra, extraJs: ['/js/auth.js', '/js/maps.js'] });
 router.get('/signup/:role(employer|consultant|seeker)', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
   rememberNext(req);
-  res.render(signupPage[req.params.role], page({ ...signupMeta[req.params.role], values: { notify_email: true }, errors: {} }));
+  const p = req.params.role === 'employer' ? employerPage : page;
+  res.render(signupPage[req.params.role], p({ ...signupMeta[req.params.role], values: { notify_email: true }, errors: {} }));
 });
 
 router.post('/signup/employer', wrap(async (req, res) => {
@@ -108,28 +115,46 @@ router.post('/signup/employer', wrap(async (req, res) => {
   const loc = validateLocation(req.body, errors, true);
   const company_name = s(req.body.company_name);
   const operating_name = s(req.body.operating_name).slice(0, 160);
+  const industry = s(req.body.industry);
   const street_address = s(req.body.street_address).slice(0, 200);
+  const unit = s(req.body.unit).slice(0, 40);
   let postal_code = s(req.body.postal_code);
   let website = s(req.body.website);
   if (company_name.length < 2) errors.company_name = 'Please enter your company name.';
   if (/[<>]/.test(operating_name)) errors.operating_name = 'Operating name cannot contain < or >.';
-  if (/[<>]/.test(street_address)) errors.street_address = 'Street address cannot contain < or >.';
-  if (postal_code && !C.POSTAL_CODE_RE.test(postal_code)) errors.postal_code = 'Please enter a valid Canadian postal code (e.g. M5V 1A1).';
-  else if (postal_code) postal_code = formatPostal(postal_code);
+  if (!industry) errors.industry = 'Please choose your industry.';
+  else if (!INDUSTRY_KEYS.includes(industry)) errors.industry = 'Please choose an industry from the list.';
+  // The business address becomes the profile's first (default) work location, so street + postal are required here.
+  if (!street_address) errors.street_address = 'Please enter your street address.';
+  else if (/[<>]/.test(street_address)) errors.street_address = 'Street address cannot contain < or >.';
+  if (/[<>]/.test(unit)) errors.unit = 'Unit cannot contain < or >.';
+  if (!postal_code) errors.postal_code = 'Please enter your postal code.';
+  else if (!C.POSTAL_CODE_RE.test(postal_code)) errors.postal_code = 'Please enter a valid Canadian postal code (e.g. M5V 1A1).';
+  else postal_code = formatPostal(postal_code);
   if (website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
   if (website && !/^https?:\/\/[^\s/]+\.[^\s]{2,}$/i.test(website)) errors.website = 'Please enter a valid website address.';
-  const vals = { ...values, ...loc, company_name, operating_name, street_address, postal_code, website };
-  if (Object.keys(errors).length) return res.status(422).render(signupPage.employer, page({ ...signupMeta.employer, values: vals, errors }));
+  const vals = { ...values, ...loc, company_name, operating_name, industry, street_address, unit, postal_code, website };
+  if (Object.keys(errors).length) return res.status(422).render(signupPage.employer, employerPage({ ...signupMeta.employer, values: vals, errors }));
 
   const slug = await uniqueProfileSlug(company_name);
-  const { user, profile } = await db.tx(async (client) => {
+  const { user, profile, location } = await db.tx(async (client) => {
     const user = await createUser(client, vals, 'employer');
+    // operating_name = the default; operating_names[] = the list the job form picks from (client PDF 2026-09-10)
     const profile = (await client.query(
-      'INSERT INTO employer_profiles(owner_user_id,company_name,operating_name,slug,website,street_address,city,province,postal_code,contact_name,contact_email,contact_phone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id',
-      [user.id, company_name, operating_name || null, slug, website || null, street_address || null, loc.city, loc.province, postal_code || null, vals.name, vals.email, vals.phone || null])).rows[0];
-    return { user, profile };
+      `INSERT INTO employer_profiles(owner_user_id,company_name,operating_name,operating_names,industry,slug,website,street_address,city,province,postal_code,contact_name,contact_email,contact_phone)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+      [user.id, company_name, operating_name || null, operating_name ? [operating_name] : [], industry, slug, website || null, street_address, loc.city, loc.province, postal_code, vals.name, vals.email, vals.phone || null])).rows[0];
+    // first entry in the profile's address book — the default location offered when posting a job
+    const location = (await client.query(
+      `INSERT INTO employer_locations(employer_profile_id,label,street_address,unit,city,province,postal_code,is_default)
+       VALUES ($1,'Main location',$2,$3,$4,$5,$6,true) RETURNING id`,
+      [profile.id, street_address, unit || null, loc.city, loc.province, postal_code])).rows[0];
+    return { user, profile, location };
   });
-  await auth.audit(user.id, 'signup', 'user', user.id, { role: 'employer', profile_id: profile.id });
+  // geocode lazily: lib/geocode.js is written by the maps agent and may not exist yet
+  try { await require('../lib/geocode').geocodeEmployerLocation(location.id); }
+  catch (e) { if (e.code !== 'MODULE_NOT_FOUND') console.error('[signup] geocode failed', e.message); }
+  await auth.audit(user.id, 'signup', 'user', user.id, { role: 'employer', profile_id: profile.id, location_id: location.id });
   await welcome(user, 'employer');
   req.flash('success', `Welcome, ${user.name.split(' ')[0]}! Your employer account for ${company_name} is ready.`);
   res.redirect(await auth.login(req, user));
@@ -215,7 +240,7 @@ router.post('/forgot', wrap(async (req, res) => {
   if (user) {
     const token = auth.randomToken(32);
     await db.query("UPDATE users SET reset_token=$2, reset_expires=now() + interval '1 hour', updated_at=now() WHERE id=$1", [user.id, token]);
-    const link = `${PUBLIC_URL}/reset/${token}`;
+    const link = `${await publicUrl()}/reset/${token}`;
     await mail.send({
       to: user.email, subject: 'Reset your Canada Careers password',
       html: mail.layout('Reset your password', `<p>Hi ${escapeHtml(user.name.split(' ')[0])}, we received a request to reset the password for <strong>${escapeHtml(user.email)}</strong>.</p><p>This link works for <strong>1 hour</strong>. If you did not ask for this, you can ignore this email — your password will not change.</p>`, { href: link, label: 'Choose a new password' }),
@@ -254,7 +279,7 @@ router.post('/reset/:token', wrap(async (req, res) => {
 // ---------------------------------------------------------------- account
 const accountMeta = { title: 'My account', metaDescription: 'Manage your Canada Careers account details and password.', noindex: true };
 function renderAccount(req, res, extra) {
-  return res.render('auth/account', page({ ...accountMeta, roleLabel: ROLE_LABEL[req.user.role] || req.user.role, values: { name: req.user.name, phone: req.user.phone || '' }, errors: {}, pwErrors: {}, ...extra }));
+  return res.render('auth/account', page({ ...accountMeta, roleLabel: ROLE_LABEL[req.user.role] || req.user.role, isAdmin: req.user.role === 'admin', values: { name: req.user.name, phone: req.user.phone || '' }, errors: {}, pwErrors: {}, ...extra }));
 }
 router.get('/account', auth.requireAuth(), (req, res) => renderAccount(req, res));
 router.post('/account', auth.requireAuth(), wrap(async (req, res) => {

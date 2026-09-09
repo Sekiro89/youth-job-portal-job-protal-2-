@@ -7,8 +7,8 @@
 ]; const isActive = (p) => path === p || path.startsWith(p + '/'); %>
 <header class="site-header">
   <div class="container site-header__inner">
-    <a class="site-logo" href="/" aria-label="Canada Careers home">
-      <img src="/img/logo.svg" alt="Canada Careers" width="200" height="56">
+    <a class="site-logo" href="/" aria-label="<%= (typeof site !== 'undefined' && site.site_name) || 'Canada Careers' %> home">
+      <img src="/img/logo.svg" alt="<%= (typeof site !== 'undefined' && site.site_name) || 'Canada Careers' %>" width="200" height="56">
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
       <span></span><span></span><span></span>

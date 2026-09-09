@@ -10,7 +10,15 @@
         <%= primary.street_address ? h.fullAddress(primary) : h.location(primary) %>
         <% if (locs.length > 1) { %><span class="small">· +<%= locs.length - 1 %> more location<%= locs.length > 2 ? 's' : '' %></span><% } %>
       </div>
-      <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+      <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (h.formatHours(job)) { %><span class="job-card__hours"><%= h.formatHours(job) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+      <% const edu = job.education === 'other' ? (job.education_other || h.educationName('other')) : h.educationName(job.education);
+         const exp = job.experience_level === 'other' ? (job.experience_other || h.experienceName('other')) : h.experienceName(job.experience_level); %>
+      <% if (job.education || job.experience_level) { %>
+      <dl class="apply-job__reqs">
+        <% if (job.education) { %><div><dt>Education</dt><dd><%= edu %></dd></div><% } %>
+        <% if (job.experience_level) { %><div><dt>Experience</dt><dd><%= exp %></dd></div><% } %>
+      </dl>
+      <% } %>
       <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
     </aside>
 

@@ -1,4 +1,4 @@
-/* Admin area (Veda) — page CSS over the .dash shell in theme.css. Mobile first, tokens only. */
+/* Admin area — page CSS over the .dash shell in theme.css. Mobile first, tokens only. */
 .is-admin .dash { padding-top: 16px; }
 .is-admin .dash__main > * { min-width: 0; }
 .admin-nav a.is-active { background: var(--cc-navy); }
@@ -83,4 +83,67 @@ code { font-size: .875em; background: var(--cc-surface); padding: 1px 6px; borde
   .table--stack-lg tr { display: block; border: 1px solid var(--kds-border); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; background: #fff; }
   .table--stack-lg td { display: flex; gap: 12px; justify-content: space-between; border: 0; padding: 6px 0 !important; }
   .table--stack-lg td::before { content: attr(data-label); font-weight: 600; color: var(--kds-fg-muted); font-size: .8125rem; flex: none; }
+}
+
+/* ---------------------------------------------------------------- integrations (client control panel) */
+.h4 { font-size: 1rem; margin: 20px 0 6px; }
+.inline-form { display: inline; }
+.setup-card--warn { border-color: var(--cc-orange, #F4A62A); background: var(--cc-orange-100, #FDF0DA); }
+.unlock { max-width: 520px; }
+.integrations { display: grid; gap: 16px; grid-template-columns: 1fr; align-items: start; }
+.integrations__nav { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; position: sticky; top: calc(var(--cc-header-h, 64px) + 4px); z-index: 2; background: var(--kds-bg, #fff); margin: 0 -4px; padding: 6px 4px; }
+.integrations__nav::-webkit-scrollbar { display: none; }
+.integrations__nav a { flex: none; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--kds-border); background: #fff; text-decoration: none; font-weight: 600; font-size: .8125rem; color: var(--cc-navy); white-space: nowrap; }
+.integrations__nav a.is-active { background: var(--cc-navy-100); border-color: var(--cc-navy); color: var(--cc-navy-700); }
+@media (min-width: 1024px) {
+  .integrations { grid-template-columns: 190px minmax(0, 1fr); gap: 24px; }
+  .integrations__nav { flex-direction: column; overflow: visible; top: calc(var(--cc-header-h, 64px) + 20px); background: transparent; margin: 0; padding: 0; }
+  .integrations__nav a { border-radius: 10px; }
+}
+.int-group { scroll-margin-top: calc(var(--cc-header-h, 64px) + 60px); }
+@media (min-width: 1024px) { .int-group { scroll-margin-top: calc(var(--cc-header-h, 64px) + 20px); } }
+.int-group__blurb { margin: -6px 0 16px; line-height: 1.5; }
+.int-field .hint { line-height: 1.5; }
+.input--mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; }
+.input--num { max-width: 220px; }
+.src { display: inline-block; vertical-align: middle; margin-right: 6px; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.src--db { background: var(--cc-green-100); color: #2f5d11; }
+.src--env { background: var(--cc-orange-100, #FDF0DA); color: #8a5300; }
+.src--default { background: var(--cc-surface); color: var(--kds-fg-muted); }
+.secret { display: grid; gap: 8px; grid-template-columns: 1fr; }
+.secret__current { font-size: .9rem; overflow-wrap: anywhere; align-self: center; }
+.secret__current code { padding: 4px 8px; }
+.check--sm { padding: 6px 10px; font-size: .875rem; min-height: 44px; }
+@media (min-width: 640px) { .secret { grid-template-columns: minmax(0, 1fr) auto; } .secret__current { grid-column: 1 / -1; } }
+.int-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--kds-border); }
+.int-actions .kds-btn { min-height: 44px; }
+.int-actions--test .input { flex: 1 1 220px; min-width: 0; }
+.int-actions > .muted { flex-basis: 100%; }
+.status-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .status-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1200px) { .status-grid { grid-template-columns: repeat(3, 1fr); } }
+.status-tile { border: 1px solid var(--kds-border); border-radius: 12px; padding: 12px 14px; background: var(--cc-surface); }
+.status-tile__label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); }
+.status-tile__value { font-size: 1.15rem; font-weight: 700; color: var(--cc-ink); margin: 2px 0; }
+.status-tile__note { font-size: .8125rem; color: var(--kds-fg-muted); overflow-wrap: anywhere; }
+.status-tile.is-ok { border-color: #b9dc93; background: var(--cc-green-100); }
+.status-tile.is-warn { border-color: var(--cc-orange, #F4A62A); background: var(--cc-orange-100, #FDF0DA); }
+.status-tile.is-sandbox { border-color: var(--cc-teal, #2a9ba3); background: var(--cc-teal-100); }
+.status-tile.is-test { border-color: var(--cc-orange, #F4A62A); background: var(--cc-orange-100, #FDF0DA); }
+.status-tile.is-live { border-color: var(--cc-green, #7cbb3a); background: var(--cc-green-100); }
+.form-row--3 { grid-template-columns: 1fr; }
+@media (min-width: 900px) { .form-row--3 { grid-template-columns: 1fr 1fr 1fr; } }
+.admins { font-size: .9rem; }
+.admins td { vertical-align: top; }
+.reset summary { list-style: none; cursor: pointer; display: inline-flex; }
+.reset summary::-webkit-details-marker { display: none; }
+.reset__form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.reset__form .input { flex: 1 1 200px; min-width: 0; }
+@media (max-width: 767px) {
+  .admins thead { display: none; }
+  .admins tr { display: block; border: 1px solid var(--kds-border); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; background: #fff; }
+  .admins td { display: flex; gap: 12px; justify-content: space-between; border: 0; padding: 6px 0 !important; flex-wrap: wrap; }
+  .admins td::before { content: attr(data-label); font-weight: 600; color: var(--kds-fg-muted); font-size: .8125rem; flex: none; }
+  .admins td[data-label="Actions"] { flex-direction: column; align-items: stretch; }
+  .admins td[data-label="Actions"] .cluster { width: 100%; }
 }

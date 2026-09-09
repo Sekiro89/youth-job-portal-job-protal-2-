@@ -206,3 +206,10 @@ body.has-sticky-submit .site-footer { margin-top: 24px; }
   .apply-page .card.apply-gate { padding: 18px; }
   .input--file::file-selector-button { margin-right: 8px; padding: 6px 10px; }
 }
+
+/* --- round 2 (2026-09-10): hours + education/experience on the apply summary ------------------------------ */
+.job-card__hours { white-space: nowrap; }
+.apply-job__reqs { margin: 4px 0 0; display: grid; gap: 4px; font-size: .9rem; }
+.apply-job__reqs > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; }
+.apply-job__reqs dt { color: var(--cc-ink-muted, #5A6B7E); font-weight: 500; }
+.apply-job__reqs dd { margin: 0; overflow-wrap: anywhere; }

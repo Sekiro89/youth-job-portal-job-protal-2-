@@ -11,13 +11,15 @@
     .bill-receipt__doc .muted, .bill-receipt__doc .small { color: #4a5a6a !important; }
     .bill-receipt__head { grid-template-columns: 1fr auto !important; }
     .bill-receipt__id { text-align: right !important; }
-    .bill-receipt__parties { grid-template-columns: 1fr 1fr !important; }
+    .bill-receipt__parties { grid-template-columns: 1fr 1fr 1fr !important; }
     .bill-receipt__lines th, .bill-receipt__lines td { border-color: #c9d2dc !important; }
     .bill-receipt__lines tfoot td { border-top: 2px solid #0b1f33 !important; }
     .badge { border: 1px solid #0b1f33 !important; background: none !important; }
     a { text-decoration: none !important; }
     a[href^="/"]::after, a[href^="http"]::after { content: "" !important; }
   }
+  /* three parties (Bill from / Bill to / Payment) side by side on wide screens; billing.css keeps 2-up from 720px */
+  @media (min-width: 960px) { .bill-receipt__parties { grid-template-columns: 1fr 1fr 1fr; } }
 </style>
 <section class="container section-pad bill-receipt">
   <div class="bill-receipt__actions bill-no-print">
@@ -33,8 +35,8 @@
   <article class="bill-receipt__doc card">
     <header class="bill-receipt__head">
       <div>
-        <img src="/img/logo.svg" alt="Canada Careers" width="200" height="56" class="bill-receipt__logo">
-        <p class="small muted">Canadian job bank · <%= PUBLIC_URL.replace(/^https?:\/\//, '') %><br>All amounts in Canadian dollars<% if (pricing.gst_number) { %><br>GST/HST No. <%= pricing.gst_number %><% } %></p>
+        <img src="/img/logo.svg" alt="<%= from.site_name %>" width="200" height="56" class="bill-receipt__logo">
+        <p class="small muted">Canadian job bank · <%= from.public_url.replace(/^https?:\/\//, '') %><br>All amounts in Canadian dollars</p>
       </div>
       <div class="bill-receipt__id">
         <p class="eyebrow">Receipt</p>
@@ -44,6 +46,10 @@
       </div>
     </header>
     <div class="bill-receipt__parties">
+      <div>
+        <h3>Bill from</h3>
+        <p><strong><%= from.site_name %></strong><% if (from.contact_address) { %><br><%= from.contact_address %><% } %><% if (from.gst_number) { %><br>GST/HST No. <%= from.gst_number %><% } %><br><%= from.public_url.replace(/^https?:\/\//, '') %></p>
+      </div>
       <div>
         <h3>Bill to</h3>
         <p><strong><%= r.payer_name %></strong><br><%= r.payer_email %><br><%= r.company_name %><% if (r.operating_name && r.operating_name.trim() && r.operating_name.trim() !== (r.company_name || '').trim()) { %> (operating as <%= r.operating_name.trim() %>)<% } %><% if (r.company_city) { %><br><%= [r.company_city, r.company_province].filter(Boolean).join(', ') %><% } %></p>
@@ -65,7 +71,7 @@
     </table>
     <footer class="bill-receipt__foot small muted">
       <p>This posting renews monthly at <%= h.money(r.total_cents) %> CAD (the rate locked in when it was published) until cancelled. All receipts are available from your login under Billing. Questions about this receipt? <a href="/contact">Contact us</a> quoting <%= r.receipt_number %>.</p>
-      <p>Canada Careers · Jobs for every Canadian. Opportunities for all.</p>
+      <p><%= from.site_name %> · Jobs for every Canadian. Opportunities for all.</p>
     </footer>
   </article>
 </section>

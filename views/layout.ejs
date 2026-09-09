@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title><%= title %><%= title === 'Canada Careers' ? '' : ' · Canada Careers' %></title>
+  <% const siteName = (typeof site !== 'undefined' && site.site_name) || 'Canada Careers'; %>
+  <title><%= title %><%= title === siteName ? '' : ' · ' + siteName %></title>
   <meta name="description" content="<%= metaDescription %>">
   <link rel="canonical" href="<%= canonical %>">
   <% if (noindex) { %><meta name="robots" content="noindex,nofollow"><% } %>
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Canada Careers">
+  <meta property="og:site_name" content="<%= siteName %>">
   <meta property="og:title" content="<%= title %>">
   <meta property="og:description" content="<%= metaDescription %>">
   <meta property="og:url" content="<%= canonical %>">
@@ -25,6 +26,7 @@
   <link rel="stylesheet" href="/kds/tokens/kds.css">
   <link rel="stylesheet" href="/kds/css/components.css">
   <link rel="stylesheet" href="/css/theme.css">
+  <% if (typeof mapConfigInLayout !== 'undefined' && mapConfigInLayout && typeof mapConfig !== 'undefined') { %><script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script><% } %>
   <% extraCss.forEach(href => { %><link rel="stylesheet" href="<%= href %>"><% }) %>
   <% jsonLd.forEach(obj => { %><script type="application/ld+json"><%- JSON.stringify(obj).replace(/</g, '\\u003c') %></script><% }) %>
 </head>

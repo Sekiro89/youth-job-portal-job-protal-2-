@@ -4,3 +4,5 @@ data/uploads/*
 !data/uploads/.gitkeep
 *.log
 shots/
+docs/.dbpw
+docs/.admin-passcode

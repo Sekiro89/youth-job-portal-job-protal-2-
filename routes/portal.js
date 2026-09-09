@@ -25,7 +25,6 @@ const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'
 const pricingFor = (role) => { const PRICE = C.priceCentsFor(role); const GST = Math.round(PRICE * C.PRICING.gst_rate); return { PRICE, GST, TOTAL: PRICE + GST }; };
 const $ = (cents) => (cents / 100).toFixed(2);
 const PROFILE_TABS = { all: 'All', active: 'Active', pending_payment: 'Awaiting payment', draft: 'Drafts', archived: 'Archived' };
-const MAX_LOCATIONS = 20;
 
 const isProd = process.env.NODE_ENV === 'production';
 const baseFor = (user) => user.role === 'consultant' ? '/consultant' : '/employer';
@@ -154,8 +153,9 @@ function guard(base) {
     res.locals.base = base;
     res.locals.isConsultant = req.user.role === 'consultant';
     res.locals.noindex = true;
-    res.locals.extraCss = ['/css/portal.css'];
-    res.locals.extraJs = ['/js/portal.js'];
+    res.locals.extraCss = ['/css/maps.css', '/css/portal.css'];
+    res.locals.extraJs = ['/js/maps.js', '/js/portal.js'];
+    try { res.locals.mapConfig = await require('../lib/geocode').publicMapConfig(); res.locals.mapConfigInLayout = true; } catch (e) { /* maps optional */ }
     res.locals.bodyClass = 'portal';
     res.locals.APP_STATUSES = APP_STATUSES;
     res.locals.APP_STATUS_NAME = APP_STATUS_NAME;
@@ -169,7 +169,8 @@ function guard(base) {
 async function loadJob(req, res, next) {
   try {
     if (!(await jobs.userCanManageJob(req.user, req.params.id))) return res.status(404).render('error', { title: 'Job not found', code: 404, message: 'That posting does not exist or is not yours.', noindex: true });
-    req.job = await db.one(`SELECT j.*, p.company_name, p.operating_name, p.slug AS company_slug, p.logo_path,
+    // operating_name = the name to DISPLAY (posting's own choice, else the profile default); job_operating_name = the raw per-posting column.
+    req.job = await db.one(`SELECT j.*, j.operating_name AS job_operating_name, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name, p.industry, p.slug AS company_slug, p.logo_path,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.id=$1`, [req.params.id]);
     if (!req.job) return res.status(404).render('error', { title: 'Job not found', code: 404, message: 'That posting does not exist.', noindex: true });
@@ -194,7 +195,7 @@ area.get('/dashboard', async (req, res, next) => {
     const recent = await db.many(`SELECT a.id, a.status, a.created_at, u.name, u.email, j.id AS job_id, j.title
       FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id
       WHERE p.owner_user_id=$1 ORDER BY a.created_at DESC LIMIT 6`, [uid]);
-    const active = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, p.company_name, p.operating_name,
+    const active = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, j.hours_amount, j.hours_period, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
@@ -218,16 +219,17 @@ area.get('/profile', async (req, res, next) => {
   if (req.user.role === 'consultant') return res.redirect('/consultant/profiles');
   try {
     const profile = req.profiles[0];
-    if (!profile) return res.render('portal/profile-form', { title: 'Company profile', nav: 'company', profile: {}, values: {}, errors: {}, mode: 'employer-create', COMPANY_SIZES });
-    res.render('portal/profile-form', { title: 'Company profile', nav: 'company', profile, values: profile, errors: {}, mode: 'employer', COMPANY_SIZES });
+    if (!profile) return res.render('portal/profile-form', { title: 'Company profile', nav: 'company', profile: {}, values: {}, errors: {}, mode: 'employer-create', COMPANY_SIZES, locations: [], loc: emptyLoc() });
+    req.profile = profile;
+    await renderProfileForm(req, res, 200, { loc: await locForEdit(req, profile) });
   } catch (e) { next(e); }
 });
 area.post('/profile', logoMiddleware, async (req, res, next) => {
   if (req.user.role === 'consultant') return res.redirect('/consultant/profiles');
   try {
     const profile = req.profiles[0];
-    const { values, errors } = validateProfile(req);
-    if (Object.keys(errors).length) return res.status(422).render('portal/profile-form', { title: 'Company profile', nav: 'company', profile: profile || {}, values, errors, mode: profile ? 'employer' : 'employer-create', COMPANY_SIZES });
+    const { values, errors } = validateProfile(req, profile);
+    if (Object.keys(errors).length) return res.status(422).render('portal/profile-form', { title: 'Company profile', nav: 'company', profile: profile || {}, values, errors, mode: profile ? 'employer' : 'employer-create', COMPANY_SIZES, locations: profile ? await locationsFor(profile.id) : [], loc: emptyLoc() });
     const id = await upsertProfile(req, profile, values);
     req.flash('success', 'Company profile saved.');
     await auth.audit(req.user.id, profile ? 'profile.update' : 'profile.create', 'employer_profile', id, { company_name: values.company_name });
@@ -257,11 +259,11 @@ area.get('/profiles', consultantOnly, async (req, res, next) => {
     res.render('portal/profiles', { title: 'Companies', nav: 'company', list });
   } catch (e) { next(e); }
 });
-area.get('/profiles/new', consultantOnly, (req, res) => res.render('portal/profile-form', { title: 'Add a company', nav: 'company', profile: {}, values: {}, errors: {}, mode: 'consultant-new', COMPANY_SIZES, then: req.query.then }));
+area.get('/profiles/new', consultantOnly, (req, res) => res.render('portal/profile-form', { title: 'Add a company', nav: 'company', profile: {}, values: {}, errors: {}, mode: 'consultant-new', COMPANY_SIZES, then: req.query.then, locations: [], loc: emptyLoc() }));
 area.post('/profiles/new', consultantOnly, logoMiddleware, async (req, res, next) => {
   try {
-    const { values, errors } = validateProfile(req);
-    if (Object.keys(errors).length) return res.status(422).render('portal/profile-form', { title: 'Add a company', nav: 'company', profile: {}, values, errors, mode: 'consultant-new', COMPANY_SIZES, then: req.query.then });
+    const { values, errors } = validateProfile(req, null);
+    if (Object.keys(errors).length) return res.status(422).render('portal/profile-form', { title: 'Add a company', nav: 'company', profile: {}, values, errors, mode: 'consultant-new', COMPANY_SIZES, then: req.query.then, locations: [], loc: emptyLoc() });
     const id = await upsertProfile(req, null, values);
     await auth.audit(req.user.id, 'profile.create', 'employer_profile', id, { company_name: values.company_name });
     req.flash('success', `${values.company_name} added. You can now post jobs for this company.`);
@@ -275,11 +277,11 @@ async function loadOwnProfile(req, res, next) {
     next();
   } catch (e) { next(e); }
 }
-area.get('/profiles/:id(\\d+)/edit', consultantOnly, loadOwnProfile, (req, res) => res.render('portal/profile-form', { title: 'Edit ' + req.profile.company_name, nav: 'company', profile: req.profile, values: req.profile, errors: {}, mode: 'consultant-edit', COMPANY_SIZES }));
+area.get('/profiles/:id(\\d+)/edit', consultantOnly, loadOwnProfile, async (req, res, next) => { try { await renderProfileForm(req, res, 200, { loc: await locForEdit(req, req.profile) }); } catch (e) { next(e); } });
 area.post('/profiles/:id(\\d+)/edit', consultantOnly, loadOwnProfile, logoMiddleware, async (req, res, next) => {
   try {
-    const { values, errors } = validateProfile(req);
-    if (Object.keys(errors).length) return res.status(422).render('portal/profile-form', { title: 'Edit ' + req.profile.company_name, nav: 'company', profile: req.profile, values, errors, mode: 'consultant-edit', COMPANY_SIZES });
+    const { values, errors } = validateProfile(req, req.profile);
+    if (Object.keys(errors).length) return renderProfileForm(req, res, 422, { values, errors });
     await upsertProfile(req, req.profile, values);
     await auth.audit(req.user.id, 'profile.update', 'employer_profile', req.profile.id, { company_name: values.company_name });
     req.flash('success', 'Company profile saved.');
@@ -305,36 +307,189 @@ area.post('/profiles/:id(\\d+)/unarchive', consultantOnly, loadOwnProfile, async
   } catch (e) { next(e); }
 });
 
-function validateProfile(req) {
+// ---- employer address book (employer_locations): managed on the profile, SELECTED when posting.
+const MAX_OPERATING_NAMES = 10;
+/** Active (non-archived) locations of a profile, default first. */
+const locationsFor = (profileId) => db.many('SELECT * FROM employer_locations WHERE employer_profile_id=$1 AND NOT archived ORDER BY is_default DESC, id', [profileId]);
+/** Fire-and-forget geocode after a location is saved. lib/geocode is written by the maps agent; missing module or failure is ignored. */
+function geocodeLater(locationId) {
+  try {
+    const p = require('../lib/geocode').geocodeEmployerLocation(locationId);
+    if (p && typeof p.catch === 'function') p.catch((e) => console.warn('[portal] geocode failed for location', locationId, e && e.message));
+  } catch (_) { /* module not present yet, or threw synchronously — never block the save */ }
+}
+/** employer_profiles.street_address/city/province/postal_code always mirror the DEFAULT location (public company page, legacy readers). */
+async function syncProfileAddress(profileId, c) {
+  const q = c || db;
+  const d = (await q.query('SELECT * FROM employer_locations WHERE employer_profile_id=$1 AND NOT archived ORDER BY is_default DESC, id LIMIT 1', [profileId])).rows[0];
+  if (!d) return;
+  if (!d.is_default) await q.query('UPDATE employer_locations SET is_default=true, updated_at=now() WHERE id=$1', [d.id]);   // nothing was default: promote the oldest
+  await q.query('UPDATE employer_profiles SET street_address=$2, city=$3, province=$4, postal_code=$5, updated_at=now() WHERE id=$1', [profileId, d.street_address, d.city, d.province, d.postal_code]);
+}
+/** Parse + validate one address (profile "Add location" form, job form "Add a new location" block, profile create). prefix = field-name prefix. */
+function parseLocation(b, prefix, opts) {
+  const p = (f) => b[prefix + f];
+  const l = { label: clean(p('label'), 80), street_address: clean(p('street_address'), 200), unit: clean(p('unit'), 40), city: clean(p('city'), 80), province: clean(p('province'), 2).toUpperCase(), postal_code: clean(p('postal_code'), 10).toUpperCase() };
+  const blank = !l.label && !l.street_address && !l.unit && !l.city && !l.province && !l.postal_code;
+  const errors = {};
+  if (blank && (opts && opts.optional)) return { values: l, errors, blank: true };
+  if (l.street_address.length < 3) errors[prefix + 'street_address'] = 'Enter the street address (number and street).';
+  if (l.city.length < 2) errors[prefix + 'city'] = 'Enter the city.';
+  if (!C.PROVINCE_NAME[l.province]) errors[prefix + 'province'] = 'Choose a province or territory.';
+  if (!l.postal_code) errors[prefix + 'postal_code'] = 'Enter the postal code.';
+  else if (!C.POSTAL_CODE_RE.test(l.postal_code)) errors[prefix + 'postal_code'] = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
+  else l.postal_code = h.formatPostal(l.postal_code);
+  return { values: l, errors, blank: false };
+}
+/** Insert a location for a profile (becomes the default when the profile has none). Returns the new row. Call geocodeLater(row.id) after commit. */
+async function insertLocation(c, profileId, l, makeDefault) {
+  const q = c || db;
+  const hasDefault = (await q.query('SELECT 1 FROM employer_locations WHERE employer_profile_id=$1 AND NOT archived AND is_default', [profileId])).rows[0];
+  const isDefault = !!makeDefault || !hasDefault;
+  if (isDefault) await q.query('UPDATE employer_locations SET is_default=false, updated_at=now() WHERE employer_profile_id=$1 AND is_default', [profileId]);
+  const r = await q.query(`INSERT INTO employer_locations(employer_profile_id, label, street_address, unit, city, province, postal_code, is_default) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [profileId, l.label || null, l.street_address, l.unit || null, l.city, l.province, l.postal_code, isDefault]);
+  await syncProfileAddress(profileId, q);
+  return r.rows[0];
+}
+const profileFormPath = (req, profile) => req.user.role === 'consultant' ? `/consultant/profiles/${profile.id}/edit` : '/employer/profile';
+const emptyLoc = () => ({ values: {}, errors: {}, editId: null });
+/** ?loc=<id> opens that location in the profile form's location editor (no-JS friendly edit mode). */
+async function locForEdit(req, profile) {
+  const lid = intOrNull(req.query.loc);
+  if (!lid) return emptyLoc();
+  const row = await db.one('SELECT * FROM employer_locations WHERE id=$1 AND employer_profile_id=$2 AND NOT archived', [lid, profile.id]);
+  return row ? { values: row, errors: {}, editId: row.id } : emptyLoc();
+}
+async function renderProfileForm(req, res, status, extra) {
+  const profile = req.profile;
+  const locals = Object.assign({ title: req.user.role === 'consultant' ? 'Edit ' + profile.company_name : 'Company profile', nav: 'company', profile, values: profile, errors: {}, mode: req.user.role === 'consultant' ? 'consultant-edit' : 'employer', COMPANY_SIZES,
+    locations: await locationsFor(profile.id), loc: { values: {}, errors: {}, editId: null } }, extra);
+  res.status(status || 200).render('portal/profile-form', locals);
+}
+// Sub-router: expects req.profile (owner-checked). Mounted at /employer/profile/locations and /consultant/profiles/:id/locations.
+const locRouter = express.Router();
+locRouter.post('/', async (req, res, next) => {
+  try {
+    const { values, errors } = parseLocation(req.body || {}, 'loc_');
+    if (Object.keys(errors).length) return renderProfileForm(req, res, 422, { loc: { values, errors, editId: null } });
+    const row = await db.tx((c) => insertLocation(c, req.profile.id, values, req.body.make_default === '1'));
+    geocodeLater(row.id);
+    await auth.audit(req.user.id, 'location.create', 'employer_location', row.id, { profile: req.profile.id, city: row.city });
+    req.flash('success', `Location added${row.is_default ? ' and set as the default' : ''}.`);
+    res.redirect(profileFormPath(req, req.profile) + '#locations');
+  } catch (e) { next(e); }
+});
+async function loadLocation(req, res, next) {
+  try {
+    req.location = await db.one('SELECT * FROM employer_locations WHERE id=$1 AND employer_profile_id=$2 AND NOT archived', [req.params.lid, req.profile.id]);
+    if (!req.location) return res.status(404).render('error', { title: 'Location not found', code: 404, message: 'That location does not exist or is not yours.', noindex: true });
+    next();
+  } catch (e) { next(e); }
+}
+locRouter.post('/:lid(\\d+)', loadLocation, async (req, res, next) => {
+  try {
+    const { values, errors } = parseLocation(req.body || {}, 'loc_');
+    if (Object.keys(errors).length) return renderProfileForm(req, res, 422, { loc: { values, errors, editId: req.location.id } });
+    const changed = ['street_address', 'unit', 'city', 'province', 'postal_code'].some(f => (req.location[f] || '') !== (values[f] || ''));
+    await db.tx(async (c) => {
+      await c.query(`UPDATE employer_locations SET label=$2, street_address=$3, unit=$4, city=$5, province=$6, postal_code=$7, updated_at=now()${changed ? ', lat=NULL, lng=NULL, geocoded_at=NULL, place_id=NULL' : ''} WHERE id=$1`,
+        [req.location.id, values.label || null, values.street_address, values.unit || null, values.city, values.province, values.postal_code]);
+      await syncProfileAddress(req.profile.id, c);
+    });
+    if (changed) geocodeLater(req.location.id);
+    await auth.audit(req.user.id, 'location.update', 'employer_location', req.location.id, { profile: req.profile.id, changed });
+    req.flash('success', 'Location updated.');
+    res.redirect(profileFormPath(req, req.profile) + '#locations');
+  } catch (e) { next(e); }
+});
+locRouter.post('/:lid(\\d+)/archive', loadLocation, async (req, res, next) => {
+  try {
+    await db.tx(async (c) => {
+      await c.query('UPDATE employer_locations SET archived=true, is_default=false, updated_at=now() WHERE id=$1', [req.location.id]);
+      await syncProfileAddress(req.profile.id, c);   // promotes the next one when the default was archived
+    });
+    await auth.audit(req.user.id, 'location.archive', 'employer_location', req.location.id, { profile: req.profile.id });
+    req.flash('success', 'Location archived. Postings that already use it keep their address.');
+    res.redirect(profileFormPath(req, req.profile) + '#locations');
+  } catch (e) { next(e); }
+});
+locRouter.post('/:lid(\\d+)/default', loadLocation, async (req, res, next) => {
+  try {
+    await db.tx(async (c) => {
+      await c.query('UPDATE employer_locations SET is_default=false, updated_at=now() WHERE employer_profile_id=$1 AND is_default', [req.profile.id]);
+      await c.query('UPDATE employer_locations SET is_default=true, updated_at=now() WHERE id=$1', [req.location.id]);
+      await syncProfileAddress(req.profile.id, c);
+    });
+    await auth.audit(req.user.id, 'location.default', 'employer_location', req.location.id, { profile: req.profile.id });
+    req.flash('success', `${req.location.label || h.fullAddress(req.location)} is now the default location.`);
+    res.redirect(profileFormPath(req, req.profile) + '#locations');
+  } catch (e) { next(e); }
+});
+// employer: their single profile; consultant: any of their profiles by id
+area.use('/profile/locations', (req, res, next) => {
+  if (req.user.role === 'consultant') return res.redirect('/consultant/profiles');
+  if (!req.profiles[0]) { req.flash('error', 'Create your company profile first.'); return res.redirect('/employer/profile'); }
+  req.profile = req.profiles[0]; next();
+}, locRouter);
+area.use('/profiles/:id(\\d+)/locations', consultantOnly, loadOwnProfile, locRouter);
+
+/** Parse the operating-name list: operating_names[] (first = default). Blank entries dropped, duplicates (case-insensitive) collapsed. */
+function parseOperatingNames(b) {
+  let v = b.operating_names;
+  if (v && typeof v === 'object' && !Array.isArray(v)) v = Object.values(v);
+  const out = []; const seen = new Set();
+  for (const raw of arr(v).concat(b.operating_name != null ? [b.operating_name] : [])) {   // operating_name: legacy single field still accepted
+    const s = clean(raw, 120); const k = s.toLowerCase();
+    if (!s || seen.has(k)) continue;
+    seen.add(k); out.push(s);
+    if (out.length >= MAX_OPERATING_NAMES) break;
+  }
+  return out;
+}
+function validateProfile(req, existing) {
   const b = req.body || {};
   const values = {
-    company_name: clean(b.company_name, 120), operating_name: clean(b.operating_name, 120), website: clean(b.website, 200), industry: clean(b.industry, 120),
-    company_size: clean(b.company_size, 20), street_address: clean(b.street_address, 200), city: clean(b.city, 80), province: clean(b.province, 2).toUpperCase(), postal_code: clean(b.postal_code, 10).toUpperCase(),
-    description: clean(b.description, 4000), contact_name: clean(b.contact_name, 120), contact_email: clean(b.contact_email, 160).toLowerCase(), contact_phone: clean(b.contact_phone, 40),
+    company_name: clean(b.company_name, 120), operating_names: parseOperatingNames(b), website: clean(b.website, 200), industry: clean(b.industry, 60),
+    company_size: clean(b.company_size, 20), description: clean(b.description, 4000), contact_name: clean(b.contact_name, 120), contact_email: clean(b.contact_email, 160).toLowerCase(), contact_phone: clean(b.contact_phone, 40),
   };
+  values.operating_name = values.operating_names[0] || '';
   const errors = {};
   if (values.company_name.length < 2) errors.company_name = 'Enter the company name.';
-  if (values.postal_code && !C.POSTAL_CODE_RE.test(values.postal_code)) errors.postal_code = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
-  else if (values.postal_code) values.postal_code = h.formatPostal(values.postal_code);
+  if (!C.INDUSTRY_NAME[values.industry]) errors.industry = values.industry ? 'Choose an industry from the list.' : 'Choose the company’s industry.';
   if (values.website && !/^https?:\/\//i.test(values.website)) values.website = 'https://' + values.website;
   if (values.website && !URL_RE.test(values.website)) errors.website = 'Enter a valid website address (https://…).';
   if (values.company_size && !COMPANY_SIZES.includes(values.company_size)) errors.company_size = 'Choose a company size.';
-  if (values.province && !C.PROVINCE_NAME[values.province]) errors.province = 'Choose a province or territory.';
   if (values.contact_email && !EMAIL_RE.test(values.contact_email)) errors.contact_email = 'Enter a valid email address.';
   if (req.logoError) errors.logo = req.logoError;
+  // A NEW profile collects its first (default) location inline: loc_* fields. Optional — but if anything is typed, the address must be complete.
+  if (!existing) {
+    const first = parseLocation(b, 'loc_', { optional: true });
+    values.first_location = first.blank ? null : first.values;
+    Object.assign(values, { loc_label: first.values.label, loc_street_address: first.values.street_address, loc_unit: first.values.unit, loc_city: first.values.city, loc_province: first.values.province, loc_postal_code: first.values.postal_code });
+    Object.assign(errors, first.errors);
+  }
   return { values, errors };
 }
 async function upsertProfile(req, existing, v) {
   let id;
   if (existing) {
-    await db.query(`UPDATE employer_profiles SET company_name=$2, website=$3, industry=$4, company_size=$5, city=$6, province=$7, description=$8, contact_name=$9, contact_email=$10, contact_phone=$11, operating_name=$12, street_address=$13, postal_code=$14, updated_at=now() WHERE id=$1`,
-      [existing.id, v.company_name, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.street_address || null, v.postal_code || null]);
+    // Address columns are NOT taken from this form any more: they mirror the default employer_locations row (syncProfileAddress).
+    await db.query(`UPDATE employer_profiles SET company_name=$2, website=$3, industry=$4, company_size=$5, description=$6, contact_name=$7, contact_email=$8, contact_phone=$9, operating_name=$10, operating_names=$11, updated_at=now() WHERE id=$1`,
+      [existing.id, v.company_name, v.website || null, v.industry || null, v.company_size || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.operating_names]);
     id = existing.id;
   } else {
     const slug = await jobs.uniqueProfileSlug(v.company_name);
-    id = (await db.one(`INSERT INTO employer_profiles(owner_user_id, company_name, slug, website, industry, company_size, city, province, description, contact_name, contact_email, contact_phone, operating_name, street_address, postal_code)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`,
-      [req.user.id, v.company_name, slug, v.website || null, v.industry || null, v.company_size || null, v.city || null, v.province || null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.street_address || null, v.postal_code || null])).id;
+    const first = v.first_location;
+    const row = await db.tx(async (c) => {
+      const r = (await c.query(`INSERT INTO employer_profiles(owner_user_id, company_name, slug, website, industry, company_size, city, province, description, contact_name, contact_email, contact_phone, operating_name, operating_names, street_address, postal_code)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
+        [req.user.id, v.company_name, slug, v.website || null, v.industry || null, v.company_size || null, first ? first.city : null, first ? first.province : null, v.description || null, v.contact_name || null, v.contact_email || null, v.contact_phone || null, v.operating_name || null, v.operating_names, first ? first.street_address : null, first ? first.postal_code : null])).rows[0];
+      const loc = first ? await insertLocation(c, r.id, Object.assign({}, first, { label: first.label || 'Main location' }), true) : null;
+      return { id: r.id, locId: loc && loc.id };
+    });
+    id = row.id;
+    if (row.locId) geocodeLater(row.locId);
   }
   if (req.file) {
     try {
@@ -358,7 +513,8 @@ area.get('/jobs', async (req, res, next) => {
     if (status === 'archived') where.push(`j.status IN ('expired','cancelled','inactive')`);
     else if (status !== 'all') where.push(`j.status='${status}'`);
     if (profileId) { params.push(profileId); where.push(`j.employer_profile_id=$${params.length}`); }
-    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, p.company_name, p.operating_name,
+    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, j.hours_amount, j.hours_period, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
+        (SELECT count(*)::int FROM job_locations l WHERE l.job_id=j.id) AS n_locations,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.status AS sub_status, s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
@@ -371,51 +527,75 @@ area.get('/jobs', async (req, res, next) => {
 });
 
 // ---- job form (new + edit)
-const LOC_FIELDS = ['street_address', 'unit', 'city', 'province', 'postal_code'];
-const blankLoc = () => ({ street_address: '', unit: '', city: '', province: '', postal_code: '' });
-/** Default first work location for a NEW posting = the company profile's address (when it has one). */
-function locFromProfile(p) {
-  if (!p) return blankLoc();
-  return { street_address: p.street_address || '', unit: '', city: p.city || '', province: p.province || '', postal_code: p.postal_code || '' };
+// Work locations are chosen from the employer profile's address book (employer_locations) and SNAPSHOTTED into job_locations on save.
+// Form fields: location_ids[] (employer_locations.id, must belong to the selected profile) · keep_job_locations[] (legacy snapshot rows of THIS
+// job that match no address-book entry; edit only) · new_loc_{label,street_address,unit,city,province,postal_code} (inline "Add a new location":
+// saved to the profile AND selected) · operating_name_choice_<profileId> ('__legal' | one of profile.operating_names | '__new') +
+// operating_name_new_<profileId> · hours_amount + hours_period.
+const MAX_JOB_LOCATIONS = 20;
+const NEW_LOC = 'new_loc_';
+const locKey = (l) => [String(l.street_address || '').toLowerCase().replace(/\s+/g, ' ').trim(), String(l.unit || '').toLowerCase().replace(/\s+/g, ''), String(l.city || '').toLowerCase().replace(/\s+/g, ' ').trim(), l.province || '', h.formatPostal(l.postal_code || '')].join('|');
+/** Active address-book rows for every profile the user owns: { [profileId]: rows[] } (default first). */
+async function locationsByProfile(req) {
+  const out = {}; req.profiles.forEach(p => { out[p.id] = []; });
+  if (!req.profiles.length) return out;
+  const rows = await db.many('SELECT * FROM employer_locations WHERE employer_profile_id = ANY($1::bigint[]) AND NOT archived ORDER BY is_default DESC, id', [req.profiles.map(p => p.id)]);
+  rows.forEach(r => { r.id = Number(r.id); r.employer_profile_id = Number(r.employer_profile_id); (out[r.employer_profile_id] = out[r.employer_profile_id] || []).push(r); });
+  return out;
 }
-function blankJob(req) {
+/** Split an existing job's snapshot rows into address-book ids to tick and legacy rows (no matching active address-book entry) to keep. */
+function matchJobLocations(job, active) {
+  const byId = new Map(active.map(l => [l.id, l])); const byKey = new Map(active.map(l => [locKey(l), l]));
+  const ids = []; const legacy = [];
+  (job.locations || []).forEach(jl => {
+    const m = (jl.employer_location_id && byId.get(Number(jl.employer_location_id))) || byKey.get(locKey(jl));
+    if (m) { if (!ids.includes(m.id)) ids.push(m.id); } else legacy.push(jl);
+  });
+  return { ids, legacy };
+}
+const defaultApplyEmail = (req, profile) => (profile ? (profile.contact_email || req.user.email) : '');   // the EMPLOYER's inbox; the owner's login only when the profile has none; blank until a company is chosen
+function blankJob(req, byProfile) {
   const profileId = intOrNull(req.query.profile) || (req.profiles.length === 1 ? req.profiles[0].id : '');
   const profile = req.profiles.find(p => p.id === profileId);
+  const active = (profile && byProfile[profile.id]) || [];
+  const def = active.find(l => l.is_default) || active[0];
   return { title: '', category: '', job_type: 'full_time', work_arrangement: 'on_site', experience_level: '', experience_other: '', education: '', education_other: '',
-    locations: [locFromProfile(profile)],
+    location_ids: def ? [def.id] : [], keep_job_locations: [], new_loc: {},
+    operating_name_choice: profile && profile.operating_name ? profile.operating_name : '__legal', operating_name_new: '',
+    hours_amount: '', hours_period: 'week',
     salary_min: '', salary_max: '', salary_period: 'year', vacancies: 1, languages: ['English'], language_other: '', skills: '', audiences: [],
-    description: '', requirements: '', benefits: '', apply_email: req.user.email, apply_url: '', noc_code: '', employer_profile_id: profileId };
+    description: '', requirements: '', benefits: '', apply_email: defaultApplyEmail(req, profile), apply_url: '', noc_code: '', employer_profile_id: profileId };
 }
-function jobToValues(j) {
+function jobToValues(req, j, byProfile) {
   const langs = j.languages || [];
   const other = langs.filter(l => !['English', 'French'].includes(l));
   const v = Object.assign({}, j, { languages: langs.filter(l => ['English', 'French'].includes(l)).concat(other.length ? ['Other'] : []), language_other: other.join(', '), skills: (j.skills || []).join(', '), salary_min: j.salary_min ?? '', salary_max: j.salary_max ?? '' });
-  // Legacy rows hold free-text education: show it under "Other (specify)".
+  // Old vocabulary keys pre-select their Job Bank equivalent; legacy free-text education opens under "Other (specify)".
+  if (C.EDUCATION_LEGACY[v.education]) v.education = C.EDUCATION_LEGACY[v.education];
+  if (C.EXPERIENCE_LEGACY[v.experience_level]) v.experience_level = C.EXPERIENCE_LEGACY[v.experience_level];
   if (v.education && !C.EDUCATION_LEVEL_NAME[v.education]) { v.education_other = v.education_other || v.education; v.education = 'other'; }
   v.education_other = v.education_other || ''; v.experience_other = v.experience_other || ''; v.experience_level = v.experience_level || ''; v.education = v.education || '';
-  const locs = (j.locations || []).map(l => ({ street_address: l.street_address || '', unit: l.unit || '', city: l.city || '', province: l.province || '', postal_code: l.postal_code || '' }));
-  v.locations = locs.length ? locs : [{ street_address: '', unit: '', city: j.city || '', province: j.province || '', postal_code: j.postal_code || '' }];
+  const profile = req.profiles.find(p => p.id === Number(j.employer_profile_id));
+  const m = matchJobLocations(j, (profile && byProfile[profile.id]) || []);
+  v.location_ids = m.ids; v.keep_job_locations = m.legacy.map(l => Number(l.id)); v.new_loc = {};
+  const names = (profile && profile.operating_names) || [];
+  const own = j.job_operating_name !== undefined ? j.job_operating_name : j.operating_name;   // loadJob exposes the raw per-posting column separately
+  v.operating_name_choice = own ? (own === (profile && profile.company_name) && !names.includes(own) ? '__legal' : own) : ((profile && profile.operating_name) || '__legal');
+  v.operating_name_new = '';
+  v.hours_amount = j.hours_amount == null ? '' : String(Number(j.hours_amount));
+  v.hours_period = j.hours_period || 'week';
+  v.apply_email = j.apply_email || '';
+  v.apply_url = j.apply_url || ''; v.noc_code = j.noc_code || ''; v.requirements = j.requirements || ''; v.benefits = j.benefits || '';
   return v;
 }
-/** Parse the repeatable location blocks: loc_street_address[] / loc_unit[] / loc_city[] / loc_province[] / loc_postal_code[] (parallel arrays). */
-function parseLocations(b) {
-  const cols = Object.fromEntries(LOC_FIELDS.map(f => { let v = b['loc_' + f]; if (v && typeof v === 'object' && !Array.isArray(v)) v = Object.values(v); return [f, arr(v)]; }));
-  const n = Math.min(MAX_LOCATIONS, Math.max(...LOC_FIELDS.map(f => cols[f].length), 0));
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    out.push({ street_address: clean(cols.street_address[i], 200), unit: clean(cols.unit[i], 40), city: clean(cols.city[i], 80), province: clean(cols.province[i], 2).toUpperCase(), postal_code: clean(cols.postal_code[i], 10).toUpperCase() });
-  }
-  return out;
-}
-const locIsBlank = (l) => LOC_FIELDS.every(f => !l[f]);
-const locKey = (l) => [l.street_address.toLowerCase().replace(/\s+/g, ' '), l.unit.toLowerCase().replace(/\s+/g, ''), l.city.toLowerCase().replace(/\s+/g, ' '), l.province, h.formatPostal(l.postal_code)].join('|');
-function validateJob(req) {
+async function validateJob(req, byProfile) {
   const b = req.body || {};
   const langs = arr(b.languages).filter(l => ['English', 'French', 'Other'].includes(l));
   const values = {
     title: clean(b.title, 120), category: clean(b.category, 60), job_type: clean(b.job_type, 30), work_arrangement: clean(b.work_arrangement, 20),
     experience_level: clean(b.experience_level, 30), experience_other: clean(b.experience_other, 120), education: clean(b.education, 30), education_other: clean(b.education_other, 160),
-    locations: parseLocations(b),
+    location_ids: arr(b.location_ids).map(intOrNull).filter(Boolean).slice(0, MAX_JOB_LOCATIONS), keep_job_locations: arr(b.keep_job_locations).map(intOrNull).filter(Boolean),
+    hours_amount: clean(b.hours_amount, 8), hours_period: C.HOURS_PERIOD_NAME[b.hours_period] ? String(b.hours_period) : 'week',
     salary_min: clean(b.salary_min, 12), salary_max: clean(b.salary_max, 12), salary_period: C.SALARY_PERIOD_NAME[b.salary_period] ? String(b.salary_period) : 'year',
     vacancies: clean(b.vacancies, 5), languages: langs, language_other: clean(b.language_other, 120), skills: clean(b.skills, 600),
     audiences: arr(b.audiences).filter(a => C.AUDIENCE_NAME[a]), description: clean(b.description, 12000), requirements: clean(b.requirements, 6000), benefits: clean(b.benefits, 6000),
@@ -425,6 +605,8 @@ function validateJob(req) {
   };
   // Once billing exists the company is locked to the job's profile, whatever the form says.
   if (req.job && ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(req.job.status)) values.employer_profile_id = Number(req.job.employer_profile_id);
+  if (C.EDUCATION_LEGACY[values.education]) values.education = C.EDUCATION_LEGACY[values.education];
+  if (C.EXPERIENCE_LEGACY[values.experience_level]) values.experience_level = C.EXPERIENCE_LEGACY[values.experience_level];
   const errors = {};
   if (values.title.length < 3) errors.title = 'Enter a job title (at least 3 characters).';
   if (!C.CATEGORY_NAME[values.category]) errors.category = 'Choose a category.';
@@ -434,25 +616,51 @@ function validateJob(req) {
   if (values.experience_level === 'other' && !values.experience_other) errors.experience_other = 'Describe the experience you are looking for.';
   if (values.education && !C.EDUCATION_LEVEL_NAME[values.education]) errors.education = 'Choose an education level.';
   if (values.education === 'other' && !values.education_other) errors.education_other = 'Describe the education or training required.';
-  // Work locations: at least one complete address; every non-blank block must be complete; no duplicates.
-  const locs = [];
-  const seen = new Map();
-  values.locations.forEach((l, i) => {
-    if (locIsBlank(l)) return;
-    const k = (f) => `loc_${i}_${f}`;
-    if (l.street_address.length < 3) errors[k('street_address')] = 'Enter the street address (number and street).';
-    if (l.city.length < 2) errors[k('city')] = 'Enter the city.';
-    if (!C.PROVINCE_NAME[l.province]) errors[k('province')] = 'Choose a province or territory.';
-    if (!l.postal_code) errors[k('postal_code')] = 'Enter the postal code.';
-    else if (!C.POSTAL_CODE_RE.test(l.postal_code)) errors[k('postal_code')] = 'Enter a valid Canadian postal code (e.g. M5V 3L9).';
-    else l.postal_code = h.formatPostal(l.postal_code);
-    const key = locKey(l);
-    if (seen.has(key)) errors[k('street_address')] = `This address is the same as location ${seen.get(key) + 1}. Each work location must be different.`;
-    else seen.set(key, locs.length);
-    locs.push(l);
-  });
-  if (!locs.length) errors.locations = 'Add at least one work location — the full address where the person will work.';
-  else if (Object.keys(errors).some(k => k.startsWith('loc_'))) errors.locations = 'Complete every work location (street, city, province and postal code) or clear the block.';
+  const profile = req.profiles.find(p => p.id === values.employer_profile_id) || null;
+  if (!profile) errors.employer_profile_id = req.user.role === 'consultant' ? 'Choose which company this posting is for.' : 'Create your company profile first.';
+  // Operating name for this posting (per-profile field names so the consultant form can carry one select per company).
+  let operatingName = null; let appendOperatingName = null;
+  values.operating_name_choice = profile ? clean(b['operating_name_choice_' + profile.id], 120) : '';
+  values.operating_name_new = profile ? clean(b['operating_name_new_' + profile.id], 120) : '';
+  if (profile) {
+    const names = profile.operating_names || [];
+    const choice = values.operating_name_choice;
+    if (choice === '__new') {
+      if (values.operating_name_new.length < 2) errors.operating_name = 'Enter the new operating name (or pick one from the list).';
+      else { operatingName = values.operating_name_new; if (!names.some(n => n.toLowerCase() === operatingName.toLowerCase())) appendOperatingName = operatingName; else operatingName = names.find(n => n.toLowerCase() === operatingName.toLowerCase()); }
+    } else if (!choice || choice === '__legal') {
+      operatingName = names.length ? profile.company_name : null;   // explicit "legal name" beats the profile default; NULL when there is nothing to override
+    } else {
+      const hit = names.find(n => n.toLowerCase() === choice.toLowerCase());
+      if (hit) operatingName = hit;
+      else if (req.job && req.job.job_operating_name && req.job.job_operating_name.toLowerCase() === choice.toLowerCase()) operatingName = req.job.job_operating_name;   // a name since removed from the profile stays on this posting
+      else errors.operating_name = 'Choose an operating name from the list.';
+    }
+  }
+  // Work locations: ticked address-book rows of THIS profile + kept legacy rows of THIS job + an optional new address (saved to the profile).
+  const active = (profile && byProfile[profile.id]) || [];
+  const chosen = active.filter(l => values.location_ids.includes(l.id));
+  values.location_ids = chosen.map(l => l.id);
+  const legacy = req.job ? matchJobLocations(req.job, active).legacy : [];
+  const kept = legacy.filter(l => values.keep_job_locations.includes(Number(l.id)));
+  values.keep_job_locations = kept.map(l => Number(l.id));
+  const nl = parseLocation(b, NEW_LOC, { optional: true });
+  values.new_loc = nl.values;
+  let newLoc = null;
+  if (!nl.blank) {
+    if (Object.keys(nl.errors).length) { Object.assign(errors, nl.errors); errors.locations = 'Complete the new location (street, city, province and postal code) or clear it.'; }
+    else if (active.some(l => locKey(l) === locKey(nl.values))) { const dupe = active.find(l => locKey(l) === locKey(nl.values)); if (!chosen.includes(dupe)) chosen.push(dupe); values.location_ids = chosen.map(l => l.id); values.new_loc = {}; }   // already in the address book: just select it
+    else newLoc = nl.values;
+  }
+  if (!errors.locations && !chosen.length && !kept.length && !newLoc) errors.locations = 'Select at least one work location.';
+  if (chosen.length + kept.length + (newLoc ? 1 : 0) > MAX_JOB_LOCATIONS) errors.locations = `A posting can have at most ${MAX_JOB_LOCATIONS} work locations.`;
+  // Hours worked (Job Bank "Number of hours worked" + frequency) — optional
+  let hours = null;
+  if (values.hours_amount !== '') {
+    hours = Number(values.hours_amount.replace(',', '.'));
+    if (!Number.isFinite(hours) || hours < 0.5 || hours > 168) { errors.hours_amount = 'Enter the number of hours (0.5 to 168).'; hours = null; }
+    else hours = Math.round(hours * 100) / 100;
+  }
   const smin = values.salary_min === '' ? null : intOrNull(values.salary_min), smax = values.salary_max === '' ? null : intOrNull(values.salary_max);
   if (values.salary_min !== '' && (smin == null || smin < 0)) errors.salary_min = 'Enter a whole number.';
   if (values.salary_max !== '' && (smax == null || smax < 0)) errors.salary_max = 'Enter a whole number.';
@@ -465,75 +673,104 @@ function validateJob(req) {
   if (values.apply_url && !/^https?:\/\//i.test(values.apply_url)) values.apply_url = 'https://' + values.apply_url;
   if (values.apply_url && !URL_RE.test(values.apply_url)) errors.apply_url = 'Enter a valid link (https://…).';
   if (values.noc_code && !/^\d{4,5}$/.test(values.noc_code)) errors.noc_code = 'NOC codes are 5 digits (2021 NOC).';
-  if (!values.employer_profile_id || !req.profiles.some(p => p.id === values.employer_profile_id)) errors.employer_profile_id = req.user.role === 'consultant' ? 'Choose which company this posting is for.' : 'Create your company profile first.';
-  const first = locs[0] || blankLoc();
   const row = {
     title: values.title, category: values.category, job_type: values.job_type, work_arrangement: values.work_arrangement,
     experience_level: values.experience_level || null, experience_other: values.experience_level === 'other' ? values.experience_other : null,
     education: values.education || null, education_other: values.education === 'other' ? values.education_other : null,
-    city: first.city, province: first.province, postal_code: first.postal_code || null, salary_min: smin, salary_max: smax, salary_period: values.salary_period,
+    operating_name: operatingName, hours_amount: hours, hours_period: hours == null ? null : values.hours_period,
+    city: '', province: '', postal_code: null,   // filled from the first snapshotted location in persistJobLocations()
+    salary_min: smin, salary_max: smax, salary_period: values.salary_period,
     vacancies: vac || 1, languages: langs.filter(l => l !== 'Other').concat(langs.includes('Other') ? values.language_other.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []),
     skills: values.skills.split(/[,;\n]/).map(s => s.trim()).filter(Boolean).slice(0, 30), audiences: values.audiences, description: values.description, requirements: values.requirements || null,
     benefits: values.benefits || null, apply_email: values.apply_email || null, apply_url: values.apply_url || null, noc_code: values.noc_code || null, employer_profile_id: values.employer_profile_id,
   };
-  return { values, errors, row, locations: locs };
+  return { values, errors, row, profile, chosen, kept, newLoc, appendOperatingName };
 }
-/** Replace a job's work locations inside the caller's transaction (jobs.city/province already come from the first one). */
-async function saveLocations(c, jobId, locs) {
+/** Replace a job's snapshot rows. rows = employer_locations rows (id → employer_location_id) and/or job_locations rows being kept. */
+async function saveLocations(c, jobId, rows) {
   await c.query('DELETE FROM job_locations WHERE job_id=$1', [jobId]);
-  for (let i = 0; i < locs.length; i++) {
-    const l = locs[i];
-    await c.query('INSERT INTO job_locations(job_id, street_address, unit, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7)', [jobId, l.street_address || null, l.unit || null, l.city, l.province, l.postal_code || null, i]);
+  for (let i = 0; i < rows.length; i++) {
+    const l = rows[i];
+    const elid = l.employer_profile_id != null ? l.id : (l.employer_location_id || null);   // address-book row vs. kept snapshot row
+    await c.query(`INSERT INTO job_locations(job_id, employer_location_id, street_address, unit, city, province, postal_code, sort_order, lat, lng, geocoded_at, place_id)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [jobId, elid, l.street_address || null, l.unit || null, l.city, l.province, l.postal_code || null, i, l.lat ?? null, l.lng ?? null, l.geocoded_at || null, l.place_id || null]);
   }
+  if (rows.length) await c.query('UPDATE jobs SET city=$2, province=$3, postal_code=$4 WHERE id=$1', [jobId, rows[0].city, rows[0].province, rows[0].postal_code || null]);
 }
-const jobFormLocals = (req, extra) => Object.assign({ nav: 'post', errors: {}, COMPANY_SIZES }, extra);
+/** Inside the save transaction: create the inline "new location" (address book + selected), order = default first, snapshot, append a new operating name to the profile. Returns { rows, newLocId }. */
+async function persistJobLocations(c, req, jobId, v) {
+  let created = null;
+  if (v.newLoc) created = await insertLocation(c, v.profile.id, v.newLoc, false);
+  const book = v.chosen.slice(); if (created) book.push(created);
+  book.sort((a, b) => (b.is_default === true) - (a.is_default === true) || Number(a.id) - Number(b.id));
+  const rows = book.concat(v.kept);
+  await saveLocations(c, jobId, rows);
+  if (v.appendOperatingName) await c.query(`UPDATE employer_profiles SET operating_names = array_append(operating_names, $2), operating_name = COALESCE(operating_name, $2), updated_at=now() WHERE id=$1 AND NOT ($2 = ANY(operating_names))`, [v.profile.id, v.appendOperatingName]);
+  return { rows, newLocId: created && created.id };
+}
+async function jobFormLocals(req, extra) {
+  const byProfile = await locationsByProfile(req);
+  const job = extra.job || null;
+  const profile = job ? req.profiles.find(p => p.id === Number(job.employer_profile_id)) : null;
+  const legacyLocs = job ? matchJobLocations(job, (profile && byProfile[profile.id]) || []).legacy : [];
+  return Object.assign({ nav: 'post', errors: {}, COMPANY_SIZES, byProfile, legacyLocs }, extra);
+}
 
-area.get('/jobs/new', (req, res) => {
+area.get('/jobs/new', (req, res, next) => {
   if (!req.profiles.length) {
     req.flash('info', req.user.role === 'consultant' ? 'Add a company first — every posting is published under a company profile.' : 'Set up your company profile first.');
     return res.redirect(req.user.role === 'consultant' ? '/consultant/profiles/new?then=post' : '/employer/profile');
   }
-  res.render('portal/job-form', jobFormLocals(req, { title: 'Post a job', values: blankJob(req), job: null }));
+  jobFormLocals(req, { title: 'Post a job', job: null }).then((l) => { l.values = blankJob(req, l.byProfile); res.render('portal/job-form', l); }).catch(next);
 });
 area.post('/jobs/new', async (req, res, next) => {
   try {
     if (!req.profiles.length) return res.redirect(res.locals.base + '/jobs/new');
-    const { values, errors, row, locations } = validateJob(req);
-    if (Object.keys(errors).length) return res.status(422).render('portal/job-form', jobFormLocals(req, { title: 'Post a job', values, errors, job: null }));
+    const byProfile = await locationsByProfile(req);
+    const v = await validateJob(req, byProfile);
+    const { values, errors, row } = v;
+    if (Object.keys(errors).length) return res.status(422).render('portal/job-form', await jobFormLocals(req, { title: 'Post a job', values, errors, job: null, byProfile }));
     // Double submit guard (double-click / retry): an identical draft created by this user in the last 20 s is reused instead of duplicated.
     // A per-user advisory lock serialises two simultaneous POSTs so the second one sees the first one's row.
-    const slug = await jobs.uniqueJobSlug(row.title, row.city);
+    const firstCity = (v.chosen[0] || v.newLoc || v.kept[0] || {}).city || '';
+    const slug = await jobs.uniqueJobSlug(row.title, firstCity);
     const cols = Object.keys(row);
-    const { id, dup } = await db.tx(async (c) => {
+    const { id, dup, saved } = await db.tx(async (c) => {
       await c.query('SELECT pg_advisory_xact_lock($1, $2)', [7001, Number(req.user.id)]);
       const d = (await c.query(`SELECT id, status FROM jobs WHERE created_by=$1 AND employer_profile_id=$2 AND title=$3 AND description=$4 AND created_at > now() - interval '20 seconds' ORDER BY id LIMIT 1`, [req.user.id, row.employer_profile_id, row.title, row.description])).rows[0];
       if (d) return { id: d.id, dup: d };
       const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, created_by, slug, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, 'draft') RETURNING id`, [...cols.map(c => row[c]), req.user.id, slug]);
-      await saveLocations(c, r.rows[0].id, locations);
-      return { id: r.rows[0].id, dup: null };
+      const saved = await persistJobLocations(c, req, r.rows[0].id, v);
+      return { id: r.rows[0].id, dup: null, saved };
     });
     if (dup) {
       if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(dup.status)) return publish(req, res, next, dup.id);
       return res.redirect(`${res.locals.base}/jobs/${dup.id}`);
     }
-    await auth.audit(req.user.id, 'job.create', 'job', id, { title: row.title, employer_profile_id: row.employer_profile_id, locations: locations.length });
+    if (saved.newLocId) geocodeLater(saved.newLocId);
+    await auth.audit(req.user.id, 'job.create', 'job', id, { title: row.title, employer_profile_id: row.employer_profile_id, locations: saved.rows.length, new_location: saved.newLocId || null });
     if (req.body.action === 'publish') return publish(req, res, next, id);
     req.flash('success', 'Draft saved. Publish it whenever you are ready.');
     res.redirect(`${res.locals.base}/jobs/${id}`);
   } catch (e) { next(e); }
 });
-area.get('/jobs/:id(\\d+)/edit', loadJob, (req, res) => res.render('portal/job-form', jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', values: jobToValues(req.job), job: req.job })));
+area.get('/jobs/:id(\\d+)/edit', loadJob, async (req, res, next) => {
+  try { const l = await jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', job: req.job }); l.values = jobToValues(req, req.job, l.byProfile); res.render('portal/job-form', l); } catch (e) { next(e); }
+});
 area.post('/jobs/:id(\\d+)/edit', loadJob, async (req, res, next) => {
   try {
-    const { values, errors, row, locations } = validateJob(req);
-    if (Object.keys(errors).length) return res.status(422).render('portal/job-form', jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', values, errors, job: req.job }));
+    const byProfile = await locationsByProfile(req);
+    const v = await validateJob(req, byProfile);
+    const { values, errors, row } = v;
+    if (Object.keys(errors).length) return res.status(422).render('portal/job-form', await jobFormLocals(req, { title: 'Edit posting', nav: 'jobs', values, errors, job: req.job, byProfile }));
     if (['active', 'pending_payment'].includes(req.job.status)) row.employer_profile_id = req.job.employer_profile_id; // company is locked once billing exists
     const cols = Object.keys(row);
-    await db.tx(async (c) => {
+    const saved = await db.tx(async (c) => {
       await c.query(`UPDATE jobs SET ${cols.map((c, i) => `${c}=$${i + 2}`).join(', ')}, updated_at=now() WHERE id=$1`, [req.job.id, ...cols.map(c => row[c])]);
-      await saveLocations(c, req.job.id, locations);
+      return persistJobLocations(c, req, req.job.id, v);
     });
-    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status, locations: locations.length });
+    if (saved.newLocId) geocodeLater(saved.newLocId);
+    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status, locations: saved.rows.length, new_location: saved.newLocId || null });
     if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(req.job.status)) return publish(req, res, next, req.job.id);
     req.flash('success', req.job.status === 'active' ? 'Posting updated — changes are live.' : 'Posting updated.');
     res.redirect(`${res.locals.base}/jobs/${req.job.id}`);
@@ -589,13 +826,13 @@ area.post('/jobs/:id(\\d+)/reactivate', loadJob, async (req, res, next) => {
 area.post('/jobs/:id(\\d+)/duplicate', loadJob, async (req, res, next) => {
   try {
     const j = req.job;
-    const cols = ['employer_profile_id', 'description', 'requirements', 'benefits', 'category', 'noc_code', 'job_type', 'work_arrangement', 'experience_level', 'experience_other', 'education', 'education_other', 'city', 'province', 'postal_code', 'salary_min', 'salary_max', 'salary_period', 'vacancies', 'languages', 'skills', 'audiences', 'apply_email', 'apply_url'];
+    const cols = ['employer_profile_id', 'description', 'requirements', 'benefits', 'category', 'noc_code', 'job_type', 'work_arrangement', 'experience_level', 'experience_other', 'education', 'education_other', 'city', 'province', 'postal_code', 'salary_min', 'salary_max', 'salary_period', 'vacancies', 'languages', 'skills', 'audiences', 'apply_email', 'apply_url', 'operating_name', 'hours_amount', 'hours_period'];
     const title = j.title.replace(/\s*\(copy\)$/i, '') + ' (copy)';
     const slug = await jobs.uniqueJobSlug(j.title, j.city);
     const id = await db.tx(async (c) => {
       const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, title, slug, created_by, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, $${cols.length + 3}, 'draft') RETURNING id`,
-        [...cols.map(c => j[c]), title, slug, req.user.id]);
-      await saveLocations(c, r.rows[0].id, j.locations || []);   // every work location comes along
+        [...cols.map(c => c === 'operating_name' ? j.job_operating_name : j[c]), title, slug, req.user.id]);
+      await saveLocations(c, r.rows[0].id, j.locations || []);   // every work location comes along (snapshot rows keep their employer_location_id)
       return r.rows[0].id;
     });
     await auth.audit(req.user.id, 'job.duplicate', 'job', id, { from: j.id, locations: (j.locations || []).length });
@@ -616,7 +853,7 @@ area.post('/jobs/:id(\\d+)/delete', loadJob, async (req, res, next) => {
 
 // ---- applicants
 const APPLICANT_SQL = `SELECT a.id, a.status, a.created_at, a.updated_at, a.viewed_at, a.employer_notes, a.resume_name, a.resume_path, a.seeker_user_id, a.cover_letter, a.cover_letter_path, a.cover_letter_name,
-    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name, p.operating_name
+    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name
   FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id`;
 area.get('/jobs/:id(\\d+)/applicants', loadJob, async (req, res, next) => {
   try {
@@ -633,7 +870,7 @@ area.get('/applicants', async (req, res, next) => {
     if (status) { params.push(status); where.push(`a.status=$${params.length}`); }
     if (jobId) { params.push(jobId); where.push(`a.job_id=$${params.length}`); }
     const list = await db.many(`${APPLICANT_SQL} WHERE ${where.join(' AND ')} ORDER BY a.created_at DESC LIMIT 300`, params);
-    const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, p.operating_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
+    const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
     res.render('portal/applicants', { title: 'Applicants', nav: 'applicants', list, job: null, jobsList, filters: { status, job: jobId }, scope: 'all', returnTo: req.originalUrl });
   } catch (e) { next(e); }
 });

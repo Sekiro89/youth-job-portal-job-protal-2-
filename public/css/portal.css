@@ -232,3 +232,44 @@
 .doc-links { display: grid; gap: 6px; justify-items: start; }
 .doc-links .small { max-width: 220px; overflow-wrap: anywhere; }
 @media (max-width: 639px) { .doc-links, .doc-links > * { width: 100%; } .doc-links .small { max-width: none; } }
+
+/* ---------- client round 2 (2026-09-10): address book, location checklist, operating names, hours ---------- */
+/* profile: operating-name rows */
+.names-list { display: grid; gap: 8px; }
+.names-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 10px; align-items: center; }
+.names-row .input { grid-column: 1; }
+.names-row__note { grid-column: 2; grid-row: 1; font-weight: 700; color: var(--cc-green); text-transform: uppercase; letter-spacing: .06em; font-size: .7rem; }
+.names-row [data-name-remove] { grid-column: 3; grid-row: 1; }
+.form-section__title--bare { border-bottom: 0; padding-bottom: 0; }
+/* profile: saved locations */
+.loc-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.loc-row { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--kds-border); border-radius: 12px; background: #fff; }
+.loc-row.is-editing { border-color: var(--cc-teal); box-shadow: inset 3px 0 0 var(--cc-teal); }
+.loc-row__main { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.loc-row__actions { justify-content: flex-start; }
+@media (min-width: 768px) { .loc-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; } .loc-row__actions { justify-content: flex-end; } }
+.loc-editor { display: grid; gap: 14px; padding: 14px; border: 1px dashed var(--kds-border-strong); border-radius: 12px; background: var(--cc-surface); }
+.loc-editor.is-collapsed { display: none; }
+.loc-editor__title { margin: 0; font-size: 1rem; }
+.addr-fields { display: grid; gap: 12px; }
+.empty--sm { padding: 18px 14px; font-size: .9375rem; }
+/* job form: location checklist */
+.loc-choice { display: grid; gap: 8px; }
+.loc-choice + .loc-choice { margin-top: 4px; }
+.loc-choice--legacy { padding-top: 8px; border-top: 1px dashed var(--kds-border); }
+.checks--loc { grid-template-columns: 1fr; }
+@media (min-width: 900px) { .checks--loc { grid-template-columns: 1fr 1fr; } }
+.check--loc { align-items: flex-start; }
+.check--loc input { margin-top: 3px; }
+.check__body { display: grid; gap: 2px; min-width: 0; }
+.check__title { font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.check__sub { font-size: .875rem; color: var(--kds-fg-muted); overflow-wrap: anywhere; }
+.loc-new { border: 1px dashed var(--kds-border-strong); border-radius: 12px; background: var(--cc-surface); padding: 0 14px; }
+.loc-new__summary { cursor: pointer; list-style: none; display: flex; align-items: center; min-height: 48px; font-weight: 700; color: var(--cc-navy); }
+.loc-new__summary::-webkit-details-marker { display: none; }
+.loc-new[open] { padding-bottom: 14px; }
+.loc-new[open] > .loc-new__summary { border-bottom: 1px solid var(--kds-border); margin-bottom: 12px; }
+.loc-new > .hint { margin: 0 0 12px; }
+.loc-new > .kds-btn { margin-top: 12px; }
+/* job detail facts: hours + industry sit with the other facts (no new rules needed); jobs list meta line wraps on phones */
+.job-meta-line { display: flex; flex-wrap: wrap; gap: 2px 8px; }

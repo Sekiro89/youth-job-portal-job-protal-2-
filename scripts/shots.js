@@ -17,7 +17,7 @@
 require('dotenv').config({ path: require('node:path').join(__dirname, '..', '.env') });
 const fs = require('node:fs');
 const path = require('node:path');
-const { launchChromium, CDP, request, login, sleep } = require('./cdp');
+const { launchChromium, CDP, request, login, sleep, findForm } = require('./cdp');
 
 const BASE = (process.env.BASE_URL || 'http://localhost:3900').replace(/\/$/, '');
 const OUT = path.join(__dirname, '..', 'shots', 'qa');
@@ -26,6 +26,8 @@ const MAX_HEIGHT = 8000;            // css px; taller pages are clipped so PNGs 
 const SETTLE_MS = 1500;
 const PASSWORD = 'Password123!';
 const LOGINS = { admin: 'veda@canadacareers.local', employer: 'employer@example.com', consultant: 'consultant@example.com', seeker: 'seeker@example.com' };
+const ADMIN_PASSCODE = process.env.QA_ADMIN_PASSCODE || 'qa-pass-123';   // unlocks /admin/integrations (smoke.js sets the same one; --seed-extra writes it)
+const CITY_COORDS = { Mississauga: [43.589, -79.6441], Brampton: [43.7315, -79.7624], Toronto: [43.6532, -79.3832], Saskatoon: [52.1332, -106.67], Vancouver: [49.2827, -123.1207] };
 
 const argv = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
 const WIDTHS = argv.widths ? String(argv.widths).split(',').map(Number).filter(Boolean) : WIDTHS_ALL;
@@ -34,7 +36,9 @@ const WIDTHS = argv.widths ? String(argv.widths).split(',').map(Number).filter(B
 // Add a page: push { key, path, as, expect? } here. `as` = null (guest) | employer | consultant | seeker | admin; `expect` = a non-2xx status that is correct for that page; `redirect: true` if landing on another URL is expected.
 // {slug} is replaced with a live job slug discovered from /sitemap.xml (or DATABASE_URL as fallback). {multislug} (a live job
 // with >= 2 job_locations), {employerJob} / {consultantJob} (an unpaid draft/pending job owned by that login) and {receiptId}
-// (a payment owned by the employer) come from DATABASE_URL; `--seed-extra` creates them when missing (never on production).
+// (a payment owned by the employer) and {geoslug} (a live job with a geocoded job_locations row) come from DATABASE_URL;
+// `--seed-extra` creates them when missing (never on production). `unlock: true` posts the Integrations passcode after the
+// admin login so the gated page is captured unlocked (QA_ADMIN_PASSCODE, default qa-pass-123).
 function pageList() {
   return [
     { key: 'home', path: '/' }, { key: 'jobs', path: '/jobs' }, { key: 'jobs-search', path: '/jobs?q=nurse&province=SK' },
@@ -57,6 +61,12 @@ function pageList() {
     { key: 'receipt', path: '/billing/receipt/{receiptId}', as: 'employer' },
     { key: 'admin', path: '/admin', as: 'admin' }, { key: 'admin-messages', path: '/admin/messages', as: 'admin' },
     { key: 'admin-jobs', path: '/admin/jobs', as: 'admin' },
+    // client round 2 (PDF, 2026-09-10): maps on the job page + search, the passcode-gated integrations panel, admin users, profile address book
+    { key: 'job-detail-map', path: '/jobs/{geoslug}' },
+    { key: 'jobs-map', path: '/jobs?near=Brampton%2C%20ON&radius_km=50&view=map' },
+    { key: 'admin-integrations', path: '/admin/integrations', as: 'admin', unlock: true },
+    { key: 'admin-users', path: '/admin/users', as: 'admin' },
+    { key: 'profile-locations', path: '/employer/profile#locations', as: 'employer' },
   ];
 }
 
@@ -106,6 +116,17 @@ async function dbFixtures(seed) {
     // skip payments of smoke.js jobs: a concurrent smoke run deletes them mid-capture
     const pay = await one("SELECT p.id FROM payments p JOIN jobs j ON j.id=p.job_id WHERE p.payer_user_id=(SELECT id FROM users WHERE email=$1) AND j.title NOT LIKE '[smoke]%' ORDER BY p.id DESC LIMIT 1", [LOGINS.employer]);
     if (pay) out.receiptId = String(pay.id);
+    // a live job with coordinates (maps): the geocoder (jobs/geocode.js) normally fills these; --seed-extra falls back to city coordinates
+    let geo = await one(`SELECT j.slug FROM jobs j JOIN job_locations l ON l.job_id=j.id WHERE ${live} AND l.lat IS NOT NULL ORDER BY j.id LIMIT 1`);
+    if (!geo && seed) {
+      const l = await one(`SELECT l.id, l.city, j.slug FROM job_locations l JOIN jobs j ON j.id=l.job_id WHERE ${live} AND l.lat IS NULL AND l.city = ANY($1) ORDER BY j.id LIMIT 1`, [Object.keys(CITY_COORDS)]);
+      if (l) { const c = CITY_COORDS[l.city]; await pool.query("UPDATE job_locations SET lat=$2, lng=$3, geocoded_at=now(), geocode_provider='manual' WHERE id=$1", [l.id, c[0], c[1]]); geo = l; console.log(`seed-extra: set manual coordinates on job_locations#${l.id} (${l.city}) — run node jobs/geocode.js for real ones`); }
+    }
+    if (geo) out.geoslug = geo.slug;
+    if (seed) {   // the Integrations passcode the admin pages are unlocked with
+      try { const settings = require('../lib/settings'); await settings.set('admin_passcode', ADMIN_PASSCODE); console.log('seed-extra: admin_passcode set (lib/settings)'); try { await require('../lib/db').pool.end(); } catch (_) {} }
+      catch (e) { console.log(`seed-extra: could not set admin_passcode via lib/settings: ${e.message}`); }
+    }
   } catch (e) { console.log(`db fixtures: ${e.message}`); }
   await pool.end().catch(() => {});
   return out;
@@ -124,7 +145,7 @@ async function main() {
 
   const slug = pages.some(p => p.path.includes('{slug}')) ? await liveJobSlug() : null;
   if (pages.some(p => p.path.includes('{slug}'))) console.log(`live job slug: ${slug || '(none found — {slug} pages will be skipped)'}`);
-  const vars = { slug, ...(pages.some(p => /\{(multislug|employerJob|consultantJob|receiptId)\}/.test(p.path)) ? await dbFixtures(!!argv['seed-extra']) : {}) };
+  const vars = { slug, ...(pages.some(p => /\{(multislug|employerJob|consultantJob|receiptId|geoslug)\}/.test(p.path) || p.unlock) ? await dbFixtures(!!argv['seed-extra']) : {}) };
   pages = pages.filter(p => {
     const missing = [...p.path.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(k => !vars[k]);
     if (missing.length) console.log(`skip ${p.key}: no fixture for {${missing.join('}, {')}}${process.env.DATABASE_URL ? ' (run with --seed-extra)' : ' (set DATABASE_URL)'}`);
@@ -138,6 +159,17 @@ async function main() {
       const s = await login(BASE, LOGINS[role], PASSWORD);
       if (s.ok) sessions[role] = s; else console.log(`login ${role}: FAILED (${s.status}${s.location ? ' → ' + s.location : ''}) — its pages will be captured as guest`);
     } catch (e) { console.log(`login ${role}: threw ${e.message}`); }
+  }
+  // Integrations is passcode-gated per session: unlock the admin session once so `unlock: true` pages render the real panel.
+  if (sessions.admin && pages.some(p => p.unlock)) {
+    try {
+      const u = await request(BASE, '/admin/integrations/unlock', { jar: sessions.admin.jar });
+      const f = findForm(u.text, 'passcode');
+      const form = { ...(f ? f.fields : {}), action: 'unlock', passcode: ADMIN_PASSCODE, next: '/admin/integrations' };
+      const r = await request(BASE, (f && f.action) || '/admin/integrations/unlock', { method: 'POST', form, jar: sessions.admin.jar });
+      const ok = r.status === 302 && !/unlock/.test(r.location || '');
+      console.log(`admin integrations unlock: ${ok ? 'OK' : 'FAILED'} (${r.status}${r.location ? ' → ' + r.location : ''})${ok ? '' : /passcode2/.test(u.text) ? ' — no passcode set yet: run with --seed-extra or set QA_ADMIN_PASSCODE' : ' — wrong QA_ADMIN_PASSCODE?'}`);
+    } catch (e) { console.log(`admin integrations unlock: threw ${e.message}`); }
   }
 
   const chrome = await launchChromium();
@@ -167,6 +199,9 @@ async function main() {
         if (sess) await cdp.send('Network.setCookie', { name: sess.cookieName, value: sess.cookie, domain: host, path: '/', httpOnly: true, sameSite: 'Lax' });
         await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: width < 500 ? 844 : width < 1100 ? 1024 : 900, deviceScaleFactor: width < 500 ? 2 : 1, mobile: width < 500, screenWidth: width, screenHeight: width < 500 ? 844 : 1024 });
         if (width < 500) await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+        // a fresh document every time: navigating to a URL that differs only by #fragment (or is identical) would be a
+        // same-document navigation — no new response, status stays "?"; about:blank in between forces a real load
+        await cdp.send('Page.navigate', { url: 'about:blank' }); await sleep(100);
         consoleBucket = []; docStatus = null;
         const loaded = cdp.waitFor('Page.loadEventFired', 20000);
         const nav = await cdp.send('Page.navigate', { url: BASE + page.path });
@@ -177,7 +212,8 @@ async function main() {
         Object.assign(row, { iw: m.iw, sw: Math.max(m.sw, m.bw), h: m.h, title: m.title, status: docStatus, finalPath: m.href });
         row.overflow = row.sw > row.iw;
         // Chrome only reports the FINAL document after a redirect, so a logged-in page bouncing to /login would look like a 200.
-        row.redirected = row.finalPath !== page.path && !page.redirect;
+        const norm = (p) => { try { return decodeURIComponent(String(p).replace(/#.*$/, '')); } catch (_) { return String(p); } };
+        row.redirected = norm(row.finalPath) !== norm(page.path) && !page.redirect;
         if (row.overflow) {
           // name the widest offenders so the owning agent can fix them without guessing
           row.offenders = await cdp.eval(`(() => { const iw = innerWidth, out = []; for (const el of document.querySelectorAll('body *')) { const r = el.getBoundingClientRect(); if (r.right > iw + 1 && r.width > 0) out.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.') : '') + ' right=' + Math.round(r.right)); } return out.slice(0, 5); })()`);

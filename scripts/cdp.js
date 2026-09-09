@@ -271,7 +271,49 @@ function getJson(url, method = 'GET') {
 }
 const slugify = (s) => String(s).replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '').replace(/^\/+|\/+$/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'home';
 
-module.exports = { WebSocket, CDP, launchChromium, findChromium, CookieJar, request, login, sleep, getJson, slugify };
+// ---------------------------------------------------------------- HTML form helpers (shared by smoke.js / shots.js)
+const unescapeHtml = (s) => String(s ?? '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const attrOf = (tag, name) => { const r = tag.match(new RegExp(`\\s${name}=(?:"([^"]*)"|'([^']*)')`, 'i')); return r ? unescapeHtml(r[1] ?? r[2]) : null; };
+/**
+ * Every <form> in a document → { action, method, fields, html }. `fields` holds the form's current values the way a
+ * browser would submit them (inputs, selected <option>, textarea; unchecked checkboxes/radios, file and submit inputs
+ * are left out), so a test can re-post a page's own form with one value changed instead of guessing field names.
+ */
+function parseForms(html) {
+  const out = [];
+  for (const m of String(html || '').matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/gi)) {
+    const attrs = m[1], body = m[2], fields = {};
+    for (const i of body.matchAll(/<input\b[^>]*>/gi)) {
+      const t = i[0], name = attrOf(t, 'name'); if (!name) continue;
+      const type = (attrOf(t, 'type') || 'text').toLowerCase();
+      if (['submit', 'button', 'file', 'image', 'reset'].includes(type)) continue;
+      if ((type === 'checkbox' || type === 'radio') && !/\schecked(?:\s|=|>|\/)/i.test(t + ' ')) continue;
+      fields[name] = attrOf(t, 'value') ?? (type === 'checkbox' ? 'on' : '');
+    }
+    for (const s of body.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/gi)) {
+      const name = attrOf(s[1], 'name'); if (!name) continue;
+      const opts = [...s[2].matchAll(/<option\b([^>]*)>/gi)];
+      const sel = opts.find(o => /\sselected(?:\s|=|>|\/)/i.test(o[1] + ' ')) || opts[0];
+      fields[name] = sel ? (attrOf(sel[1], 'value') ?? '') : '';
+    }
+    for (const t of body.matchAll(/<textarea\b([^>]*)>([\s\S]*?)<\/textarea>/gi)) { const name = attrOf(t[1], 'name'); if (name) fields[name] = unescapeHtml(t[2]); }
+    out.push({ action: attrOf(attrs, 'action') || '', method: (attrOf(attrs, 'method') || 'get').toLowerCase(), fields, html: body });
+  }
+  return out;
+}
+/** The form whose fields include `fieldName` (or whose action matches a RegExp). */
+const findForm = (html, key) => parseForms(html).find(f => key instanceof RegExp ? key.test(f.action) : Object.prototype.hasOwnProperty.call(f.fields, key)) || null;
+/** Current value of <input name="x"> (attribute order independent); null when the input is absent. */
+function inputValue(html, name) {
+  for (const i of String(html || '').matchAll(/<input\b[^>]*>/gi)) if (attrOf(i[0], 'name') === name) return attrOf(i[0], 'value') ?? '';
+  const sel = [...String(html || '').matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/gi)].find(s => attrOf(s[1], 'name') === name);
+  if (sel) { const o = [...sel[2].matchAll(/<option\b([^>]*)>/gi)].find(o => /\sselected(?:\s|=|>|\/)/i.test(o[1] + ' ')); return o ? (attrOf(o[1], 'value') ?? '') : ''; }
+  return null;
+}
+/** Flash messages rendered by views/partials/flash.ejs. */
+const flashes = (html) => [...String(html || '').matchAll(/class="flash flash--(\w+)"[^>]*>([\s\S]*?)<\/div>/g)].map(m => `${m[1]}: ${unescapeHtml(m[2]).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()}`);
+
+module.exports = { WebSocket, CDP, launchChromium, findChromium, CookieJar, request, login, sleep, getJson, slugify, parseForms, findForm, inputValue, flashes, unescapeHtml };
 
 // `node scripts/cdp.js [url] [width]` — self-test: launch chromium, emulate width, print innerWidth, save a PNG.
 if (require.main === module) {

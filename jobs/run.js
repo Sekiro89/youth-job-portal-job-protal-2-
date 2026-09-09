@@ -10,6 +10,11 @@ const { runRenewals } = require('./renewals');
   try {
     const counts = await runRenewals();
     console.log(`[renewals] done in ${Date.now() - started}ms:`, JSON.stringify(counts));
+    try {
+      const { geocodeMissing } = require('./geocode');
+      const g = await geocodeMissing({ limit: 200 });
+      console.log('[geocode] backlog:', JSON.stringify(g));
+    } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') console.error('[geocode] failed', e.message); }
     if (process.env.JOBBANK_SYNC !== '0') {
       try {
         const { syncJobBank } = require('./jobbank-sync');

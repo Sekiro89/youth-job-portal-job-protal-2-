@@ -11,8 +11,13 @@ board) into Canada Careers so the portal launches with genuine content.
 Files: `lib/jobbank.js` (fetch + parse + upsert), `scripts/import-jobbank.js` (CLI), `jobs/jobbank-sync.js`
 (daily `syncJobBank()`), `views/public/job.ejs` + `views/public/_job-card.ejs` (attribution UI),
 `data/jobbank-cache/` (raw HTML cache, gitignored). Schema: the `source*` columns on `jobs` and `source` on
-`employer_profiles`, the `job_locations` table, `jobs.education_other`, `employer_profiles.operating_name`
-(bottom of `db/schema.sql`).
+`employer_profiles`, the `job_locations` table, `jobs.education_other` / `experience_other` / `hours_amount` /
+`hours_period`, `employer_profiles.operating_name` / `industry` (bottom of `db/schema.sql`).
+
+**2026-09-10 (client PDF round):** education and experience now map to the NEW Job Bank vocabularies in
+`lib/constants.js` (`EDUCATION_LEVELS`, `EXPERIENCE_LEVELS`), work hours are parsed into `hours_amount` + `hours_period`,
+and the employer's **industry sector** is read from the employer's Job Bank profile page into `employer_profiles.industry`
+(a `C.INDUSTRIES` key). The `jobbank_sync` kill switch is a runtime setting (`lib/settings`) shared with the admin panel.
 
 ## Sources used (verified 2026-09-09)
 
@@ -22,6 +27,7 @@ Files: `lib/jobbank.js` (fetch + parse + upsert), `scripts/import-jobbank.js` (C
 | Search HTML (fallback) | `https://www.jobbank.gc.ca/jobsearch/jobsearch?searchstring=<kw>&fprov=<XX>&sort=D` | ~300 KB, 25 results/page, `article#article-<id> > a.resultJobItem` with `span.noctitle`, `li.date`, `li.business`, `li.location`, `li.salary`. `parseSearchHtml()` covers it; not used by default because the feed is 10× cheaper. |
 | Posting detail | `https://www.jobbank.gc.ca/jobsearch/jobposting/<id>` | ~190 KB. RDFa: `property="title|datePosted|hiringOrganization/name|addressLocality|addressRegion|postalCode|baseSalary(minValue,maxValue,unitText)|employmentType|workHours|validThrough"`, NOC in `span.aa_jobbank_job_noccode`. **Native** postings have structured `div.job-posting-detail-requirements` blocks (`h3/h4`: Overview → Languages/Education/Experience/On site; Responsibilities → Tasks; Experience and specialization; Additional information; Benefits; Employment groups with `<details><summary>Support for …</summary>`), plus "Who can apply for this job?". **Partner** postings (Indeed, Jobillico, Workopolis, …) carry one HTML blob in `span[property=description]` and an `#externalJobLink`. The "Show how to apply" POST is **not** used — we link to the posting instead. |
 | Expired posting | HTTP **410** + redirect to `/jobsearch/jobpostingexpired` | This is the "gone" signal used by the daily sync. |
+| Employer profile (**industry**) | `https://www.jobbank.gc.ca/jobsearch/empprofile/<posting id>` | ~150 KB. Linked (as `/jobsearch/empprofile/<id>;jsessionid=…`, the posting's own id) from native postings whose employer has a Job Bank profile — 69 of 296 cached postings. `h1 span.name` = employer, `span.industry-sector > span.value` = **"Industrial sector: Construction"** (NAICS sector, the same vocabulary as `C.INDUSTRIES`), `span.website a`, business size, workplace amenities, "Support for …" groups. `parseEmployerPage()` reads sector/website/size. Fetched **once per employer** (cache key `empprofile-<id>`, 30 days), only when the profile has no industry yet; `--no-employer-pages` skips it. |
 
 ### robots.txt
 
@@ -72,8 +78,10 @@ convenience, not as our own inventory, so every imported posting:
 | `noc_code` | NOC | 5-digit NOC 2021. |
 | `job_type` | employmentType | Permanent/Full time → `full_time`; Part time / Casual → `part_time`; Term or contract → `contract`; Temporary → `temporary`; Seasonal → `seasonal`; apprenticeship/internship when stated. |
 | `work_arrangement` | "Work location" (On site / Remote / Hybrid) | default `on_site`. |
-| `experience_level` | Experience | "No experience / will train / < 2 years" → entry; 2–5 years → intermediate; 5+ → senior. |
-| `education`, `education_other` | Education (`ul[property="educationRequirements"]` lines) | `educationFor()` → a `C.EDUCATION_LEVELS` **key**: "No degree, certificate or diploma" → `none`; "Secondary (high) school graduation certificate" → `secondary`; "College/CEGEP", "College, CEGEP or other non-university certificate or diploma …", "Other trades certificate or diploma", "University certificate …" → `certificate`; "Registered Apprenticeship certificate" / journeyperson / Red Seal → `apprenticeship`; "Bachelor's degree" → `bachelor`; "Master's degree" → `master`; "Earned doctorate degree" → `doctorate`; "Degree in medicine, dentistry, veterinary medicine or optometry" → `professional`. First mappable line wins (modifier lines like "or equivalent experience" are ignored); anything unrecognised → `other` + `education_other` = raw text; no Education section (partner postings) → NULL. The raw line is always kept verbatim in `requirements` ("Education: …"). |
+| `experience_level`, `experience_other` | Experience (`span[property="experienceRequirements"]`) | `experienceFor()` → a `C.EXPERIENCE_LEVELS` **key** — the list IS Job Bank's vocabulary, so it is 1:1: "No experience (will train)" → `will_train`; "Experience an asset" → `asset`; "1 to less than 7 months" → `1_7_months`; "7 months to less than 1 year" → `7_12_months`; "1 year to less than 2 years" → `1_2_years`; "2 years to less than 3 years" → `2_3_years`; "3 years to less than 5 years" → `3_5_years`; "5 years or more" → `5_plus`. Matcher is longest-phrase-first. Free text ("2-5 years", "3+ years", "6 months") is bucketed by its LOWER bound; anything else → `other` + `experience_other` = raw text; no Experience section (partner postings) → NULL. |
+| `education`, `education_other` | Education (`ul[property="educationRequirements qualification"]` lines) | `educationFor()` → a `C.EDUCATION_LEVELS` **key** (1:1 with Job Bank's list): "No degree, certificate or diploma" → `none`; "Secondary (high) school graduation certificate" → `secondary`; "Registered Apprenticeship certificate" → `apprenticeship`; "Other trades certificate or diploma" → `trades`; "College, CEGEP or other non-university certificate or diploma from a program of 3 months to less than 1 year" → `college_short`; "… of 1 year to 2 years" → `college_1_2`; "College/CEGEP" (and longer-program variants) → `college`; "Bachelor's degree" → `bachelor`; "Degree in medicine, dentistry, veterinary medicine or optometry" → `professional_degree`; "Master's degree" → `master`; "Earned doctorate degree" → `doctorate`. **Matcher is ordered longest phrase first** (several phrases contain "certificate or diploma" — a short pattern running first mis-filed the College variants in round 1). First mappable line wins; modifier lines ("or equivalent experience", "Full time enrollment") are ignored; anything unrecognised → `other` + `education_other` = raw text; no Education section (partner postings) → NULL. The raw line is always kept verbatim in `requirements` ("Education: …"). |
+| `hours_amount`, `hours_period` | `property='workHours'` ("35 hours per week", "30 to 40 hours per week", "75 hours bi-weekly") | `parseHours()` → amount = the single value or the **upper bound** of a range (numeric(6,2)), period ∈ `C.HOURS_PERIODS` (`week` / `biweekly` / `month` / `year`; French "heures par semaine" handled). Note Job Bank single-quotes this attribute — round 1's `propText` only matched double quotes, so `workHours` was always NULL until 2026-09-10. Partner postings have no workHours → NULL; `h.formatHours(job)` renders "35 hours per week". |
+| `employer_profiles.industry` | employer profile page "Industrial sector: …" | `industryFor()` matches the sector name against `C.INDUSTRIES` labels (normalised), then a per-sector alias list; **no match → NULL, never guessed** (an unmapped sector is logged as `unmapped sector "…"`). Never overwrites an existing value. `website` is filled from the same page when empty. Only employers whose posting links an employer page get one (69 of 296 postings; ~1 in 4 employers). |
 | `job_locations` (≥1 row), `city`, `province`, `postal_code` | every `property="address" typeof="PostalAddress"` block in the Location `<li>` (streetAddress / addressLocality / addressRegion / postalCode); "Various locations" postings list all of them in `span.list-city`; the `#variouslocation-dialog` modal is the fallback | `parseLocations()` → one `job_locations` row per address in page order (`sort_order` 0…n), `street_address` + `unit` (split out of the street by `splitUnit()`: "UNIT 4-11 VERVAIN DRIVE", "948 Homer Street suite 400", "205-105 Southbank Boulevard") + `postal_code` (validated with `C.POSTAL_CODE_RE`, stored "A1A 1A1") when Job Bank printed them, else city/province only. `jobs.city/province/postal_code` = the first row. Province must be a `C.PROVINCES` code or the address is dropped (posting skipped if none is left). **Upsert replaces the job's location rows** (delete + insert inside one transaction). |
 | `salary_min/max`, `salary_period` | baseSalary minValue/maxValue/unitText (fallback: feed salary text) | HOUR → `hour`, DAY → `day`, WEEK(LY) → `week`, BIWEEKLY → `biweekly`, MONTH(LY) → `month`, YEAR/ANNUALLY → `year` — **amounts stored as printed** (a "$1,200 weekly" posting is `1200 / week`; search/sort annualises with `C.SALARY_PERIOD_TO_YEAR`). Only semi-monthly (no period key) is converted: ×24 → `year`. Whole CAD; `content="10,000"` thousands separators are stripped. Guard kept: a non-hourly figure under $150 is an employer typo ("$24.87 weekly / 74 hours per week" and "software developer $101.00 daily" are real Job Bank data) and is stored as hourly. |
 | `vacancies` | "N vacancies" | default 1. |
@@ -86,8 +94,8 @@ convenience, not as our own inventory, so every imported posting:
 | `created_by` | — | the system user. |
 
 Upsert key: unique index `jobs_source_uid (source, source_id)`. Updates refresh title/description/requirements/
-benefits/salary/education/expiry/`source_synced_at`, replace the `job_locations` rows and re-sync the employer
-profile's legal/operating name; the job slug and profile slug never change.
+benefits/salary/education/experience/hours/expiry/`source_synced_at`, replace the `job_locations` rows and re-sync the
+employer profile's legal/operating name (+ industry once); the job slug and profile slug never change.
 
 ## How to run
 
@@ -112,8 +120,12 @@ node -e "require('./jobs/jobbank-sync').syncJobBank().then(r => console.log(JSON
 
 Options: `--queries a,b` · `--provinces ON,BC` · `--limit N` (max new postings; **0 = import nothing new**) ·
 `--per-query N` (max new per keyword × province, default 2) · `--max-requests N` (HTTP budget, default 600) ·
-`--dry-run` · `--refresh` · `--from-cache` (with `--refresh`: use cached pages of any age) · `--purge` · `--enable`.
+`--dry-run` · `--refresh` · `--from-cache` (with `--refresh`: use cached pages of any age; network only for pages
+missing from the cache — e.g. employer pages on the first run after 2026-09-10, ≤ 69 requests ≈ 6 min) ·
+`--no-employer-pages` (skip the industry lookup) · `--purge` · `--enable`.
 Env: `JOBBANK_DELAY_MS` (default 5000 = robots Crawl-delay; floor 1000), `JOBBANK_SYNC=off` (kill switch, see below).
+The run ends with the vocabulary distributions (education / experience keys, hours, employer industry) so a mapping
+regression is visible immediately.
 
 ### Purge / kill switch
 
@@ -124,10 +136,13 @@ node scripts/import-jobbank.js --purge
 ```
 
 archives every imported posting (`status='expired'`, `archived_at=now()` — nothing is deleted, nothing paid is touched)
-and writes `settings.jobbank_sync = 'off'`. While that flag is set (or env `JOBBANK_SYNC=off`), `syncJobBank()` returns
-`{ skipped: '…' }` without fetching anything and `scripts/import-jobbank.js` refuses to run (exit 3) — otherwise the
-daily sync would quietly revive them (the upsert revives an expired row whose `validThrough` is still ahead). The 235
-auto-created employer profiles stay (they list no live postings, so they're not linked from anywhere). To undo:
+and sets the **`jobbank_sync` runtime setting** to `off` through `lib/settings` (`settings.set('jobbank_sync','off')`;
+read with `settings.get` — DB value > env `JOBBANK_SYNC` > default `on`). The client's admin panel
+(`/admin/integrations` → "Daily Job Bank reference import") toggles the very same key, so panel and CLI never disagree.
+While it is off, `syncJobBank()` returns `{ skipped: '…' }` without fetching anything and `scripts/import-jobbank.js`
+refuses to run (exit 3) — otherwise the daily sync would quietly revive them (the upsert revives an expired row whose
+`validThrough` is still ahead). The 235 auto-created employer profiles stay (they list no live postings, so they're not
+linked from anywhere). To undo:
 
 ```bash
 node scripts/import-jobbank.js --enable            # clears the flag + re-activates purged rows whose Job Bank expiry is still ahead
@@ -169,8 +184,11 @@ updates only, no truncation, no touching of paid rows: every write is scoped `WH
 - **Operating names** are only detected when Job Bank prints them inside the employer name ("X Ltd. o/a Y"); the
   employer-details block shows the same single string, there is no separate "Business name" field on the posting page.
   1 of 235 imported employers has one (Weldwork Fabricators Ltd. o/a Weldwork Fabricators).
-- **Education** is NULL for partner postings (no structured Education section — 146 of 266) and `other` is not hit
-  by any of the current vocabulary; if Job Bank adds a phrase, it lands in `education_other` verbatim.
+- **Education / experience / hours** are NULL for partner postings (no structured sections, no `workHours` — 146 of
+  266 rows); `other` is not hit by any of the current native vocabulary. If Job Bank adds a phrase, it lands in
+  `education_other` / `experience_other` verbatim and shows up in the run's distribution line.
+- **Industry** exists only for employers with a Job Bank employer profile (69 of 296 postings link one); everyone else
+  stays NULL on purpose — we do not infer a sector from the NOC or the title.
 - **Salary "to be negotiated"** with no figures → salary null ("Salary not disclosed").
 - `job_type` collapses Job Bank's two-axis terms (Permanent/Term/Casual/Seasonal × Full/Part time) to one key;
   "Term or contract + Full time" becomes `contract`.

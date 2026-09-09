@@ -75,3 +75,9 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
   .role-card__cta { align-self: end; } /* CTAs line up across the three cards */
 }
 @media (min-width: 1024px) { .auth { padding-top: 56px; padding-bottom: 72px; } }
+
+/* --- round 2 (2026-09-10): employer signup address block + admin note ------------------------------------ */
+.auth__section-note { margin: 8px 0 0; }
+.auth .form-row--street { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+@media (max-width: 639px) { .auth .form-row--street { grid-template-columns: 1fr; } }
+.auth-info--admin a { font-weight: 600; }

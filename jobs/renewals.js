@@ -41,8 +41,9 @@ async function runRenewals({ log = console.log } = {}) {
 
   // 3) Stripe reconciliation: if a webhook was missed, pull the latest paid invoice for lapsed Stripe subscriptions
   //    (and Stripe subscriptions still `pending` after 1 hour whose Checkout may have completed without a webhook).
-  if (billing.mode() === 'stripe') {
-    const stripe = billing.stripe();
+  //    Keys come from lib/settings at run time (the admin panel), so the cron follows a key change without any restart.
+  if (await billing.mode() === 'stripe') {
+    const stripe = await billing.stripe();
     const lapsed = await db.many(`SELECT * FROM subscriptions WHERE provider='stripe' AND provider_subscription_id IS NOT NULL AND status IN ('active','past_due') AND current_period_end <= now()`);
     for (const s of lapsed) {
       try {

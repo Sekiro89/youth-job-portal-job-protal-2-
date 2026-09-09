@@ -1,4 +1,4 @@
-<%# Admin side nav. Expects `active` (overview|messages|jobs|users|payments|outbox|settings) %>
+<%# Admin side nav. Expects `active` (overview|messages|jobs|users|payments|outbox|integrations) %>
 <% const items = [
   ['overview', '/admin', 'Overview'],
   ['messages', '/admin/messages', 'Messages'],
@@ -6,7 +6,7 @@
   ['users', '/admin/users', 'Users'],
   ['payments', '/admin/payments', 'Payments'],
   ['outbox', '/admin/outbox', 'Mail outbox'],
-  ['settings', '/admin/settings', 'Settings'],
+  ['integrations', '/admin/integrations', 'Integrations'],
 ]; %>
 <nav class="dash__side admin-nav" aria-label="Admin">
   <% items.forEach(([key, href, label]) => { %>

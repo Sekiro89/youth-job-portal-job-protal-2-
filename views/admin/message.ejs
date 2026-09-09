@@ -33,7 +33,7 @@
 
         <article class="card">
           <h2 class="h3 card__title">Reply by email</h2>
-          <p class="muted small">Goes to <strong><%= m.email %></strong> from <%= supportName %> with your signature and the original message quoted. Sending marks the ticket <em>in progress</em>.</p>
+          <p class="muted small">Goes to <strong><%= m.email %></strong> from the site's sender address (signed <%= supportName %><% if (supportEmails.length) { %>, Reply-To <%= supportEmails[0] %><% } %>) with the original message quoted. Sending marks the ticket <em>in progress</em>.</p>
           <form method="post" action="/admin/messages/<%= m.id %>" class="form">
             <input type="hidden" name="action" value="reply">
             <div class="field">

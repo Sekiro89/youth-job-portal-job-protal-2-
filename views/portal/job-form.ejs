@@ -1,11 +1,13 @@
 <% const v = values; const err = (k) => errors[k] ? `<div class="error" id="err-${k}">${h.escapeHtml(errors[k])}</div>` : ''; const inv = (k) => errors[k] ? ` aria-invalid="true" aria-describedby="err-${k}"` : '';
    const isEdit = !!job; const canPublish = !job || ['draft','pending_payment'].includes(job.status); const isLive = job && job.status === 'active';
-   // Work locations: always render at least 3 blocks (no-JS users get spare blocks; JS hides the empty ones and adds more on demand).
-   const blankLoc = { street_address: '', unit: '', city: '', province: '', postal_code: '' };
-   const locs = (v.locations && v.locations.length ? v.locations : [blankLoc]).slice();
-   while (locs.length < 3) locs.push(blankLoc);
-   const locBlank = (l) => !l.street_address && !l.unit && !l.city && !l.province && !l.postal_code;
-   const locHasErr = (i) => ['street_address','unit','city','province','postal_code'].some(f => errors['loc_' + i + '_' + f]); %>
+   const locked = isEdit && ['active','pending_payment'].includes(job.status);
+   const selPid = v.employer_profile_id ? String(v.employer_profile_id) : '';
+   const renderProfiles = isConsultant ? profiles : profiles.slice(0, 1);
+   const chosenIds = (v.location_ids || []).map(String); const keptIds = (v.keep_job_locations || []).map(String);
+   const legacy = typeof legacyLocs !== 'undefined' ? legacyLocs : [];
+   const nl = v.new_loc || {};
+   const newOpen = !!(nl.street_address || nl.city || nl.postal_code || nl.label || Object.keys(errors).some(k => k.startsWith('new_loc_')));
+   const profileHref = isConsultant ? (selPid ? '/consultant/profiles/' + selPid + '/edit#locations' : '/consultant/profiles') : '/employer/profile#locations'; %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
@@ -22,20 +24,39 @@
     <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the <%= Object.keys(errors).length %> highlighted field<%= Object.keys(errors).length === 1 ? '' : 's' %> below.</div><% } %>
 
     <form class="form job-form" method="post" action="<%= isEdit ? base + '/jobs/' + job.id + '/edit' : base + '/jobs/new' %>" novalidate>
-      <% if (isConsultant) { %>
       <section class="card form-section">
-        <h2 class="form-section__title">Post as company</h2>
+        <h2 class="form-section__title"><%= isConsultant ? 'Post as company' : 'Company' %></h2>
+        <% if (isConsultant) { %>
         <div class="field">
           <label for="employer_profile_id">Which client is this posting for? <span class="req">*</span></label>
-          <select class="input" id="employer_profile_id" name="employer_profile_id" required<%- inv('employer_profile_id') %><%= isEdit && ['active','pending_payment'].includes(job.status) ? ' disabled' : '' %>>
-            <option value="">Choose a company…</option>
-            <% profiles.forEach(p => { %><option value="<%= p.id %>" <%= String(v.employer_profile_id) === String(p.id) ? 'selected' : '' %>><%= h.displayCompany(p) %><%= h.legalNameNote(p) ? ' (' + p.company_name + ')' : '' %><%= p.city ? ' — ' + h.location(p) : '' %></option><% }) %>
+          <select class="input" id="employer_profile_id" name="employer_profile_id" required<%- inv('employer_profile_id') %><%= locked ? ' disabled' : '' %>>
+            <option value="" data-contact-email="">Choose a company…</option>
+            <% profiles.forEach(p => { %><option value="<%= p.id %>" data-contact-email="<%= p.contact_email || user.email %>" <%= selPid === String(p.id) ? 'selected' : '' %>><%= h.displayCompany(p) %><%= h.legalNameNote(p) ? ' (' + p.company_name + ')' : '' %><%= p.city ? ' — ' + h.location(p) : '' %></option><% }) %>
           </select>
-          <% if (isEdit && ['active','pending_payment'].includes(job.status)) { %><input type="hidden" name="employer_profile_id" value="<%= job.employer_profile_id %>"><div class="hint">The company cannot change once billing has started.</div><% } else { %><div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div><% } %>
+          <% if (locked) { %><input type="hidden" name="employer_profile_id" value="<%= job.employer_profile_id %>"><div class="hint">The company cannot change once billing has started.</div><% } else { %><div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div><% } %>
           <%- err('employer_profile_id') %>
         </div>
+        <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company profile</a></div>' : '' %><% } %>
+        <% renderProfiles.forEach(p => { const names = p.operating_names && p.operating_names.length ? p.operating_names : (p.operating_name ? [p.operating_name] : []); const isSel = selPid === String(p.id);
+             const choice = isSel ? (v.operating_name_choice || '__legal') : (p.operating_name || '__legal'); const custom = choice !== '__legal' && choice !== '__new' && !names.includes(choice); %>
+        <div class="field" data-profile="<%= p.id %>"<%= isConsultant && !isSel ? ' hidden' : '' %>>
+          <label for="opname-<%= p.id %>">Operating name for this posting</label>
+          <select class="input" id="opname-<%= p.id %>" name="operating_name_choice_<%= p.id %>" data-select-toggles="opname-new-<%= p.id %>" data-toggle-value="__new"<%- isSel ? inv('operating_name') : '' %>>
+            <option value="__legal" <%= choice === '__legal' ? 'selected' : '' %>>Legal name — <%= p.company_name %></option>
+            <% names.forEach((n, i) => { %><option value="<%= n %>" <%= choice === n ? 'selected' : '' %>><%= n %><%= i === 0 ? ' (default)' : '' %></option><% }) %>
+            <% if (custom) { %><option value="<%= choice %>" selected><%= choice %> (current)</option><% } %>
+            <option value="__new" <%= choice === '__new' ? 'selected' : '' %>>Add a new operating name…</option>
+          </select>
+          <div class="hint">Job seekers see this name first; the legal name appears underneath. <a href="<%= isConsultant ? '/consultant/profiles/' + p.id + '/edit#operating-names' : '/employer/profile#operating-names' %>">Manage names</a></div>
+          <%- isSel ? err('operating_name') : '' %>
+          <div class="field field--sub" id="opname-new-<%= p.id %>" data-nojs-visible>
+            <label for="opname-new-input-<%= p.id %>">New operating name</label>
+            <input class="input" id="opname-new-input-<%= p.id %>" name="operating_name_new_<%= p.id %>" value="<%= isSel ? (v.operating_name_new || '') : '' %>" maxlength="120" placeholder="e.g. Flying Pig">
+            <div class="hint">Saved to the company profile so you can pick it next time.</div>
+          </div>
+        </div>
+        <% }) %>
       </section>
-      <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company profile</a></div>' : '' %><% } %>
 
       <section class="card form-section">
         <h2 class="form-section__title">The role</h2>
@@ -70,7 +91,7 @@
         </div>
         <div class="form-row form-row--3">
           <div class="field">
-            <label for="experience_level">Experience level</label>
+            <label for="experience_level">Experience</label>
             <select class="input" id="experience_level" name="experience_level" data-select-toggles="experience_other_wrap" data-toggle-value="other"<%- inv('experience_level') %>>
               <option value="">Any</option>
               <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
@@ -106,55 +127,42 @@
 
       <section class="card form-section" id="locations" aria-labelledby="locations-title">
         <h2 class="form-section__title" id="locations-title">Work location(s) <span class="req">*</span></h2>
-        <p class="hint hint--lead">Full address is required so local job seekers can find you. Hiring at several branches in the same region? Add each address here instead of posting the job again.</p>
+        <p class="hint hint--lead">Tick every address where the person will work — each one is printed on the posting and shown on the map. Locations come from the company profile (<a href="<%= profileHref %>">manage locations</a>).</p>
         <%- errors.locations ? `<div class="error error--block" id="err-locations" role="alert">${h.escapeHtml(errors.locations)}</div>` : '' %>
-        <div class="loc-list" id="loc-list" data-max="<%= 20 %>">
-          <% locs.forEach((l, i) => { const k = (f) => 'loc_' + i + '_' + f; const spare = i > 0 && locBlank(l) && !locHasErr(i); %>
-          <fieldset class="loc-block<%= spare ? ' loc-block--spare' : '' %><%= locHasErr(i) ? ' loc-block--invalid' : '' %>" data-loc-block>
-            <legend class="loc-block__title"><span class="loc-block__label">Location <span data-loc-n><%= i + 1 %></span></span><% if (i === 0) { %><span class="loc-block__note small muted" data-loc-first-note>Shown first · sets the posting’s city</span><% } %></legend>
-            <div class="field">
-              <label for="<%= k('street_address') %>">Street address <span class="req">*</span></label>
-              <input class="input" id="<%= k('street_address') %>" name="loc_street_address[]" value="<%= l.street_address %>" maxlength="200" placeholder="e.g. 2400 Derry Rd E" autocomplete="off"<%- inv(k('street_address')) %>>
-              <%- err(k('street_address')) %>
-            </div>
-            <div class="form-row loc-row loc-row--unit">
-              <div class="field">
-                <label for="<%= k('unit') %>">Unit / suite <span class="muted">(optional)</span></label>
-                <input class="input" id="<%= k('unit') %>" name="loc_unit[]" value="<%= l.unit %>" maxlength="40" placeholder="e.g. 4" autocomplete="off">
-              </div>
-              <div class="field">
-                <label for="<%= k('city') %>">City <span class="req">*</span></label>
-                <input class="input" id="<%= k('city') %>" name="loc_city[]" value="<%= l.city %>" maxlength="80" autocomplete="off"<%- inv(k('city')) %>>
-                <%- err(k('city')) %>
-              </div>
-            </div>
-            <div class="form-row loc-row">
-              <div class="field">
-                <label for="<%= k('province') %>">Province / territory <span class="req">*</span></label>
-                <select class="input" id="<%= k('province') %>" name="loc_province[]"<%- inv(k('province')) %>>
-                  <option value="">Choose…</option>
-                  <% C.PROVINCES.forEach(([pk, pn]) => { %><option value="<%= pk %>" <%= l.province === pk ? 'selected' : '' %>><%= pn %></option><% }) %>
-                </select>
-                <%- err(k('province')) %>
-              </div>
-              <div class="field">
-                <label for="<%= k('postal_code') %>">Postal code <span class="req">*</span></label>
-                <input class="input" id="<%= k('postal_code') %>" name="loc_postal_code[]" value="<%= l.postal_code %>" maxlength="7" placeholder="A1A 1A1" autocomplete="off"<%- inv(k('postal_code')) %>>
-                <%- err(k('postal_code')) %>
-              </div>
-            </div>
-            <div class="loc-block__actions"><button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="button" data-loc-remove hidden>Remove this location</button></div>
-          </fieldset>
-          <% }) %>
+        <% if (isConsultant) { %><p class="hint" data-profile-none<%= selPid ? ' hidden' : '' %>>Choose a company above to see its locations.</p><% } %>
+        <% renderProfiles.forEach(p => { const list = byProfile[p.id] || []; const isSel = selPid === String(p.id); %>
+        <div class="loc-choice" data-profile="<%= p.id %>"<%= isConsultant && selPid && !isSel ? ' hidden' : '' %>>
+          <% if (isConsultant) { %><div class="small muted" data-nojs-only>Locations of <%= h.displayCompany(p) %></div><% } %>
+          <% if (!list.length) { %><div class="empty empty--sm">No saved locations for <%= h.displayCompany(p) %> yet — add one below and it is saved to the profile.</div>
+          <% } else { %>
+          <div class="checks checks--loc">
+            <% list.forEach(l => { %>
+            <label class="check check--loc"><input type="checkbox" name="location_ids" value="<%= l.id %>" <%= isSel && chosenIds.includes(String(l.id)) ? 'checked' : '' %>><span class="check__body"><span class="check__title"><%= l.label || 'Location' %><% if (l.is_default) { %> <span class="badge badge--positive">Default</span><% } %></span><span class="check__sub"><%= h.fullAddress(l) %></span></span></label>
+            <% }) %>
+          </div>
+          <% } %>
         </div>
-        <div class="loc-add">
-          <button class="kds-btn kds-btn--ghost" type="button" id="loc-add" hidden>+ Add another location</button>
-          <p class="hint" data-nojs-only>Leave the spare blocks empty if the job has one location. Blank blocks are ignored.</p>
+        <% }) %>
+        <% if (legacy.length) { %>
+        <div class="loc-choice loc-choice--legacy">
+          <div class="small muted">Saved on this posting (not in the company’s location list)</div>
+          <div class="checks checks--loc">
+            <% legacy.forEach(l => { %>
+            <label class="check check--loc"><input type="checkbox" name="keep_job_locations" value="<%= l.id %>" <%= keptIds.includes(String(l.id)) ? 'checked' : '' %>><span class="check__body"><span class="check__title">Keep this address</span><span class="check__sub"><%= l.street_address ? h.fullAddress(l) : h.location(l) %></span></span></label>
+            <% }) %>
+          </div>
         </div>
+        <% } %>
+        <details class="loc-new" id="loc-new"<%= newOpen ? ' open' : '' %>>
+          <summary class="loc-new__summary">+ Add a new location</summary>
+          <p class="hint">Saved to the company profile and selected for this posting. Leave it empty if the job is at the locations ticked above.</p>
+          <%- include('partials/location-fields', { prefix: 'new_loc_', vals: nl, errs: errors, idp: 'new-loc-', showLabel: true }) %>
+          <button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" data-nojs-hide id="loc-new-clear">Clear</button>
+        </details>
       </section>
 
       <section class="card form-section">
-        <h2 class="form-section__title">Pay &amp; openings</h2>
+        <h2 class="form-section__title">Pay &amp; hours</h2>
         <div class="form-row form-row--3">
           <div class="field">
             <label for="salary_min">Pay from (CAD)</label>
@@ -174,17 +182,29 @@
             <div class="hint">Shown as e.g. “$52,000 – $60,000/year” or “$22/hour”.</div>
           </div>
         </div>
-        <div class="form-row">
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="hours_amount">Number of hours worked <span class="muted">(optional)</span></label>
+            <input class="input" id="hours_amount" name="hours_amount" type="number" inputmode="decimal" min="0.5" max="168" step="0.5" value="<%= v.hours_amount %>" placeholder="e.g. 35"<%- inv('hours_amount') %>>
+            <%- err('hours_amount') %>
+          </div>
+          <div class="field">
+            <label for="hours_period">Hours frequency</label>
+            <select class="input" id="hours_period" name="hours_period">
+              <% C.HOURS_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.hours_period || 'week') === k ? 'selected' : '' %>><%= n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly') %></option><% }) %>
+            </select>
+            <div class="hint">Shown as e.g. “35 hours per week”.</div>
+          </div>
           <div class="field">
             <label for="vacancies">Number of positions <span class="req">*</span></label>
             <input class="input" id="vacancies" name="vacancies" type="number" min="1" max="999" value="<%= v.vacancies %>" required<%- inv('vacancies') %>>
             <%- err('vacancies') %>
           </div>
-          <div class="field">
-            <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
-            <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
-            <div class="hint">Used for matching job seekers to your posting.</div>
-          </div>
+        </div>
+        <div class="field">
+          <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
+          <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
+          <div class="hint">Used for matching job seekers to your posting.</div>
         </div>
         <fieldset class="field fieldset">
           <legend>Languages <span class="req">*</span></legend>
@@ -232,11 +252,12 @@
 
       <section class="card form-section">
         <h2 class="form-section__title">How to apply</h2>
-        <p class="muted small">Applicants always apply through Canada Careers (resume + cover letter into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
+        <p class="muted small">Applicants always apply through Canada Careers (resume + cover sheet into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
         <div class="form-row">
           <div class="field">
-            <label for="apply_email">Application email</label>
-            <input class="input" id="apply_email" name="apply_email" type="email" value="<%= v.apply_email %>" maxlength="160" autocomplete="email"<%- inv('apply_email') %>>
+            <label for="apply_email">Application email (the employer’s inbox)</label>
+            <input class="input" id="apply_email" name="apply_email" type="email" value="<%= v.apply_email %>" maxlength="160" autocomplete="off" data-apply-default="<%= v.apply_email %>"<%- inv('apply_email') %>>
+            <div class="hint">Applicants also land in your dashboard.</div>
             <%- err('apply_email') %>
           </div>
           <div class="field">

@@ -5,6 +5,7 @@ const db = require('../lib/db');
 const auth = require('../lib/auth');
 const jobs = require('../lib/jobs');
 const billing = require('../lib/billing');
+const settings = require('../lib/settings');
 const { money } = require('../lib/helpers');
 
 const router = express.Router();
@@ -25,10 +26,11 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ---------------------------------------------------------------- Stripe webhook (raw body from server.js; no auth, no same-origin)
+// The client and the signing secret are read from lib/settings on EVERY delivery, so keys pasted in /admin/integrations work immediately.
 router.post('/billing/webhook', wrap(async (req, res) => {
-  const stripe = billing.stripe();
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripe || !secret) { console.warn('[billing] webhook received but Stripe is not configured (STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET)'); return res.status(400).send('Stripe is not configured'); }
+  const stripe = await billing.stripe();
+  const secret = await settings.get('stripe_webhook_secret');
+  if (!stripe || !secret) { console.warn('[billing] webhook received but Stripe is not configured (stripe_secret_key / stripe_webhook_secret in /admin/integrations)'); return res.status(400).send('Stripe is not configured'); }
   if (!Buffer.isBuffer(req.body)) return res.status(400).send('Raw body required');   // server.js mounts express.raw() on this path
   let event;
   try {
@@ -85,7 +87,7 @@ router.get('/billing/checkout/:jobId', owners, wrap(async (req, res) => {
   }
   const sub = await billing.ensureSubscription(job, req.user);            // snapshots the price for the payer's role
   const pricing = await billing.snapshotPricing(sub, req.user.role);       // what the page shows = what will be charged
-  res.render('billing/checkout', page({ title: `Checkout — ${job.title}`, metaDescription: 'Pay for your job posting on Canada Careers.', job, sub, pricing, base, mode: billing.mode(), rateLabel: pricing.role === 'consultant' ? 'Third party consultant rate' : 'Employer rate' }));
+  res.render('billing/checkout', page({ title: `Checkout — ${job.title}`, metaDescription: 'Pay for your job posting.', job, sub, pricing, base, mode: await billing.mode(), rateLabel: pricing.role === 'consultant' ? 'Third party consultant rate' : 'Employer rate' }));
 }));
 
 router.post('/billing/checkout/:jobId', owners, wrap(async (req, res) => {
@@ -96,7 +98,7 @@ router.post('/billing/checkout/:jobId', owners, wrap(async (req, res) => {
   const profile = { company_name: job.company_name };
   try {
     const { url } = await billing.createCheckout(job, req.user, profile);
-    await auth.audit(req.user.id, 'billing.checkout_started', 'job', job.id, { mode: billing.mode() });
+    await auth.audit(req.user.id, 'billing.checkout_started', 'job', job.id, { mode: await billing.mode() });
     return res.redirect(303, url);
   } catch (e) {
     console.error('[billing] createCheckout failed', e);
@@ -153,7 +155,7 @@ router.post('/billing/sandbox/:checkoutId', owners, wrap(async (req, res) => {
 router.get('/billing/success', owners, wrap(async (req, res) => {
   req.params.jobId = req.query.job;
   const job = await ownedJob(req, res); if (!job) return;
-  if (billing.mode() === 'stripe' && req.query.session_id) {
+  if (await billing.mode() === 'stripe' && req.query.session_id) {
     // The webhook may not have landed yet: pull the Checkout Session (+ subscription + latest invoice) directly.
     try { await billing.reconcileCheckoutSession(String(req.query.session_id), job.id); } catch (e) { console.warn('[billing] reconcile session failed', e.message); }
   }
@@ -193,7 +195,7 @@ router.post('/billing/resume/:jobId', owners, wrap(async (req, res) => {
 
 // ---------------------------------------------------------------- Stripe Customer Portal (update card, invoices) — Stripe mode only
 router.get('/billing/portal', owners, wrap(async (req, res) => {
-  if (billing.mode() !== 'stripe') { req.flash('info', 'Card management opens once Stripe payments are enabled. In sandbox mode there is no card on file.'); return res.redirect('/billing'); }
+  if (await billing.mode() !== 'stripe') { req.flash('info', 'Card management opens once Stripe payments are enabled. In sandbox mode there is no card on file.'); return res.redirect('/billing'); }
   try {
     const url = await billing.portalUrl(req.user, '/billing');
     if (!url) { req.flash('info', 'No Stripe billing account yet — it is created with your first paid posting.'); return res.redirect('/billing'); }
@@ -236,8 +238,9 @@ router.get('/billing', owners, wrap(async (req, res) => {
   }
   const pricing = await billing.getPricing(req.user.role);               // the rate THIS payer gets on new postings
   const allPricing = await billing.getAllPricing();                       // both rates, for the explanatory note
-  const hasStripeCustomer = billing.mode() === 'stripe' && !!(await billing.findStripeCustomerId(req.user.id));
-  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, allPricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode: billing.mode(), hasStripeCustomer, money }));
+  const mode = await billing.mode();
+  const hasStripeCustomer = mode === 'stripe' && !!(await billing.findStripeCustomerId(req.user.id));
+  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, allPricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode, hasStripeCustomer, money }));
 }));
 
 // ---------------------------------------------------------------- receipt (owner or admin)
@@ -247,9 +250,10 @@ router.get('/billing/receipt/:paymentId', auth.requireAuth('employer', 'consulta
   if (!r || (req.user.role !== 'admin' && r.owner_user_id !== req.user.id && r.payer_user_id !== req.user.id)) {
     return res.status(404).render('error', { title: 'Receipt not found', code: 404, message: 'We could not find that receipt.', noindex: true });
   }
-  const pricing = await billing.getPricing(r.payer_role);                // only gst_number is read; amounts come from the payment row
+  const from = await billing.billFrom();                                   // "Bill from": site name, business address, GST number, public URL — all from /admin/integrations; amounts come from the payment row
+  const pricing = { gst_number: from.gst_number };
   const autoprint = req.query.print === '1';                               // /billing "Download (PDF)" link opens the print dialog on load
-  res.render('billing/receipt', page({ title: `Receipt ${r.receipt_number}`, metaDescription: 'Payment receipt.', r, pricing, base: req.user.role === 'admin' ? '/admin' : baseFor(req.user), bodyClass: 'is-receipt', gstLabel: billing.gstLabel, providerName: billing.providerName, rateLabel: billing.pricingRole(r.payer_role) === 'consultant' ? 'third party consultant rate' : 'employer rate', autoprint, extraJs: [] }));
+  res.render('billing/receipt', page({ title: `Receipt ${r.receipt_number}`, metaDescription: 'Payment receipt.', r, pricing, from, base: req.user.role === 'admin' ? '/admin' : baseFor(req.user), bodyClass: 'is-receipt', gstLabel: billing.gstLabel, providerName: billing.providerName, rateLabel: billing.pricingRole(r.payer_role) === 'consultant' ? 'third party consultant rate' : 'employer rate', autoprint, extraJs: [] }));
 }));
 
 module.exports = router;

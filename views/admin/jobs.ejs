@@ -37,6 +37,8 @@
               <td data-label="Applicants"><%= j.applicants %></td>
               <td data-label="Actions">
                 <div class="cluster">
+                  <% if (isPublic) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobs/<%= j.slug %>?print=1" target="_blank" rel="noopener" title="Open the public posting ready to print">Printable</a><% } %>
+                  <% if (j.last_receipt_id) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/billing/receipt/<%= j.last_receipt_id %>" target="_blank" rel="noopener">Receipt</a><% } %>
                   <% if (!archived && j.status === 'active') { %>
                     <form method="post" action="/admin/jobs/<%= j.id %>/archive" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm btn-danger-text" type="submit" data-confirm="Take down “<%= j.title %>”? It will disappear from the public site immediately.">Take down</button></form>
                   <% } else if (archived) { %>

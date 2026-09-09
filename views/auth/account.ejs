@@ -7,6 +7,7 @@
     </div>
 
     <div class="stack">
+      <% if (locals.isAdmin) { %><div class="auth-info auth-info--admin"><strong>Administrator</strong> — this page only covers your own sign-in details. Manage the site from <a href="/admin">/admin</a>.</div><% } %>
       <div class="card">
         <h2 class="auth__section">Your details</h2>
         <dl class="auth-meta">

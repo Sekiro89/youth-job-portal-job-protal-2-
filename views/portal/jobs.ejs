@@ -26,7 +26,7 @@
         <tbody>
           <% list.forEach(job => { %>
             <tr>
-              <td data-label="Title"><a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a><div class="small muted"><%= h.location(job) %> · <%= job.views %> views</div></td>
+              <td data-label="Title"><a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a><div class="small muted job-meta-line"><span><%= h.location(job) %><%= job.n_locations > 1 ? ' +' + (job.n_locations - 1) + ' more' : '' %></span><% if (h.formatHours(job)) { %><span>· <%= h.formatHours(job) %></span><% } %><span>· <%= job.views %> views</span></div></td>
               <% if (isConsultant) { %><td data-label="Company"><%= h.displayCompany(job) %></td><% } %>
               <td data-label="Status"><%- include('partials/status-badge', { job }) %></td>
               <td data-label="Applicants"><a href="<%= base %>/jobs/<%= job.id %>/applicants"><%= job.applicants %></a></td>

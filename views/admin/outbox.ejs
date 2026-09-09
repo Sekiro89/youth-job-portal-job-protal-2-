@@ -5,7 +5,7 @@
     <div>
       <p class="eyebrow">Admin</p><h1>Mail outbox</h1>
       <p class="muted">Every email the site produces is recorded here, sent from <code><%= mailFrom %></code>.
-      <% if (mailConfigured) { %>SMTP is configured: <em>sent</em> means delivered to the mail server.<% } else { %><strong>SMTP is not configured</strong>, so nothing is actually delivered — emails are <em>logged</em> here and you can open each one to read it.<% } %></p>
+      <% if (mailConfigured) { %>Provider: <strong><%= mailProvider === 'smtp' ? 'SMTP' : 'Resend' %></strong> — <em>sent</em> means handed to the provider; <em>failed</em> shows the provider's error.<% } else { %><strong>No email provider is configured</strong> (<a href="/admin/integrations#email">set one up</a>), so nothing is actually delivered — emails are <em>logged</em> here and you can open each one to read it.<% } %></p>
     </div>
 
     <div class="filter-tabs" aria-label="Filter by status">

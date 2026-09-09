@@ -1,7 +1,15 @@
 <% const v = values; const err = (k) => errors[k] ? `<div class="error" id="perr-${k}">${h.escapeHtml(errors[k])}</div>` : ''; const inv = (k) => errors[k] ? ` aria-invalid="true" aria-describedby="perr-${k}"` : '';
    const thenPost = (typeof then !== 'undefined' && then === 'post');
+   const isNew = mode === 'consultant-new' || mode === 'employer-create';
    const action = mode === 'consultant-new' ? '/consultant/profiles/new' + (thenPost ? '?then=post' : '') : mode === 'consultant-edit' ? '/consultant/profiles/' + profile.id + '/edit' : '/employer/profile';
-   const heading = mode === 'consultant-new' ? 'Add a company' : mode === 'consultant-edit' ? 'Edit company' : 'Company profile'; %>
+   const locBase = mode === 'consultant-edit' ? '/consultant/profiles/' + profile.id + '/locations' : '/employer/profile/locations';
+   const heading = mode === 'consultant-new' ? 'Add a company' : mode === 'consultant-edit' ? 'Edit company' : 'Company profile';
+   const names = (v.operating_names && v.operating_names.length ? v.operating_names : (v.operating_name ? [v.operating_name] : [])).slice();
+   while (names.length < 3) names.push('');
+   const legacyIndustry = v.industry && !C.INDUSTRY_NAME[v.industry] ? v.industry : '';
+   const locs = typeof locations !== 'undefined' ? locations : [];
+   const L = typeof loc !== 'undefined' && loc ? loc : { values: {}, errors: {}, editId: null };
+   const locOpen = !!(L.editId || Object.keys(L.errors || {}).length || (L.values && L.values.street_address)); %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
@@ -19,29 +27,46 @@
     <form class="form" method="post" action="<%= action %>" enctype="multipart/form-data" novalidate>
       <section class="card form-section">
         <h2 class="form-section__title">Company</h2>
-        <div class="form-row">
-          <div class="field">
-            <label for="company_name">Legal company name <span class="req">*</span></label>
-            <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization" placeholder="e.g. 1234567 Ontario Inc."<%- inv('company_name') %>>
-            <div class="hint">The registered business name — printed on receipts.</div>
-            <%- err('company_name') %>
-          </div>
-          <div class="field">
-            <label for="operating_name">Operating / trade name <span class="muted">(optional)</span></label>
-            <input class="input" id="operating_name" name="operating_name" value="<%= v.operating_name || '' %>" maxlength="120" placeholder="e.g. Flying Pig"<%- inv('operating_name') %>>
-            <div class="hint">The name job seekers know you by, e.g. Flying Pig. Shown first on every posting; the legal name appears underneath.</div>
-            <%- err('operating_name') %>
-          </div>
+        <div class="field">
+          <label for="company_name">Legal company name <span class="req">*</span></label>
+          <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization" placeholder="e.g. 1234567 Ontario Inc."<%- inv('company_name') %>>
+          <div class="hint">The registered business name — printed on receipts and shown under the operating name.</div>
+          <%- err('company_name') %>
         </div>
+        <fieldset class="field fieldset" id="operating-names">
+          <legend>Operating / trade names <span class="muted">(optional)</span></legend>
+          <div class="hint hint--lead">The names job seekers know you by, e.g. Flying Pig. The first one is the default on new postings; each posting can pick any of them.</div>
+          <div class="names-list" id="names-list" data-max="10">
+            <% names.forEach((n, i) => { const spare = i > 0 && !n; %>
+            <div class="names-row<%= spare ? ' names-row--spare' : '' %>" data-name-row>
+              <label class="visually-hidden" for="opname-<%= i %>">Operating name <%= i + 1 %></label>
+              <input class="input" id="opname-<%= i %>" name="operating_names[]" value="<%= n %>" maxlength="120" placeholder="<%= i === 0 ? 'e.g. Flying Pig' : 'Another name (optional)' %>" autocomplete="organization">
+              <span class="names-row__note small muted" data-name-default<%= i === 0 ? '' : ' hidden' %>>Default</span>
+              <button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="button" data-name-remove hidden>Remove</button>
+            </div>
+            <% }) %>
+          </div>
+          <div class="loc-add">
+            <button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" id="names-add" hidden>+ Add another name</button>
+            <p class="hint" data-nojs-only>Leave spare boxes empty.</p>
+          </div>
+          <%- err('operating_names') %>
+        </fieldset>
         <div class="form-row">
+          <div class="field">
+            <label for="industry">Industry <span class="req">*</span></label>
+            <select class="input" id="industry" name="industry" required<%- inv('industry') %>>
+              <option value="">Choose…</option>
+              <% if (legacyIndustry) { %><option value="" disabled selected>Current: <%= legacyIndustry %> — choose from the list</option><% } %>
+              <% C.INDUSTRIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.industry === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <% if (legacyIndustry) { %><div class="hint">Your industry is saved as “<%= legacyIndustry %>”. Pick the closest sector from the list.</div><% } %>
+            <%- err('industry') %>
+          </div>
           <div class="field">
             <label for="website">Website</label>
             <input class="input" id="website" name="website" value="<%= v.website || '' %>" maxlength="200" placeholder="https://…" inputmode="url" autocomplete="url"<%- inv('website') %>>
             <%- err('website') %>
-          </div>
-          <div class="field">
-            <label for="industry">Industry</label>
-            <input class="input" id="industry" name="industry" value="<%= v.industry || '' %>" maxlength="120" placeholder="e.g. Healthcare">
           </div>
         </div>
         <div class="form-row">
@@ -72,40 +97,17 @@
         </div>
       </section>
 
-      <section class="card form-section">
-        <h2 class="form-section__title">Business address</h2>
-        <p class="small muted">Used as the first work location on every new posting (you can change it per job) and shown on your public company page as city and province.</p>
-        <div class="form-row addr-row">
-          <div class="field">
-            <label for="p-street">Street address</label>
-            <input class="input" id="p-street" name="street_address" value="<%= v.street_address || '' %>" maxlength="200" placeholder="e.g. 2400 Derry Rd E, Unit 4" autocomplete="street-address"<%- inv('street_address') %>>
-            <%- err('street_address') %>
-          </div>
-          <div class="field">
-            <label for="p-postal">Postal code</label>
-            <input class="input" id="p-postal" name="postal_code" value="<%= v.postal_code || '' %>" maxlength="7" placeholder="A1A 1A1" autocomplete="postal-code"<%- inv('postal_code') %>>
-            <%- err('postal_code') %>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="p-city">City</label>
-            <input class="input" id="p-city" name="city" value="<%= v.city || '' %>" maxlength="80" autocomplete="address-level2">
-          </div>
-          <div class="field">
-            <label for="p-province">Province / territory</label>
-            <select class="input" id="p-province" name="province"<%- inv('province') %>>
-              <option value="">Choose…</option>
-              <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
-            </select>
-            <%- err('province') %>
-          </div>
-        </div>
+      <% if (isNew) { %>
+      <section class="card form-section" id="locations">
+        <h2 class="form-section__title">Main location</h2>
+        <p class="small muted">The address where people work. It becomes the default work location on new postings; you can add more locations after saving.</p>
+        <%- include('partials/location-fields', { prefix: 'loc_', vals: { label: v.loc_label, street_address: v.loc_street_address, unit: v.loc_unit, city: v.loc_city, province: v.loc_province, postal_code: v.loc_postal_code }, errs: errors, idp: 'p-loc-', showLabel: true }) %>
       </section>
+      <% } %>
 
       <section class="card form-section">
         <h2 class="form-section__title">Hiring contact</h2>
-        <p class="small muted">Used for billing receipts and if we need to reach someone about a posting. Not shown publicly.</p>
+        <p class="small muted">Used for billing receipts and if we need to reach someone about a posting. Not shown publicly. The contact email is the default application inbox on new postings.</p>
         <div class="form-row form-row--3">
           <div class="field">
             <label for="contact_name">Contact name</label>
@@ -128,5 +130,48 @@
         <% if (isConsultant) { %><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="/employer/dashboard">Cancel</a><% } %>
       </div>
     </form>
+
+    <% if (!isNew) { %>
+    <section class="card form-section" id="locations" aria-labelledby="locations-title">
+      <div class="split">
+        <div>
+          <h2 class="form-section__title form-section__title--bare" id="locations-title">Locations</h2>
+          <p class="small muted">Every address where people work. When you post a job you tick one or more of these; the default is pre-selected. Changes here save on their own.</p>
+        </div>
+        <% if (!locOpen) { %><a class="kds-btn kds-btn--accent kds-btn--sm" href="#loc-editor" data-loc-open>+ Add location</a><% } %>
+      </div>
+      <% if (!locs.length) { %>
+        <div class="empty empty--sm">No locations yet. Add the first one below — it becomes the default work location on new postings.</div>
+      <% } else { %>
+      <ul class="loc-rows">
+        <% locs.forEach(l => { %>
+        <li class="loc-row<%= L.editId && String(L.editId) === String(l.id) ? ' is-editing' : '' %>">
+          <div class="loc-row__main">
+            <div class="cluster"><strong><%= l.label || 'Location' %></strong><% if (l.is_default) { %><span class="badge badge--positive">Default</span><% } %></div>
+            <div class="small"><%= h.fullAddress(l) %></div>
+            <% if (l.lat != null) { %><div class="small muted">Map pin ready</div><% } %>
+          </div>
+          <div class="loc-row__actions td-actions">
+            <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= action %>?loc=<%= l.id %>#loc-editor">Edit</a>
+            <% if (!l.is_default) { %><form class="inline-form" method="post" action="<%= locBase %>/<%= l.id %>/default"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Make default</button></form><% } %>
+            <form class="inline-form" method="post" action="<%= locBase %>/<%= l.id %>/archive"><button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="submit" data-confirm="Archive this location? Postings that already use it keep the address; it just disappears from the list.">Archive</button></form>
+          </div>
+        </li>
+        <% }) %>
+      </ul>
+      <% } %>
+
+      <form class="form loc-editor<%= locOpen || !locs.length ? '' : ' is-collapsed' %>" id="loc-editor" method="post" action="<%= L.editId ? locBase + '/' + L.editId : locBase %>" novalidate>
+        <h3 class="loc-editor__title"><%= L.editId ? 'Edit location' : 'Add a location' %></h3>
+        <% if (Object.keys(L.errors || {}).length) { %><div class="error error--block" role="alert">Complete the address — street, city, province and postal code.</div><% } %>
+        <%- include('partials/location-fields', { prefix: 'loc_', vals: L.values || {}, errs: L.errors || {}, idp: 'loc-', showLabel: true }) %>
+        <% if (!L.editId && locs.length) { %><label class="check check--inline"><input type="checkbox" name="make_default" value="1"> Make this the default location</label><% } %>
+        <div class="cluster">
+          <button class="kds-btn kds-btn--brand" type="submit"><%= L.editId ? 'Save location' : 'Add location' %></button>
+          <% if (L.editId || locs.length) { %><a class="kds-btn kds-btn--ghost" href="<%= action %>#locations" data-loc-cancel>Cancel</a><% } %>
+        </div>
+      </form>
+    </section>
+    <% } %>
   </div>
 </div>

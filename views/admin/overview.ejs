@@ -2,8 +2,23 @@
   <%- include('_nav') %>
   <div class="dash__main">
     <div class="split">
-      <div><p class="eyebrow">Admin</p><h1>Overview</h1><p class="muted">Welcome back, <%= user.name %>. <% if (!mailConfigured) { %>SMTP is not configured — every email is recorded in the <a href="/admin/outbox">mail outbox</a> instead of being sent.<% } %></p></div>
+      <div><p class="eyebrow">Admin</p><h1>Overview</h1><p class="muted">Welcome back, <%= user.name %>. <% if (!mailConfigured) { %>No email provider is configured — every email is recorded in the <a href="/admin/outbox">mail outbox</a> instead of being sent. Set one up under <a href="/admin/integrations#email">Integrations</a>.<% } %></p></div>
       <a class="kds-btn kds-btn--brand" href="/admin/messages?status=new">Open new messages<% if (counts.new_messages) { %> (<%= counts.new_messages %>)<% } %></a>
+    </div>
+
+    <div class="card setup-card <%= status.supportEmails.length ? '' : 'setup-card--warn' %>">
+      <div class="split">
+        <div>
+          <h2 class="card__title h3">Contact Us recipients</h2>
+          <% if (status.supportEmails.length) { %>
+            <p class="small">Every Contact Us message is emailed to <% status.supportEmails.forEach((e, i) => { %><strong><%= e %></strong><%= i < status.supportEmails.length - 1 ? ', ' : '' %><% }) %> (Reply-To = the visitor) and lands in <a href="/admin/messages">Messages</a>.</p>
+          <% } else { %>
+            <p class="small"><strong>No recipient is set.</strong> Contact Us messages are stored in <a href="/admin/messages">Messages</a> but nobody is emailed about them. Add an address under Integrations → Contact Us routing.</p>
+          <% } %>
+          <p class="small muted">Payments: <strong><%= status.modeLabel %></strong> · Email: <strong><%= { none: 'none', smtp: 'SMTP', resend: 'Resend' }[status.mailProvider] || status.mailProvider %></strong> · Maps: <strong><%= status.mapsProvider === 'google' ? 'Google' : 'OpenStreetMap' %></strong> · Job Bank import: <strong><%= status.jobbank ? 'on' : 'off' %></strong></p>
+        </div>
+        <a class="kds-btn kds-btn--ghost" href="/admin/integrations">Open Integrations</a>
+      </div>
     </div>
 
     <div class="stats stats--admin">

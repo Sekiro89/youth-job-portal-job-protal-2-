@@ -268,3 +268,8 @@ body.has-applybar { padding-bottom: 84px; }
 .co-head__text { min-width: 0; }
 .co-head__legal { margin: -4px 0 6px; }
 .co-head__addr { overflow-wrap: anywhere; }
+
+/* ---------- client round 2 (2026-09-10): hours, industry, distance — map styles live in /css/maps.css ---------- */
+.job-head__hours { background: var(--cc-navy-50) !important; }
+.results__bar .view-toggle { margin-left: auto; }
+.results__bar .view-toggle + .sort { margin-left: 0; }

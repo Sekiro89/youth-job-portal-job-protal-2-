@@ -11,8 +11,10 @@
 //          --max-requests N (HTTP budget, default 600)  --dry-run (fetch + parse + print, write nothing)  --refresh (also re-check live imported jobs)
 //          --purge (archive every imported posting, set settings.jobbank_sync=off, exit)
 //          --enable (undo a purge: clear that flag, re-activate purged rows whose Job Bank expiry is still ahead, then continue)
-//          --from-cache (with --refresh: re-map from the on-disk page cache regardless of age — no network)
+//          --from-cache (with --refresh: re-map from the on-disk page cache regardless of age — network only for pages missing from the cache)
+//          --no-employer-pages (skip fetching Job Bank employer profile pages for the industry sector; default = fetch once per employer, cached 30 d)
 // Requests are throttled to robots.txt's Crawl-delay (5 s; JOBBANK_DELAY_MS overrides) and cached under data/jobbank-cache/.
+// The kill switch (`jobbank_sync`) is a runtime setting (lib/settings: DB > env JOBBANK_SYNC > 'on') shared with /admin/integrations.
 
 require('dotenv').config({ path: require('node:path').join(__dirname, '..', '.env') });
 const db = require('../lib/db');
@@ -79,8 +81,9 @@ async function main() {
     // --from-cache: re-map every live imported row from the on-disk page cache regardless of its age (no network unless a page
     // is missing from the cache). Use it after a parser/mapping change; the daily sync still re-checks Job Bank within 20 h.
     const maxAge = argv['from-cache'] ? Infinity : undefined;
-    console.log(`\nrefreshing live imported postings${maxAge ? ' (from cache — any age)' : ''}…`);
-    const rr = await jb.refreshImported({ log: console.log, maxAge });
+    const employerPages = !argv['no-employer-pages'];
+    console.log(`\nrefreshing live imported postings${maxAge ? ' (from cache — any age)' : ''}${employerPages ? '' : ', employer pages skipped'}…`);
+    const rr = await jb.refreshImported({ log: console.log, maxAge, employerPages });
     console.log(`refresh: checked ${rr.checked}, expired ${rr.expired}, refreshed ${rr.refreshed}, errors ${rr.errors} (${jb.stats.requests} HTTP requests, ${jb.stats.cacheHits} cache hits)`);
   }
   if (!opts.dryRun) {
@@ -92,6 +95,14 @@ async function main() {
     ]);
     console.log(`\nlive Job Bank postings in DB: ${c.reduce((a, r) => a + r.n, 0)} (${c.map(r => `${r.province}=${r.n}`).join(', ')}); employer profiles: ${p.n} (${p.op} with operating name)`);
     console.log(`salary periods: ${sp.map(r => `${r.salary_period}=${r.n}`).join(', ')}; work locations: ${loc.n} rows (${loc.street} with a street address)`);
+    // vocabulary distributions (client PDF 2026-09-10): education / experience keys, hours, employer industry
+    const dist = async (col, table = 'jobs', where = `source=$1 AND status='active'`) =>
+      (await db.many(`SELECT COALESCE(${col}::text, 'NULL') AS k, count(*)::int AS n FROM ${table} WHERE ${where} GROUP BY 1 ORDER BY 2 DESC`, [jb.SOURCE])).map(r => `${r.k}=${r.n}`).join(', ');
+    const hrs = await db.one(`SELECT count(hours_amount)::int AS n, count(*)::int AS total FROM jobs WHERE source=$1 AND status='active'`, [jb.SOURCE]);
+    console.log(`education: ${await dist('education')}`);
+    console.log(`experience: ${await dist('experience_level')}`);
+    console.log(`hours: ${hrs.n} of ${hrs.total} rows (${await dist('hours_period')})`);
+    console.log(`employer industry: ${await dist('industry', 'employer_profiles', 'source=$1')}`);
   }
   await db.pool.end();
 }

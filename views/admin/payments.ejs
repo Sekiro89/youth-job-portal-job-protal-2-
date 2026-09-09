@@ -1,7 +1,8 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting (employers $14.99 + 5% GST = $15.74, consultants $9.99 + 5% GST = $10.49 CAD per posting per month). Receipts open in a printable page.</p></div>
+    <% const gst = Number(pricing.gst_rate || 0); const emp = Number(pricing.employer_price_cents || 0); const con = Number(pricing.consultant_price_cents || 0); const withTax = (c) => Math.round(c * (1 + gst)); %>
+    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting (employers <%= h.money(emp) %> + <%= (gst * 100).toFixed(gst * 100 % 1 ? 1 : 0) %>% GST = <%= h.money(withTax(emp)) %>, consultants <%= h.money(con) %> + GST = <%= h.money(withTax(con)) %> CAD per posting per month). Mode: <strong><%= status.modeLabel %></strong> — change prices, GST and Stripe keys under <a href="/admin/integrations#pricing">Integrations</a>. Receipts open in a printable page.</p></div>
 
     <div class="stats">
       <div class="stat"><div class="stat__value"><%= h.money(totals.total) %></div><div class="stat__label">Collected, all time (<%= totals.n %> payments)</div></div>

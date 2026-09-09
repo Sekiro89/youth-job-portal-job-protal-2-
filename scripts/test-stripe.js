@@ -5,6 +5,7 @@
 //   node scripts/test-stripe.js            # DATABASE_URL defaults to the cc_billing dev database (docs/.dbpw)
 //   KEEP=1 node scripts/test-stripe.js     # keep the fixture jobs/payments for inspection
 //
+// Config (keys, GST, prices) is seeded through lib/settings exactly like the admin panel does — nothing comes from env.
 // Two things live in this file:
 //   1. createFakeStripe() — an in-memory (optionally file-backed) stand-in for the Stripe SDK client that implements
 //      exactly the methods lib/billing.js, jobs/renewals.js and scripts/stripe-setup.js call, validates the parameters
@@ -132,8 +133,10 @@ function createFakeStripe(opts = {}) {
       cancel: async (id, params = {}) => { record('subscriptions.cancel', id, params); const s = get('subscriptions', id, 'subscription'); s.status = 'canceled'; s.canceled_at = ts(); s.ended_at = ts(); s.cancel_at_period_end = false; save(); return clone(s); },
     },
     billingPortal: { sessions: { create: async (params = {}) => { record('billingPortal.sessions.create', params); must(params.customer, 'customer is required'); get('customers', params.customer, 'customer'); return { id: rid('bps'), object: 'billing_portal.session', customer: params.customer, return_url: params.return_url || null, url: `https://billing.stripe.com/p/session/test_${rid('YWNjdA')}`, created: ts(), livemode: false }; } } },
+    accounts: { retrieve: async () => { record('accounts.retrieve'); return { id: 'acct_fake123', object: 'account', business_profile: { name: 'Canada Careers (fake)', support_email: 'billing@example.com' }, email: 'owner@example.com', country: 'CA', default_currency: 'cad', charges_enabled: true, payouts_enabled: true, settings: { dashboard: { display_name: 'Canada Careers (fake)' } } }; } },
+    balance: { retrieve: async () => { record('balance.retrieve'); return { object: 'balance', livemode: false, available: [{ amount: 0, currency: 'cad' }], pending: [] }; } },
     webhookEndpoints: {
-      list: async () => { load(); return { object: 'list', data: Object.values(S.endpoints).map(clone) }; },
+      list: async (params = {}) => { load(); return { object: 'list', data: Object.values(S.endpoints).slice(0, params.limit || 10).map(clone), has_more: false }; },
       create: async (params = {}) => { record('webhookEndpoints.create', params); must(params.url && Array.isArray(params.enabled_events) && params.enabled_events.length, 'url and enabled_events are required'); const e = { id: rid('we'), object: 'webhook_endpoint', url: params.url, enabled_events: params.enabled_events, description: params.description || null, status: 'enabled', secret: 'whsec_' + crypto.randomBytes(16).toString('hex'), api_version: params.api_version || null, created: ts() }; S.endpoints[e.id] = e; save(); const out = clone(e); return out; },
     },
 
@@ -179,16 +182,20 @@ if (require.main !== module) return;
   if (process.env.NODE_ENV === 'production') { console.error('Refusing to run against NODE_ENV=production'); process.exit(2); }
   process.env.NODE_ENV = 'development';
   process.env.BILLING_FAKE_STRIPE = '1';
-  process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_fake_offline';
-  process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_' + crypto.randomBytes(12).toString('hex');
-  process.env.GST_NUMBER = process.env.GST_NUMBER || '123456789 RT0001';
-  delete process.env.STRIPE_TAX; delete process.env.POSTING_PRICE_CENTS; delete process.env.EMPLOYER_PRICE_CENTS; delete process.env.CONSULTANT_PRICE_CENTS;
+  // Stripe config is SETTINGS-driven now (lib/settings: DB > env > default). The env fallbacks are cleared so the
+  // values seeded below through settings.set() are the only source, exactly like keys pasted in /admin/integrations.
+  for (const k of ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_TAX', 'GST_NUMBER', 'POSTING_PRICE_CENTS', 'EMPLOYER_PRICE_CENTS', 'CONSULTANT_PRICE_CENTS']) delete process.env[k];
   for (const k of Object.keys(process.env)) if (/^STRIPE_PRICE_/.test(k)) delete process.env[k];
   const ROOT = path.join(__dirname, '..');
   if (!process.env.DATABASE_URL) {
-    const pw = fs.readFileSync(path.join(ROOT, 'docs', '.dbpw'), 'utf8').trim().split('=').pop();
+    const pw = (fs.readFileSync(path.join(ROOT, 'docs', '.dbpw'), 'utf8').match(/^DB_PASSWORD=(.*)$/m) || [, ''])[1].trim();
     process.env.DATABASE_URL = `postgres://canada_careers:${pw}@127.0.0.1:5432/cc_billing`;
   }
+  // Secrets are encrypted at rest with a key derived from SESSION_SECRET: this process must use the same one as the
+  // spawned server (which loads .env), otherwise the server cannot decrypt the key we seed.
+  try {
+    for (const line of fs.readFileSync(path.join(ROOT, '.env'), 'utf8').split('\n')) { const m = line.match(/^(SESSION_SECRET|SETTINGS_KEY)=(.*)$/); if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim(); }
+  } catch (_) {}
   const port = await freePort();
   process.env.PORT = String(port);
   process.env.PUBLIC_URL = `http://localhost:${port}`;
@@ -197,11 +204,24 @@ if (require.main !== module) return;
 
   const db = require('../lib/db');
   const jobs = require('../lib/jobs');
+  const settings = require('../lib/settings');
+  // ---- seed the panel settings the test relies on (restored byte-for-byte at the end, including "no row")
+  const SEEDED = { stripe_secret_key: 'sk_test_fake', stripe_webhook_secret: 'whsec_test', gst_number: '123456789 RT0001', stripe_tax: '' };
+  const TOUCHED = [...Object.keys(SEEDED), 'employer_price_cents', 'consultant_price_cents'];
+  const priorRows = await db.many('SELECT key, value, is_secret, updated_at, updated_by FROM settings WHERE key = ANY($1)', [TOUCHED]);
+  for (const [k, v] of Object.entries(SEEDED)) await settings.set(k, v);
+  const restoreSettings = async () => {
+    await db.query('DELETE FROM settings WHERE key = ANY($1)', [TOUCHED]);
+    for (const r of priorRows) await db.query('INSERT INTO settings(key, value, is_secret, updated_at, updated_by) VALUES ($1,$2,$3,$4,$5)', [r.key, r.value, r.is_secret, r.updated_at, r.updated_by]);
+    settings.invalidate();
+  };
+  /** Run fn with a setting temporarily changed (restored afterwards, cache invalidated). */
+  const withSetting = async (key, value, fn) => { const prev = await settings.get(key); await settings.set(key, value); try { return await fn(); } finally { await settings.set(key, prev); billing.resetPricingCache(); } };
   const billing = require('../lib/billing');
   const { runRenewals } = require('../jobs/renewals');
   const { request, CookieJar } = require('./cdp');
-  const fake = billing.stripe();
-  const SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+  const fake = await billing.stripe();
+  const SECRET = SEEDED.stripe_webhook_secret;
   const Stripe = require('stripe');
 
   const results = [];
@@ -240,22 +260,47 @@ if (require.main !== module) return;
 
   try {
     console.log(`Offline Stripe proof — SDK ${Stripe.PACKAGE_VERSION || require('stripe/package.json').version}, DB ${process.env.DATABASE_URL.replace(/:[^:@]+@/, ':***@')}, fake store ${process.env.BILLING_FAKE_STRIPE_STORE}`);
-    eq(billing.mode(), 'stripe', 'billing.mode()'); assert(fake._fake, 'fake client injected');
+    eq(await billing.mode(), 'stripe', 'billing.mode()'); assert(fake._fake, 'fake client injected'); eq(fake._secret, SECRET, 'fake signs with the settings webhook secret');
 
-    await step('getPricing(role): employer 1499 + 75 = 1574, consultant 999 + 50 = 1049; env override wins over settings; legacy POSTING_PRICE_CENTS ignored', async () => {
+    await step('getPricing(role): employer 1499 + 75 = 1574, consultant 999 + 50 = 1049; panel (DB) wins over .env, .env is the fallback; legacy POSTING_PRICE_CENTS ignored', async () => {
       billing.resetPricingCache();
       const e = await billing.getPricing('employer'), c = await billing.getPricing('consultant'), u = await billing.getPricing(user), d = await billing.getPricing(undefined);
       eq(e.price_cents, 1499, 'employer price'); eq(e.tax_cents, 75, 'employer GST'); eq(e.total_cents, 1574, 'employer total'); eq(e.role, 'employer', 'role');
       eq(c.price_cents, 999, 'consultant price'); eq(c.tax_cents, 50, 'consultant GST'); eq(c.total_cents, 1049, 'consultant total'); eq(c.role, 'consultant', 'role');
       eq(u.price_cents, 1499, 'user object → employer'); eq(d.price_cents, 1499, 'no role → employer');
+      eq(e.gst_number, '123456789 RT0001', 'gst_number from settings');
       const all = await billing.getAllPricing(); eq(all.employer.total_cents, 1574, 'getAllPricing employer'); eq(all.consultant.total_cents, 1049, 'getAllPricing consultant');
       process.env.CONSULTANT_PRICE_CENTS = '1299'; process.env.POSTING_PRICE_CENTS = '100'; billing.resetPricingCache();
       try {
-        const c2 = await billing.getPricing('consultant'); eq(c2.price_cents, 1299, 'env consultant price'); eq(c2.tax_cents, 65, 'GST rounded to the cent (64.95 → 65)'); eq(c2.total_cents, 1364, 'total');
-        eq((await billing.getPricing('employer')).price_cents, 1499, 'employer unaffected by CONSULTANT_PRICE_CENTS / POSTING_PRICE_CENTS');
+        eq((await billing.getPricing('consultant')).price_cents, 999, 'panel value (999) wins over CONSULTANT_PRICE_CENTS env');
+        await withSetting('consultant_price_cents', '', async () => {           // panel blank → .env fallback
+          const c2 = await billing.getPricing('consultant'); eq(c2.price_cents, 1299, '.env consultant price used when the panel is blank'); eq(c2.tax_cents, 65, 'GST rounded to the cent (64.95 → 65)'); eq(c2.total_cents, 1364, 'total');
+          eq((await billing.getPricing('employer')).price_cents, 1499, 'employer unaffected by CONSULTANT_PRICE_CENTS / POSTING_PRICE_CENTS');
+        });
+        await withSetting('consultant_price_cents', '1399', async () => { eq((await billing.getPricing('consultant')).price_cents, 1399, 'a panel change is live on the next call (no restart)'); });
       } finally { delete process.env.CONSULTANT_PRICE_CENTS; delete process.env.POSTING_PRICE_CENTS; billing.resetPricingCache(); }
-      eq((await billing.getPricing('consultant')).price_cents, 999, 'back to settings after env removed');
-      return 'employer 1574 / consultant 1049; env override + rounding ok';
+      eq((await billing.getPricing('consultant')).price_cents, 999, 'back to the panel value');
+      return 'employer 1574 / consultant 1049; panel > env > constants, rounding ok';
+    });
+    await step('admin: testConnection() reports the account and key mode; catalogStatus() lists the 4 missing lookup keys; no key → friendly error (never throws)', async () => {
+      const t = await billing.testConnection();
+      eq(t.ok, true, 'ok'); eq(t.mode, 'test', 'mode'); eq(t.account.id, 'acct_fake123', 'account id'); eq(t.account.country, 'CA', 'country'); eq(t.account.default_currency, 'cad', 'currency'); eq(t.account.business_name, 'Canada Careers (fake)', 'business name'); eq(t.error, null, 'no error');
+      const st = await billing.catalogStatus();
+      eq(st.ok, false, 'catalog incomplete before setup'); eq(st.missing.length, 4, 'four missing keys'); eq(Object.keys(st.keys).length, 4, 'four keys reported'); eq(st.keys.cc_posting_employer_monthly.expected_cents, 1499, 'expected cents');
+      // without the fake and without a key every admin call must return { ok:false, error } instead of throwing
+      delete process.env.BILLING_FAKE_STRIPE;
+      try {
+        await withSetting('stripe_secret_key', '', async () => {
+          eq(await billing.mode(), 'sandbox', 'mode() flips to sandbox when the key is blanked — no restart');
+          const t0 = await billing.testConnection(); eq(t0.ok, false, 'not ok'); assert(/No Stripe secret key/.test(t0.error), `error: ${t0.error}`); eq(t0.mode, null, 'mode null');
+          const c0 = await billing.setupCatalog(); eq(c0.ok, false, 'setupCatalog not ok'); assert(/No Stripe secret key/.test(c0.error), 'setupCatalog error');
+          const w0 = await billing.createWebhookEndpoint(); eq(w0.ok, false, 'createWebhookEndpoint not ok'); assert(/No Stripe secret key/.test(w0.error), 'webhook error');
+          eq(await billing.stripe(), null, 'no client');
+        });
+        eq(await billing.mode(), 'stripe', 'mode() back to stripe once the key is restored'); eq(billing.keyMode('sk_live_abc'), 'live', 'live key detection');
+      } finally { process.env.BILLING_FAKE_STRIPE = '1'; }
+      eq(await billing.stripe(), fake, 'same fake client instance afterwards');
+      return `${t.account.id} (${t.mode})`;
     });
 
     // ============================================================ in-process lifecycle (job A)
@@ -371,9 +416,9 @@ if (require.main !== module) return;
 
     // ============================================================ Stripe Tax variant (job B)
     const B = await newJob('Stripe test B — Stripe Tax variant');
-    await step('STRIPE_TAX=1: single posting line + automatic_tax; invoice tax recorded from Stripe', async () => {
-      process.env.STRIPE_TAX = '1';
-      try {
+    await step('setting stripe_tax=1: single posting line + automatic_tax; invoice tax recorded from Stripe', async () => {
+      await withSetting('stripe_tax', '1', async () => {
+        eq(await billing.useStripeTax(), true, 'useStripeTax() reads the setting');
         const out = await billing.createCheckout(B, user, { company_name: profile.company_name });
         const call = fake._calls('checkout.sessions.create').pop().args[0];
         eq(call.line_items.length, 1, 'one line item'); eq(call.automatic_tax.enabled, true, 'automatic_tax'); eq(call.customer, (await subRow(A.id)).provider_customer_id, 'same Stripe customer reused for the same user');
@@ -384,32 +429,50 @@ if (require.main !== module) return;
         const p = await db.one('SELECT * FROM payments WHERE job_id=$1', [B.id]); eq(p.amount_cents, 1499, 'amount'); eq(p.tax_cents, 75, 'tax from invoice'); eq(p.total_cents, 1574, 'total');
         eq((await jobRow(B.id)).status, 'active', 'job active');
         return `invoice ${paid.invoice.id}`;
-      } finally { delete process.env.STRIPE_TAX; }
+      });
     });
 
-    // ============================================================ lookup-key Prices via stripe-setup.js (job C)
+    // ============================================================ lookup-key Prices via setupCatalog() (job C)
     const C = await newJob('Stripe test C — lookup_key prices');
     let catalog;
-    await step('scripts/stripe-setup.js creates 2 Products + 2 Prices PER ROLE idempotently (4 lookup keys); employer checkout then uses `price:` ids', async () => {
-      const setup = require('./stripe-setup');
-      const r1 = await setup.ensureCatalog(fake, await billing.getAllPricing(), { log: () => {} });
-      const r2 = await setup.ensureCatalog(fake, await billing.getAllPricing(), { log: () => {} });
-      catalog = r1;
-      for (const role of ['employer', 'consultant']) {
-        eq(r1[role].posting.id, r2[role].posting.id, `${role} posting price stable`); eq(r1[role].gst.id, r2[role].gst.id, `${role} gst price stable`);
-        eq(r1[role].posting.lookup_key, billing.LOOKUP_KEYS[role].posting, `${role} posting lookup key`); eq(r1[role].gst.lookup_key, billing.LOOKUP_KEYS[role].gst, `${role} gst lookup key`);
-      }
-      eq(r1.employer.posting.unit_amount, 1499, 'employer posting amount'); eq(r1.employer.gst.unit_amount, 75, 'employer gst amount');
-      eq(r1.consultant.posting.unit_amount, 999, 'consultant posting amount'); eq(r1.consultant.gst.unit_amount, 50, 'consultant gst amount');
+    await step('admin: setupCatalog() creates 2 Products + 2 Prices PER ROLE, then reports them as existing (idempotent); catalogStatus() complete; employer checkout uses `price:` ids', async () => {
+      const r1 = await billing.setupCatalog();
+      eq(r1.ok, true, `ok (${r1.error})`); eq(r1.mode, 'test', 'mode'); eq(r1.created.length, 4, 'four lookup keys created'); eq(r1.existing.length, 0, 'nothing pre-existing'); eq(Object.keys(r1.prices).length, 4, 'four price ids');
+      const r2 = await billing.setupCatalog();
+      eq(r2.ok, true, 'second run ok'); eq(r2.created.length, 0, 'second run creates nothing'); eq(r2.existing.length, 4, 'second run reports 4 existing'); eq(JSON.stringify(r2.prices), JSON.stringify(r1.prices), 'same price ids');
       eq(fake._calls('prices.create').length, 4, 'four prices created once'); eq(fake._calls('products.create').length, 4, 'four products created once');
-      billing.setStripeClient(fake);            // clears the price cache
+      const st = await billing.catalogStatus(); eq(st.ok, true, 'catalogStatus complete'); eq(st.missing.length, 0, 'no missing'); eq(st.keys.cc_posting_consultant_monthly.price_id, r1.prices.cc_posting_consultant_monthly, 'status price id');
+      // the explicit-client form (scripts/stripe-setup.js re-exports it) returns the same objects
+      const setup = require('./stripe-setup');
+      const cat = await setup.ensureCatalog(fake, await billing.getAllPricing(), { log: () => {} });
+      catalog = cat;
+      for (const role of ['employer', 'consultant']) {
+        eq(cat[role].posting.id, r1.prices[billing.LOOKUP_KEYS[role].posting], `${role} posting price stable`); eq(cat[role].gst.id, r1.prices[billing.LOOKUP_KEYS[role].gst], `${role} gst price stable`);
+        eq(cat[role].posting.lookup_key, billing.LOOKUP_KEYS[role].posting, `${role} posting lookup key`); eq(cat[role].gst.lookup_key, billing.LOOKUP_KEYS[role].gst, `${role} gst lookup key`);
+      }
+      eq(cat.employer.posting.unit_amount, 1499, 'employer posting amount'); eq(cat.employer.gst.unit_amount, 75, 'employer gst amount');
+      eq(cat.consultant.posting.unit_amount, 999, 'consultant posting amount'); eq(cat.consultant.gst.unit_amount, 50, 'consultant gst amount');
       const out = await billing.createCheckout(C, user, { company_name: profile.company_name });
       const call = fake._calls('checkout.sessions.create').pop().args[0];
-      eq(call.line_items[0].price, r1.employer.posting.id, 'posting by EMPLOYER price id'); eq(call.line_items[1].price, r1.employer.gst.id, 'gst by employer price id'); assert(!call.line_items[0].price_data, 'no price_data');
+      eq(call.line_items[0].price, cat.employer.posting.id, 'posting by EMPLOYER price id'); eq(call.line_items[1].price, cat.employer.gst.id, 'gst by employer price id'); assert(!call.line_items[0].price_data, 'no price_data');
       const paid = fake._pay(out.session.id); eq(paid.invoice.amount_paid, 1574, 'invoice total from catalog prices');
-      const wh = await setup.ensureWebhook(fake, `${process.env.PUBLIC_URL}/billing/webhook`, { log: () => {} });
-      assert(/^whsec_/.test(wh.secret), 'webhook endpoint created with a secret'); eq(wh.enabled_events.length, billing.WEBHOOK_EVENTS.length, 'events');
-      return `${r1.employer.posting.id}, ${r1.consultant.posting.id}, ${wh.id}`;
+      return `${cat.employer.posting.id}, ${cat.consultant.posting.id}`;
+    });
+    await step('admin: createWebhookEndpoint() creates the endpoint (secret returned once + saved to settings), then returns the existing one without a secret', async () => {
+      const url = `${process.env.PUBLIC_URL}/billing/webhook`;
+      const w1 = await billing.createWebhookEndpoint(url, { saveSecret: false });
+      eq(w1.ok, true, `ok (${w1.error})`); eq(w1.created, true, 'created'); assert(/^we_/.test(w1.id), `id ${w1.id}`); eq(w1.url, url, 'url'); assert(/^whsec_/.test(w1.secret), 'secret returned on creation'); eq(w1.secret_saved, false, 'not saved when saveSecret=false'); eq(w1.events.length, billing.WEBHOOK_EVENTS.length, 'events');
+      eq(await settings.get('stripe_webhook_secret'), SECRET, 'settings untouched');
+      const w2 = await billing.createWebhookEndpoint(url);
+      eq(w2.ok, true, 'existing ok'); eq(w2.created, false, 'not created again'); eq(w2.id, w1.id, 'same endpoint'); eq(w2.secret, null, 'no secret for an existing endpoint'); assert(/already exists/.test(w2.note), `note: ${w2.note}`);
+      eq(fake._calls('webhookEndpoints.create').length, 1, 'one create call');
+      // default url = <public_url>/billing/webhook; a fresh url saves its secret to settings (restored right after so the HTTP tests keep verifying)
+      const w3 = await billing.createWebhookEndpoint(`${process.env.PUBLIC_URL}/billing/webhook?second=1`);
+      eq(w3.created, true, 'second url created'); eq(w3.secret_saved, true, 'secret saved'); eq(await settings.get('stripe_webhook_secret'), w3.secret, 'settings hold the new secret');
+      await settings.set('stripe_webhook_secret', SECRET);
+      const bad = await billing.createWebhookEndpoint('http://example.com/hook'); eq(bad.ok, false, 'non-https refused'); assert(/https/.test(bad.error), 'https error');
+      const legacy = await require('./stripe-setup').ensureWebhook(fake, url, { log: () => {} }); eq(legacy.id, w1.id, 'ensureWebhook(client,url) finds the same endpoint');
+      return `${w1.id} then existing`;
     });
 
     // ============================================================ consultant pricing (job G, paid by consultant@example.com)
@@ -432,25 +495,23 @@ if (require.main !== module) return;
     });
     await step('inline price_data fallback carries the role snapshot when the catalog does not match (price changed after setup)', async () => {
       const H = await newJobFor(consultant, cprofile, 'Stripe test H — stale catalog');
-      process.env.CONSULTANT_PRICE_CENTS = '1099'; billing.resetPricingCache();
-      try {
+      await withSetting('consultant_price_cents', '1099', async () => {
         await billing.createCheckout(H, consultant, { company_name: cprofile.company_name });
         const s = await subRow(H.id); eq(s.price_cents, 1099, 'snapshot at the new price'); eq(s.tax_cents, 55, 'GST 54.95 → 55'); eq(s.total_cents, 1154, 'total');
         const call = fake._calls('checkout.sessions.create').pop().args[0];
         assert(call.line_items[0].price_data && call.line_items[0].price_data.unit_amount === 1099, 'posting sent inline at 1099 (catalog Price is 999, so it is NOT used)');
         assert(call.line_items[1].price_data && call.line_items[1].price_data.unit_amount === 55, 'GST sent inline at 55');
         eq(call.line_items[0].price_data.product_data.metadata.payer_role, 'consultant', 'role on the inline product');
-      } finally { delete process.env.CONSULTANT_PRICE_CENTS; billing.resetPricingCache(); }
+      });
       return 'inline 1099 + 55';
     });
-    await step('renewals charge the SNAPSHOT: a sandbox subscription at 1574 renews at 1574 even after EMPLOYER_PRICE_CENTS changes to 1999', async () => {
+    await step('renewals charge the SNAPSHOT: a sandbox subscription at 1574 renews at 1574 even after the panel price changes to 1999', async () => {
       const S = await newJob('Stripe test S — sandbox renewal snapshot');
       const sub = await billing.ensureSubscription(S, user);                                      // snapshot 1499/75/1574
       eq(sub.total_cents, 1574, 'snapshot');
       await db.query("UPDATE subscriptions SET provider='sandbox', status='active', current_period_start=now() - interval '32 days', current_period_end=now() - interval '1 day' WHERE id=$1", [sub.id]);
       await db.query("UPDATE jobs SET status='active', expires_at=now() - interval '1 day', published_at=now() - interval '32 days' WHERE id=$1", [S.id]);
-      process.env.EMPLOYER_PRICE_CENTS = '1999'; billing.resetPricingCache();
-      try {
+      await withSetting('employer_price_cents', '1999', async () => {
         eq((await billing.getPricing('employer')).total_cents, 2099, 'current price is now 2099');
         const counts = await runRenewals({ log: () => {} });
         assert(counts.renewed >= 1, `renewed ${counts.renewed}`); eq(counts.errors, 0, 'no errors');
@@ -458,7 +519,7 @@ if (require.main !== module) return;
         eq(p.amount_cents, 1499, 'renewal amount = snapshot'); eq(p.tax_cents, 75, 'renewal GST = snapshot'); eq(p.total_cents, 1574, 'renewal total = snapshot, not 2099');
         const s2 = await subRow(S.id); assert(new Date(s2.current_period_end) > new Date(), 'period extended'); eq(s2.total_cents, 1574, 'snapshot untouched');
         eq((await jobRow(S.id)).status, 'active', 'job active');
-      } finally { delete process.env.EMPLOYER_PRICE_CENTS; billing.resetPricingCache(); }
+      });
       return 'renewed at 1574 while current price was 2099';
     });
     await step('/billing/success reconciliation (no webhook yet): retrieve session -> link + record + activate', async () => {
@@ -546,10 +607,25 @@ if (require.main !== module) return;
       const r = await request(BASE, '/billing/portal', { jar }); eq(r.status, 303, 'status'); assert(/^https:\/\/billing\.stripe\.com\//.test(r.location), `location ${r.location}`);
       return r.location;
     });
-    await step('HTTP: receipt page shows the GST registration number and Stripe as the provider', async () => {
+    await step('HTTP: receipt page shows the GST registration number, a "Bill from" block (site name + address from settings) and Stripe as the provider', async () => {
       const p = await db.one('SELECT id FROM payments WHERE job_id=$1', [E.id]);
       const r = await request(BASE, `/billing/receipt/${p.id}`, { jar }); eq(r.status, 200, 'status'); assert(r.text.includes('123456789 RT0001'), 'GST number'); assert(/Paid via <strong>Stripe<\/strong>/.test(r.text), 'provider');
+      assert(/<h3>Bill from<\/h3>/.test(r.text) && /<h3>Bill to<\/h3>/.test(r.text), 'Bill from + Bill to blocks');
+      const site = await billing.billFrom(); assert(r.text.includes(`<strong>${site.site_name}</strong>`), `site name "${site.site_name}" in Bill from`);
       return `/billing/receipt/${p.id}`;
+    });
+    await step('HTTP: webhook secret is read per request — a changed setting is honoured by the running server without restart', async () => {
+      const other = 'whsec_rotated_' + crypto.randomBytes(6).toString('hex');
+      await settings.set('stripe_webhook_secret', other);
+      try {
+        await new Promise(r => setTimeout(r, 5200));                                        // lib/settings caches for 5 s in the server process
+        const inv = { ...paidE.invoice };
+        let d = fake._signed('invoice.paid', inv);                                          // signed with the OLD secret
+        let r = await post(d.payload, d.header); eq(r.status, 400, 'old secret now rejected');
+        d = fake._signed('invoice.paid', inv, { secret: other });
+        r = await post(d.payload, d.header); eq(r.status, 200, 'new secret accepted (idempotent replay)'); eq(await payCount(E.id), 1, 'no duplicate');
+      } finally { await settings.set('stripe_webhook_secret', SECRET); await new Promise(r => setTimeout(r, 5200)); }
+      return 'rotated and restored';
     });
     await step('HTTP: success page before the webhook (job F) reconciles the session and goes live; pending state polls', async () => {
       const F = await newJob('Stripe test F — success before webhook');
@@ -607,6 +683,7 @@ if (require.main !== module) return;
     if (server) server.kill();
     if (!process.env.KEEP) { for (const id of fixtures) await db.query('DELETE FROM jobs WHERE id=$1', [id]); await db.query("DELETE FROM mail_outbox WHERE to_email = ANY($1) AND created_at > now() - interval '10 minutes' AND (subject ILIKE '%Stripe test%')", [[user.email, consultant.email]]); }
     else console.log('KEEP=1: fixture job ids', fixtures.join(', '));
+    try { await restoreSettings(); } catch (e) { console.error('settings restore failed:', e.message); }
     fs.rmSync(scratch, { recursive: true, force: true });
     await db.pool.end();
   }

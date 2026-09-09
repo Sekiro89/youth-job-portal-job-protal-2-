@@ -23,8 +23,31 @@
         <%- include('_field', { f: { name: 'company_name', label: 'Legal company name', value: values.company_name, error: errors.company_name, autocomplete: 'organization', hint: 'The registered business name, as on your invoices.' } }) %>
         <%- include('_field', { f: { name: 'operating_name', label: 'Operating name', value: values.operating_name, error: errors.operating_name, required: false, placeholder: 'e.g. Flying Pig', hint: 'Operating / trade name — the name job seekers know you by. Shown first on your postings.' } }) %>
       </div>
-      <%- include('_field', { f: { name: 'street_address', label: 'Street address', value: values.street_address, error: errors.street_address, autocomplete: 'street-address', required: false, placeholder: '123 Main St, Unit 4', hint: 'Used as the default work location when you post a job — you can add more locations per posting.' } }) %>
       <div class="form-row">
+        <div class="field">
+          <label for="industry">Industry</label>
+          <select class="input" id="industry" name="industry" required <% if (errors.industry) { %>aria-invalid="true" aria-describedby="err-industry"<% } else { %>aria-describedby="hint-industry"<% } %>>
+            <option value="">Choose your industry…</option>
+            <% C.INDUSTRIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= values.industry === k ? 'selected' : '' %>><%= n %></option><% }) %>
+          </select>
+          <% if (errors.industry) { %><span class="error" id="err-industry"><%= errors.industry %></span><% } else { %><span class="hint" id="hint-industry">The sector your company operates in (Job Bank list).</span><% } %>
+        </div>
+        <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
+      </div>
+
+      <h2 class="auth__section">Business address</h2>
+      <p class="small muted auth__section-note">Saved to your profile as your first work location. When you post a job you tick the locations it applies to — add as many as you need later.</p>
+      <div class="form-row form-row--street">
+        <div class="field">
+          <label for="street_address">Street address</label>
+          <input class="input" id="street_address" name="street_address" type="text" value="<%= values.street_address ?? '' %>" required autocomplete="street-address" placeholder="123 Main St"
+            data-address-autocomplete data-autofill="street=street_address,city=city,province=province,postal=postal_code"
+            <% if (errors.street_address) { %>aria-invalid="true" aria-describedby="err-street_address"<% } else { %>aria-describedby="hint-street_address"<% } %>>
+          <% if (errors.street_address) { %><span class="error" id="err-street_address"><%= errors.street_address %></span><% } else { %><span class="hint" id="hint-street_address">Start typing and pick your address to fill in the rest.</span><% } %>
+        </div>
+        <%- include('_field', { f: { name: 'unit', label: 'Unit / suite', value: values.unit, error: errors.unit, autocomplete: 'address-line2', required: false, placeholder: 'Unit 4' } }) %>
+      </div>
+      <div class="form-row form-row--3">
         <%- include('_field', { f: { name: 'city', label: 'City', value: values.city, error: errors.city, autocomplete: 'address-level2' } }) %>
         <div class="field">
           <label for="province">Province / territory</label>
@@ -34,10 +57,7 @@
           </select>
           <% if (errors.province) { %><span class="error" id="err-province"><%= errors.province %></span><% } %>
         </div>
-      </div>
-      <div class="form-row">
-        <%- include('_field', { f: { name: 'postal_code', label: 'Postal code', value: values.postal_code, error: errors.postal_code, autocomplete: 'postal-code', required: false, placeholder: 'A1A 1A1' } }) %>
-        <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
+        <%- include('_field', { f: { name: 'postal_code', label: 'Postal code', value: values.postal_code, error: errors.postal_code, autocomplete: 'postal-code', placeholder: 'A1A 1A1' } }) %>
       </div>
 
       <label class="check <%= errors.agree ? 'check--error' : '' %>" for="agree">

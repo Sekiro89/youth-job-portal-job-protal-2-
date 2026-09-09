@@ -52,7 +52,7 @@
 ## 6. Environment / secrets
 - **`.env`** at project root (600). Keys: `DATABASE_URL SESSION_SECRET PUBLIC_URL PORT SMTP_URL MAIL_FROM SUPPORT_EMAIL SUPPORT_NAME STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET STRIPE_PUBLISHABLE_KEY POSTING_PRICE_CENTS GST_RATE UPLOAD_DIR`.
 - Empty `SMTP_URL` ⇒ emails are recorded in `mail_outbox` (visible at `/admin/outbox`) but not sent. Empty `STRIPE_SECRET_KEY` ⇒ **sandbox billing** (simulated card `4242 4242 4242 4242`). See `docs/BILLING.md`.
-- `SUPPORT_EMAIL` = where Contact Us messages go (Veda).
+- **The client's control panel `/admin/integrations` (passcode in `docs/.admin-passcode`) now owns Stripe keys, email provider, support recipients, pricing, GST number, Google Maps key, Job Bank sync and admin users; saved values override `.env`.** `.env` values remain the fallback.
 
 ## 7. Backup & restore
 - **What:** database `cc_main` + `data/uploads/`.
