@@ -119,7 +119,7 @@ a:hover { color: var(--cc-red); }
 .flash--info { background: var(--cc-teal-100); border-color: #a7dfe2; color: #16606a; }
 
 /* ---------- footer ---------- */
-.site-footer { background: var(--cc-navy-50); border-top: 1px solid var(--kds-border); margin-top: 48px; padding: 40px 0 24px; font-size: .9375rem; }
+.site-footer { background: var(--cc-navy-50); border-top: 1px solid var(--kds-border); margin-top: 24px; padding: 40px 0 24px; font-size: .9375rem; }
 .site-footer__grid { display: grid; gap: 28px; grid-template-columns: 1fr; }
 .site-footer h3 { font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-muted); margin-bottom: 12px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -157,7 +157,7 @@ a:hover { color: var(--cc-red); }
 .form { display: grid; gap: 16px; }
 .form-row { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; } .form-row--3 { grid-template-columns: 1fr 1fr 1fr; } }
-.field { display: grid; gap: 6px; }
+.field { display: grid; gap: 6px; align-content: start; }
 .field label, .kds-label { font-weight: 600; font-size: .9rem; color: var(--cc-ink); }
 .field .hint { font-size: .8125rem; color: var(--kds-fg-muted); }
 .field .error { font-size: .8125rem; color: var(--kds-danger); font-weight: 500; }
@@ -166,11 +166,11 @@ a:hover { color: var(--cc-red); }
 }
 textarea.input { min-height: 120px; resize: vertical; }
 .input:focus, .kds-input:focus, .kds-select:focus { border-color: var(--cc-teal); outline: 2px solid var(--kds-focus-ring); outline-offset: 1px; }
-.checks { display: grid; gap: 8px; grid-template-columns: 1fr; }
+.checks { display: grid; gap: 8px; grid-template-columns: 1fr; align-content: start; }
 @media (min-width: 640px) { .checks { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 1024px) { .checks--3 { grid-template-columns: 1fr 1fr 1fr; } }
-.check { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--kds-border); border-radius: 10px; background: #fff; cursor: pointer; font-size: .9375rem; }
-.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--cc-navy); flex: none; }
+.check { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--kds-border); border-radius: 10px; background: #fff; cursor: pointer; font-size: .9375rem; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--cc-navy); flex: none; }
 .check:has(input:checked) { border-color: var(--cc-navy); background: var(--cc-navy-50); }
 .form-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .form-actions .kds-btn { min-height: 44px; }
