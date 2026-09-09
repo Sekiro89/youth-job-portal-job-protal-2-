@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en-CA" data-kds-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= title %><%= title === 'Canada Careers' ? '' : ' · Canada Careers' %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <link rel="canonical" href="<%= canonical %>">
+  <% if (noindex) { %><meta name="robots" content="noindex,nofollow"><% } %>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Canada Careers">
+  <meta property="og:title" content="<%= title %>">
+  <meta property="og:description" content="<%= metaDescription %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <meta property="og:image" content="<%= ogImage %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#1F3A5F">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/kds/tokens/kds.css">
+  <link rel="stylesheet" href="/kds/css/components.css">
+  <link rel="stylesheet" href="/css/theme.css">
+  <% extraCss.forEach(href => { %><link rel="stylesheet" href="<%= href %>"><% }) %>
+  <% jsonLd.forEach(obj => { %><script type="application/ld+json"><%- JSON.stringify(obj).replace(/</g, '\\u003c') %></script><% }) %>
+</head>
+<body class="<%= bodyClass %>">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <%- include('partials/nav') %>
+  <%- include('partials/flash') %>
+  <main id="main" class="site-main">
+    <%- body %>
+  </main>
+  <%- include('partials/footer') %>
+  <script src="/js/site.js" defer></script>
+  <% extraJs.forEach(src => { %><script src="<%= src %>" defer></script><% }) %>
+</body>
+</html>

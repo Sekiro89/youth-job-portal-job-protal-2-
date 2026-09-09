@@ -1,0 +1,233 @@
+/* ============================================================
+   KDS Components — pure-CSS recipes on top of tokens/kds.css
+   Use with any framework or none. React layer maps 1:1 to these.
+   © Khosha Systems. All rights reserved.
+   ============================================================ */
+
+/* ---------- Button ---------- */
+.kds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--kds-sp-2);
+  font: 600 var(--kds-text-sm) / 1 var(--kds-font-sans);
+  padding: 0.625rem 1.1rem;
+  border-radius: var(--kds-radius-md);
+  border: 1px solid transparent;
+  background: var(--kds-accent);
+  color: var(--kds-accent-fg);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--kds-dur-fast) var(--kds-ease-standard),
+    border-color var(--kds-dur-fast) var(--kds-ease-standard),
+    opacity var(--kds-dur-fast) var(--kds-ease-standard),
+    transform var(--kds-dur-fast) var(--kds-ease-standard);
+}
+.kds-btn:hover { opacity: 0.9; }
+.kds-btn:active { transform: scale(0.97); }
+.kds-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.kds-btn--brand { background: var(--kds-brand); color: var(--kds-brand-fg); }
+.kds-btn--ghost {
+  background: transparent;
+  color: var(--kds-fg);
+  border-color: var(--kds-border);
+}
+.kds-btn--ghost:hover { background: var(--kds-surface); opacity: 1; }
+.kds-btn--danger { background: var(--kds-danger); }
+.kds-btn--sm { padding: 0.4rem 0.75rem; font-size: var(--kds-text-xs); }
+.kds-btn--lg { padding: 0.8rem 1.5rem; font-size: var(--kds-text-md); }
+
+/* ---------- Input / Select ---------- */
+.kds-input,
+.kds-select {
+  width: 100%;
+  font: 400 var(--kds-text-sm) / 1.4 var(--kds-font-sans);
+  color: var(--kds-fg);
+  background: var(--kds-surface);
+  border: 1px solid var(--kds-border);
+  border-radius: var(--kds-radius-md);
+  padding: 0.6rem 0.8rem;
+  transition: border-color var(--kds-dur-fast) var(--kds-ease-standard);
+}
+.kds-input::placeholder { color: var(--kds-fg-faint); }
+.kds-input:focus, .kds-select:focus { border-color: var(--kds-accent); outline: none; }
+.kds-input[aria-invalid="true"] { border-color: var(--kds-danger); }
+.kds-field { display: grid; gap: var(--kds-sp-1); }
+.kds-label { font: 500 var(--kds-text-sm) / 1.2 var(--kds-font-sans); color: var(--kds-fg); }
+.kds-hint { font-size: var(--kds-text-xs); color: var(--kds-fg-muted); }
+.kds-hint--error { color: var(--kds-danger); }
+
+/* ---------- Card ---------- */
+.kds-card {
+  background: var(--kds-surface);
+  border: 1px solid var(--kds-border);
+  border-radius: var(--kds-radius-lg);
+  padding: var(--kds-sp-5);
+  transition:
+    border-color var(--kds-dur-base) var(--kds-ease-standard),
+    transform var(--kds-dur-base) var(--kds-ease-standard),
+    box-shadow var(--kds-dur-base) var(--kds-ease-standard);
+}
+.kds-card--interactive { cursor: pointer; }
+.kds-card--interactive:hover {
+  border-color: var(--kds-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--kds-shadow-2);
+}
+
+/* ---------- Badge ---------- */
+.kds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font: 500 var(--kds-text-xs) / 1 var(--kds-font-mono);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--kds-radius-full);
+  border: 1px solid var(--kds-border);
+  background: var(--kds-surface-2);
+  color: var(--kds-fg-muted);
+}
+.kds-badge--positive { color: var(--kds-positive); border-color: color-mix(in srgb, var(--kds-positive) 35%, transparent); }
+.kds-badge--warning { color: var(--kds-warning); border-color: color-mix(in srgb, var(--kds-warning) 35%, transparent); }
+.kds-badge--danger { color: var(--kds-danger); border-color: color-mix(in srgb, var(--kds-danger) 35%, transparent); }
+.kds-badge--brand { color: var(--kds-brand); border-color: color-mix(in srgb, var(--kds-brand) 35%, transparent); }
+
+/* ---------- Dialog (native <dialog>) ---------- */
+.kds-dialog {
+  background: var(--kds-surface);
+  color: var(--kds-fg);
+  border: 1px solid var(--kds-border);
+  border-radius: var(--kds-radius-lg);
+  box-shadow: var(--kds-shadow-3);
+  padding: var(--kds-sp-6);
+  max-width: min(92vw, 480px);
+  width: 100%;
+}
+.kds-dialog::backdrop { background: var(--kds-scrim); backdrop-filter: blur(2px); }
+.kds-dialog[open] { animation: kds-dialog-in var(--kds-dur-slow) var(--kds-ease-enter); }
+@keyframes kds-dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Toast ---------- */
+.kds-toast-region {
+  position: fixed;
+  bottom: var(--kds-sp-5);
+  right: var(--kds-sp-5);
+  display: grid;
+  gap: var(--kds-sp-2);
+  z-index: var(--kds-z-toast);
+}
+.kds-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--kds-sp-3);
+  background: var(--kds-surface-2);
+  border: 1px solid var(--kds-border-strong);
+  border-radius: var(--kds-radius-md);
+  box-shadow: var(--kds-shadow-2);
+  padding: var(--kds-sp-3) var(--kds-sp-4);
+  font-size: var(--kds-text-sm);
+  max-width: 360px;
+}
+.kds-toast--positive { border-left: 3px solid var(--kds-positive); }
+.kds-toast--danger { border-left: 3px solid var(--kds-danger); }
+.kds-toast--info { border-left: 3px solid var(--kds-info); }
+
+/* ---------- Tabs ---------- */
+.kds-tabs { display: flex; gap: var(--kds-sp-1); border-bottom: 1px solid var(--kds-border); }
+.kds-tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--kds-fg-muted);
+  font: 500 var(--kds-text-sm) / 1 var(--kds-font-sans);
+  padding: 0.65rem 0.9rem;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color var(--kds-dur-fast) var(--kds-ease-standard);
+}
+.kds-tab:hover { color: var(--kds-fg); }
+.kds-tab[aria-selected="true"] { color: var(--kds-fg); border-bottom-color: var(--kds-brand); }
+
+/* ---------- Tooltip ---------- */
+.kds-tooltip-wrap { position: relative; display: inline-flex; }
+.kds-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  translate: -50% 0;
+  background: var(--kds-n3);
+  color: var(--kds-n9);
+  border: 1px solid var(--kds-border-strong);
+  font-size: var(--kds-text-xs);
+  border-radius: var(--kds-radius-sm);
+  padding: 0.35rem 0.6rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--kds-dur-fast) var(--kds-ease-standard);
+  z-index: var(--kds-z-overlay);
+}
+.kds-tooltip-wrap:hover .kds-tooltip,
+.kds-tooltip-wrap:focus-within .kds-tooltip { opacity: 1; }
+
+/* ---------- Switch ---------- */
+.kds-switch {
+  appearance: none;
+  width: 42px;
+  height: 24px;
+  border-radius: var(--kds-radius-full);
+  background: var(--kds-surface-2);
+  border: 1px solid var(--kds-border-strong);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--kds-dur-base) var(--kds-ease-standard);
+}
+.kds-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--kds-fg-muted);
+  transition:
+    translate var(--kds-dur-base) var(--kds-ease-spring),
+    background var(--kds-dur-base) var(--kds-ease-standard);
+}
+.kds-switch:checked { background: var(--kds-accent); border-color: var(--kds-accent); }
+.kds-switch:checked::after { translate: 18px 0; background: #fff; }
+
+/* ---------- Skeleton ---------- */
+.kds-skeleton {
+  border-radius: var(--kds-radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--kds-surface-2) 40%,
+    var(--kds-border) 50%,
+    var(--kds-surface-2) 60%
+  );
+  background-size: 200% 100%;
+  animation: kds-shimmer 1.4s linear infinite;
+}
+@keyframes kds-shimmer {
+  from { background-position: 120% 0; }
+  to { background-position: -80% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kds-skeleton { animation: none; background: var(--kds-surface-2); }
+}
+
+/* ---------- Stat ---------- */
+.kds-stat { display: grid; gap: var(--kds-sp-1); }
+.kds-stat__value {
+  font: 700 var(--kds-text-3xl) / 1 var(--kds-font-mono);
+  color: var(--kds-fg);
+  letter-spacing: var(--kds-tracking-tight);
+}
+.kds-stat__label { font-size: var(--kds-text-sm); color: var(--kds-fg-muted); }

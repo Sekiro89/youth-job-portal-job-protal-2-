@@ -1,0 +1,36 @@
+<% const tabs = [
+  ['/employer', 'Employer'],
+  ['/consultant', 'Third Party Consultant'],
+  ['/jobseeker', 'Job Seeker'],
+  ['/about', 'About Us'],
+  ['/contact', 'Contact Us'],
+]; const isActive = (p) => path === p || path.startsWith(p + '/'); %>
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="site-logo" href="/" aria-label="Canada Careers home">
+      <img src="/img/logo.svg" alt="Canada Careers" width="200" height="56">
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <ul class="site-nav__tabs">
+        <li><a href="/jobs" class="<%= isActive('/jobs') ? 'is-active' : '' %>">Find Jobs</a></li>
+        <% tabs.forEach(([href, label]) => { %>
+          <li><a href="<%= href %>" class="<%= isActive(href) ? 'is-active' : '' %>"><%= label %></a></li>
+        <% }) %>
+      </ul>
+      <div class="site-nav__auth">
+        <% if (user) { %>
+          <a class="kds-btn kds-btn--ghost" href="<%= ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role] %>">
+            <span class="avatar" aria-hidden="true"><%= (user.name||'?').trim()[0].toUpperCase() %></span> My account
+          </a>
+          <form method="post" action="/logout" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Sign out</button></form>
+        <% } else { %>
+          <a class="kds-btn kds-btn--ghost" href="/login">Sign in</a>
+          <a class="kds-btn kds-btn--brand" href="/signup">Sign up</a>
+        <% } %>
+      </div>
+    </nav>
+  </div>
+</header>

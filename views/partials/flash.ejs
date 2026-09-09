@@ -1,0 +1,7 @@
+<% if (flash && flash.length) { %>
+<div class="container flash-region" role="status" aria-live="polite">
+  <% flash.forEach(f => { %>
+    <div class="flash flash--<%= f.type %>"><%= f.message %></div>
+  <% }) %>
+</div>
+<% } %>

@@ -1,0 +1,20 @@
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div class="site-footer__brand">
+      <img src="/img/logo.svg" alt="Canada Careers" width="180" height="50">
+      <p>Jobs for every Canadian. Opportunities for all.</p>
+      <ul class="audience-strip" aria-label="Who we serve">
+        <% C.AUDIENCES.forEach(([k, name, icon]) => { %><li class="aud aud--<%= k %>"><%= name %></li><% }) %>
+      </ul>
+    </div>
+    <nav aria-label="Employers"><h3>Employers</h3>
+      <ul><li><a href="/employer">Post a job</a></li><li><a href="/employer#pricing">Pricing — $9.99/month + GST</a></li><li><a href="/consultant">Third Party Consultants</a></li></ul></nav>
+    <nav aria-label="Job seekers"><h3>Job seekers</h3>
+      <ul><li><a href="/jobs">Browse all jobs</a></li><li><a href="/jobseeker">Create your profile</a></li><li><a href="/jobseeker#alerts">Job alerts</a></li></ul></nav>
+    <nav aria-label="Company"><h3>Canada Careers</h3>
+      <ul><li><a href="/about">About us</a></li><li><a href="/contact">Contact us</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></nav>
+  </div>
+  <div class="container site-footer__legal">
+    <p>© <%= new Date().getFullYear() %> Canada Careers. All prices in Canadian dollars; GST applies.</p>
+  </div>
+</footer>

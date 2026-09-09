@@ -1,0 +1,140 @@
+/* ============================================================
+   KDS — Khosha Design System · Design Tokens
+   Pure CSS custom properties. Zero JavaScript. Theme via
+   [data-kds-theme="light" | "dark"] on <html> (dark is default).
+   Override any token per-app to re-brand everything at once.
+   © Khosha Systems. All rights reserved.
+   ============================================================ */
+
+:root {
+  /* ---------- primitives: neutral ramp (dark-first) ---------- */
+  --kds-n0: #07090d;
+  --kds-n1: #0b0e14;
+  --kds-n2: #10151e;
+  --kds-n3: #161d29;
+  --kds-n4: #222b3a;
+  --kds-n5: #2e3a4e;
+  --kds-n6: #4a5871;
+  --kds-n7: #94a1b5;
+  --kds-n8: #c5cdda;
+  --kds-n9: #e8ecf4;
+  --kds-n10: #ffffff;
+
+  /* ---------- primitives: hues ---------- */
+  --kds-hue-flame: #ff9933;   /* warm brand accent */
+  --kds-hue-leaf: #2ecc71;    /* positive */
+  --kds-hue-sky: #5b8cff;     /* interactive */
+  --kds-hue-rose: #ff5470;    /* danger */
+  --kds-hue-amber: #ffc53d;   /* warning */
+  --kds-hue-iris: #9d7bff;    /* info/special */
+
+  /* ---------- semantic: color (dark default) ---------- */
+  --kds-bg: var(--kds-n1);
+  --kds-surface: var(--kds-n2);
+  --kds-surface-2: var(--kds-n3);
+  --kds-border: var(--kds-n4);
+  --kds-border-strong: var(--kds-n5);
+  --kds-fg: var(--kds-n9);
+  --kds-fg-muted: var(--kds-n7);
+  --kds-fg-faint: var(--kds-n6);
+  --kds-accent: var(--kds-hue-sky);
+  --kds-accent-fg: #ffffff;
+  --kds-brand: var(--kds-hue-flame);
+  --kds-brand-fg: #221302;
+  --kds-positive: var(--kds-hue-leaf);
+  --kds-warning: var(--kds-hue-amber);
+  --kds-danger: var(--kds-hue-rose);
+  --kds-info: var(--kds-hue-iris);
+  --kds-focus-ring: color-mix(in srgb, var(--kds-accent) 70%, transparent);
+  --kds-scrim: rgba(3, 5, 9, 0.66);
+
+  /* ---------- typography ---------- */
+  --kds-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --kds-font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  --kds-text-xs: 0.75rem;
+  --kds-text-sm: 0.875rem;
+  --kds-text-md: 1rem;
+  --kds-text-lg: 1.125rem;
+  --kds-text-xl: 1.375rem;
+  --kds-text-2xl: 1.75rem;
+  --kds-text-3xl: 2.25rem;
+  --kds-text-4xl: 3rem;
+  --kds-leading-tight: 1.2;
+  --kds-leading-body: 1.6;
+  --kds-tracking-tight: -0.015em;
+
+  /* ---------- space (4px base) ---------- */
+  --kds-sp-1: 0.25rem;
+  --kds-sp-2: 0.5rem;
+  --kds-sp-3: 0.75rem;
+  --kds-sp-4: 1rem;
+  --kds-sp-5: 1.5rem;
+  --kds-sp-6: 2rem;
+  --kds-sp-7: 3rem;
+  --kds-sp-8: 4rem;
+
+  /* ---------- shape ---------- */
+  --kds-radius-sm: 6px;
+  --kds-radius-md: 10px;
+  --kds-radius-lg: 16px;
+  --kds-radius-full: 999px;
+
+  /* ---------- elevation ---------- */
+  --kds-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --kds-shadow-2: 0 6px 24px rgba(0, 0, 0, 0.3);
+  --kds-shadow-3: 0 16px 48px rgba(0, 0, 0, 0.42);
+
+  /* ---------- motion ---------- */
+  --kds-dur-fast: 120ms;
+  --kds-dur-base: 200ms;
+  --kds-dur-slow: 320ms;
+  --kds-dur-grand: 600ms;
+  --kds-ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --kds-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --kds-ease-exit: cubic-bezier(0.6, 0, 0.85, 0.4);
+  --kds-ease-spring: cubic-bezier(0.34, 1.45, 0.5, 1); /* gentle overshoot */
+
+  /* ---------- layers ---------- */
+  --kds-z-sticky: 100;
+  --kds-z-overlay: 800;
+  --kds-z-modal: 900;
+  --kds-z-toast: 1000;
+
+  color-scheme: dark;
+}
+
+/* ---------- light theme ---------- */
+[data-kds-theme="light"] {
+  --kds-bg: #f7f8fb;
+  --kds-surface: #ffffff;
+  --kds-surface-2: #eef1f6;
+  --kds-border: #dde3ec;
+  --kds-border-strong: #c3ccda;
+  --kds-fg: #161c26;
+  --kds-fg-muted: #5a6679;
+  --kds-fg-faint: #8b95a7;
+  --kds-accent-fg: #ffffff;
+  --kds-brand-fg: #221302;
+  --kds-focus-ring: color-mix(in srgb, var(--kds-accent) 55%, transparent);
+  --kds-scrim: rgba(15, 20, 30, 0.4);
+  --kds-shadow-1: 0 1px 2px rgba(22, 28, 38, 0.08);
+  --kds-shadow-2: 0 6px 24px rgba(22, 28, 38, 0.1);
+  --kds-shadow-3: 0 16px 48px rgba(22, 28, 38, 0.16);
+  color-scheme: light;
+}
+
+/* ---------- base + a11y ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --kds-dur-fast: 0ms;
+    --kds-dur-base: 0ms;
+    --kds-dur-slow: 0ms;
+    --kds-dur-grand: 0ms;
+  }
+}
+
+.kds-focusable:focus-visible,
+[class^="kds-"]:focus-visible {
+  outline: 2px solid var(--kds-focus-ring);
+  outline-offset: 2px;
+}
