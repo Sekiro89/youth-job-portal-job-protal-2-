@@ -74,3 +74,4 @@
 
 ## 10. Change log
 - 2026-09-09 — initial build (orchestrator + 9 agents), systemd units, Caddy block.
+- 2026-09-09 (later) — second wave: Stripe path hardened + offline lifecycle test (`node scripts/test-stripe.js`, 26/26), `docs/STRIPE-GO-LIVE.md`; Job Bank importer (`scripts/import-jobbank.js`, `jobs/jobbank-sync.js` wired into the daily runner) — 256 real postings imported into `cc_main`; three tester agents' fixes; critical fix: helmet `no-referrer` made browsers send `Origin: null` so every form 403'd — now `strict-origin-when-cross-origin`; session id regenerated on login; scroll-restoration disabled (pages open at top); `PUBLIC_WHERE` now also excludes archived employer profiles.
