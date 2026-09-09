@@ -11,6 +11,8 @@
 
 /* checkout */
 .bill-checkout { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+.bill-checkout__main > .bill-sandbox-banner { margin-bottom: 16px; }
+.bill-index > .bill-sandbox-banner { margin: 0; }
 .bill-checkout__aside { display: grid; gap: 16px; }
 .bill-job { display: grid; gap: 4px; justify-items: start; padding: 14px 16px; border-radius: 12px; background: var(--cc-navy-50); border: 1px solid var(--cc-navy-100); }
 .bill-job__title { font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); }

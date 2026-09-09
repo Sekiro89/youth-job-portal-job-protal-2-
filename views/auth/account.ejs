@@ -33,10 +33,19 @@
           <input type="hidden" name="email" value="<%= user.email %>" autocomplete="username">
           <%- include('_password', { f: { name: 'current_password', label: 'Current password', error: pwErrors.current_password, autocomplete: 'current-password' } }) %>
           <div class="form-row">
-            <%- include('_password', { f: { name: 'password', label: 'New password', error: pwErrors.password, hint: 'At least 8 characters.' } }) %>
+            <%- include('_password', { f: { name: 'password', label: 'New password', error: pwErrors.password, hint: 'At least 8 characters, with a letter and a number.' } }) %>
             <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm new password', error: pwErrors.password_confirm } }) %>
           </div>
           <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Change password</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="auth__section">Signed-in devices</h2>
+        <p class="muted">Lost a phone or used a shared computer? Sign out everywhere except this device. Changing your password does this automatically.</p>
+        <form class="form" method="post" action="/account" novalidate>
+          <input type="hidden" name="form" value="logout_all">
+          <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Sign out of all other devices</button></div>
         </form>
       </div>
 

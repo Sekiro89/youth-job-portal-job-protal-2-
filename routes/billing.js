@@ -28,7 +28,8 @@ if (process.env.NODE_ENV !== 'production') {
 router.post('/billing/webhook', wrap(async (req, res) => {
   const stripe = billing.stripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripe || !secret) return res.status(400).send('Stripe is not configured');
+  if (!stripe || !secret) { console.warn('[billing] webhook received but Stripe is not configured (STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET)'); return res.status(400).send('Stripe is not configured'); }
+  if (!Buffer.isBuffer(req.body)) return res.status(400).send('Raw body required');   // server.js mounts express.raw() on this path
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, req.get('stripe-signature'), secret);
@@ -36,13 +37,17 @@ router.post('/billing/webhook', wrap(async (req, res) => {
     console.warn('[billing] webhook signature failed:', e.message);
     return res.status(400).send(`Webhook Error: ${e.message}`);
   }
+  // Signature verified. From here on a failure must be a 5xx: Stripe retries non-2xx deliveries (for up to 3 days
+  // in live mode), so a DB hiccup or API outage is replayed instead of silently losing a payment/cancellation.
+  // Handlers are idempotent (payments dedupe on the invoice id), so replays are safe.
   try {
     const outcome = await billing.handleStripeEvent(event);
-    console.log(`[billing] webhook ${event.type}: ${outcome}`);
+    console.log(`[billing] webhook ${event.id || ''} ${event.type}: ${outcome}`);
+    res.status(200).json({ received: true, outcome });
   } catch (e) {
-    console.error(`[billing] webhook ${event.type} failed:`, e);
+    console.error(`[billing] webhook ${event.id || ''} ${event.type} FAILED (Stripe will retry):`, e);
+    res.status(500).json({ received: false, error: 'handler failed; retry' });
   }
-  res.status(200).json({ received: true });
 }));
 
 // ---------------------------------------------------------------- helpers
@@ -144,12 +149,13 @@ router.get('/billing/success', owners, wrap(async (req, res) => {
   req.params.jobId = req.query.job;
   const job = await ownedJob(req, res); if (!job) return;
   if (billing.mode() === 'stripe' && req.query.session_id) {
-    try { await billing.reconcileCheckoutSession(String(req.query.session_id)); } catch (e) { console.warn('[billing] reconcile session failed', e.message); }
+    // The webhook may not have landed yet: pull the Checkout Session (+ subscription + latest invoice) directly.
+    try { await billing.reconcileCheckoutSession(String(req.query.session_id), job.id); } catch (e) { console.warn('[billing] reconcile session failed', e.message); }
   }
   const fresh = await billing.loadJob(job.id);
   const sub = await billing.loadSubscriptionByJob(job.id);
   const pending = !(fresh.status === 'active' && fresh.expires_at && new Date(fresh.expires_at) > new Date());
-  res.render('billing/success', page({ title: pending ? 'Confirming your payment' : 'Your posting is live', metaDescription: 'Payment confirmation.', job: fresh, sub, base: baseFor(req.user), pending, extraJs: [] }));
+  res.render('billing/success', page({ title: pending ? 'Confirming your payment' : 'Your posting is live', metaDescription: 'Payment confirmation.', job: fresh, sub, base: baseFor(req.user), pending, extraJs: pending ? ['/js/billing.js'] : [] }));
 }));
 router.get('/billing/cancelled', owners, wrap(async (req, res) => {
   req.params.jobId = req.query.job;
@@ -178,6 +184,21 @@ router.post('/billing/resume/:jobId', owners, wrap(async (req, res) => {
   try { await billing.resume(job.id, req.user); req.flash('success', `Auto-renewal is back on for "${job.title}".`); }
   catch (e) { if (!e.status) throw e; req.flash('error', e.message); }
   res.redirect(backTo(req, `${base}/jobs/${job.id}`));
+}));
+
+// ---------------------------------------------------------------- Stripe Customer Portal (update card, invoices) — Stripe mode only
+router.get('/billing/portal', owners, wrap(async (req, res) => {
+  if (billing.mode() !== 'stripe') { req.flash('info', 'Card management opens once Stripe payments are enabled. In sandbox mode there is no card on file.'); return res.redirect('/billing'); }
+  try {
+    const url = await billing.portalUrl(req.user, '/billing');
+    if (!url) { req.flash('info', 'No Stripe billing account yet — it is created with your first paid posting.'); return res.redirect('/billing'); }
+    await auth.audit(req.user.id, 'billing.portal', 'user', req.user.id, null);
+    return res.redirect(303, url);
+  } catch (e) {
+    console.error('[billing] portal session failed', e.message);
+    req.flash('error', 'We could not open the payment portal right now. Please try again in a moment.');
+    return res.redirect('/billing');
+  }
 }));
 
 // ---------------------------------------------------------------- billing overview
@@ -209,7 +230,8 @@ router.get('/billing', owners, wrap(async (req, res) => {
     row.count += 1; if (!s.cancel_at_period_end) row.monthly += s.total_cents; byCompanyMap.set(s.company_name, row);
   }
   const pricing = await billing.getPricing();
-  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode: billing.mode(), money }));
+  const hasStripeCustomer = billing.mode() === 'stripe' && !!(await billing.findStripeCustomerId(req.user.id));
+  res.render('billing/index', page({ title: 'Billing', metaDescription: 'Your subscriptions and payment history.', subs, payments, pricing, totals, byCompany: [...byCompanyMap.values()], isConsultant: req.user.role === 'consultant', base: baseFor(req.user), mode: billing.mode(), hasStripeCustomer, money }));
 }));
 
 // ---------------------------------------------------------------- receipt (owner or admin)

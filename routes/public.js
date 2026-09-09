@@ -22,7 +22,11 @@ const ANNUAL = `((CASE WHEN jobs.salary_period = 'hour' THEN 2080 ELSE 1 END) * 
 const NEWEST = `jobs.published_at DESC NULLS LAST, jobs.id DESC`;
 
 const first = (v) => (Array.isArray(v) ? v[0] : v);
-const str = (v, max = 120) => (first(v) == null ? '' : String(first(v)).trim().slice(0, max));
+// NUL bytes are stripped: Postgres rejects them in text parameters (would 500).
+const str = (v, max = 120) => (first(v) == null ? '' : String(first(v)).replace(/\0/g, '').trim().slice(0, max));
+// Slugs are produced by h.slugify (a-z, 0-9, '-') plus a random suffix; anything else can never match, so 404 early
+// instead of sending odd bytes to Postgres.
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,119}$/;
 const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const isoDate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : undefined);
 
@@ -162,6 +166,8 @@ router.get('/jobs', async (req, res, next) => {
     ]);
     const total = countRow.n;
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    // ?page= beyond the last page: send the visitor to the last real page instead of "8 jobs found" + an empty list.
+    if (f.page > pages) return res.redirect(302, jobsUrl(f, { page: pages }));
 
     const chips = [];
     if (f.q) chips.push({ label: `“${f.q}”`, href: jobsUrl(f, { q: '' }) });
@@ -196,6 +202,7 @@ const EMPLOYMENT_TYPE = { full_time: 'FULL_TIME', part_time: 'PART_TIME', contra
 
 router.get('/jobs/:slug', async (req, res, next) => {
   try {
+    if (!SLUG_RE.test(req.params.slug)) return notFound(res, 'This job posting is no longer available. It may have closed, expired or been removed by the employer.');
     const job = await db.one(`SELECT jobs.*, p.company_name, p.slug AS company_slug, p.website AS company_website, p.industry AS company_industry,
         p.city AS company_city, p.province AS company_province, p.company_size, p.description AS company_description
       ${JOB_FROM} WHERE jobs.slug = $1 AND ${PUBLIC_WHERE}`, [req.params.slug]);
@@ -264,6 +271,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
 // ------------------------------------------------------------------ company page
 router.get('/companies/:slug', async (req, res, next) => {
   try {
+    if (!SLUG_RE.test(req.params.slug)) return notFound(res, 'We could not find that employer.');
     const co = await db.one('SELECT * FROM employer_profiles WHERE slug = $1 AND NOT archived', [req.params.slug]);
     if (!co) return notFound(res, 'We could not find that employer.');
     const jobs = await db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.employer_profile_id = $1 AND ${PUBLIC_WHERE} ORDER BY ${NEWEST}`, [co.id]);

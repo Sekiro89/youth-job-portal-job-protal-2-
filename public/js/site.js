@@ -1,4 +1,8 @@
 (function () {
+  // Always open a new page at the top (browsers otherwise restore the previous scroll position).
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  function toTop() { if (!location.hash) window.scrollTo(0, 0); }
+  toTop(); window.addEventListener('pageshow', toTop); window.addEventListener('load', toTop);
   var toggle = document.querySelector('.nav-toggle');
   var nav = document.getElementById('site-nav');
   if (toggle && nav) {

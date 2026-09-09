@@ -17,6 +17,20 @@ const AUDIENCE_KEYS = C.AUDIENCES.map(([k]) => k);
 const ROLE_LABEL = { employer: 'Employer', consultant: 'Third Party Consultant', seeker: 'Job Seeker', admin: 'Administrator' };
 const MAX_FAILS = 5, FAIL_WINDOW_MS = 10 * 60 * 1000;
 
+/** Password policy (shared by signup, reset and account): 8+ chars with at least one letter and one number, not your email. */
+function passwordError(pw, email) {
+  if (pw.length < 8) return 'Password must be at least 8 characters.';
+  if (pw.length > 128) return 'Password must be 128 characters or fewer.';
+  if (!/[a-z]/i.test(pw) || !/\d/.test(pw)) return 'Password must include at least one letter and one number.';
+  if (email && pw.toLowerCase() === String(email).toLowerCase()) return 'Password cannot be the same as your email.';
+  return '';
+}
+const nameError = (name) => name.length < 2 ? 'Please enter your full name.' : /[<>]/.test(name) ? 'Names cannot contain < or >.' : name.length > 100 ? 'Please use 100 characters or fewer.' : '';
+/** "Sign out everywhere": drop every other session that belongs to this user (pg session store keeps userId in sess). */
+async function endOtherSessions(userId, keepSid) {
+  const r = await db.query(`DELETE FROM "session" WHERE (sess->>'userId')::bigint = $1 AND sid <> COALESCE($2, '')`, [userId, keepSid || null]);
+  return r.rowCount;
+}
 const page = (extra) => Object.assign({ extraCss: ['/css/auth.css'], extraJs: ['/js/auth.js'] }, extra);
 const s = (v) => String(v ?? '').trim();
 const arr = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(s);
@@ -30,10 +44,10 @@ async function validateSignup(body, opts = {}) {
     password: String(body.password || ''), password_confirm: String(body.password_confirm || ''),
     agree: !!body.agree,
   };
-  if (v.name.length < 2) errors.name = 'Please enter your full name.';
+  if (nameError(v.name)) errors.name = nameError(v.name);
   if (!EMAIL_RE.test(v.email)) errors.email = 'Please enter a valid email address.';
   else if (await db.one('SELECT 1 FROM users WHERE email=$1', [v.email])) errors.email = 'An account with this email already exists. Try signing in instead.';
-  if (v.password.length < 8) errors.password = 'Password must be at least 8 characters.';
+  if (passwordError(v.password, v.email)) errors.password = passwordError(v.password, v.email);
   if (v.password !== v.password_confirm) errors.password_confirm = 'Passwords do not match.';
   if (opts.terms !== false && !v.agree) errors.agree = 'Please accept the Terms of Use and Privacy Policy.';
   return { errors, values: v };
@@ -213,12 +227,13 @@ router.post('/reset/:token', wrap(async (req, res) => {
   if (!user) { req.flash('error', 'That reset link is invalid or has expired. Please request a new one.'); return res.redirect('/forgot'); }
   const errors = {};
   const password = String(req.body.password || ''), confirm = String(req.body.password_confirm || '');
-  if (password.length < 8) errors.password = 'Password must be at least 8 characters.';
+  if (passwordError(password, user.email)) errors.password = passwordError(password, user.email);
   if (password !== confirm) errors.password_confirm = 'Passwords do not match.';
   if (Object.keys(errors).length) return res.status(422).render('auth/reset', page({ ...resetMeta, token: req.params.token, email: user.email, errors }));
   await db.query('UPDATE users SET password_hash=$2, reset_token=NULL, reset_expires=NULL, updated_at=now() WHERE id=$1', [user.id, await auth.hashPassword(password)]);
-  await auth.audit(user.id, 'password_reset', 'user', user.id);
-  req.flash('success', 'Your password has been updated. Please sign in.');
+  const ended = await endOtherSessions(user.id, null);   // a reset means "I may have lost control" — sign out every device
+  await auth.audit(user.id, 'password_reset', 'user', user.id, { sessions_ended: ended });
+  req.flash('success', 'Your password has been updated and every signed-in device has been signed out. Please sign in.');
   res.redirect('/login');
 }));
 
@@ -233,7 +248,8 @@ router.post('/account', auth.requireAuth(), wrap(async (req, res) => {
   if (form === 'profile') {
     const name = s(req.body.name), phone = s(req.body.phone);
     const errors = {};
-    if (name.length < 2) errors.name = 'Please enter your full name.';
+    if (nameError(name)) errors.name = nameError(name);
+    if (phone.length > 30) errors.phone = 'Please enter a valid phone number.';
     if (Object.keys(errors).length) { res.status(422); return renderAccount(req, res, { values: { name, phone }, errors }); }
     await db.query('UPDATE users SET name=$2, phone=$3, updated_at=now() WHERE id=$1', [req.user.id, name, phone || null]);
     await auth.audit(req.user.id, 'account_updated', 'user', req.user.id, { fields: ['name', 'phone'] });
@@ -245,18 +261,27 @@ router.post('/account', auth.requireAuth(), wrap(async (req, res) => {
     const pwErrors = {};
     const row = await db.one('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
     if (!(await auth.verifyPassword(current, row.password_hash))) pwErrors.current_password = 'Your current password is not right.';
-    if (password.length < 8) pwErrors.password = 'New password must be at least 8 characters.';
+    if (passwordError(password, req.user.email)) pwErrors.password = passwordError(password, req.user.email);
+    else if (await auth.verifyPassword(password, row.password_hash)) pwErrors.password = 'New password must be different from your current one.';
     if (password !== confirm) pwErrors.password_confirm = 'Passwords do not match.';
     if (Object.keys(pwErrors).length) { res.status(422); return renderAccount(req, res, { pwErrors }); }
     await db.query('UPDATE users SET password_hash=$2, reset_token=NULL, reset_expires=NULL, updated_at=now() WHERE id=$1', [req.user.id, await auth.hashPassword(password)]);
-    await auth.audit(req.user.id, 'password_changed', 'user', req.user.id);
-    req.flash('success', 'Your password has been changed.');
+    const ended = await endOtherSessions(req.user.id, req.sessionID);   // keep this device, sign out all others
+    await auth.audit(req.user.id, 'password_changed', 'user', req.user.id, { sessions_ended: ended });
+    req.flash('success', ended ? `Your password has been changed and ${ended} other signed-in device${ended === 1 ? ' was' : 's were'} signed out.` : 'Your password has been changed.');
+    return res.redirect('/account');
+  }
+  if (form === 'logout_all') {
+    const ended = await endOtherSessions(req.user.id, req.sessionID);
+    await auth.audit(req.user.id, 'logout_everywhere', 'user', req.user.id, { sessions_ended: ended });
+    req.flash('success', ended ? `Signed out of ${ended} other device${ended === 1 ? '' : 's'}. This device stays signed in.` : 'No other devices were signed in.');
     return res.redirect('/account');
   }
   if (form === 'deactivate') {
     if (s(req.body.confirm_text).toUpperCase() !== 'DEACTIVATE') { res.status(422); return renderAccount(req, res, { deactivateError: 'Type DEACTIVATE to confirm.' }); }
     const uid = req.user.id;
-    await db.query('UPDATE users SET is_active=false, updated_at=now() WHERE id=$1', [uid]);
+    await db.query('UPDATE users SET is_active=false, reset_token=NULL, reset_expires=NULL, updated_at=now() WHERE id=$1', [uid]);
+    await endOtherSessions(uid, null);
     await auth.audit(uid, 'account_deactivated', 'user', uid);
     return req.session.regenerate((err) => {
       if (err) return res.redirect('/');

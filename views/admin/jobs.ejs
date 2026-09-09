@@ -53,6 +53,7 @@
         </tbody>
       </table></div>
     </div>
+    <%- include('_pager', { pg, unit: 'jobs', qs: (o) => qs({ page: '', ...o }) }) %>
     <% } %>
   </div>
 </section>

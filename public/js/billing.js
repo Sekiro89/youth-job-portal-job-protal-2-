@@ -33,6 +33,17 @@
     if (number.value) number.dispatchEvent(new Event('input'));
   }
 
+  // Success page while the Stripe webhook is still in flight: re-check a few times, then stop (the Refresh button remains).
+  var poll = document.querySelector('[data-poll]');
+  if (poll) {
+    var key = 'cc_bill_poll', n = 0;
+    try { n = Number(sessionStorage.getItem(key) || 0); } catch (e) {}
+    if (n < 6) {
+      try { sessionStorage.setItem(key, String(n + 1)); } catch (e) {}
+      setTimeout(function () { window.location.replace(poll.getAttribute('data-poll')); }, 3000 + n * 1000);
+    }
+  } else { try { sessionStorage.removeItem('cc_bill_poll'); } catch (e) {} }
+
   // Busy state: "Processing…" and disable after a valid submit (prevents double charges).
   document.querySelectorAll('form button[data-busy]').forEach(function (btn) {
     btn.form.addEventListener('submit', function (e) {

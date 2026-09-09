@@ -7,7 +7,7 @@
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="stat__value"><%= matches.length %></div><div class="stat__label">Matched jobs</div></div>
+      <div class="stat"><div class="stat__value"><%= matchCount %></div><div class="stat__label">Matched jobs</div></div>
       <div class="stat"><div class="stat__value"><%= counts.applications %></div><div class="stat__label">Applications</div></div>
       <div class="stat"><div class="stat__value"><%= counts.saved %></div><div class="stat__label">Saved jobs</div></div>
       <div class="stat"><div class="stat__value"><%= unreadCount %></div><div class="stat__label">Unread notifications</div></div>
@@ -28,11 +28,15 @@
     </section>
 
     <section aria-labelledby="matches-h">
-      <div class="split"><h2 id="matches-h" class="h3">Jobs matched to your profile</h2><a class="small" href="/jobseeker/alerts">How matching works</a></div>
+      <div class="split"><h2 id="matches-h" class="h3">Jobs matched to your profile<% if (matchCount > matches.length) { %> <span class="small muted">(top <%= matches.length %> of <%= matchCount %>)</span><% } %></h2><a class="small" href="/jobseeker/alerts">How matching works</a></div>
       <% if (matches.length) { %>
         <div class="grid grid--2"><% matches.forEach(job => { %><%- include('_jobcard', { job }) %><% }) %></div>
       <% } else { %>
-        <div class="empty"><p><strong>No matches yet.</strong></p><p>Add job categories, keywords or skills to your profile and matching jobs will appear here.</p><a class="kds-btn kds-btn--brand" href="/jobseeker/profile">Edit my profile</a> <a class="kds-btn kds-btn--ghost" href="/jobs">Browse all jobs</a></div>
+        <% if (hasCriteria) { %>
+          <div class="empty"><p><strong>No live jobs match your profile right now.</strong></p><p>Your criteria are set — <%= (profile.categories || []).length %> categor<%= (profile.categories || []).length === 1 ? 'y' : 'ies' %>, <%= (profile.keywords || []).length %> keyword<%= (profile.keywords || []).length === 1 ? '' : 's' %>, <%= (profile.skills || []).length %> skill<%= (profile.skills || []).length === 1 ? '' : 's' %><%= (profile.provinces || []).length ? ', ' + (profile.provinces || []).map(h.provinceName).join(' / ') : ', anywhere in Canada' %>. As soon as a matching posting goes live it appears here and in your notifications<%= profile.notify_email ? ' and inbox' : '' %>. Widening your provinces or adding keywords finds more.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse all jobs</a> <a class="kds-btn kds-btn--ghost" href="/jobseeker/alerts">Review my criteria</a></div>
+        <% } else { %>
+          <div class="empty"><p><strong>Tell us what you are looking for.</strong></p><p>Matching is built from your profile: pick job categories, add keywords or list skills and matching jobs will appear here (and trigger your alerts).</p><a class="kds-btn kds-btn--brand" href="/jobseeker/profile#f-categories">Set my criteria</a> <a class="kds-btn kds-btn--ghost" href="/jobs">Browse all jobs</a></div>
+        <% } %>
       <% } %>
     </section>
 

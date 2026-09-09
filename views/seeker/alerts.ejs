@@ -18,7 +18,7 @@
     </form>
     <section class="card stack" aria-labelledby="crit-h">
       <div class="split"><h2 id="crit-h" class="h3">Your alert criteria</h2><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/profile#f-categories">Edit in profile</a></div>
-      <p class="small muted">A job matches when it is in one of your categories, mentions one of your keywords, or lists one of your skills — and is in a province you will work in (or is remote).</p>
+      <p class="small muted">A job matches when it is in one of your categories, mentions one of your keywords (as a whole word — “RN” will not match “learn”), or lists one of your skills — and is in a province you will work in (or is remote). Matches are ranked: category counts most, then keywords, skills, province and whether the employer is hiring for the audience you identified with. Instant alerts go out the moment a posting is paid and live; the daily digest is one email a day covering the previous 24 hours, and is only sent when there is something new.</p>
       <dl class="crit">
         <div><dt>Categories</dt><dd><% if (profile.categories.length) { %><div class="cluster"><% profile.categories.forEach(c => { %><span class="badge"><%= h.categoryName(c) %></span><% }) %></div><% } else { %><span class="muted">None chosen</span><% } %></dd></div>
         <div><dt>Provinces</dt><dd><% if (profile.provinces.length) { %><div class="cluster"><% profile.provinces.forEach(p => { %><span class="badge badge--teal"><%= h.provinceName(p) %></span><% }) %></div><% } else { %><span class="muted">Anywhere in Canada</span><% } %></dd></div>

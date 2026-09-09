@@ -12,7 +12,7 @@
     <% } else { %>
       <form method="post" action="/jobs/<%= job.slug %>/save" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Save</button></form>
     <% } %>
-    <% if (typeof job.score === 'number' && job.score > 0) { %><span class="match-score" title="Match score"><%= job.score >= 4 ? 'Strong match' : 'Match' %></span><% } %>
+    <% if (typeof job.score === 'number' && job.score > 0) { %><span class="match-score" title="<%= job.audience_hit ? 'This employer is hiring for people like you' : 'Match score' %>"><%= job.score >= 4 ? 'Strong match' : 'Match' %><%= job.audience_hit ? ' · hiring for you' : '' %></span><% } %>
   </div>
   <% } %>
 </article>

@@ -36,24 +36,41 @@ async function runRenewals({ log = console.log } = {}) {
     } catch (e) { counts.errors++; console.error('[renewals] renewal failed', s.id, e.message); }
   }
 
-  // 3) Stripe reconciliation: if a webhook was missed, pull the latest paid invoice for lapsed Stripe subscriptions.
+  // 3) Stripe reconciliation: if a webhook was missed, pull the latest paid invoice for lapsed Stripe subscriptions
+  //    (and Stripe subscriptions still `pending` after 1 hour whose Checkout may have completed without a webhook).
   if (billing.mode() === 'stripe') {
     const stripe = billing.stripe();
     const lapsed = await db.many(`SELECT * FROM subscriptions WHERE provider='stripe' AND provider_subscription_id IS NOT NULL AND status IN ('active','past_due') AND current_period_end <= now()`);
     for (const s of lapsed) {
       try {
         const remote = await stripe.subscriptions.retrieve(s.provider_subscription_id, { expand: ['latest_invoice'] });
-        const inv = remote.latest_invoice;
-        if (remote.status === 'active' && inv && (inv.status === 'paid' || inv.paid)) {
-          const before = await db.one('SELECT 1 FROM payments WHERE provider=$1 AND provider_payment_id=$2', ['stripe', inv.id]);
-          await billing.handleStripeEvent({ type: 'invoice.paid', data: { object: inv } });
-          if (!before) counts.stripe_reconciled++;
-        } else if (['canceled', 'unpaid', 'incomplete_expired'].includes(remote.status)) {
+        const inv = typeof remote.latest_invoice === 'object' ? remote.latest_invoice : null;
+        if (['canceled', 'unpaid', 'incomplete_expired'].includes(remote.status)) {
           await billing.handleStripeEvent({ type: 'customer.subscription.deleted', data: { object: remote } });
           counts.stripe_reconciled++;
+          log(`[renewals] stripe subscription ${s.id} (job ${s.job_id}) is ${remote.status} at Stripe -> cancelled`);
+          continue;
         }
-        if (remote.cancel_at_period_end !== s.cancel_at_period_end) await db.query('UPDATE subscriptions SET cancel_at_period_end=$2 WHERE id=$1', [s.id, !!remote.cancel_at_period_end]);
+        if (inv && billing.invoiceIsPaid(inv)) {
+          const before = await db.one('SELECT 1 FROM payments WHERE provider=$1 AND provider_payment_id=$2', ['stripe', inv.id]);
+          const outcome = await billing.handleStripeEvent({ type: 'invoice.paid', data: { object: inv } });
+          if (!before) { counts.stripe_reconciled++; log(`[renewals] stripe subscription ${s.id} (job ${s.job_id}): ${outcome}`); }
+        } else if (['past_due', 'unpaid'].includes(remote.status) && s.status !== 'past_due') {
+          await db.query("UPDATE subscriptions SET status='past_due', updated_at=now() WHERE id=$1", [s.id]);
+          counts.stripe_reconciled++;
+        }
+        // Mirror cancel-at-period-end + period end (defensive across API versions) without touching the job.
+        await billing.handleStripeEvent({ type: 'customer.subscription.updated', data: { object: remote } });
       } catch (e) { counts.errors++; console.error('[renewals] stripe reconcile failed', s.id, e.message); }
+    }
+    const unlinked = await db.many(`SELECT * FROM subscriptions WHERE provider='stripe' AND status='pending' AND provider_checkout_id IS NOT NULL AND updated_at < now() - interval '1 hour' AND updated_at > now() - interval '7 days'`);
+    for (const s of unlinked) {
+      try {
+        const before = await db.one('SELECT status FROM subscriptions WHERE id=$1', [s.id]);
+        await billing.reconcileCheckoutSession(s.provider_checkout_id, s.job_id);
+        const after = await db.one('SELECT status FROM subscriptions WHERE id=$1', [s.id]);
+        if (before.status !== after.status) { counts.stripe_reconciled++; log(`[renewals] checkout ${s.provider_checkout_id} for subscription ${s.id} reconciled -> ${after.status}`); }
+      } catch (e) { if (e.code !== 'resource_missing') { counts.errors++; console.error('[renewals] checkout reconcile failed', s.id, e.message); } }
     }
   }
 

@@ -7,6 +7,7 @@
 </div>
 <section class="container section-pad bill-checkout">
   <div class="bill-checkout__main card">
+    <% if (mode === 'sandbox') { %><div class="bill-sandbox-banner" role="note"><strong>Sandbox mode — no real charge.</strong> Payments are simulated until Stripe is connected. The next page is a test card form; use <code>4242 4242 4242 4242</code>.</div><% } %>
     <h2 class="bill-h2">Order summary</h2>
     <div class="bill-job">
       <div class="bill-job__title"><%= job.title %></div>

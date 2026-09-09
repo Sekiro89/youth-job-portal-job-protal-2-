@@ -18,7 +18,8 @@ const CATEGORY_KEYS = C.CONTACT_CATEGORIES.map(([k]) => k);
 const CATEGORY_NAME = Object.fromEntries(C.CONTACT_CATEGORIES);
 const RATE_MAX = 5, RATE_WINDOW_MS = 60 * 60 * 1000;
 
-const s = (v) => String(v ?? '').trim();
+// Postgres rejects NUL bytes in text (would 500) — strip them from every user string.
+const s = (v) => String(v ?? '').replace(/\0/g, '').trim();
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const META = {

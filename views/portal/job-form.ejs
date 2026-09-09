@@ -169,18 +169,18 @@
         <h2 class="form-section__title">Description</h2>
         <div class="field">
           <label for="description">Job description <span class="req">*</span></label>
-          <textarea class="input" id="description" name="description" rows="10" minlength="100" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
-          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
+          <textarea class="input" id="description" name="description" rows="10" minlength="100" maxlength="12000" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
+          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> / 12,000 characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
           <%- err('description') %>
         </div>
         <div class="form-row">
           <div class="field">
             <label for="requirements">Requirements</label>
-            <textarea class="input" id="requirements" name="requirements" rows="6" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
+            <textarea class="input" id="requirements" name="requirements" rows="6" maxlength="6000" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
           </div>
           <div class="field">
             <label for="benefits">Benefits</label>
-            <textarea class="input" id="benefits" name="benefits" rows="6" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
+            <textarea class="input" id="benefits" name="benefits" rows="6" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
           </div>
         </div>
       </section>

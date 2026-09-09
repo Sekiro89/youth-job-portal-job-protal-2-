@@ -49,7 +49,7 @@ const audiences = {
   <div class="container">
     <p class="eyebrow">Jobs for every Canadian</p>
     <h2>Five audiences, one job bank</h2>
-    <p class="lead">Every figure in the Canada Careers logo stands for someone we built this for. Tell us who you are and we highlight the employers hiring for you.</p>
+    <p class="lead">Every figure in the Canada Careers logo stands for someone we built this for. Employers tag who they are hiring for; tell us who you are and those postings rank higher in your matches.</p>
     <ul class="js-aud-grid">
       <% C.AUDIENCES.forEach(([k]) => { const [name, line, svg] = audiences[k]; %>
         <li class="js-aud js-aud--<%= k %>"><span class="js-aud__icon" aria-hidden="true"><%- svg %></span><h3><%= name %></h3><p><%= line %></p><a href="/jobs?audience=<%= k %>">See jobs for <%= forWho[k] %> →</a></li>

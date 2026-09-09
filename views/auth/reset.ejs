@@ -8,7 +8,7 @@
     <%- include('_form-errors', { errors }) %>
     <form class="form" method="post" action="/reset/<%= token %>" novalidate>
       <input type="hidden" name="email" value="<%= email %>" autocomplete="username">
-      <%- include('_password', { f: { name: 'password', label: 'New password', error: errors.password, hint: 'At least 8 characters.' } }) %>
+      <%- include('_password', { f: { name: 'password', label: 'New password', error: errors.password, hint: 'At least 8 characters, with a letter and a number.' } }) %>
       <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm new password', error: errors.password_confirm } }) %>
       <div class="form-actions">
         <button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Save new password</button>

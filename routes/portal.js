@@ -39,12 +39,13 @@ const profilesFor = async (user) => (await db.many('SELECT * FROM employer_profi
 const logoUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: LOGO_MAX_BYTES, files: 1 },
-  fileFilter: (req, file, cb) => cb(null, !!LOGO_MIME[file.mimetype]),
+  // Reject by type but remember that a file WAS sent, so the form can complain even without JS (logo_present marker).
+  fileFilter: (req, file, cb) => { const ok = !!LOGO_MIME[file.mimetype]; if (!ok) req.logoRejected = true; cb(null, ok); },
 }).single('logo');
 function logoMiddleware(req, res, next) {
   logoUpload(req, res, (err) => {
     if (err) { req.logoError = err.code === 'LIMIT_FILE_SIZE' ? 'Logo must be 2 MB or smaller.' : 'Could not read the logo file.'; }
-    else if (req.body && req.body.logo_present === '1' && !req.file) req.logoError = 'Logo must be a PNG, JPG, SVG or WebP image.';
+    else if (!req.file && (req.logoRejected || (req.body && req.body.logo_present === '1'))) req.logoError = 'Logo must be a PNG, JPG, SVG or WebP image.';
     next();
   });
 }
@@ -370,8 +371,11 @@ function validateJob(req) {
     vacancies: clean(b.vacancies, 5), languages: langs, language_other: clean(b.language_other, 120), skills: clean(b.skills, 600),
     audiences: arr(b.audiences).filter(a => C.AUDIENCE_NAME[a]), description: clean(b.description, 12000), requirements: clean(b.requirements, 6000), benefits: clean(b.benefits, 6000),
     apply_email: clean(b.apply_email, 160).toLowerCase(), apply_url: clean(b.apply_url, 300), noc_code: clean(b.noc_code, 10),
-    employer_profile_id: intOrNull(b.employer_profile_id),
+    // Employers own exactly one profile: the posted id is never trusted. Consultants choose among THEIR profiles (checked below).
+    employer_profile_id: req.user.role === 'consultant' ? intOrNull(b.employer_profile_id) : (req.profiles[0] ? req.profiles[0].id : null),
   };
+  // Once billing exists the company is locked to the job's profile, whatever the form says.
+  if (req.job && ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(req.job.status)) values.employer_profile_id = Number(req.job.employer_profile_id);
   const errors = {};
   if (values.title.length < 3) errors.title = 'Enter a job title (at least 3 characters).';
   if (!C.CATEGORY_NAME[values.category]) errors.category = 'Choose a category.';
@@ -417,10 +421,21 @@ area.post('/jobs/new', async (req, res, next) => {
     if (!req.profiles.length) return res.redirect(res.locals.base + '/jobs/new');
     const { values, errors, row } = validateJob(req);
     if (Object.keys(errors).length) return res.status(422).render('portal/job-form', jobFormLocals(req, { title: 'Post a job', values, errors, job: null }));
+    // Double submit guard (double-click / retry): an identical draft created by this user in the last 20 s is reused instead of duplicated.
+    // A per-user advisory lock serialises two simultaneous POSTs so the second one sees the first one's row.
     const slug = await jobs.uniqueJobSlug(row.title, row.city);
     const cols = Object.keys(row);
-    const id = (await db.one(`INSERT INTO jobs(${cols.join(',')}, created_by, slug, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, 'draft') RETURNING id`,
-      [...cols.map(c => row[c]), req.user.id, slug])).id;
+    const { id, dup } = await db.tx(async (c) => {
+      await c.query('SELECT pg_advisory_xact_lock($1, $2)', [7001, Number(req.user.id)]);
+      const d = (await c.query(`SELECT id, status FROM jobs WHERE created_by=$1 AND employer_profile_id=$2 AND title=$3 AND description=$4 AND created_at > now() - interval '20 seconds' ORDER BY id LIMIT 1`, [req.user.id, row.employer_profile_id, row.title, row.description])).rows[0];
+      if (d) return { id: d.id, dup: d };
+      const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, created_by, slug, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, 'draft') RETURNING id`, [...cols.map(c => row[c]), req.user.id, slug]);
+      return { id: r.rows[0].id, dup: null };
+    });
+    if (dup) {
+      if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(dup.status)) return publish(req, res, next, dup.id);
+      return res.redirect(`${res.locals.base}/jobs/${dup.id}`);
+    }
     await auth.audit(req.user.id, 'job.create', 'job', id, { title: row.title, employer_profile_id: row.employer_profile_id });
     if (req.body.action === 'publish') return publish(req, res, next, id);
     req.flash('success', 'Draft saved. Publish it whenever you are ready.');

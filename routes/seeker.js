@@ -26,6 +26,7 @@ const pickKeys = (vals, list) => { const ok = new Set(list.map(x => x[0])); retu
 const csvToArray = (s, max = 20, len = 40) => [...new Set(String(s || '').split(/[,\n]/).map(x => x.trim().slice(0, len)).filter(Boolean))].slice(0, max);
 const clean = (s, max) => String(s || '').trim().slice(0, max);
 const isSafeReturn = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//');
+const isId = (v) => /^\d{1,18}$/.test(String(v || ''));
 
 function resumeExt(file) {
   const byMime = C.RESUME_MIME[file.mimetype];
@@ -48,8 +49,23 @@ function resumeUpload(req, res, next) {
   upload(req, res, (err) => {
     if (err && err.code === 'LIMIT_FILE_SIZE') req.uploadError = `Resume must be ${Math.round(C.RESUME_MAX_BYTES / 1024 / 1024)} MB or smaller.`;
     else if (err) req.uploadError = 'We could not read that file. Please upload a PDF, DOC or DOCX.';
+    checkResumeFile(req);
     next();
   });
+}
+/** Content sniffing: the extension/MIME a browser sends is derived from the file NAME, so an .exe renamed to .pdf
+ *  arrives as application/pdf. Check the magic bytes match the claimed type before anything touches disk. */
+function resumeMagicOk(file) {
+  const ext = resumeExt(file); const b = file.buffer || Buffer.alloc(0);
+  if (ext === '.pdf') return b.subarray(0, 1024).includes('%PDF');           // header may be preceded by a BOM/junk
+  if (ext === '.doc') return b.subarray(0, 8).equals(Buffer.from('D0CF11E0A1B11AE1', 'hex'));   // OLE compound file
+  if (ext === '.docx') return b.subarray(0, 4).equals(Buffer.from('504B0304', 'hex'));           // zip container
+  return false;
+}
+function checkResumeFile(req) {
+  if (req.uploadError || !req.file) return;
+  if (!req.file.buffer || !req.file.buffer.length) { req.uploadError = 'That file is empty. Please upload your resume as a PDF, DOC or DOCX.'; req.file = null; return; }
+  if (!resumeMagicOk(req.file)) { req.uploadError = 'That file does not look like a real PDF, DOC or DOCX. Please export your resume again and upload it.'; req.file = null; }
 }
 /** Write an in-memory upload to resumes/<userId>-<rand>.<ext>; returns { path (relative), name }. */
 function storeResume(userId, file) {
@@ -131,8 +147,8 @@ router.get('/jobseeker', (req, res) => {
     ['Is Canada Careers free for job seekers?', 'Yes. Creating a profile, uploading your resume, applying to jobs and receiving job alerts are all free, and always will be. Employers pay a small monthly fee to post.'],
     ['Do I need a resume to apply?', 'You need one resume on file. Upload it once (PDF, DOC or DOCX, up to 5 MB) and every application uses it automatically — or attach a different one for a specific job.'],
     ['How do job alerts work?', 'Your alerts are built from your profile: the job categories you choose, the provinces you will work in, your keywords and your skills. When a matching job goes live you get an in-app notification and, if you like, an email — instantly or as a daily digest.'],
-    ['Can I apply if I am new to Canada or do not have Canadian experience?', 'Absolutely. Many employers on Canada Careers hire newcomers and refugees and welcome international credentials. Mark yourself as a new immigrant or refugee in your profile so we can highlight the jobs that fit.'],
-    ['Who can see my resume?', 'Only the employer or consultant behind a job you applied to. Your resume is never publicly listed and is stored securely on Canadian infrastructure.'],
+    ['Can I apply if I am new to Canada or do not have Canadian experience?', 'Absolutely. Employers on Canada Careers tag each posting with the audiences they are hiring for — new immigrants, refugees, Indigenous peoples, youth and professionals. Tell us who you are in your profile and postings from employers hiring for you rank higher in your matches.'],
+    ['Who can see my resume?', 'Only the employer or consultant behind a job you applied to, and only the copy you sent them. Your resume is never publicly listed, never searchable, and is served only to signed-in owners of that posting.'],
     ['Can I withdraw an application?', 'Yes. While an application is still marked "Submitted" you can withdraw it from your Applications page.'],
   ];
   res.render('seeker/landing', {
@@ -150,9 +166,10 @@ router.get('/jobseeker', (req, res) => {
 router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
   try {
     const uid = req.user.id;
-    const [profile, matches, applications, notifications, counts] = await Promise.all([
+    const [profile, matches, matchCount, applications, notifications, counts] = await Promise.all([
       getProfile(uid),
       matching.matchesForSeeker(uid, 6),
+      matching.countMatchesForSeeker(uid),
       db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ep.company_name, (${PUBLIC_WHERE}) AS is_public
                FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
                WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]),
@@ -160,7 +177,8 @@ router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
       db.one(`SELECT (SELECT count(*)::int FROM applications WHERE seeker_user_id=$1) AS applications,
                      (SELECT count(*)::int FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id WHERE s.user_id=$1 AND ${PUBLIC_WHERE}) AS saved`, [uid]),
     ]);
-    res.render('seeker/dashboard', { title: 'My dashboard', nav: 'dashboard', profile, meter: completeness(profile), matches, applications, notifications, counts });
+    const hasCriteria = (profile.categories || []).length + (profile.keywords || []).length + (profile.skills || []).length > 0;
+    res.render('seeker/dashboard', { title: 'My dashboard', nav: 'dashboard', profile, meter: completeness(profile), matches, matchCount, applications, notifications, counts, hasCriteria });
   } catch (e) { next(e); }
 });
 
@@ -327,6 +345,7 @@ router.get('/jobseeker/applications', seekerOnly, async (req, res, next) => {
 });
 router.post('/jobseeker/applications/:id/withdraw', seekerOnly, async (req, res, next) => {
   try {
+    if (!isId(req.params.id)) return next();  // 404, not a 500 from pg
     const r = await db.query(`DELETE FROM applications WHERE id=$1 AND seeker_user_id=$2 AND status='submitted' RETURNING job_id`, [req.params.id, req.user.id]);
     if (r.rowCount) { await auth.audit(req.user.id, 'application.withdraw', 'application', Number(req.params.id), { job_id: r.rows[0].job_id }); req.flash('success', 'Application withdrawn.'); }
     else req.flash('error', 'That application can no longer be withdrawn.');
@@ -369,7 +388,10 @@ router.get('/jobseeker/saved', seekerOnly, async (req, res, next) => {
 });
 // stale saved (archived) jobs can be removed even though the job is no longer public
 router.post('/jobseeker/saved/:jobId/remove', seekerOnly, async (req, res, next) => {
-  try { await db.query('DELETE FROM saved_jobs WHERE user_id=$1 AND job_id=$2', [req.user.id, req.params.jobId]); req.flash('info', 'Removed from saved jobs.'); res.redirect('/jobseeker/saved'); }
+  try {
+    if (!isId(req.params.jobId)) return next();
+    await db.query('DELETE FROM saved_jobs WHERE user_id=$1 AND job_id=$2', [req.user.id, req.params.jobId]); req.flash('info', 'Removed from saved jobs.'); res.redirect('/jobseeker/saved');
+  }
   catch (e) { next(e); }
 });
 

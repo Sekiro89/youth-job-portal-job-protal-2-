@@ -5,10 +5,14 @@
       <h1>Billing</h1>
       <p class="muted">Subscriptions and receipts for <%= isConsultant ? 'all the companies you manage' : 'your postings' %>.</p>
     </div>
-    <a class="kds-btn kds-btn--ghost" href="<%= base %>/dashboard">← Dashboard</a>
+    <div class="cluster">
+      <% if (mode === 'stripe' && hasStripeCustomer) { %><a class="kds-btn kds-btn--brand" href="/billing/portal" rel="noopener">Manage card &amp; invoices</a><% } %>
+      <a class="kds-btn kds-btn--ghost" href="<%= base %>/dashboard">← Dashboard</a>
+    </div>
   </div>
 </div>
 <section class="container section-pad bill-index">
+  <% if (mode === 'sandbox') { %><div class="bill-sandbox-banner" role="note"><strong>Sandbox mode — no real charge.</strong> Card payments are simulated; nothing is billed to a real card until Stripe is connected.</div><% } %>
   <div class="stats">
     <div class="stat"><div class="stat__value"><%= totals.activeCount %></div><div class="stat__label">Live posting<%= totals.activeCount === 1 ? '' : 's' %></div></div>
     <div class="stat"><div class="stat__value"><%= money(totals.monthly) %></div><div class="stat__label">Monthly total (CAD, incl. GST)</div></div>
@@ -100,6 +104,6 @@
 
   <div class="card card--flat bill-pricing-note">
     <h3>How pricing works</h3>
-    <p>Each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong>, charged on the day you publish and then every month on the same date until you cancel. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } %></p>
+    <p>Each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong>, charged on the day you publish and then every month on the same date until you cancel. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST<% if (pricing.gst_number) { %> (registration no. <%= pricing.gst_number %>)<% } %>.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } else { %> Cards are processed by Stripe; use <a href="/billing/portal">Manage card &amp; invoices</a> to update your card or download Stripe invoices.<% } %></p>
   </div>
 </section>

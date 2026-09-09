@@ -1,0 +1,8 @@
+<%# Pager for admin list pages. Expects `pg` ({ pageNo, pages, total }), `unit` ('messages'|'jobs'|'users') and a `qs(overrides)` helper defined by the including view. %>
+<% if (pg && pg.pages > 1) { %>
+  <nav class="cluster pager" aria-label="Pages">
+    <% if (pg.pageNo > 1) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= qs({ page: pg.pageNo - 1 }) || '?' %>" rel="prev">← Newer</a><% } %>
+    <span class="muted small">Page <%= pg.pageNo %> of <%= pg.pages %> · <%= pg.total %> <%= unit %></span>
+    <% if (pg.pageNo < pg.pages) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= qs({ page: pg.pageNo + 1 }) %>" rel="next">Older →</a><% } %>
+  </nav>
+<% } %>

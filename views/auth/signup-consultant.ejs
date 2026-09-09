@@ -13,7 +13,7 @@
         <%- include('_field', { f: { name: 'phone', label: 'Phone', type: 'tel', value: values.phone, error: errors.phone, autocomplete: 'tel', inputmode: 'tel', required: false, placeholder: '(604) 555-0100' } }) %>
       </div>
       <div class="form-row">
-        <%- include('_password', { f: { name: 'password', label: 'Password', error: errors.password, hint: 'At least 8 characters.' } }) %>
+        <%- include('_password', { f: { name: 'password', label: 'Password', error: errors.password, hint: 'At least 8 characters, with a letter and a number.' } }) %>
         <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm password', error: errors.password_confirm } }) %>
       </div>
 

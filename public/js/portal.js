@@ -13,6 +13,15 @@
     var sync = function () { target.hidden = !cb.checked; if (cb.checked) { var i = target.querySelector('input'); if (i && document.activeElement === cb) i.focus(); } };
     cb.addEventListener('change', sync); sync();
   });
+  // Every other POST form: ignore a second submit while the first is in flight (publish / pay / status buttons)
+  document.querySelectorAll('form[method=post]:not(.job-form)').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      if (f.dataset.busy) { e.preventDefault(); return; }
+      f.dataset.busy = '1';
+      f.querySelectorAll('button[type=submit]').forEach(function (b) { b.setAttribute('aria-busy', 'true'); setTimeout(function () { b.disabled = true; }, 0); });
+      setTimeout(function () { delete f.dataset.busy; f.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = false; b.removeAttribute('aria-busy'); }); }, 8000);
+    });
+  });
   // Filters that submit on change (keep the button for no-JS)
   document.querySelectorAll('[data-autosubmit]').forEach(function (sel) {
     sel.addEventListener('change', function () { sel.form && sel.form.submit(); });
@@ -36,7 +45,12 @@
   if (jf) {
     var dirty = false, submitting = false;
     jf.addEventListener('input', function () { dirty = true; });
-    jf.addEventListener('submit', function () { submitting = true; });
+    jf.addEventListener('submit', function (e) {
+      if (submitting) { e.preventDefault(); return; }           // double-click / double-Enter guard
+      submitting = true;
+      var btn = e.submitter; if (btn) { btn.setAttribute('aria-busy', 'true'); btn.dataset.label = btn.textContent; btn.textContent = 'Saving…'; }
+      jf.querySelectorAll('button[type=submit]').forEach(function (b) { setTimeout(function () { b.disabled = true; }, 0); });
+    });
     window.addEventListener('beforeunload', function (e) { if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; } });
   }
 })();

@@ -22,8 +22,14 @@ const CATEGORY_NAME = Object.fromEntries(C.CONTACT_CATEGORIES);
 const ROLES = ['employer', 'consultant', 'seeker', 'admin'];
 const PAGE_SIZE = 50;
 
-const s = (v) => String(v ?? '').trim();
-const int = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) && n > 0 ? n : null; };
+// NUL bytes are stripped (Postgres rejects them in text params → 500). Ids must be plain digits: parseInt('1e3') === 1
+// would otherwise silently open ticket #1 for /admin/messages/1e3.
+const s = (v) => String(v ?? '').replace(/\0/g, '').trim();
+const int = (v) => { const t = s(v); if (!/^\d{1,15}$/.test(t)) return null; const n = Number(t); return Number.isSafeInteger(n) && n > 0 ? n : null; };
+/** Same-origin redirect target only: an absolute path that is not protocol-relative ("//host") or backslash-tricked ("/\host"). */
+const safePath = (v, fallback) => { const t = s(v); return /^\/(?![\/\\])/.test(t) ? t : fallback; };
+/** Pagination helper for the list pages. */
+const paging = (query, total) => { const pages = Math.max(1, Math.ceil(total / PAGE_SIZE)); const pageNo = Math.min(int(query.page) || 1, pages); return { pageNo, pages, total, offset: (pageNo - 1) * PAGE_SIZE }; };
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 /** Render inside the admin shell. */
@@ -41,8 +47,7 @@ if (!isProd) {
     const user = await db.one('SELECT id, email, role, name FROM users WHERE email=$1 AND is_active', [req.params.email]);
     if (!user) return res.status(404).send('no such user');
     req.session.userId = user.id;
-    const next = s(req.query.next);
-    res.redirect(next.startsWith('/') && !next.startsWith('//') ? next : auth.homeFor(user));
+    res.redirect(safePath(req.query.next, auth.homeFor(user)));
   }));
 }
 
@@ -79,16 +84,17 @@ router.get('/admin/messages', wrap(async (req, res) => {
   if (status !== 'all') { params.push(status); where.push(`m.status=$${params.length}::contact_status`); }
   if (category) { params.push(category); where.push(`m.category=$${params.length}`); }
   if (q) { params.push(`%${q}%`); where.push(`(m.subject ILIKE $${params.length} OR m.name ILIKE $${params.length} OR m.email ILIKE $${params.length} OR m.message ILIKE $${params.length})`); }
+  const W = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const pg = paging(req.query, (await db.one(`SELECT count(*)::int AS n FROM contact_messages m ${W}`, params)).n);
   const [rows, tally] = await Promise.all([
     db.many(`SELECT m.id, m.name, m.email, m.category, m.subject, m.status, m.user_id, m.created_at, m.updated_at, u.role AS user_role
-             FROM contact_messages m LEFT JOIN users u ON u.id=m.user_id
-             ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-             ORDER BY CASE m.status WHEN 'new' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 200`, params),
+             FROM contact_messages m LEFT JOIN users u ON u.id=m.user_id ${W}
+             ORDER BY CASE m.status WHEN 'new' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END, m.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${pg.offset}`, params),
     db.many('SELECT status, count(*)::int AS n FROM contact_messages GROUP BY status'),
   ]);
   const counts = { all: 0 }; CONTACT_STATUSES.forEach(k => { counts[k] = 0; });
   tally.forEach(t => { counts[t.status] = t.n; counts.all += t.n; });
-  page(res, 'messages', 'messages', { title: 'Support messages', rows, counts, status, category, q });
+  page(res, 'messages', 'messages', { title: 'Support messages', rows, counts, status, category, q, pg, unit: 'messages' });
 }));
 
 router.get('/admin/messages/:id', wrap(async (req, res, next) => {
@@ -163,6 +169,8 @@ router.get('/admin/jobs', wrap(async (req, res) => {
   if (status === 'archived') { params.push(C.ARCHIVED_STATUSES); where.push(`j.status = ANY($${params.length}::job_status[])`); }
   else if (status !== 'all') { params.push(status); where.push(`j.status=$${params.length}::job_status`); }
   if (q) { params.push(`%${q}%`); where.push(`(j.title ILIKE $${params.length} OR p.company_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.name ILIKE $${params.length} OR j.city ILIKE $${params.length})`); }
+  const FROM = `FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=p.owner_user_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`;
+  const pg = paging(req.query, (await db.one(`SELECT count(*)::int AS n ${FROM}`, params)).n);
   const [rows, tally] = await Promise.all([
     db.many(`SELECT j.id, j.title, j.slug, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.views, j.created_at,
                     p.id AS profile_id, p.company_name, p.slug AS company_slug, u.id AS owner_id, u.name AS owner_name, u.email AS owner_email, u.role AS owner_role,
@@ -172,12 +180,12 @@ router.get('/admin/jobs', wrap(async (req, res) => {
              FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=p.owner_user_id
              LEFT JOIN subscriptions sub ON sub.job_id=j.id
              ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-             ORDER BY j.created_at DESC LIMIT 300`, params),
+             ORDER BY j.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${pg.offset}`, params),
     db.many('SELECT status, count(*)::int AS n FROM jobs GROUP BY status'),
   ]);
   const counts = { all: 0, archived: 0 }; C.JOB_STATUSES.forEach(k => { counts[k] = 0; });
   tally.forEach(t => { counts[t.status] = t.n; counts.all += t.n; if (C.ARCHIVED_STATUSES.includes(t.status)) counts.archived += t.n; });
-  page(res, 'jobs', 'jobs', { title: 'All jobs', rows, counts, status, q });
+  page(res, 'jobs', 'jobs', { title: 'All jobs', rows, counts, status, q, pg, unit: 'jobs' });
 }));
 
 router.post('/admin/jobs/:id/archive', wrap(async (req, res, next) => {
@@ -221,18 +229,20 @@ router.get('/admin/users', wrap(async (req, res) => {
   const where = []; const params = [];
   if (role) { params.push(role); where.push(`u.role=$${params.length}::user_role`); }
   if (q) { params.push(`%${q}%`); where.push(`(u.name ILIKE $${params.length} OR u.email::text ILIKE $${params.length})`); }
+  const W = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const pg = paging(req.query, (await db.one(`SELECT count(*)::int AS n FROM users u ${W}`, params)).n);
   const [rows, tally] = await Promise.all([
     db.many(`SELECT u.id, u.name, u.email, u.role, u.phone, u.is_active, u.email_verified, u.created_at, u.last_login_at,
                     (SELECT count(*) FROM employer_profiles p WHERE p.owner_user_id=u.id)::int AS profiles,
                     (SELECT count(*) FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=u.id)::int AS jobs,
                     (SELECT count(*) FROM applications a WHERE a.seeker_user_id=u.id)::int AS applications,
                     (SELECT count(*) FROM contact_messages m WHERE m.user_id=u.id)::int AS messages
-             FROM users u ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY u.created_at DESC LIMIT 300`, params),
+             FROM users u ${W} ORDER BY u.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${pg.offset}`, params),
     db.many('SELECT role, count(*)::int AS n FROM users GROUP BY role'),
   ]);
   const counts = { all: 0 }; ROLES.forEach(r => { counts[r] = 0; });
   tally.forEach(t => { counts[t.role] = t.n; counts.all += t.n; });
-  page(res, 'users', 'users', { title: 'Users', rows, counts, role, q, roles: ROLES });
+  page(res, 'users', 'users', { title: 'Users', rows, counts, role, q, roles: ROLES, pg, unit: 'users' });
 }));
 
 router.post('/admin/users/:id/toggle-active', wrap(async (req, res, next) => {
