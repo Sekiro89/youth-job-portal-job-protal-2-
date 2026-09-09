@@ -245,3 +245,46 @@ textarea.input { min-height: 120px; resize: vertical; }
 
 /* print */
 @media print { .site-header, .site-footer, .nav-toggle, .flash-region { display: none !important; } }
+
+/* ======================================================================
+   UX STANDARD (2026-09-10) — every page uses these primitives. See docs/UX-STANDARDS.md.
+   ====================================================================== */
+/* Containers: ONE width for the whole site. Prose pages narrow the text, never the gutters. */
+.container--prose { max-width: 820px; }              /* long reading: about, privacy, terms, contact copy */
+.container--narrow { max-width: 640px; }             /* auth cards, checkout, single forms */
+.container--wide { max-width: 1360px; }              /* ONLY /jobs with the map open */
+/* Page header band — identical on every page (eyebrow · h1 · lead · optional actions on the right at ≥768) */
+.page-head { background: linear-gradient(180deg, var(--cc-navy-50), #fff); border-bottom: 1px solid var(--kds-border); padding: 28px 0; }
+.page-head__inner { display: grid; gap: 12px; align-items: end; }
+.page-head h1 { margin-bottom: 4px; }
+.page-head .lead { margin: 0; max-width: 68ch; }
+.page-head__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.breadcrumb { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0 0 10px; padding: 0; font-size: .8125rem; color: var(--kds-fg-faint); }
+.breadcrumb a { color: var(--kds-fg-muted); text-decoration: none; }
+.breadcrumb li + li::before { content: "›"; margin-right: 6px; color: var(--kds-fg-faint); }
+@media (min-width: 768px) { .page-head { padding: 36px 0; } .page-head__inner { grid-template-columns: 1fr auto; } }
+@media (min-width: 1024px) { .page-head { padding: 44px 0; } }
+/* Section rhythm — vertical spacing is the SAME on every page */
+.section { padding: 40px 0; }
+.section--alt { background: var(--cc-surface); border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); }
+.section__head { margin-bottom: 20px; max-width: 68ch; }
+.section__head .lead { margin: 0; }
+@media (min-width: 768px) { .section { padding: 56px 0; } .section__head { margin-bottom: 28px; } }
+@media (min-width: 1024px) { .section { padding: 72px 0; } }
+/* Prose measure for long text inside any container */
+.prose { max-width: 72ch; }
+.prose h2 { margin-top: 1.6em; } .prose h3 { margin-top: 1.2em; }
+.prose ul, .prose ol { padding-left: 1.25em; } .prose li { margin-bottom: .35em; }
+/* App shell (dashboards) — page-head + .dash grid; cards inside use .card */
+.app-head { padding: 20px 0 0; }
+.app-head h1 { font-size: clamp(1.5rem, 1.6vw + 1rem, 2.125rem); }
+/* Card family: one radius, one border, one padding scale */
+.card { padding: 20px; }
+.card--pad-lg { padding: 28px; }
+.card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.card__head h2, .card__head h3 { margin: 0; }
+/* Buttons: exactly three visual weights — brand (navy), accent (red, the ONE primary action per page), ghost */
+.kds-btn--brand:hover { background: var(--cc-navy-700); opacity: 1; }
+/* Sticky mobile action bar — shared by apply, job form, checkout */
+.sticky-bar { position: sticky; bottom: 0; z-index: 20; background: rgba(255,255,255,.97); backdrop-filter: blur(6px); border-top: 1px solid var(--kds-border); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; }
+@media (min-width: 1024px) { .sticky-bar { position: static; background: none; border: 0; padding: 0; backdrop-filter: none; } }
