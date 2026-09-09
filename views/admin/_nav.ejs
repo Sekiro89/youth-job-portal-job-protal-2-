@@ -1,0 +1,15 @@
+<%# Admin side nav. Expects `active` (overview|messages|jobs|users|payments|outbox|settings) %>
+<% const items = [
+  ['overview', '/admin', 'Overview'],
+  ['messages', '/admin/messages', 'Messages'],
+  ['jobs', '/admin/jobs', 'Jobs'],
+  ['users', '/admin/users', 'Users'],
+  ['payments', '/admin/payments', 'Payments'],
+  ['outbox', '/admin/outbox', 'Mail outbox'],
+  ['settings', '/admin/settings', 'Settings'],
+]; %>
+<nav class="dash__side admin-nav" aria-label="Admin">
+  <% items.forEach(([key, href, label]) => { %>
+    <a href="<%= href %>" class="<%= active === key ? 'is-active' : '' %>" <%= active === key ? 'aria-current="page"' : '' %>><%= label %></a>
+  <% }) %>
+</nav>

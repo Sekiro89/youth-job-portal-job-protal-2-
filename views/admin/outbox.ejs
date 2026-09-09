@@ -1,0 +1,50 @@
+<% const badge = { sent: 'positive', failed: 'danger', logged: 'teal', queued: 'warning' }; const qs = (o) => { const p = new URLSearchParams({ status, q, ...o }); [...p.keys()].forEach(k => { if (!p.get(k)) p.delete(k); }); const t = p.toString(); return t ? '?' + t : ''; }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div>
+      <p class="eyebrow">Admin</p><h1>Mail outbox</h1>
+      <p class="muted">Every email the site produces is recorded here, sent from <code><%= mailFrom %></code>.
+      <% if (mailConfigured) { %>SMTP is configured: <em>sent</em> means delivered to the mail server.<% } else { %><strong>SMTP is not configured</strong>, so nothing is actually delivered — emails are <em>logged</em> here and you can open each one to read it.<% } %></p>
+    </div>
+
+    <div class="filter-tabs" aria-label="Filter by status">
+      <a href="/admin/outbox<%= qs({ status: '', page: '' }) %>" class="<%= !status ? 'is-active' : '' %>">All <span class="count"><%= counts.all %></span></a>
+      <% ['logged','sent','queued','failed'].forEach(k => { %><a href="/admin/outbox<%= qs({ status: k, page: '' }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= k %> <span class="count"><%= counts[k] || 0 %></span></a><% }) %>
+    </div>
+
+    <form method="get" action="/admin/outbox" class="filter-bar">
+      <input type="hidden" name="status" value="<%= status %>">
+      <label class="visually-hidden" for="q">Search</label>
+      <input class="input" id="q" name="q" type="search" value="<%= q %>" placeholder="Search recipient or subject">
+      <button class="kds-btn kds-btn--brand" type="submit">Search</button>
+      <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/outbox<%= qs({ q: '', page: '' }) %>">Clear</a><% } %>
+    </form>
+
+    <% if (!rows.length) { %><div class="empty">No emails match.</div><% } else { %>
+    <div class="card card--table">
+      <div class="table-wrap"><table class="table table--stack">
+        <thead><tr><th>#</th><th>To</th><th>Subject</th><th>Status</th><th>Created</th></tr></thead>
+        <tbody>
+          <% rows.forEach(e => { %>
+            <tr>
+              <td data-label="Email"><a href="/admin/outbox/<%= e.id %>">#<%= e.id %></a></td>
+              <td data-label="To"><%= e.to_email %></td>
+              <td data-label="Subject"><a href="/admin/outbox/<%= e.id %>" class="row-title"><%= e.subject %></a><% if (e.error) { %><br><span class="small" style="color:var(--kds-danger)"><%= e.error %></span><% } %></td>
+              <td data-label="Status"><span class="badge badge--<%= badge[e.status] || '' %>"><%= e.status %></span></td>
+              <td data-label="Created"><span title="<%= h.formatDateTime(e.created_at) %>"><%= h.timeAgo(e.created_at) %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+    </div>
+    <% if (pages > 1) { %>
+      <nav class="cluster pager" aria-label="Pages">
+        <% if (pageNo > 1) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/admin/outbox<%= qs({ page: pageNo - 1 }) %>">← Newer</a><% } %>
+        <span class="muted small">Page <%= pageNo %> of <%= pages %> · <%= total %> emails</span>
+        <% if (pageNo < pages) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/admin/outbox<%= qs({ page: pageNo + 1 }) %>">Older →</a><% } %>
+      </nav>
+    <% } %>
+    <% } %>
+  </div>
+</section>

@@ -1,0 +1,57 @@
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split">
+      <div><p class="eyebrow">Admin</p><h1>Overview</h1><p class="muted">Welcome back, <%= user.name %>. <% if (!mailConfigured) { %>SMTP is not configured — every email is recorded in the <a href="/admin/outbox">mail outbox</a> instead of being sent.<% } %></p></div>
+      <a class="kds-btn kds-btn--brand" href="/admin/messages?status=new">Open new messages<% if (counts.new_messages) { %> (<%= counts.new_messages %>)<% } %></a>
+    </div>
+
+    <div class="stats stats--admin">
+      <a class="stat <%= counts.new_messages ? 'stat--alert' : '' %>" href="/admin/messages?status=new"><div class="stat__value"><%= counts.new_messages %></div><div class="stat__label">New messages</div></a>
+      <a class="stat" href="/admin/messages?status=in_progress"><div class="stat__value"><%= counts.open_messages %></div><div class="stat__label">In progress</div></a>
+      <a class="stat" href="/admin/jobs?status=active"><div class="stat__value"><%= counts.active_jobs %></div><div class="stat__label">Active jobs</div></a>
+      <a class="stat" href="/admin/jobs?status=pending_payment"><div class="stat__value"><%= counts.pending_jobs %></div><div class="stat__label">Awaiting payment</div></a>
+      <a class="stat" href="/admin/jobs?status=archived"><div class="stat__value"><%= counts.archived_jobs %></div><div class="stat__label">Archived jobs</div></a>
+      <a class="stat" href="/admin/payments"><div class="stat__value"><%= h.money(pay.total) %></div><div class="stat__label">Paid this month (<%= pay.n %>)</div></a>
+      <a class="stat" href="/admin/users"><div class="stat__value"><%= counts.users_total %></div><div class="stat__label">Users</div></a>
+      <a class="stat <%= counts.failed_mail ? 'stat--alert' : '' %>" href="/admin/outbox?status=failed"><div class="stat__value"><%= counts.failed_mail %></div><div class="stat__label">Failed emails</div></a>
+    </div>
+
+    <div class="card">
+      <h2 class="card__title h3">Users by role</h2>
+      <ul class="cluster role-chips">
+        <li><a href="/admin/users?role=employer" class="badge">Employers <strong><%= usersByRole.employer %></strong></a></li>
+        <li><a href="/admin/users?role=consultant" class="badge">Third Party Consultants <strong><%= usersByRole.consultant %></strong></a></li>
+        <li><a href="/admin/users?role=seeker" class="badge badge--teal">Job seekers <strong><%= usersByRole.seeker %></strong></a></li>
+        <li><a href="/admin/users?role=admin" class="badge badge--warning">Admins <strong><%= usersByRole.admin %></strong></a></li>
+      </ul>
+    </div>
+
+    <div class="grid grid--2 grid--admin">
+      <div class="card">
+        <div class="split"><h2 class="card__title h3">Latest messages</h2><a href="/admin/messages" class="small">All messages →</a></div>
+        <% if (!messages.length) { %><p class="empty">No messages yet.</p><% } else { %>
+        <ul class="list-rows">
+          <% messages.forEach(m => { %>
+            <li class="list-row">
+              <a href="/admin/messages/<%= m.id %>" class="list-row__title">#<%= m.id %> <%= m.subject %></a>
+              <div class="list-row__meta"><span class="badge badge--<%= ({new:'danger',in_progress:'warning',resolved:'positive'})[m.status] %>"><%= m.status.replace('_',' ') %></span><span class="badge"><%= categoryName[m.category] || m.category %></span><span class="muted small"><%= m.name %> · <%= h.timeAgo(m.created_at) %></span></div>
+            </li>
+          <% }) %>
+        </ul>
+        <% } %>
+      </div>
+      <div class="card">
+        <div class="split"><h2 class="card__title h3">Latest jobs</h2><a href="/admin/jobs" class="small">All jobs →</a></div>
+        <ul class="list-rows">
+          <% latestJobs.forEach(j => { %>
+            <li class="list-row">
+              <a href="/admin/jobs?q=<%= encodeURIComponent(j.title) %>" class="list-row__title"><%= j.title %></a>
+              <div class="list-row__meta"><span class="badge badge--<%= h.statusBadge(j.status) %>"><%= h.statusLabel(j.status) %></span><span class="muted small"><%= j.company_name %> · created <%= h.timeAgo(j.created_at) %></span></div>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

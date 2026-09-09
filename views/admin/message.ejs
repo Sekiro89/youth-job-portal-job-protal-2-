@@ -1,0 +1,112 @@
+<% const badge = { new: 'danger', in_progress: 'warning', resolved: 'positive' }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <p><a href="/admin/messages" class="small">← All messages</a></p>
+    <div class="split">
+      <div>
+        <p class="eyebrow">Ticket #<%= m.id %></p>
+        <h1 class="msg-title"><%= m.subject %></h1>
+        <div class="cluster">
+          <span class="badge badge--<%= badge[m.status] %>"><%= m.status.replace('_',' ') %></span>
+          <span class="badge <%= m.category === 'technical' ? 'badge--teal' : '' %>"><%= categoryName[m.category] || m.category %></span>
+          <span class="muted small">Received <%= h.formatDateTime(m.created_at) %> (<%= h.timeAgo(m.created_at) %>)</span>
+          <% if (m.resolved_at) { %><span class="muted small">· Resolved <%= h.formatDateTime(m.resolved_at) %></span><% } %>
+        </div>
+      </div>
+      <form method="post" action="/admin/messages/<%= m.id %>" class="status-form">
+        <input type="hidden" name="action" value="status">
+        <label for="status" class="visually-hidden">Status</label>
+        <select class="input" id="status" name="status">
+          <% contactStatuses.forEach(st => { %><option value="<%= st %>" <%= m.status === st ? 'selected' : '' %>><%= st.replace('_',' ') %></option><% }) %>
+        </select>
+        <button class="kds-btn kds-btn--brand" type="submit">Update status</button>
+      </form>
+    </div>
+
+    <div class="msg-grid">
+      <div class="stack">
+        <article class="card">
+          <h2 class="h3 card__title">Message</h2>
+          <div class="msg-body"><%- h.paragraphs(m.message) %></div>
+        </article>
+
+        <article class="card">
+          <h2 class="h3 card__title">Reply by email</h2>
+          <p class="muted small">Goes to <strong><%= m.email %></strong> from <%= supportName %> with your signature and the original message quoted. Sending marks the ticket <em>in progress</em>.</p>
+          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
+            <input type="hidden" name="action" value="reply">
+            <div class="field">
+              <label for="subject">Subject</label>
+              <input class="input" id="subject" name="subject" type="text" value="<%= reply.subject %>" required maxlength="200">
+            </div>
+            <div class="field">
+              <label for="body">Reply</label>
+              <textarea class="input" id="body" name="body" rows="8" required placeholder="Hi <%= m.name.split(' ')[0] %>,&#10;&#10;Thanks for reporting this…"><%= reply.body %></textarea>
+              <span class="hint">Blank lines start new paragraphs. Your signature (<%= supportName %>, Technical support) is added automatically.</span>
+            </div>
+            <div class="form-actions">
+              <button class="kds-btn kds-btn--brand" type="submit">Send reply</button>
+              <label class="check check--inline"><input type="checkbox" name="resolve" value="1"> <span>Also mark as resolved</span></label>
+            </div>
+          </form>
+        </article>
+
+        <article class="card">
+          <h2 class="h3 card__title">Internal notes</h2>
+          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
+            <input type="hidden" name="action" value="notes">
+            <div class="field">
+              <label for="admin_notes" class="visually-hidden">Admin notes</label>
+              <textarea class="input" id="admin_notes" name="admin_notes" rows="6" placeholder="What you found, what you did, what to check next. Only admins see this."><%= m.admin_notes || '' %></textarea>
+            </div>
+            <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Save notes</button></div>
+          </form>
+        </article>
+      </div>
+
+      <aside class="stack">
+        <div class="card">
+          <h2 class="h3 card__title">Reporter</h2>
+          <dl class="dl">
+            <dt>Name</dt><dd><%= m.name %></dd>
+            <dt>Email</dt><dd><a href="mailto:<%= m.email %>?subject=<%= encodeURIComponent(reply.subject) %>"><%= m.email %></a></dd>
+            <% if (m.phone) { %><dt>Phone</dt><dd><a href="tel:<%= m.phone %>"><%= m.phone %></a></dd><% } %>
+            <dt>Account</dt>
+            <dd>
+              <% if (m.user_id) { %>
+                <a href="/admin/users?q=<%= encodeURIComponent(m.user_email) %>">#<%= m.user_id %> <%= m.user_name %></a><br>
+                <span class="muted small"><%= m.user_role %><%= m.user_active ? '' : ' · deactivated' %> · <%= m.user_email %></span>
+              <% } else { %><span class="muted">Not signed in when sent</span><% } %>
+            </dd>
+            <dt>Assigned to</dt><dd><%= m.assigned_to %></dd>
+            <dt>IP</dt><dd><code><%= m.ip || '—' %></code></dd>
+            <dt>Device</dt><dd class="small muted ua"><%= m.user_agent || '—' %></dd>
+          </dl>
+        </div>
+
+        <div class="card">
+          <h2 class="h3 card__title">Emails on this ticket</h2>
+          <% if (!emails.length) { %><p class="muted small">None recorded yet.</p><% } else { %>
+          <ul class="list-rows">
+            <% emails.forEach(e => { %>
+              <li class="list-row"><a href="/admin/outbox/<%= e.id %>" class="list-row__title small"><%= e.subject %></a><div class="list-row__meta"><span class="badge badge--<%= ({sent:'positive',failed:'danger',logged:'teal',queued:'warning'})[e.status] || '' %>"><%= e.status %></span><span class="muted small"><%= h.timeAgo(e.created_at) %></span></div></li>
+            <% }) %>
+          </ul>
+          <% } %>
+        </div>
+
+        <% if (others.length) { %>
+        <div class="card">
+          <h2 class="h3 card__title">Other tickets from <%= m.email %></h2>
+          <ul class="list-rows">
+            <% others.forEach(o => { %>
+              <li class="list-row"><a href="/admin/messages/<%= o.id %>" class="list-row__title small">#<%= o.id %> <%= o.subject %></a><div class="list-row__meta"><span class="badge badge--<%= badge[o.status] %>"><%= o.status.replace('_',' ') %></span><span class="muted small"><%= h.timeAgo(o.created_at) %></span></div></li>
+            <% }) %>
+          </ul>
+        </div>
+        <% } %>
+      </aside>
+    </div>
+  </div>
+</section>

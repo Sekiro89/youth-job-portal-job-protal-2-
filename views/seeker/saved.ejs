@@ -1,0 +1,20 @@
+<div class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split"><div><h1>Saved jobs</h1><p class="muted">Jobs you bookmarked to come back to.</p></div><a class="kds-btn kds-btn--brand" href="/jobs">Find jobs</a></div>
+    <% const live = jobs.filter(j => j.is_public), gone = jobs.filter(j => !j.is_public); %>
+    <% if (live.length) { %>
+      <div class="grid grid--2"><% live.forEach(job => { job.saved = true; %><%- include('_jobcard', { job }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty"><p><strong>No saved jobs.</strong></p><p>Tap "Save" on any job to keep it here.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs</a></div>
+    <% } %>
+    <% if (gone.length) { %>
+      <section class="card card--flat">
+        <h2 class="h3">No longer available</h2>
+        <ul class="list-plain">
+          <% gone.forEach(j => { %><li class="list-plain__item"><div><%= j.title %><div class="small muted"><%= j.company_name %> · saved <%= h.formatDate(j.saved_at) %></div></div><form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Remove</button></form></li><% }) %>
+        </ul>
+      </section>
+    <% } %>
+  </div>
+</div>

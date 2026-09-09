@@ -1,0 +1,50 @@
+<% const badge = { new: 'danger', in_progress: 'warning', resolved: 'positive' }; const qs = (o) => { const p = new URLSearchParams({ status, category, q, ...o }); [...p.keys()].forEach(k => { if (!p.get(k)) p.delete(k); }); const t = p.toString(); return t ? '?' + t : ''; }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split">
+      <div><p class="eyebrow">Support inbox</p><h1>Messages</h1><p class="muted">Every Contact Us submission lands here and is emailed to <%= supportName %> at <%= supportEmail %>.</p></div>
+    </div>
+
+    <div class="filter-tabs" role="tablist" aria-label="Filter by status">
+      <% [['all','All'],['new','New'],['in_progress','In progress'],['resolved','Resolved']].forEach(([k,l]) => { %>
+        <a href="/admin/messages<%= qs({ status: k === 'all' ? '' : k }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= l %> <span class="count"><%= counts[k] %></span></a>
+      <% }) %>
+    </div>
+
+    <form method="get" action="/admin/messages" class="filter-bar">
+      <input type="hidden" name="status" value="<%= status %>">
+      <label class="visually-hidden" for="category">Category</label>
+      <select class="input" id="category" name="category">
+        <option value="">All categories</option>
+        <% C.CONTACT_CATEGORIES.forEach(([k,l]) => { %><option value="<%= k %>" <%= category === k ? 'selected' : '' %>><%= l %></option><% }) %>
+      </select>
+      <label class="visually-hidden" for="q">Search</label>
+      <input class="input" id="q" name="q" type="search" value="<%= q %>" placeholder="Search subject, name, email, message">
+      <button class="kds-btn kds-btn--brand" type="submit">Filter</button>
+      <% if (category || q) { %><a class="kds-btn kds-btn--ghost" href="/admin/messages<%= qs({ category: '', q: '' }) %>">Clear</a><% } %>
+    </form>
+
+    <% if (!rows.length) { %>
+      <div class="empty">No messages match.</div>
+    <% } else { %>
+    <div class="card card--table">
+      <div class="table-wrap"><table class="table table--stack">
+        <thead><tr><th>#</th><th>Subject</th><th>From</th><th>Category</th><th>Status</th><th>Age</th></tr></thead>
+        <tbody>
+          <% rows.forEach(m => { %>
+            <tr class="<%= m.status === 'new' ? 'row--new' : '' %>">
+              <td data-label="Ticket"><a href="/admin/messages/<%= m.id %>">#<%= m.id %></a></td>
+              <td data-label="Subject"><a href="/admin/messages/<%= m.id %>" class="row-title"><%= m.subject %></a></td>
+              <td data-label="From"><%= m.name %><br><span class="muted small"><%= m.email %><% if (m.user_role) { %> · <%= m.user_role %><% } %></span></td>
+              <td data-label="Category"><span class="badge <%= m.category === 'technical' ? 'badge--teal' : '' %>"><%= categoryName[m.category] || m.category %></span></td>
+              <td data-label="Status"><span class="badge badge--<%= badge[m.status] %>"><%= m.status.replace('_',' ') %></span></td>
+              <td data-label="Age"><span title="<%= h.formatDateTime(m.created_at) %>"><%= h.timeAgo(m.created_at) %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+    </div>
+    <% } %>
+  </div>
+</section>

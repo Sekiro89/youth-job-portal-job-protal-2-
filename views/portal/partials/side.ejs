@@ -1,0 +1,12 @@
+<% const sideLinks = [
+  ['dashboard', base + '/dashboard', 'Dashboard'],
+  ['jobs', base + '/jobs', 'Jobs'],
+  ['post', base + '/jobs/new', 'Post a job'],
+  ['applicants', base + '/applicants', 'Applicants'],
+  ['company', isConsultant ? '/consultant/profiles' : '/employer/profile', isConsultant ? 'Companies' : 'Company'],
+  ['billing', '/billing', 'Billing'],
+  ['account', '/account', 'Account'],
+]; const current = (typeof nav === 'undefined') ? '' : nav; %>
+<nav class="dash__side" aria-label="Employer portal">
+  <% sideLinks.forEach(([k, href, label]) => { %><a href="<%= href %>" class="<%= current === k ? 'is-active' : '' %>"<%- current === k ? ' aria-current="page"' : '' %>><%= label %></a><% }) %>
+</nav>

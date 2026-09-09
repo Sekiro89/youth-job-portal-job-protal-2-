@@ -1,0 +1,11 @@
+<section class="about-section about-quick" id="quick-answers" aria-labelledby="quick-h">
+  <h2 id="quick-h">Quick answers</h2>
+  <dl class="about-quick__list">
+    <% quick.forEach(({ q, a }) => { %>
+      <div class="about-quick__item">
+        <dt><%= q %></dt>
+        <dd><%= a %></dd>
+      </div>
+    <% }) %>
+  </dl>
+</section>

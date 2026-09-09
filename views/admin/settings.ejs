@@ -1,0 +1,31 @@
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div><p class="eyebrow">Admin</p><h1>Settings</h1>
+      <p class="muted">Values stored in the database. <strong>Precedence: environment (.env) &gt; database.</strong> Where a value is set in <code>.env</code> the site uses that and the stored value is ignored until the environment variable is removed and the server restarted.</p>
+    </div>
+
+    <form method="post" action="/admin/settings" class="card form">
+      <% settings.forEach(d => { %>
+        <div class="field setting">
+          <label for="<%= d.key %>"><%= d.label %></label>
+          <input class="input" id="<%= d.key %>" name="<%= d.key %>" type="text" value="<%= d.stored %>" inputmode="<%= d.type === 'email' ? 'email' : 'decimal' %>" <% if (errors[d.key]) { %>aria-invalid="true" aria-describedby="err-<%= d.key %>"<% } %>>
+          <% if (errors[d.key]) { %><span class="error" id="err-<%= d.key %>"><%= errors[d.key] %></span><% } %>
+          <span class="hint setting__effective">
+            <% if (d.overridden) { %>
+              <span class="badge badge--warning">env override</span> In effect: <strong><%= d.effective %></strong> from <code><%= d.env %></code> in <code>.env</code>. Stored value is kept but not used.
+            <% } else { %>
+              <span class="badge badge--positive">in effect</span> <code><%= d.env %></code> is not set, so this stored value is used.
+            <% } %>
+          </span>
+        </div>
+      <% }) %>
+      <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save settings</button></div>
+    </form>
+
+    <div class="card card--flat">
+      <h2 class="h3 card__title">Changing where support messages go</h2>
+      <p class="small">Contact Us emails are delivered to <strong><%= supportEmail %></strong> (name "<%= supportName %>"). This comes from <code>SUPPORT_EMAIL</code> / <code>SUPPORT_NAME</code> in <code>.env</code>; edit those and restart the app. See <code>docs/ADMIN.md</code>.</p>
+    </div>
+  </div>
+</section>

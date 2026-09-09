@@ -1,0 +1,41 @@
+<div class="page-head co-head">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">›</span><a href="/jobs">Jobs</a><span aria-hidden="true">›</span><span aria-current="page"><%= co.company_name %></span></nav>
+    <div class="co-head__row">
+      <span class="co-logo" aria-hidden="true"><%= (co.company_name || '?').trim()[0].toUpperCase() %></span>
+      <div>
+        <h1><%= co.company_name %></h1>
+        <p class="cluster co-head__meta muted">
+          <% if (co.industry) { %><span><%= co.industry %></span><% } %>
+          <% if (co.city || co.province) { %><span><%= h.location(co) %></span><% } %>
+          <% if (co.company_size) { %><span><%= co.company_size %> employees</span><% } %>
+          <% if (co.website) { %><a href="<%= co.website %>" target="_blank" rel="noopener nofollow">Website ↗</a><% } %>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container co-layout">
+  <section class="co-jobs" aria-labelledby="co-jobs-h">
+    <h2 id="co-jobs-h"><%= jobs.length %> open job<%= jobs.length === 1 ? '' : 's' %> at <%= co.company_name %></h2>
+    <% if (jobs.length) { %>
+      <div class="results__list"><% jobs.forEach(job => { %><%- include('_job-card', { job }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty"><p><%= co.company_name %> has no open positions right now.</p><p><a class="kds-btn kds-btn--ghost" href="/jobs">Browse all jobs</a></p></div>
+    <% } %>
+  </section>
+  <aside class="co-about">
+    <div class="card">
+      <h2 class="h3">About <%= co.company_name %></h2>
+      <% if (co.description) { %><div class="prose small"><%- h.paragraphs(co.description) %></div><% } else { %><p class="muted small">This employer has not added a description yet.</p><% } %>
+      <dl class="facts">
+        <% if (co.industry) { %><div><dt>Industry</dt><dd><%= co.industry %></dd></div><% } %>
+        <% if (co.company_size) { %><div><dt>Size</dt><dd><%= co.company_size %></dd></div><% } %>
+        <% if (co.city || co.province) { %><div><dt>Head office</dt><dd><%= h.location(co) %>, <%= co.country %></dd></div><% } %>
+        <% if (co.website) { %><div><dt>Website</dt><dd><a href="<%= co.website %>" target="_blank" rel="noopener nofollow"><%= co.website.replace(/^https?:\/\//, '') %></a></dd></div><% } %>
+        <div><dt>On Canada Careers since</dt><dd><%= h.formatDate(co.created_at, { day: undefined }) %></dd></div>
+      </dl>
+    </div>
+  </aside>
+</div>

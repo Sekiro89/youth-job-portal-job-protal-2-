@@ -1,0 +1,105 @@
+<div class="page-head">
+  <div class="container split">
+    <div>
+      <p class="eyebrow"><%= isConsultant ? 'Third Party Consultant' : 'Employer' %></p>
+      <h1>Billing</h1>
+      <p class="muted">Subscriptions and receipts for <%= isConsultant ? 'all the companies you manage' : 'your postings' %>.</p>
+    </div>
+    <a class="kds-btn kds-btn--ghost" href="<%= base %>/dashboard">← Dashboard</a>
+  </div>
+</div>
+<section class="container section-pad bill-index">
+  <div class="stats">
+    <div class="stat"><div class="stat__value"><%= totals.activeCount %></div><div class="stat__label">Live posting<%= totals.activeCount === 1 ? '' : 's' %></div></div>
+    <div class="stat"><div class="stat__value"><%= money(totals.monthly) %></div><div class="stat__label">Monthly total (CAD, incl. GST)</div></div>
+    <div class="stat"><div class="stat__value"><%= totals.nextRenewal ? h.formatDate(totals.nextRenewal) : '—' %></div><div class="stat__label">Next renewal</div></div>
+    <div class="stat"><div class="stat__value"><%= money(totals.paid) %></div><div class="stat__label">Paid to date</div></div>
+  </div>
+
+  <% if (totals.pastDue) { %><div class="flash flash--error">A payment failed on <%= totals.pastDue %> posting<%= totals.pastDue === 1 ? '' : 's' %>. Update your card to keep <%= totals.pastDue === 1 ? 'it' : 'them' %> live.</div><% } %>
+
+  <div class="bill-section">
+    <div class="split"><h2 class="bill-h2">Subscriptions</h2><span class="small muted"><%= subs.length %> total</span></div>
+    <% if (!subs.length) { %>
+      <div class="empty">No subscriptions yet. Publish a posting from your dashboard and it will appear here.</div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="table table--stack bill-table">
+        <thead><tr>
+          <th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Next renewal</th><th>Monthly</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+        <% subs.forEach(s => {
+             const live = s.status === 'active' && s.current_period_end && new Date(s.current_period_end) > new Date();
+             const label = s.status === 'active' ? (s.cancel_at_period_end ? 'Ends at period end' : 'Active') : s.status === 'past_due' ? 'Payment failed' : s.status === 'pending' ? 'Awaiting payment' : 'Cancelled';
+             const cls = s.status === 'active' ? (s.cancel_at_period_end ? 'warning' : 'positive') : s.status === 'past_due' ? 'danger' : s.status === 'pending' ? 'warning' : 'danger'; %>
+          <tr>
+            <td data-label="Posting"><div><a href="<%= base %>/jobs/<%= s.job_id %>"><%= s.job_title %></a><div class="small muted">Posting <%= h.statusLabel(s.job_status).toLowerCase() %><% if (s.payment_count) { %> · <%= s.payment_count %> payment<%= s.payment_count === 1 ? '' : 's' %><% } %></div></div></td>
+            <% if (isConsultant) { %><td data-label="Company"><%= s.company_name %></td><% } %>
+            <td data-label="Status"><span class="badge badge--<%= cls %>"><%= label %></span></td>
+            <td data-label="Next renewal">
+              <% if (live && !s.cancel_at_period_end) { %><%= h.formatDate(s.current_period_end) %>
+              <% } else if (live && s.cancel_at_period_end) { %><span class="muted">Live until <%= h.formatDate(s.current_period_end) %></span>
+              <% } else if (s.status === 'past_due') { %><span class="muted">Overdue since <%= h.formatDate(s.current_period_end) %></span>
+              <% } else { %><span class="muted">—</span><% } %>
+            </td>
+            <td data-label="Monthly"><%= money(s.total_cents) %></td>
+            <td data-label="Actions" class="bill-actions-cell"><div class="bill-actions">
+              <% if (s.status === 'pending' || s.status === 'past_due' || (!live && s.status !== 'active')) { %>
+                <% if (['draft','pending_payment','expired','cancelled','inactive'].includes(s.job_status)) { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="/billing/checkout/<%= s.job_id %>"><%= s.status === 'pending' ? 'Pay now' : 'Re-activate' %></a><% } %>
+              <% } %>
+              <% if (live && !s.cancel_at_period_end) { %>
+                <form method="post" action="/billing/cancel/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Stop auto-renewal? The posting stays live until <%= h.formatDate(s.current_period_end) %>.">Cancel at period end</button></form>
+                <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm bill-btn-danger" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
+              <% } else if (live && s.cancel_at_period_end) { %>
+                <form method="post" action="/billing/resume/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--brand kds-btn--sm" type="submit">Resume renewal</button></form>
+                <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm bill-btn-danger" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
+              <% } %>
+            </div></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (isConsultant && byCompany.length) { %>
+      <div class="bill-subtotals">
+        <h3>Per company</h3>
+        <ul>
+          <% byCompany.forEach(c => { %><li><span><%= c.company_name %> <span class="muted small">· <%= c.count %> live</span></span><strong><%= money(c.monthly) %>/mo</strong></li><% }) %>
+        </ul>
+      </div>
+    <% } %>
+    <% } %>
+  </div>
+
+  <div class="bill-section">
+    <div class="split"><h2 class="bill-h2">Payment history</h2><span class="small muted"><%= payments.length %> receipt<%= payments.length === 1 ? '' : 's' %></span></div>
+    <% if (!payments.length) { %>
+      <div class="empty">No payments yet.</div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="table table--stack bill-table">
+        <thead><tr><th>Receipt</th><th>Date</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Period</th><th>Total</th><th></th></tr></thead>
+        <tbody>
+        <% payments.forEach(p => { %>
+          <tr>
+            <td data-label="Receipt"><code class="bill-receipt-no"><%= p.receipt_number %></code></td>
+            <td data-label="Date"><%= h.formatDate(p.paid_at) %></td>
+            <td data-label="Posting"><%= p.job_title %></td>
+            <% if (isConsultant) { %><td data-label="Company"><%= p.company_name %></td><% } %>
+            <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
+            <td data-label="Total"><%= money(p.total_cents) %> <% if (p.status !== 'paid') { %><span class="badge badge--danger"><%= p.status %></span><% } %></td>
+            <td data-label="Receipt link"><a href="/billing/receipt/<%= p.id %>">View receipt</a></td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card card--flat bill-pricing-note">
+    <h3>How pricing works</h3>
+    <p>Each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong>, charged on the day you publish and then every month on the same date until you cancel. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } %></p>
+  </div>
+</section>

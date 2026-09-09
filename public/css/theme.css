@@ -46,6 +46,7 @@
 
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--cc-header-h) + 12px); }
 body { margin: 0; background: var(--kds-bg); color: var(--kds-fg); font: 400 16px/1.55 var(--kds-font-sans); min-height: 100dvh; display: flex; flex-direction: column; }
 .site-main { flex: 1 0 auto; }
@@ -99,7 +100,17 @@ a:hover { color: var(--cc-red); }
   .site-nav__tabs a.is-active::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 3px; border-radius: 2px; background: var(--cc-red); }
   .site-nav__auth .kds-btn { flex: 0 0 auto; }
 }
-@media (min-width: 1200px) { .site-nav__tabs a { padding: 8px 14px; font-size: 1rem; } }
+.nav-label-short { display: none; }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .site-nav { gap: 8px; }
+  .site-nav__tabs a { padding: 8px 8px; font-size: .875rem; }
+  .site-nav__auth { gap: 6px; }
+  .site-nav__auth .kds-btn { padding: .5rem .7rem; font-size: .8125rem; }
+  .site-nav__auth .avatar + .nav-label { display: none; }
+  .site-nav__auth .nav-label-short { display: inline; }
+  .site-nav__auth form .nav-label { display: none; }
+}
+@media (min-width: 1280px) { .site-nav__tabs a { padding: 8px 14px; font-size: 1rem; } }
 
 /* ---------- flash ---------- */
 .flash-region { padding-top: 12px; }

@@ -1,0 +1,30 @@
+<% const badge = { sent: 'positive', failed: 'danger', logged: 'teal', queued: 'warning' }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <p><a href="/admin/outbox" class="small">← Mail outbox</a></p>
+    <div>
+      <p class="eyebrow">Email #<%= m.id %></p>
+      <h1 class="msg-title"><%= m.subject %></h1>
+      <dl class="dl dl--inline">
+        <dt>To</dt><dd><%= m.to_email %></dd>
+        <dt>From</dt><dd><%= mailFrom %></dd>
+        <dt>Status</dt><dd><span class="badge badge--<%= badge[m.status] || '' %>"><%= m.status %></span><% if (m.status === 'logged') { %> <span class="muted small">— not delivered (SMTP not configured); this is what the recipient would have received</span><% } %></dd>
+        <dt>Created</dt><dd><%= h.formatDateTime(m.created_at) %></dd>
+        <% if (m.sent_at) { %><dt>Sent</dt><dd><%= h.formatDateTime(m.sent_at) %></dd><% } %>
+        <% if (m.error) { %><dt>Error</dt><dd style="color:var(--kds-danger)"><%= m.error %></dd><% } %>
+      </dl>
+    </div>
+
+    <div class="card card--table">
+      <div class="split">
+        <h2 class="h3 card__title">Preview</h2>
+        <div class="cluster" role="tablist"><button type="button" class="kds-btn kds-btn--ghost kds-btn--sm is-active" data-mail-view="html">HTML</button><button type="button" class="kds-btn kds-btn--ghost kds-btn--sm" data-mail-view="text">Plain text</button></div>
+      </div>
+      <% if (m.html) { %>
+        <iframe class="mail-preview" data-mail-pane="html" title="Email preview" sandbox="" srcdoc="<%= m.html %>"></iframe>
+      <% } else { %><p class="muted" data-mail-pane="html">No HTML body.</p><% } %>
+      <pre class="mail-text" data-mail-pane="text" hidden><%= m.text || '(no plain-text body)' %></pre>
+    </div>
+  </div>
+</section>

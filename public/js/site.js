@@ -16,3 +16,4 @@
     el.addEventListener('click', function (e) { if (!window.confirm(el.getAttribute('data-confirm'))) e.preventDefault(); });
   });
 })();
+document.querySelectorAll('[data-print]').forEach(function (el) { el.addEventListener('click', function () { window.print(); }); });

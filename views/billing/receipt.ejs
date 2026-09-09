@@ -1,0 +1,44 @@
+<section class="container section-pad bill-receipt">
+  <div class="bill-receipt__actions bill-no-print">
+    <a class="kds-btn kds-btn--ghost" href="<%= base === '/admin' ? '/admin/payments' : '/billing' %>">← <%= base === '/admin' ? 'Payments' : 'Billing' %></a>
+    <button type="button" class="kds-btn kds-btn--brand" data-print>Print / save as PDF</button>
+  </div>
+  <article class="bill-receipt__doc card">
+    <header class="bill-receipt__head">
+      <div>
+        <img src="/img/logo.svg" alt="Canada Careers" width="200" height="56" class="bill-receipt__logo">
+        <p class="small muted">Canadian job bank · <%= PUBLIC_URL.replace(/^https?:\/\//, '') %><br>All amounts in Canadian dollars<% if (pricing.gst_number) { %><br>GST/HST No. <%= pricing.gst_number %><% } %></p>
+      </div>
+      <div class="bill-receipt__id">
+        <p class="eyebrow">Receipt</p>
+        <div class="bill-receipt__no"><%= r.receipt_number %></div>
+        <div class="small muted">Issued <%= h.formatDate(r.paid_at) %></div>
+        <span class="badge badge--<%= r.status === 'paid' ? 'positive' : 'danger' %>"><%= r.status === 'paid' ? 'Paid' : r.status %></span>
+      </div>
+    </header>
+    <div class="bill-receipt__parties">
+      <div>
+        <h3>Bill to</h3>
+        <p><strong><%= r.payer_name %></strong><br><%= r.payer_email %><br><%= r.company_name %><% if (r.company_city) { %><br><%= [r.company_city, r.company_province].filter(Boolean).join(', ') %><% } %></p>
+      </div>
+      <div>
+        <h3>Payment</h3>
+        <p>Paid via <strong><%= providerName(r.provider) %></strong><br>Date <%= h.formatDateTime(r.paid_at) %><br>Billing period <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %></p>
+      </div>
+    </div>
+    <table class="bill-receipt__lines" aria-label="Line items">
+      <thead><tr><th>Description</th><th class="bill-lines__amt">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Job posting — <strong><%= r.job_title %></strong><div class="small muted"><%= r.company_name %> · <%= h.location(r) %> · monthly fee for <%= h.formatDate(r.period_start) %> – <%= h.formatDate(r.period_end) %></div></td><td class="bill-lines__amt"><%= h.money(r.amount_cents) %></td></tr>
+        <tr><td><%= gstLabel(r.tax_rate) %></td><td class="bill-lines__amt"><%= h.money(r.tax_cents) %></td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="bill-lines__total"><td>Total paid</td><td class="bill-lines__amt"><%= h.money(r.total_cents) %> <span class="bill-cur"><%= r.currency %></span></td></tr>
+      </tfoot>
+    </table>
+    <footer class="bill-receipt__foot small muted">
+      <p>This posting renews monthly at <%= h.money(r.total_cents) %> CAD until cancelled. Questions about this receipt? <a href="/contact">Contact us</a> quoting <%= r.receipt_number %>.</p>
+      <p>Canada Careers · Jobs for every Canadian. Opportunities for all.</p>
+    </footer>
+  </article>
+</section>

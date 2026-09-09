@@ -1,0 +1,49 @@
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting ($9.99 + 5% GST = $10.49 CAD per month). Receipts open in a printable page.</p></div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat__value"><%= h.money(totals.total) %></div><div class="stat__label">Collected, all time (<%= totals.n %> payments)</div></div>
+      <div class="stat"><div class="stat__value"><%= h.money(totals.tax) %></div><div class="stat__label">GST collected</div></div>
+      <div class="stat"><div class="stat__value"><%= totals.active_subs %></div><div class="stat__label">Active subscriptions</div></div>
+      <div class="stat"><div class="stat__value"><%= months.length ? h.money(months[0].total) : h.money(0) %></div><div class="stat__label"><%= months.length ? months[0].month : 'This month' %></div></div>
+    </div>
+
+    <div class="card card--table">
+      <h2 class="h3 card__title">Totals by month</h2>
+      <% if (!months.length) { %><p class="muted">No payments yet.</p><% } else { %>
+      <div class="table-wrap"><table class="table table--stack table--stack-lg">
+        <thead><tr><th>Month</th><th>Paid</th><th>Subtotal</th><th>GST</th><th>Total</th><th>Refunded</th><th>Failed</th></tr></thead>
+        <tbody>
+          <% months.forEach(mo => { %>
+            <tr><td data-label="Month"><strong><%= mo.month %></strong></td><td data-label="Paid"><%= mo.n %></td><td data-label="Subtotal"><%= h.money(mo.amount) %></td><td data-label="GST"><%= h.money(mo.tax) %></td><td data-label="Total"><strong><%= h.money(mo.total) %></strong></td><td data-label="Refunded"><%= mo.refunded %></td><td data-label="Failed"><%= mo.failed %></td></tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+      <% } %>
+    </div>
+
+    <div class="card card--table">
+      <h2 class="h3 card__title">All payments</h2>
+      <% if (!rows.length) { %><p class="muted">No payments yet.</p><% } else { %>
+      <div class="table-wrap"><table class="table table--stack table--stack-lg">
+        <thead><tr><th>Receipt</th><th>Paid</th><th>Job</th><th>Payer</th><th>Period</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>
+          <% rows.forEach(p => { %>
+            <tr>
+              <td data-label="Receipt"><a href="/billing/receipt/<%= p.id %>" target="_blank" rel="noopener"><%= p.receipt_number || ('#' + p.id) %></a><br><span class="muted small"><%= p.provider %></span></td>
+              <td data-label="Paid"><%= h.formatDate(p.paid_at) %></td>
+              <td data-label="Job"><span class="row-title"><%= p.job_title %></span><br><span class="muted small"><%= p.company_name %> · <span class="badge badge--<%= h.statusBadge(p.job_status) %>"><%= h.statusLabel(p.job_status) %></span></span></td>
+              <td data-label="Payer"><%= p.payer_name %><br><span class="muted small"><%= p.payer_email %></span></td>
+              <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
+              <td data-label="Total"><strong><%= h.money(p.total_cents) %></strong><br><span class="muted small"><%= h.money(p.amount_cents) %> + GST <%= h.money(p.tax_cents) %></span></td>
+              <td data-label="Status"><span class="badge badge--<%= ({paid:'positive',failed:'danger',refunded:'warning'})[p.status] %>"><%= p.status %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+      <% } %>
+    </div>
+  </div>
+</section>

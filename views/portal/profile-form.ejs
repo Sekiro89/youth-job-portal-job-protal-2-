@@ -1,0 +1,106 @@
+<% const v = values; const err = (k) => errors[k] ? `<div class="error" id="perr-${k}">${h.escapeHtml(errors[k])}</div>` : ''; const inv = (k) => errors[k] ? ` aria-invalid="true" aria-describedby="perr-${k}"` : '';
+   const thenPost = (typeof then !== 'undefined' && then === 'post');
+   const action = mode === 'consultant-new' ? '/consultant/profiles/new' + (thenPost ? '?then=post' : '') : mode === 'consultant-edit' ? '/consultant/profiles/' + profile.id + '/edit' : '/employer/profile';
+   const heading = mode === 'consultant-new' ? 'Add a company' : mode === 'consultant-edit' ? 'Edit company' : 'Company profile'; %>
+<div class="container dash">
+  <%- include('partials/side') %>
+  <div class="dash__main">
+    <div class="split">
+      <div>
+        <p class="eyebrow"><%= isConsultant ? 'Client companies' : 'Your company' %></p>
+        <h1><%= heading %></h1>
+        <p class="muted"><%= isConsultant ? 'Postings are published under this company’s name, and job seekers see this page as the employer.' : 'This is what job seekers see as the employer on every posting you publish.' %><% if (profile.slug && !profile.archived) { %> <a href="/companies/<%= profile.slug %>" target="_blank" rel="noopener">Public company page ↗</a><% } %></p>
+      </div>
+      <% if (isConsultant) { %><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">← Companies</a><% } %>
+    </div>
+
+    <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the highlighted fields.</div><% } %>
+
+    <form class="form" method="post" action="<%= action %>" enctype="multipart/form-data" novalidate>
+      <section class="card form-section">
+        <h2 class="form-section__title">Company</h2>
+        <div class="form-row">
+          <div class="field">
+            <label for="company_name">Company name <span class="req">*</span></label>
+            <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization"<%- inv('company_name') %>>
+            <%- err('company_name') %>
+          </div>
+          <div class="field">
+            <label for="website">Website</label>
+            <input class="input" id="website" name="website" value="<%= v.website || '' %>" maxlength="200" placeholder="https://…" inputmode="url" autocomplete="url"<%- inv('website') %>>
+            <%- err('website') %>
+          </div>
+        </div>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="industry">Industry</label>
+            <input class="input" id="industry" name="industry" value="<%= v.industry || '' %>" maxlength="120" placeholder="e.g. Healthcare">
+          </div>
+          <div class="field">
+            <label for="company_size">Company size</label>
+            <select class="input" id="company_size" name="company_size"<%- inv('company_size') %>>
+              <option value="">Choose…</option>
+              <% COMPANY_SIZES.forEach(s => { %><option value="<%= s %>" <%= v.company_size === s ? 'selected' : '' %>><%= s %> employees</option><% }) %>
+            </select>
+            <%- err('company_size') %>
+          </div>
+          <div class="field">
+            <label for="p-province">Province / territory</label>
+            <select class="input" id="p-province" name="province"<%- inv('province') %>>
+              <option value="">Choose…</option>
+              <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('province') %>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="p-city">City</label>
+            <input class="input" id="p-city" name="city" value="<%= v.city || '' %>" maxlength="80" autocomplete="address-level2">
+          </div>
+          <div class="field">
+            <label for="logo">Logo <span class="muted">(PNG, JPG, SVG or WebP · max 2 MB)</span></label>
+            <div class="logo-field">
+              <% if (profile.logo_path) { %><img class="logo-preview" id="logo-preview" src="<%= base %>/logos/<%= profile.id %>" alt="Current logo"><% } else { %><img class="logo-preview" id="logo-preview" alt="" hidden><% } %>
+              <div class="stack-tight">
+                <input class="input input--file" id="logo" name="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" data-preview="logo-preview"<%- inv('logo') %>>
+                <input type="hidden" name="logo_present" value="0" id="logo_present">
+                <% if (profile.logo_path) { %><label class="check check--inline"><input type="checkbox" name="remove_logo" value="1"> Remove current logo</label><% } %>
+              </div>
+            </div>
+            <%- err('logo') %>
+          </div>
+        </div>
+        <div class="field">
+          <label for="p-description">About the company</label>
+          <textarea class="input" id="p-description" name="description" rows="6" placeholder="What you do, where you operate, what it is like to work with you…"><%= v.description || '' %></textarea>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">Hiring contact</h2>
+        <p class="small muted">Used for billing receipts and if we need to reach someone about a posting. Not shown publicly.</p>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="contact_name">Contact name</label>
+            <input class="input" id="contact_name" name="contact_name" value="<%= v.contact_name || '' %>" maxlength="120" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="contact_email">Contact email</label>
+            <input class="input" id="contact_email" name="contact_email" type="email" value="<%= v.contact_email || '' %>" maxlength="160" autocomplete="email"<%- inv('contact_email') %>>
+            <%- err('contact_email') %>
+          </div>
+          <div class="field">
+            <label for="contact_phone">Contact phone</label>
+            <input class="input" id="contact_phone" name="contact_phone" type="tel" value="<%= v.contact_phone || '' %>" maxlength="40" autocomplete="tel">
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button class="kds-btn kds-btn--brand" type="submit"><%= mode === 'consultant-new' ? 'Add company' : 'Save profile' %></button>
+        <% if (isConsultant) { %><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="/employer/dashboard">Cancel</a><% } %>
+      </div>
+    </form>
+  </div>
+</div>

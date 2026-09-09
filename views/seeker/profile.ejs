@@ -1,0 +1,96 @@
+<% const checked = (arr, k) => (arr || []).includes(k) ? 'checked' : ''; %>
+<div class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split"><div><h1>My profile</h1><p class="muted">Your profile powers your job matches and alerts. Employers only see it when you apply.</p></div><span class="badge <%= meter.percent === 100 ? 'badge--positive' : 'badge--warning' %>"><%= meter.percent %>% complete</span></div>
+
+    <form method="post" action="/jobseeker/profile" enctype="multipart/form-data" class="form profile-form" novalidate>
+      <section class="card stack" aria-labelledby="about-h">
+        <h2 id="about-h" class="h3">About you</h2>
+        <div class="field" id="f-headline">
+          <label for="headline">Headline</label>
+          <input class="input" id="headline" name="headline" maxlength="120" value="<%= profile.headline || '' %>" placeholder="e.g. Registered Nurse (IEN) — 6 years experience">
+          <span class="hint">One line that says what you do.</span>
+        </div>
+        <div class="field" id="f-summary">
+          <label for="summary">Summary</label>
+          <textarea class="input" id="summary" name="summary" maxlength="2000" rows="5" placeholder="A short introduction: your experience, what you are looking for, your work authorization."><%= profile.summary || '' %></textarea>
+          <% if (errors.summary) { %><span class="error"><%= errors.summary %></span><% } %>
+        </div>
+        <div class="form-row">
+          <div class="field"><label for="city">City</label><input class="input" id="city" name="city" maxlength="80" value="<%= profile.city || '' %>"></div>
+          <div class="field"><label for="province">Province / territory</label>
+            <select class="input" id="province" name="province"><option value="">Select…</option><% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= profile.province === k ? 'selected' : '' %>><%= n %></option><% }) %></select></div>
+        </div>
+        <fieldset class="field">
+          <legend>I am a… <span class="hint">(optional — helps us highlight employers hiring for you)</span></legend>
+          <div class="checks checks--3">
+            <% C.AUDIENCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="audiences" value="<%= k %>" <%= checked(profile.audiences, k) %>> <span class="aud aud--<%= k %>"><%= n %></span></label><% }) %>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="card stack" id="f-resume" aria-labelledby="resume-h">
+        <h2 id="resume-h" class="h3">Resume</h2>
+        <% if (profile.resume_path) { %>
+          <div class="resume-box">
+            <div class="resume-box__icon" aria-hidden="true">📄</div>
+            <div class="resume-box__meta"><strong><%= profile.resume_name %></strong><span class="small muted">Uploaded <%= h.formatDate(profile.resume_uploaded_at) %></span></div>
+            <div class="cluster"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/resume">Download</a><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" form="remove-resume" data-confirm="Remove your resume? You will need to upload one before applying.">Remove resume</button></div>
+          </div>
+          <p class="small muted">Upload a new file below to replace it.</p>
+        <% } else { %>
+          <p class="muted">No resume on file yet. You need one to apply.</p>
+        <% } %>
+        <div class="field">
+          <label for="resume"><%= profile.resume_path ? 'Replace resume' : 'Upload resume' %></label>
+          <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB</span>
+          <% if (errors.resume) { %><span class="error"><%= errors.resume %></span><% } %>
+        </div>
+      </section>
+
+      <section class="card stack" aria-labelledby="want-h">
+        <h2 id="want-h" class="h3">What you are looking for</h2>
+        <p class="small muted">These choices are your job-alert criteria too.</p>
+        <fieldset class="field" id="f-categories">
+          <legend>Job categories</legend>
+          <div class="checks checks--3"><% C.CATEGORIES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="categories" value="<%= k %>" <%= checked(profile.categories, k) %>> <%= n %></label><% }) %></div>
+        </fieldset>
+        <div class="form-row">
+          <fieldset class="field">
+            <legend>Job types</legend>
+            <div class="checks"><% C.JOB_TYPES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="job_types" value="<%= k %>" <%= checked(profile.job_types, k) %>> <%= n %></label><% }) %></div>
+          </fieldset>
+          <fieldset class="field">
+            <legend>Work arrangement</legend>
+            <div class="checks"><% C.WORK_ARRANGEMENTS.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="work_arrangements" value="<%= k %>" <%= checked(profile.work_arrangements, k) %>> <%= n %></label><% }) %></div>
+          </fieldset>
+        </div>
+        <fieldset class="field" id="f-provinces">
+          <legend>Provinces and territories where you will work</legend>
+          <span class="hint">Leave all unchecked to match jobs anywhere in Canada. Remote jobs always match.</span>
+          <div class="checks checks--3"><% C.PROVINCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="provinces" value="<%= k %>" <%= checked(profile.provinces, k) %>> <%= n %></label><% }) %></div>
+        </fieldset>
+        <div class="form-row">
+          <div class="field" id="f-keywords">
+            <label for="keywords">Keywords</label>
+            <input class="input" id="keywords" name="keywords" value="<%= (profile.keywords || []).join(', ') %>" placeholder="e.g. nurse, long-term care, RN">
+            <span class="hint">Comma separated. We match these against job titles and descriptions.</span>
+          </div>
+          <div class="field" id="f-skills">
+            <label for="skills">Skills</label>
+            <input class="input" id="skills" name="skills" value="<%= (profile.skills || []).join(', ') %>" placeholder="e.g. Patient care, Forklift, JavaScript">
+            <span class="hint">Comma separated. Matched against the skills employers list.</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions sticky-actions">
+        <button class="kds-btn kds-btn--brand" type="submit">Save profile</button>
+        <a class="kds-btn kds-btn--ghost" href="/jobseeker/dashboard">Cancel</a>
+      </div>
+    </form>
+    <form id="remove-resume" method="post" action="/jobseeker/resume/remove" class="inline-form"></form>
+  </div>
+</div>

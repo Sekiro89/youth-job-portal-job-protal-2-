@@ -1,0 +1,18 @@
+<article class="job-card">
+  <h3 class="job-card__title"><a href="/jobs/<%= job.slug %>"><%= job.title %></a></h3>
+  <div class="job-card__company"><%= job.company_name %> · <%= h.location(job) %></div>
+  <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+  <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
+  <div class="job-card__foot"><span>Posted <%= h.timeAgo(job.published_at) %></span><span><%= h.categoryName(job.category) %></span></div>
+  <% if (typeof actions === 'undefined' || actions) { %>
+  <div class="job-card__actions">
+    <% if (job.applied) { %><span class="badge badge--positive">Applied</span><% } else { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="/jobs/<%= job.slug %>/apply">Apply</a><% } %>
+    <% if (job.saved) { %>
+      <form method="post" action="/jobs/<%= job.slug %>/unsave" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Unsave</button></form>
+    <% } else { %>
+      <form method="post" action="/jobs/<%= job.slug %>/save" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Save</button></form>
+    <% } %>
+    <% if (typeof job.score === 'number' && job.score > 0) { %><span class="match-score" title="Match score"><%= job.score >= 4 ? 'Strong match' : 'Match' %></span><% } %>
+  </div>
+  <% } %>
+</article>

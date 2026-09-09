@@ -1,0 +1,57 @@
+<section class="landing-hero landing-hero--consultant">
+  <div class="container landing-hero__inner">
+    <div>
+      <p class="eyebrow">For third party consultants</p>
+      <h1>Post for every client from one login.</h1>
+      <p class="lead">Recruiters, staffing agencies, HR and immigration consultants: add unlimited employer profiles, post on behalf of any of them, and keep one invoice list across all your clients. $<%= (PRICE/100).toFixed(2) %> + GST per posting per month.</p>
+      <div class="cluster landing-hero__cta">
+        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/signup/consultant">Create a consultant account</a>
+        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/login?role=consultant">Consultant sign in</a>
+      </div>
+      <p class="small muted">No per-client fees · no minimums · cancel any posting any time</p>
+    </div>
+    <div class="landing-hero__art" aria-hidden="true">
+      <div class="mock-card mock-card--stack">
+        <div class="mock-card__row"><span class="logo-md logo-md--placeholder">P</span><div><div class="mock-card__title">Prairie Health Group</div><div class="mock-card__sub">2 active · 46 applicants</div></div></div>
+        <div class="mock-card__row"><span class="logo-md logo-md--placeholder logo-md--teal">M</span><div><div class="mock-card__title">Maple Byte Software</div><div class="mock-card__sub">3 active · 29 applicants</div></div></div>
+        <div class="mock-card__row mock-card__row--add">+ Add a company</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section">
+  <div class="container">
+    <p class="eyebrow">Built for agencies</p>
+    <h2>One account, all your clients</h2>
+    <div class="grid grid--3">
+      <div class="card"><h3>Unlimited employer profiles</h3><p class="muted">Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></div>
+      <div class="card"><h3>Post on behalf of any client</h3><p class="muted">The posting form asks “Post as company”. Switch between clients with one click on every jobs list and dashboard.</p></div>
+      <div class="card"><h3>One invoice list across clients</h3><p class="muted">Billing shows every subscription and numbered GST receipt in one place, grouped by company, so pass-through invoicing takes minutes.</p></div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/landing-audiences') %>
+
+<section class="landing-section">
+  <div class="container">
+    <p class="eyebrow">How it works</p>
+    <h2>Three steps per client</h2>
+    <ol class="steps">
+      <li class="step"><span class="step__n">1</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
+      <li class="step"><span class="step__n">2</span><h3>Post as the client</h3><p>Pick the company, write the posting, tag the audiences it suits, save a draft or publish straight away.</p></li>
+      <li class="step"><span class="step__n">3</span><h3>Pay $<%= (PRICE/100).toFixed(2) %> + GST per posting</h3><p>Each posting renews monthly for $<%= (TOTAL/100).toFixed(2) %> until you cancel it. Applicants for all clients land in one dashboard with a per-company breakdown.</p></li>
+    </ol>
+  </div>
+</section>
+
+<%- include('partials/landing-pricing', { signupHref: '/signup/consultant', audienceLabel: 'consultant' }) %>
+
+<section class="landing-section">
+  <div class="container">
+    <p class="cluster landing-cta-row"><a class="kds-btn kds-btn--brand" href="/signup/consultant">Create a consultant account</a> <span class="muted">Hiring for your own company only? <a href="/employer">Use the employer account</a>.</span></p>
+  </div>
+</section>
+
+<%- include('partials/landing-faq') %>

@@ -1,0 +1,15 @@
+<section class="landing-section landing-section--alt" id="faq">
+  <div class="container container--narrow">
+    <p class="eyebrow">FAQ</p>
+    <h2>Questions employers ask us</h2>
+    <div class="faq">
+      <% faq.forEach(([q, a], i) => { %>
+        <details class="faq__item" <%= i === 0 ? 'open' : '' %>>
+          <summary><%= q %></summary>
+          <p><%= a %></p>
+        </details>
+      <% }) %>
+    </div>
+    <p class="muted">Something else? <a href="/contact">Contact us</a> — a real person (Veda) replies.</p>
+  </div>
+</section>

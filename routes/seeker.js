@@ -1,0 +1,410 @@
+'use strict';
+// Job seeker area: /jobseeker/* plus /jobs/:slug/apply|save|unsave. Mounted at '/' BEFORE the public router.
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const multer = require('multer');
+const db = require('../lib/db');
+const auth = require('../lib/auth');
+const mail = require('../lib/mail');
+const C = require('../lib/constants');
+const h = require('../lib/helpers');
+const { PUBLIC_WHERE } = require('../lib/jobs');
+const matching = require('../lib/matching');
+
+const router = express.Router();
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'data', 'uploads');
+const RESUME_DIR = path.join(UPLOAD_DIR, 'resumes');
+const EXT_OK = new Set(Object.values(C.RESUME_MIME));
+const COVER_MAX = 3000;
+
+// ------------------------------------------------------------------ helpers
+const seekerOnly = auth.requireAuth('seeker');
+const toArray = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]).map(String);
+const pickKeys = (vals, list) => { const ok = new Set(list.map(x => x[0])); return [...new Set(toArray(vals).filter(v => ok.has(v)))]; };
+const csvToArray = (s, max = 20, len = 40) => [...new Set(String(s || '').split(/[,\n]/).map(x => x.trim().slice(0, len)).filter(Boolean))].slice(0, max);
+const clean = (s, max) => String(s || '').trim().slice(0, max);
+const isSafeReturn = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//');
+
+function resumeExt(file) {
+  const byMime = C.RESUME_MIME[file.mimetype];
+  const byName = path.extname(file.originalname || '').toLowerCase();
+  if (byMime && (byName === byMime || !EXT_OK.has(byName))) return byMime;
+  if (EXT_OK.has(byName) && (byMime || file.mimetype === 'application/octet-stream')) return byName;
+  return null;
+}
+/** multer in memory so validation errors never leave orphan files on disk. */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: C.RESUME_MAX_BYTES, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (resumeExt(file)) return cb(null, true);
+    req.uploadError = 'That file type is not accepted. Please upload a PDF, DOC or DOCX resume.';
+    cb(null, false);
+  },
+}).single('resume');
+function resumeUpload(req, res, next) {
+  upload(req, res, (err) => {
+    if (err && err.code === 'LIMIT_FILE_SIZE') req.uploadError = `Resume must be ${Math.round(C.RESUME_MAX_BYTES / 1024 / 1024)} MB or smaller.`;
+    else if (err) req.uploadError = 'We could not read that file. Please upload a PDF, DOC or DOCX.';
+    next();
+  });
+}
+/** Write an in-memory upload to resumes/<userId>-<rand>.<ext>; returns { path (relative), name }. */
+function storeResume(userId, file) {
+  const ext = resumeExt(file);
+  fs.mkdirSync(RESUME_DIR, { recursive: true });
+  const rel = path.posix.join('resumes', `${userId}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  fs.writeFileSync(path.join(UPLOAD_DIR, rel), file.buffer);
+  return { path: rel, name: clean(file.originalname, 120) || `resume${ext}` };
+}
+/** Delete an old resume file — unless an application still references it (employers must keep their copy). */
+async function removeFile(rel) {
+  if (!rel || rel.startsWith('seed/')) return;
+  const abs = path.join(UPLOAD_DIR, rel);
+  if (!abs.startsWith(path.join(UPLOAD_DIR, 'resumes'))) return;
+  if (await db.one('SELECT 1 FROM applications WHERE resume_path=$1', [rel])) return;
+  await fs.promises.unlink(abs).catch(() => {});
+}
+
+async function getProfile(userId) {
+  return (await db.one('SELECT * FROM seeker_profiles WHERE user_id=$1', [userId])) || {
+    user_id: userId, headline: '', summary: '', city: '', province: '', categories: [], job_types: [], work_arrangements: [],
+    provinces: [], keywords: [], skills: [], audiences: [], resume_path: null, resume_name: null, resume_uploaded_at: null,
+    notify_email: true, notify_frequency: 'instant',
+  };
+}
+function completeness(p) {
+  const items = [
+    ['headline', 'Add a headline', !!(p.headline && p.headline.trim())],
+    ['summary', 'Write a short summary', !!(p.summary && p.summary.trim())],
+    ['resume', 'Upload your resume', !!p.resume_path],
+    ['categories', 'Pick job categories', (p.categories || []).length > 0],
+    ['provinces', 'Choose where you will work', (p.provinces || []).length > 0],
+    ['keywords', 'Add keywords for alerts', (p.keywords || []).length > 0],
+  ];
+  const done = items.filter(i => i[2]).length;
+  return { items, done, total: items.length, percent: Math.round((done / items.length) * 100) };
+}
+async function publicJob(slug) {
+  return db.one(`SELECT jobs.*, ep.company_name, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id
+                 FROM jobs JOIN employer_profiles ep ON ep.id = jobs.employer_profile_id WHERE jobs.slug=$1 AND ${PUBLIC_WHERE}`, [slug]);
+}
+const backTo = (req, fallback) => {
+  const ref = req.get('referer');
+  try { if (ref && new URL(ref).host === req.get('host')) return new URL(ref).pathname + new URL(ref).search; } catch (_) {}
+  return fallback;
+};
+
+/** Locals for every seeker page: side-nav unread badge. */
+async function seekerLocals(req, res, next) {
+  res.locals.noindex = true;
+  res.locals.extraCss = ['/css/seeker.css'];
+  res.locals.extraJs = ['/js/seeker.js'];
+  res.locals.unreadCount = 0;
+  if (req.user && req.user.role === 'seeker') {
+    try { res.locals.unreadCount = Number((await db.one('SELECT count(*)::int AS n FROM notifications WHERE user_id=$1 AND read_at IS NULL', [req.user.id])).n); }
+    catch (e) { return next(e); }
+  }
+  next();
+}
+router.use('/jobseeker', seekerLocals);
+
+// ------------------------------------------------------------------ dev-only login (auth routes belong to another agent)
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/seeker-dev-login/:email', async (req, res, next) => {
+    try {
+      const u = await db.one('SELECT id, role FROM users WHERE email=$1 AND is_active', [req.params.email]);
+      if (!u) return res.status(404).send('no such user');
+      req.session.userId = u.id;
+      const next_ = isSafeReturn(req.query.next) ? req.query.next : auth.homeFor(u);
+      req.session.save(() => res.redirect(next_));
+    } catch (e) { next(e); }
+  });
+}
+
+// ------------------------------------------------------------------ 1. public landing
+router.get('/jobseeker', (req, res) => {
+  if (req.user && req.user.role === 'seeker') return res.redirect('/jobseeker/dashboard');
+  const faqs = [
+    ['Is Canada Careers free for job seekers?', 'Yes. Creating a profile, uploading your resume, applying to jobs and receiving job alerts are all free, and always will be. Employers pay a small monthly fee to post.'],
+    ['Do I need a resume to apply?', 'You need one resume on file. Upload it once (PDF, DOC or DOCX, up to 5 MB) and every application uses it automatically — or attach a different one for a specific job.'],
+    ['How do job alerts work?', 'Your alerts are built from your profile: the job categories you choose, the provinces you will work in, your keywords and your skills. When a matching job goes live you get an in-app notification and, if you like, an email — instantly or as a daily digest.'],
+    ['Can I apply if I am new to Canada or do not have Canadian experience?', 'Absolutely. Many employers on Canada Careers hire newcomers and refugees and welcome international credentials. Mark yourself as a new immigrant or refugee in your profile so we can highlight the jobs that fit.'],
+    ['Who can see my resume?', 'Only the employer or consultant behind a job you applied to. Your resume is never publicly listed and is stored securely on Canadian infrastructure.'],
+    ['Can I withdraw an application?', 'Yes. While an application is still marked "Submitted" you can withdraw it from your Applications page.'],
+  ];
+  res.render('seeker/landing', {
+    title: 'Job Seekers — free profile, one-click apply, job alerts',
+    metaDescription: 'Create a free Canada Careers profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills. For professionals, new immigrants, Indigenous peoples, refugees and youth.',
+    extraCss: ['/css/seeker.css'], extraJs: ['/js/seeker.js'], noindex: false, faqs,
+    jsonLd: [{
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    }],
+  });
+});
+
+// ------------------------------------------------------------------ 2. dashboard
+router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
+  try {
+    const uid = req.user.id;
+    const [profile, matches, applications, notifications, counts] = await Promise.all([
+      getProfile(uid),
+      matching.matchesForSeeker(uid, 6),
+      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ep.company_name, (${PUBLIC_WHERE}) AS is_public
+               FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
+               WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]),
+      db.many('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 5', [uid]),
+      db.one(`SELECT (SELECT count(*)::int FROM applications WHERE seeker_user_id=$1) AS applications,
+                     (SELECT count(*)::int FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id WHERE s.user_id=$1 AND ${PUBLIC_WHERE}) AS saved`, [uid]),
+    ]);
+    res.render('seeker/dashboard', { title: 'My dashboard', nav: 'dashboard', profile, meter: completeness(profile), matches, applications, notifications, counts });
+  } catch (e) { next(e); }
+});
+
+// ------------------------------------------------------------------ 3. profile + resume
+function profileForm(body, existing) {
+  return {
+    headline: clean(body.headline, 120),
+    summary: clean(body.summary, 2000),
+    city: clean(body.city, 80),
+    province: C.PROVINCE_NAME[body.province] ? body.province : '',
+    categories: pickKeys(body.categories, C.CATEGORIES),
+    job_types: pickKeys(body.job_types, C.JOB_TYPES),
+    work_arrangements: pickKeys(body.work_arrangements, C.WORK_ARRANGEMENTS),
+    provinces: pickKeys(body.provinces, C.PROVINCES),
+    keywords: csvToArray(body.keywords),
+    skills: csvToArray(body.skills, 30),
+    audiences: pickKeys(body.audiences, C.AUDIENCES),
+    resume_path: existing.resume_path, resume_name: existing.resume_name, resume_uploaded_at: existing.resume_uploaded_at,
+    notify_email: existing.notify_email, notify_frequency: existing.notify_frequency,
+  };
+}
+router.get('/jobseeker/profile', seekerOnly, async (req, res, next) => {
+  try {
+    const profile = await getProfile(req.user.id);
+    res.render('seeker/profile', { title: 'My profile', nav: 'profile', profile, meter: completeness(profile), errors: {} });
+  } catch (e) { next(e); }
+});
+router.post('/jobseeker/profile', seekerOnly, resumeUpload, async (req, res, next) => {
+  try {
+    const uid = req.user.id;
+    const existing = await getProfile(uid);
+    const p = profileForm(req.body, existing);
+    const errors = {};
+    if (req.uploadError) errors.resume = req.uploadError;
+    if (p.summary.length > 2000) errors.summary = 'Summary must be 2000 characters or fewer.';
+    if (Object.keys(errors).length) return res.status(422).render('seeker/profile', { title: 'My profile', nav: 'profile', profile: p, meter: completeness(p), errors });
+    let newFile = null;
+    if (req.file) { newFile = storeResume(uid, req.file); p.resume_path = newFile.path; p.resume_name = newFile.name; p.resume_uploaded_at = new Date(); }
+    await db.query(`INSERT INTO seeker_profiles(user_id, headline, summary, city, province, categories, job_types, work_arrangements, provinces, keywords, skills, audiences, resume_path, resume_name, resume_uploaded_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,now())
+      ON CONFLICT (user_id) DO UPDATE SET headline=EXCLUDED.headline, summary=EXCLUDED.summary, city=EXCLUDED.city, province=EXCLUDED.province,
+        categories=EXCLUDED.categories, job_types=EXCLUDED.job_types, work_arrangements=EXCLUDED.work_arrangements, provinces=EXCLUDED.provinces,
+        keywords=EXCLUDED.keywords, skills=EXCLUDED.skills, audiences=EXCLUDED.audiences, resume_path=EXCLUDED.resume_path, resume_name=EXCLUDED.resume_name,
+        resume_uploaded_at=EXCLUDED.resume_uploaded_at, updated_at=now()`,
+      [uid, p.headline || null, p.summary || null, p.city || null, p.province || null, p.categories, p.job_types, p.work_arrangements, p.provinces, p.keywords, p.skills, p.audiences, p.resume_path, p.resume_name, p.resume_uploaded_at]);
+    if (newFile && existing.resume_path && existing.resume_path !== newFile.path) await removeFile(existing.resume_path);
+    await auth.audit(uid, 'seeker.profile.update', 'seeker_profile', uid, { resume: !!newFile });
+    req.flash('success', newFile ? 'Profile saved and resume uploaded.' : 'Profile saved.');
+    res.redirect('/jobseeker/profile');
+  } catch (e) { next(e); }
+});
+router.post('/jobseeker/resume/remove', seekerOnly, async (req, res, next) => {
+  try {
+    const existing = await getProfile(req.user.id);
+    if (existing.resume_path) {
+      await db.query('UPDATE seeker_profiles SET resume_path=NULL, resume_name=NULL, resume_uploaded_at=NULL, updated_at=now() WHERE user_id=$1', [req.user.id]);
+      await removeFile(existing.resume_path);
+      await auth.audit(req.user.id, 'seeker.resume.remove', 'seeker_profile', req.user.id);
+      req.flash('success', 'Resume removed.');
+    }
+    res.redirect('/jobseeker/profile');
+  } catch (e) { next(e); }
+});
+router.get('/jobseeker/resume', seekerOnly, async (req, res, next) => {
+  try {
+    const p = await getProfile(req.user.id);
+    if (!p.resume_path) { req.flash('info', 'You have not uploaded a resume yet.'); return res.redirect('/jobseeker/profile'); }
+    const abs = path.join(UPLOAD_DIR, p.resume_path);
+    if (!fs.existsSync(abs)) { req.flash('error', 'Your resume file could not be found. Please upload it again.'); return res.redirect('/jobseeker/profile'); }
+    res.download(abs, p.resume_name || path.basename(abs));
+  } catch (e) { next(e); }
+});
+
+// ------------------------------------------------------------------ 4. apply
+async function applyGate(req, res, next) {
+  try {
+    const job = await publicJob(req.params.slug);
+    if (!job) return next('route');  // falls through to the public router / 404
+    if (!req.user) {
+      req.session.returnTo = `/jobs/${job.slug}/apply`;
+      req.flash('info', 'Sign in or create a free job seeker account to apply.');
+      return res.redirect('/login');
+    }
+    if (req.user.role !== 'seeker') {
+      req.flash('error', 'Only job seeker accounts can apply to postings.');
+      return res.redirect(`/jobs/${job.slug}`);
+    }
+    req.job = job;
+    res.locals.noindex = true; res.locals.extraCss = ['/css/seeker.css']; res.locals.extraJs = ['/js/seeker.js'];
+    next();
+  } catch (e) { next(e); }
+}
+function renderApply(res, req, extra) {
+  return res.render('seeker/apply', Object.assign({ title: `Apply — ${req.job.title}`, job: req.job, bodyClass: 'has-sticky-submit', values: { cover_letter: '', resume_choice: 'profile', save_to_profile: true }, errors: {} }, extra));
+}
+router.get('/jobs/:slug/apply', applyGate, async (req, res, next) => {
+  try {
+    const [profile, existing] = await Promise.all([getProfile(req.user.id), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [req.job.id, req.user.id])]);
+    renderApply(res, req, { profile, existing, values: { cover_letter: '', resume_choice: profile.resume_path ? 'profile' : 'upload', save_to_profile: true } });
+  } catch (e) { next(e); }
+});
+router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next) => {
+  try {
+    const uid = req.user.id; const job = req.job;
+    const [profile, existing] = await Promise.all([getProfile(uid), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [job.id, uid])]);
+    if (existing) { req.flash('info', `You already applied to this job on ${h.formatDate(existing.created_at)}.`); return res.redirect('/jobseeker/applications'); }
+    const values = { cover_letter: clean(req.body.cover_letter, COVER_MAX + 1), resume_choice: req.body.resume_choice === 'upload' ? 'upload' : 'profile', save_to_profile: !!req.body.save_to_profile };
+    const errors = {};
+    if (values.cover_letter.length > COVER_MAX) errors.cover_letter = `Cover letter must be ${COVER_MAX} characters or fewer.`;
+    if (values.resume_choice === 'profile' && !profile.resume_path) { values.resume_choice = 'upload'; errors.resume = 'You have no resume on file yet — upload one to apply.'; }
+    else if (values.resume_choice === 'upload') {
+      if (req.uploadError) errors.resume = req.uploadError;
+      else if (!req.file) errors.resume = 'Please choose a PDF, DOC or DOCX resume to upload.';
+    }
+    if (Object.keys(errors).length) { res.status(422); return renderApply(res, req, { profile, existing: null, values, errors }); }
+    let resume = { path: profile.resume_path, name: profile.resume_name };
+    if (values.resume_choice === 'upload') {
+      resume = storeResume(uid, req.file);
+      if (values.save_to_profile) {
+        await db.query(`INSERT INTO seeker_profiles(user_id, resume_path, resume_name, resume_uploaded_at) VALUES ($1,$2,$3,now())
+          ON CONFLICT (user_id) DO UPDATE SET resume_path=EXCLUDED.resume_path, resume_name=EXCLUDED.resume_name, resume_uploaded_at=now(), updated_at=now()`, [uid, resume.path, resume.name]);
+        if (profile.resume_path) await removeFile(profile.resume_path);
+      }
+    }
+    const app = await db.one('INSERT INTO applications(job_id, seeker_user_id, resume_path, resume_name, cover_letter) VALUES ($1,$2,$3,$4,$5) RETURNING id, created_at',
+      [job.id, uid, resume.path, resume.name, values.cover_letter || null]);
+    await db.query(`INSERT INTO notifications(user_id, type, title, body, link, job_id) VALUES ($1,'application_update',$2,$3,'/jobseeker/applications',$4)`,
+      [uid, 'Application sent', `Your application for ${job.title} at ${job.company_name} was sent.`, job.id]);
+    const jobLink = `${mail.PUBLIC_URL}/jobs/${job.slug}`;
+    await mail.send({
+      to: req.user.email,
+      subject: `Application sent: ${job.title} at ${job.company_name}`,
+      html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and resume (<strong>${h.escapeHtml(resume.name)}</strong>) to <strong>${h.escapeHtml(job.company_name)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${h.escapeHtml(h.location(job))}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
+      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${job.company_name} was sent with resume ${resume.name}.\n${jobLink}\n\nTrack it: ${mail.PUBLIC_URL}/jobseeker/applications`,
+    });
+    const employerTo = job.apply_email || job.contact_email || (await db.one('SELECT email FROM users WHERE id=$1', [job.owner_user_id]) || {}).email;
+    if (employerTo) {
+      const applicantsHref = `${mail.PUBLIC_URL}/employer/jobs/${job.id}/applicants`;
+      const cover = values.cover_letter ? `<div style="border-left:3px solid #E1E7EF;padding-left:12px;margin:12px 0">${h.paragraphs(values.cover_letter)}</div>` : '';
+      await mail.send({
+        to: employerTo,
+        subject: `New applicant for ${job.title}`,
+        html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(job.company_name)}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${cover}<p>Their resume (<strong>${h.escapeHtml(resume.name)}</strong>) is available on your applicants page.</p>`, { href: applicantsHref, label: 'View applicants' }),
+        text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${job.company_name}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}View applicants: ${applicantsHref}`,
+      });
+    }
+    await auth.audit(uid, 'application.create', 'application', app.id, { job_id: job.id, resume: resume.path });
+    req.flash('success', `Your application for ${job.title} was sent to ${job.company_name}.`);
+    res.redirect('/jobseeker/applications');
+  } catch (e) {
+    if (e.code === '23505') { req.flash('info', 'You have already applied to this job.'); return res.redirect('/jobseeker/applications'); }
+    next(e);
+  }
+});
+
+// ------------------------------------------------------------------ 5. applications
+router.get('/jobseeker/applications', seekerOnly, async (req, res, next) => {
+  try {
+    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ep.company_name, (${PUBLIC_WHERE}) AS is_public
+      FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
+      WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC`, [req.user.id]);
+    res.render('seeker/applications', { title: 'My applications', nav: 'applications', applications });
+  } catch (e) { next(e); }
+});
+router.post('/jobseeker/applications/:id/withdraw', seekerOnly, async (req, res, next) => {
+  try {
+    const r = await db.query(`DELETE FROM applications WHERE id=$1 AND seeker_user_id=$2 AND status='submitted' RETURNING job_id`, [req.params.id, req.user.id]);
+    if (r.rowCount) { await auth.audit(req.user.id, 'application.withdraw', 'application', Number(req.params.id), { job_id: r.rows[0].job_id }); req.flash('success', 'Application withdrawn.'); }
+    else req.flash('error', 'That application can no longer be withdrawn.');
+    res.redirect('/jobseeker/applications');
+  } catch (e) { next(e); }
+});
+
+// ------------------------------------------------------------------ 6. saved jobs
+async function saveGate(req, res, next) {
+  try {
+    const job = await publicJob(req.params.slug);
+    if (!job) return next('route');
+    if (!req.user) { req.session.returnTo = `/jobs/${job.slug}`; req.flash('info', 'Sign in to save jobs.'); return res.redirect('/login'); }
+    if (req.user.role !== 'seeker') { req.flash('error', 'Only job seeker accounts can save jobs.'); return res.redirect(`/jobs/${job.slug}`); }
+    req.job = job; next();
+  } catch (e) { next(e); }
+}
+router.post('/jobs/:slug/save', saveGate, async (req, res, next) => {
+  try {
+    await db.query('INSERT INTO saved_jobs(user_id, job_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [req.user.id, req.job.id]);
+    req.flash('success', `Saved "${req.job.title}" to your list.`);
+    res.redirect(backTo(req, `/jobs/${req.job.slug}`));
+  } catch (e) { next(e); }
+});
+router.post('/jobs/:slug/unsave', saveGate, async (req, res, next) => {
+  try {
+    await db.query('DELETE FROM saved_jobs WHERE user_id=$1 AND job_id=$2', [req.user.id, req.job.id]);
+    req.flash('info', `Removed "${req.job.title}" from your saved jobs.`);
+    res.redirect(backTo(req, `/jobs/${req.job.slug}`));
+  } catch (e) { next(e); }
+});
+router.get('/jobseeker/saved', seekerOnly, async (req, res, next) => {
+  try {
+    const jobs = await db.many(`SELECT jobs.*, ep.company_name, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public,
+        EXISTS (SELECT 1 FROM applications a WHERE a.job_id=jobs.id AND a.seeker_user_id=s.user_id) AS applied
+      FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
+      WHERE s.user_id=$1 ORDER BY s.created_at DESC`, [req.user.id]);
+    res.render('seeker/saved', { title: 'Saved jobs', nav: 'saved', jobs });
+  } catch (e) { next(e); }
+});
+// stale saved (archived) jobs can be removed even though the job is no longer public
+router.post('/jobseeker/saved/:jobId/remove', seekerOnly, async (req, res, next) => {
+  try { await db.query('DELETE FROM saved_jobs WHERE user_id=$1 AND job_id=$2', [req.user.id, req.params.jobId]); req.flash('info', 'Removed from saved jobs.'); res.redirect('/jobseeker/saved'); }
+  catch (e) { next(e); }
+});
+
+// ------------------------------------------------------------------ 7. alerts
+router.get('/jobseeker/alerts', seekerOnly, async (req, res, next) => {
+  try { const profile = await getProfile(req.user.id); res.render('seeker/alerts', { title: 'Job alerts', nav: 'alerts', profile }); }
+  catch (e) { next(e); }
+});
+router.post('/jobseeker/alerts', seekerOnly, async (req, res, next) => {
+  try {
+    const notify = req.body.notify_email === '1' || req.body.notify_email === 'on';
+    const freq = req.body.notify_frequency === 'daily' ? 'daily' : 'instant';
+    await db.query(`INSERT INTO seeker_profiles(user_id, notify_email, notify_frequency) VALUES ($1,$2,$3)
+      ON CONFLICT (user_id) DO UPDATE SET notify_email=EXCLUDED.notify_email, notify_frequency=EXCLUDED.notify_frequency, updated_at=now()`, [req.user.id, notify, freq]);
+    await auth.audit(req.user.id, 'seeker.alerts.update', 'seeker_profile', req.user.id, { notify_email: notify, notify_frequency: freq });
+    req.flash('success', notify ? `Email alerts on (${freq === 'daily' ? 'daily digest' : 'instant'}).` : 'Email alerts off. You will still see matches in your notifications.');
+    res.redirect('/jobseeker/alerts#alerts');
+  } catch (e) { next(e); }
+});
+
+// ------------------------------------------------------------------ 8. notifications
+router.get('/jobseeker/notifications', seekerOnly, async (req, res, next) => {
+  try {
+    const notifications = await db.many('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100', [req.user.id]);
+    res.render('seeker/notifications', { title: 'Notifications', nav: 'notifications', notifications });
+  } catch (e) { next(e); }
+});
+router.post('/jobseeker/notifications/read', seekerOnly, async (req, res, next) => {
+  try {
+    const id = /^\d+$/.test(String(req.body.id || '')) ? Number(req.body.id) : null;
+    if (id) await db.query('UPDATE notifications SET read_at=now() WHERE user_id=$1 AND id=$2 AND read_at IS NULL', [req.user.id, id]);
+    else await db.query('UPDATE notifications SET read_at=now() WHERE user_id=$1 AND read_at IS NULL', [req.user.id]);
+    const go = isSafeReturn(req.body.next) ? req.body.next : '/jobseeker/notifications';
+    res.redirect(go);
+  } catch (e) { next(e); }
+});
+
+module.exports = router;

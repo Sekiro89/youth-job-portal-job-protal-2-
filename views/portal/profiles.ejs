@@ -1,0 +1,53 @@
+<% const live = list.filter(p => !p.archived), archived = list.filter(p => p.archived); %>
+<div class="container dash">
+  <%- include('partials/side') %>
+  <div class="dash__main">
+    <div class="split">
+      <div><p class="eyebrow">Client companies</p><h1>Companies</h1><p class="muted">Add as many employer profiles as you need. Every posting is published under one of them.</p></div>
+      <a class="kds-btn kds-btn--accent" href="/consultant/profiles/new">+ Add a company</a>
+    </div>
+
+    <% if (!live.length) { %>
+      <div class="empty">No companies yet. <a href="/consultant/profiles/new">Add your first client company</a> to start posting.</div>
+    <% } else { %>
+    <div class="grid grid--2">
+      <% live.forEach(p => { %>
+        <article class="card company-card">
+          <div class="company-card__head">
+            <% if (p.logo_path) { %><img class="logo-md" src="/consultant/logos/<%= p.id %>" alt=""><% } else { %><div class="logo-md logo-md--placeholder" aria-hidden="true"><%= (p.company_name || '?').trim()[0].toUpperCase() %></div><% } %>
+            <div>
+              <h2 class="card__title"><%= p.company_name %></h2>
+              <div class="small muted"><%= [p.industry, h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
+            </div>
+          </div>
+          <div class="company-card__stats">
+            <div><strong><%= p.active_jobs %></strong><span>active</span></div>
+            <div><strong><%= p.pending_jobs %></strong><span>draft / unpaid</span></div>
+            <div><strong><%= p.total_jobs %></strong><span>all time</span></div>
+            <div><strong><%= p.applicants %></strong><span>applicants</span></div>
+          </div>
+          <div class="cluster">
+            <a class="kds-btn kds-btn--brand kds-btn--sm" href="/consultant/jobs/new?profile=<%= p.id %>">Post a job</a>
+            <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs?profile=<%= p.id %>">Jobs</a>
+            <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/profiles/<%= p.id %>/edit">Edit</a>
+            <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/companies/<%= p.slug %>" target="_blank" rel="noopener">Public page ↗</a>
+            <form class="inline-form" method="post" action="/consultant/profiles/<%= p.id %>/archive"><button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="submit" data-confirm="Archive <%= p.company_name %>? It disappears from your lists and public pages. Only possible when it has no active or unpaid postings." <%= (p.active_jobs + p.pending_jobs) ? 'title="Cancel active postings first"' : '' %>>Archive</button></form>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <% if (archived.length) { %>
+    <details class="card card--flat">
+      <summary><strong>Archived companies (<%= archived.length %>)</strong></summary>
+      <ul class="list-plain">
+        <% archived.forEach(p => { %>
+          <li class="split"><span><%= p.company_name %> <span class="small muted">· <%= p.total_jobs %> job<%= p.total_jobs === 1 ? '' : 's' %> all time</span></span>
+            <form class="inline-form" method="post" action="/consultant/profiles/<%= p.id %>/unarchive"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Restore</button></form></li>
+        <% }) %>
+      </ul>
+    </details>
+    <% } %>
+  </div>
+</div>

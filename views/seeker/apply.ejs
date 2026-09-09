@@ -1,0 +1,64 @@
+<div class="container apply-page">
+  <p class="small"><a href="/jobs/<%= job.slug %>">← Back to job</a></p>
+  <div class="apply-page__grid">
+    <aside class="card card--flat apply-job">
+      <p class="eyebrow">You are applying to</p>
+      <h2 class="h3"><%= job.title %></h2>
+      <div class="muted"><%= job.company_name %> · <%= h.location(job) %></div>
+      <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
+      <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
+    </aside>
+
+    <div class="apply-main">
+      <h1>Apply for <%= job.title %></h1>
+      <% if (existing) { %>
+        <div class="card stack">
+          <p><strong>You applied on <%= h.formatDate(existing.created_at) %>.</strong> Status: <span class="badge"><%= existing.status.charAt(0).toUpperCase() + existing.status.slice(1) %></span></p>
+          <p class="muted">Resume sent: <%= existing.resume_name %></p>
+          <div class="cluster"><a class="kds-btn kds-btn--brand" href="/jobseeker/applications">My applications</a><a class="kds-btn kds-btn--ghost" href="/jobs">Find more jobs</a></div>
+        </div>
+      <% } else { %>
+        <form method="post" action="/jobs/<%= job.slug %>/apply" enctype="multipart/form-data" class="form apply-form" novalidate>
+          <div class="card stack">
+            <div class="split"><h2 class="h3">Your details</h2><a class="small" href="/account">Edit</a></div>
+            <p><strong><%= user.name %></strong><br><span class="muted"><%= user.email %></span><% if (profile.headline) { %><br><span class="muted"><%= profile.headline %></span><% } %></p>
+          </div>
+
+          <fieldset class="card stack">
+            <legend class="h3">Resume</legend>
+            <% if (errors.resume) { %><p class="error" role="alert"><%= errors.resume %></p><% } %>
+            <div class="stack resume-choice">
+              <% if (profile.resume_path) { %>
+                <label class="check"><input type="radio" name="resume_choice" value="profile" <%= values.resume_choice === 'profile' ? 'checked' : '' %> data-resume-choice> <span>Use my profile resume <strong>(<%= profile.resume_name %>)</strong><br><span class="small muted">Uploaded <%= h.formatDate(profile.resume_uploaded_at) %> · <a href="/jobseeker/resume">download</a></span></span></label>
+                <label class="check"><input type="radio" name="resume_choice" value="upload" <%= values.resume_choice === 'upload' ? 'checked' : '' %> data-resume-choice> <span>Upload a different resume for this job</span></label>
+              <% } else { %>
+                <input type="hidden" name="resume_choice" value="upload">
+                <p class="muted">You have no resume on your profile yet — upload one now.</p>
+              <% } %>
+              <div class="field resume-upload" data-resume-upload <%= values.resume_choice === 'upload' ? '' : 'hidden' %>>
+                <label for="resume">Resume file</label>
+                <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB</span>
+                <label class="check"><input type="checkbox" name="save_to_profile" value="1" <%= values.save_to_profile ? 'checked' : '' %>> Save this resume to my profile for one-click applications</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="card stack">
+            <div class="field">
+              <label for="cover_letter">Cover letter <span class="muted">(optional)</span></label>
+              <textarea class="input" id="cover_letter" name="cover_letter" rows="8" maxlength="3000" data-counter="cover-count" placeholder="Tell <%= job.company_name %> why you are a good fit. A few short paragraphs is plenty."><%= values.cover_letter %></textarea>
+              <span class="hint"><span id="cover-count"><%= values.cover_letter.length %></span> / 3000 characters</span>
+              <% if (errors.cover_letter) { %><span class="error"><%= errors.cover_letter %></span><% } %>
+            </div>
+          </div>
+
+          <div class="form-actions sticky-actions">
+            <button class="kds-btn kds-btn--accent" type="submit">Send application</button>
+            <span class="small muted">Your resume goes only to <%= job.company_name %>.</span>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>

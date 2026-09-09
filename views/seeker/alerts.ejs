@@ -1,0 +1,31 @@
+<div class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div><h1>Job alerts</h1><p class="muted">When a new posting matches your profile you always get an in-app notification. Choose whether we also email you.</p></div>
+    <form method="post" action="/jobseeker/alerts" class="form" id="alerts">
+      <section class="card stack">
+        <h2 class="h3">Email alerts</h2>
+        <label class="check switch-row"><input type="checkbox" name="notify_email" value="1" <%= profile.notify_email ? 'checked' : '' %> role="switch" aria-checked="<%= profile.notify_email ? 'true' : 'false' %>" data-switch> <span><strong>Email me when a job matches my profile</strong><br><span class="small muted">Sent to <%= user.email %></span></span></label>
+        <fieldset class="field">
+          <legend>How often</legend>
+          <div class="checks">
+            <label class="check"><input type="radio" name="notify_frequency" value="instant" <%= profile.notify_frequency !== 'daily' ? 'checked' : '' %>> <span><strong>Instantly</strong><br><span class="small muted">One email per matching job, as soon as it goes live</span></span></label>
+            <label class="check"><input type="radio" name="notify_frequency" value="daily" <%= profile.notify_frequency === 'daily' ? 'checked' : '' %>> <span><strong>Daily digest</strong><br><span class="small muted">One email a day listing every new match</span></span></label>
+          </div>
+        </fieldset>
+        <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save alert settings</button></div>
+      </section>
+    </form>
+    <section class="card stack" aria-labelledby="crit-h">
+      <div class="split"><h2 id="crit-h" class="h3">Your alert criteria</h2><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/profile#f-categories">Edit in profile</a></div>
+      <p class="small muted">A job matches when it is in one of your categories, mentions one of your keywords, or lists one of your skills — and is in a province you will work in (or is remote).</p>
+      <dl class="crit">
+        <div><dt>Categories</dt><dd><% if (profile.categories.length) { %><div class="cluster"><% profile.categories.forEach(c => { %><span class="badge"><%= h.categoryName(c) %></span><% }) %></div><% } else { %><span class="muted">None chosen</span><% } %></dd></div>
+        <div><dt>Provinces</dt><dd><% if (profile.provinces.length) { %><div class="cluster"><% profile.provinces.forEach(p => { %><span class="badge badge--teal"><%= h.provinceName(p) %></span><% }) %></div><% } else { %><span class="muted">Anywhere in Canada</span><% } %></dd></div>
+        <div><dt>Keywords</dt><dd><% if (profile.keywords.length) { %><div class="cluster"><% profile.keywords.forEach(k => { %><span class="badge badge--warning"><%= k %></span><% }) %></div><% } else { %><span class="muted">None yet</span><% } %></dd></div>
+        <div><dt>Skills</dt><dd><% if (profile.skills.length) { %><div class="cluster"><% profile.skills.forEach(k => { %><span class="badge badge--positive"><%= k %></span><% }) %></div><% } else { %><span class="muted">None yet</span><% } %></dd></div>
+      </dl>
+      <% if (!profile.categories.length && !profile.keywords.length && !profile.skills.length) { %><p class="error">You have no criteria yet, so no jobs can match. <a href="/jobseeker/profile#f-categories">Add categories, keywords or skills</a>.</p><% } %>
+    </section>
+  </div>
+</div>

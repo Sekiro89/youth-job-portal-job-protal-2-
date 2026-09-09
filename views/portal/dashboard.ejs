@@ -1,0 +1,98 @@
+<div class="container dash">
+  <%- include('partials/side') %>
+  <div class="dash__main">
+    <div class="split">
+      <div>
+        <p class="eyebrow"><%= isConsultant ? 'Consultant dashboard' : 'Employer dashboard' %></p>
+        <h1>Welcome back, <%= (user.name || '').split(' ')[0] %></h1>
+        <p class="muted">
+          <% if (isConsultant) { %><%= profiles.length %> compan<%= profiles.length === 1 ? 'y' : 'ies' %> under your account.<% } else if (profiles[0]) { %><%= profiles[0].company_name %><% if (profiles[0].city) { %> · <%= h.location(profiles[0]) %><% } %><% } else { %>Set up your company profile to start posting.<% } %>
+        </p>
+      </div>
+      <div class="cluster">
+        <a class="kds-btn kds-btn--accent" href="<%= base %>/jobs/new">+ Post a job</a>
+        <a class="kds-btn kds-btn--ghost" href="<%= base %>/applicants">View applicants</a>
+        <a class="kds-btn kds-btn--ghost" href="/billing">Billing</a>
+      </div>
+    </div>
+
+    <div class="stats stats--5">
+      <div class="stat"><div class="stat__value"><%= stats.active %></div><div class="stat__label">Active postings</div></div>
+      <div class="stat"><div class="stat__value"><%= stats.pending %></div><div class="stat__label">Awaiting payment</div></div>
+      <div class="stat"><div class="stat__value"><%= stats.applicants %></div><div class="stat__label">Applicants total</div></div>
+      <div class="stat"><div class="stat__value"><%= stats.applicants_week %></div><div class="stat__label">Applicants this week</div></div>
+      <div class="stat"><div class="stat__value"><%= h.money(spend.cents) %></div><div class="stat__label">Monthly spend · <%= spend.n %> subscription<%= spend.n === 1 ? '' : 's' %></div></div>
+    </div>
+
+    <% if (!profiles.length) { %>
+      <div class="card card--cta">
+        <h2><%= isConsultant ? 'Add your first client company' : 'Complete your company profile' %></h2>
+        <p class="muted">Every posting is published under a company profile with its name, location and logo.</p>
+        <a class="kds-btn kds-btn--brand" href="<%= isConsultant ? '/consultant/profiles/new' : '/employer/profile' %>"><%= isConsultant ? 'Add a company' : 'Set up profile' %></a>
+      </div>
+    <% } %>
+
+    <% if (isConsultant && byCompany.length) { %>
+    <section class="card">
+      <div class="split"><h2 class="card__title">By company</h2><a class="small" href="/consultant/profiles">Manage companies</a></div>
+      <div class="table-wrap">
+        <table class="table table--stack">
+          <thead><tr><th>Company</th><th>Active</th><th>Awaiting payment</th><th>Applicants</th><th>Monthly spend</th><th></th></tr></thead>
+          <tbody>
+            <% byCompany.forEach(c => { %>
+              <tr>
+                <td data-label="Company"><span class="company-cell"><% if (c.logo_path) { %><img class="logo-sm" src="/logos/<%= c.id %>" alt=""><% } %><strong><%= c.company_name %></strong></span></td>
+                <td data-label="Active"><%= c.active %></td>
+                <td data-label="Awaiting payment"><%= c.pending %></td>
+                <td data-label="Applicants"><%= c.applicants %></td>
+                <td data-label="Monthly spend"><%= h.money(c.spend_cents) %></td>
+                <td data-label="Actions" class="td-actions"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs?profile=<%= c.id %>">Jobs</a> <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs/new?profile=<%= c.id %>">Post</a></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <% } %>
+
+    <div class="grid grid--2 grid--dash">
+      <section class="card">
+        <div class="split"><h2 class="card__title">Recent applicants</h2><a class="small" href="<%= base %>/applicants">All applicants</a></div>
+        <% if (!recent.length) { %>
+          <div class="empty">No applications yet. Applicants appear here as soon as someone applies.</div>
+        <% } else { %>
+          <ul class="list-plain">
+            <% recent.forEach(a => { %>
+              <li class="applicant-row">
+                <div><strong><%= a.name %></strong><div class="small muted"><%= a.title %> · <%= h.timeAgo(a.created_at) %></div></div>
+                <div class="cluster"><span class="badge badge--<%= ({submitted:'',viewed:'teal',shortlisted:'positive',rejected:'danger',hired:'positive'})[a.status] %>"><%= APP_STATUS_NAME[a.status] %></span><a class="small" href="<%= base %>/jobs/<%= a.job_id %>/applicants">Review</a></div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+
+      <section class="card">
+        <div class="split"><h2 class="card__title">Your postings</h2><a class="small" href="<%= base %>/jobs">All jobs</a></div>
+        <% if (!active.length) { %>
+          <div class="empty">No postings yet. <a href="<%= base %>/jobs/new">Post your first job</a> — $<%= (TOTAL/100).toFixed(2) %>/month incl. GST.</div>
+        <% } else { %>
+          <ul class="list-plain">
+            <% active.forEach(job => { %>
+              <li class="applicant-row">
+                <div>
+                  <a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a>
+                  <div class="small muted"><% if (isConsultant) { %><%= job.company_name %> · <% } %><%= h.location(job) %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
+                </div>
+                <div class="stack-tight">
+                  <%- include('partials/status-badge', { job }) %>
+                  <% if (job.status === 'active' && job.expires_at) { %><span class="small muted"><%= job.cancel_at_period_end ? 'Ends' : 'Renews' %> <%= h.formatDate(job.expires_at) %></span><% } else if (job.status === 'pending_payment') { %><a class="small" href="/billing/checkout/<%= job.id %>">Pay now</a><% } %>
+                </div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </section>
+    </div>
+  </div>
+</div>

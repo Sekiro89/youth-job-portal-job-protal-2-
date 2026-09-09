@@ -1,0 +1,54 @@
+<section class="container section-pad bill-sandbox">
+  <div class="bill-pay card">
+    <div class="bill-sandbox-banner" role="note">
+      <strong>Sandbox payment — no real charge.</strong> This simulates the card step. Use <code>4242 4242 4242 4242</code> to succeed or <code>4000 0000 0000 0002</code> to see a decline.
+    </div>
+    <div class="bill-pay__head">
+      <div>
+        <p class="eyebrow">Canada Careers</p>
+        <h1 class="bill-pay__title">Pay <%= h.money(pricing.total_cents) %> <span class="bill-cur">CAD</span> / month</h1>
+        <p class="muted small">Job posting: <strong><%= job.title %></strong> · <%= job.company_name %></p>
+      </div>
+      <svg class="bill-pay__lock" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <% if (error) { %><div class="flash flash--error" role="alert"><%= error %></div><% } %>
+    <% const f = typeof fields !== 'undefined' && fields ? fields : {}; %>
+    <form method="post" action="/billing/sandbox/<%= checkoutId %>" class="form" id="sandbox-form" novalidate>
+      <div class="field">
+        <label for="name">Name on card</label>
+        <input class="input <%= f.name ? 'is-invalid' : '' %>" id="name" name="name" autocomplete="cc-name" value="<%= values.name %>" required>
+        <% if (f.name) { %><span class="error"><%= f.name %></span><% } %>
+      </div>
+      <div class="field">
+        <label for="number">Card number</label>
+        <div class="bill-cardfield">
+          <input class="input <%= f.number ? 'is-invalid' : '' %>" id="number" name="number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="23" value="<%= values.number %>" required>
+          <span class="bill-cardbrand" id="card-brand" aria-live="polite"></span>
+        </div>
+        <span class="error" id="number-error"><%= f.number || '' %></span>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="exp">Expiry (MM/YY)</label>
+          <input class="input <%= f.exp ? 'is-invalid' : '' %>" id="exp" name="exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5" value="<%= values.exp %>" required>
+          <span class="error" id="exp-error"><%= f.exp || '' %></span>
+        </div>
+        <div class="field">
+          <label for="cvc">Security code (CVC)</label>
+          <input class="input <%= f.cvc ? 'is-invalid' : '' %>" id="cvc" name="cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4" value="<%= values.cvc %>" required>
+          <span class="error" id="cvc-error"><%= f.cvc || '' %></span>
+        </div>
+      </div>
+      <table class="bill-lines bill-lines--compact" aria-label="Price breakdown">
+        <tbody>
+          <tr><td>Job posting — monthly fee</td><td class="bill-lines__amt"><%= h.money(sub.price_cents) %></td></tr>
+          <tr><td><%= pricing.gst_label %></td><td class="bill-lines__amt"><%= h.money(sub.tax_cents) %></td></tr>
+          <tr class="bill-lines__total"><td>Total today, then monthly</td><td class="bill-lines__amt"><%= h.money(sub.total_cents) %> <span class="bill-cur">CAD</span></td></tr>
+        </tbody>
+      </table>
+      <button type="submit" class="kds-btn kds-btn--brand kds-btn--block kds-btn--lg" data-busy="Processing…">Pay <%= h.money(sub.total_cents) %> CAD</button>
+      <p class="small muted bill-cta__note">By paying you agree to a recurring monthly charge of <%= h.money(sub.total_cents) %> CAD until you cancel. <a href="/terms">Terms</a>.</p>
+    </form>
+    <p class="small"><a href="/billing/cancelled?job=<%= job.id %>">Cancel and go back</a></p>
+  </div>
+</section>

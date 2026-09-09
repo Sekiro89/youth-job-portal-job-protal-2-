@@ -1,0 +1,48 @@
+<% const qs = (o) => { const p = new URLSearchParams({ role, q, ...o }); [...p.keys()].forEach(k => { if (!p.get(k)) p.delete(k); }); const t = p.toString(); return t ? '?' + t : ''; }; const roleLabel = { employer: 'Employer', consultant: 'Third Party Consultant', seeker: 'Job Seeker', admin: 'Admin' }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div><p class="eyebrow">Admin</p><h1>Users</h1><p class="muted">Deactivating a user signs them out everywhere and blocks sign-in; their data is kept.</p></div>
+
+    <div class="filter-tabs" aria-label="Filter by role">
+      <a href="/admin/users<%= qs({ role: '' }) %>" class="<%= !role ? 'is-active' : '' %>">All <span class="count"><%= counts.all %></span></a>
+      <% roles.forEach(r => { %><a href="/admin/users<%= qs({ role: r }) %>" class="<%= role === r ? 'is-active' : '' %>"><%= roleLabel[r] %>s <span class="count"><%= counts[r] %></span></a><% }) %>
+    </div>
+
+    <form method="get" action="/admin/users" class="filter-bar">
+      <input type="hidden" name="role" value="<%= role %>">
+      <label class="visually-hidden" for="q">Search</label>
+      <input class="input" id="q" name="q" type="search" value="<%= q %>" placeholder="Search name or email">
+      <button class="kds-btn kds-btn--brand" type="submit">Search</button>
+      <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/users<%= qs({ q: '' }) %>">Clear</a><% } %>
+    </form>
+
+    <% if (!rows.length) { %><div class="empty">No users match.</div><% } else { %>
+    <div class="card card--table">
+      <div class="table-wrap"><table class="table table--stack table--stack-lg">
+        <thead><tr><th>User</th><th>Role</th><th>Created</th><th>Last login</th><th>Profiles</th><th>Jobs</th><th>Applications</th><th>Actions</th></tr></thead>
+        <tbody>
+          <% rows.forEach(u => { %>
+            <tr class="<%= u.is_active ? '' : 'row--muted' %>">
+              <td data-label="User"><span class="row-title"><%= u.name %></span><% if (!u.is_active) { %> <span class="badge badge--danger">deactivated</span><% } %><br><span class="muted small"><%= u.email %><% if (u.phone) { %> · <%= u.phone %><% } %> · #<%= u.id %></span></td>
+              <td data-label="Role"><span class="badge <%= u.role === 'admin' ? 'badge--warning' : u.role === 'seeker' ? 'badge--teal' : '' %>"><%= roleLabel[u.role] || u.role %></span></td>
+              <td data-label="Created"><%= h.formatDate(u.created_at) %></td>
+              <td data-label="Last login"><%= u.last_login_at ? h.timeAgo(u.last_login_at) : 'never' %></td>
+              <td data-label="Profiles"><%= u.role === 'seeker' ? '—' : u.profiles %></td>
+              <td data-label="Jobs"><% if (u.jobs) { %><a href="/admin/jobs?q=<%= encodeURIComponent(u.email) %>"><%= u.jobs %></a><% } else { %><%= u.role === 'seeker' ? '—' : 0 %><% } %></td>
+              <td data-label="Applications"><%= u.role === 'seeker' ? u.applications : '—' %></td>
+              <td data-label="Actions">
+                <% if (u.id === user.id) { %><span class="muted small">you</span><% } else { %>
+                <form method="post" action="/admin/users/<%= u.id %>/toggle-active" class="inline-form">
+                  <button class="kds-btn kds-btn--ghost kds-btn--sm <%= u.is_active ? 'btn-danger-text' : '' %>" type="submit" data-confirm="<%= u.is_active ? `Deactivate ${u.name}? They will be signed out and unable to sign in.` : `Reactivate ${u.name}?` %>"><%= u.is_active ? 'Deactivate' : 'Reactivate' %></button>
+                </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+    </div>
+    <% } %>
+  </div>
+</section>

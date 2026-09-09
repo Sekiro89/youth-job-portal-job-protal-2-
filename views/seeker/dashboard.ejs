@@ -1,0 +1,68 @@
+<div class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split">
+      <div><h1>Hello, <%= (user.name || '').split(' ')[0] %></h1><p class="muted"><%= profile.headline || 'Add a headline so employers know what you do.' %></p></div>
+      <a class="kds-btn kds-btn--brand" href="/jobs">Find jobs</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat__value"><%= matches.length %></div><div class="stat__label">Matched jobs</div></div>
+      <div class="stat"><div class="stat__value"><%= counts.applications %></div><div class="stat__label">Applications</div></div>
+      <div class="stat"><div class="stat__value"><%= counts.saved %></div><div class="stat__label">Saved jobs</div></div>
+      <div class="stat"><div class="stat__value"><%= unreadCount %></div><div class="stat__label">Unread notifications</div></div>
+    </div>
+
+    <section class="card meter-card" aria-labelledby="meter-h">
+      <div class="split">
+        <h2 id="meter-h" class="h3">Profile completeness</h2>
+        <strong class="meter-card__pct"><%= meter.percent %>%</strong>
+      </div>
+      <div class="meter" role="progressbar" aria-valuenow="<%= meter.percent %>" aria-valuemin="0" aria-valuemax="100" aria-label="Profile completeness"><span style="width:<%= meter.percent %>%"></span></div>
+      <ul class="meter-list">
+        <% meter.items.forEach(([key, label, done]) => { %>
+          <li class="<%= done ? 'is-done' : '' %>"><span class="meter-list__tick" aria-hidden="true"><%= done ? '✓' : '' %></span><% if (done) { %><%= label %><% } else { %><a href="/jobseeker/profile#f-<%= key %>"><%= label %></a><% } %></li>
+        <% }) %>
+      </ul>
+      <% if (meter.percent < 100) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/profile">Complete my profile</a><% } %>
+    </section>
+
+    <section aria-labelledby="matches-h">
+      <div class="split"><h2 id="matches-h" class="h3">Jobs matched to your profile</h2><a class="small" href="/jobseeker/alerts">How matching works</a></div>
+      <% if (matches.length) { %>
+        <div class="grid grid--2"><% matches.forEach(job => { %><%- include('_jobcard', { job }) %><% }) %></div>
+      <% } else { %>
+        <div class="empty"><p><strong>No matches yet.</strong></p><p>Add job categories, keywords or skills to your profile and matching jobs will appear here.</p><a class="kds-btn kds-btn--brand" href="/jobseeker/profile">Edit my profile</a> <a class="kds-btn kds-btn--ghost" href="/jobs">Browse all jobs</a></div>
+      <% } %>
+    </section>
+
+    <div class="grid grid--2 dash-cols">
+      <section class="card" aria-labelledby="apps-h">
+        <div class="split"><h2 id="apps-h" class="h3">Recent applications</h2><a class="small" href="/jobseeker/applications">All applications</a></div>
+        <% if (applications.length) { %>
+          <ul class="list-plain">
+            <% applications.forEach(a => { %>
+              <li class="list-plain__item">
+                <div><% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><%= a.title %></a><% } else { %><span><%= a.title %></span><% } %><div class="small muted"><%= a.company_name %> · <%= h.formatDate(a.created_at) %></div></div>
+                <span class="badge badge--<%= ({submitted:'',viewed:'teal',shortlisted:'positive',rejected:'danger',hired:'positive'})[a.status] %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %><p class="muted">You have not applied to any jobs yet.</p><% } %>
+      </section>
+      <section class="card" aria-labelledby="notif-h">
+        <div class="split"><h2 id="notif-h" class="h3">Notifications <% if (unreadCount) { %><span class="badge badge--danger"><%= unreadCount %> new</span><% } %></h2><a class="small" href="/jobseeker/notifications">See all</a></div>
+        <% if (notifications.length) { %>
+          <ul class="list-plain">
+            <% notifications.forEach(n => { %>
+              <li class="list-plain__item notif <%= n.read_at ? '' : 'is-unread' %>">
+                <div><a href="<%= n.link || '/jobseeker/notifications' %>"><%= n.title %></a><div class="small muted"><%= n.body || '' %></div></div>
+                <span class="small muted"><%= h.timeAgo(n.created_at) %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %><p class="muted">Nothing yet. When a job matches your profile it shows up here.</p><% } %>
+      </section>
+    </div>
+  </div>
+</div>

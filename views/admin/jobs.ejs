@@ -1,0 +1,58 @@
+<% const qs = (o) => { const p = new URLSearchParams({ status, q, ...o }); [...p.keys()].forEach(k => { if (!p.get(k)) p.delete(k); }); const t = p.toString(); return t ? '?' + t : ''; }; %>
+<section class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div><p class="eyebrow">Admin</p><h1>Jobs</h1><p class="muted">Every posting on the site, including archived ones. Only <strong>Active</strong> jobs whose paid period has not ended are visible to the public.</p></div>
+
+    <div class="filter-tabs" aria-label="Filter by status">
+      <% [['all','All'],['active','Active'],['pending_payment','Awaiting payment'],['draft','Draft'],['archived','Archived'],['expired','Expired'],['cancelled','Cancelled'],['inactive','Inactive']].forEach(([k,l]) => { %>
+        <a href="/admin/jobs<%= qs({ status: k === 'all' ? '' : k }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= l %> <span class="count"><%= counts[k] %></span></a>
+      <% }) %>
+    </div>
+
+    <form method="get" action="/admin/jobs" class="filter-bar">
+      <input type="hidden" name="status" value="<%= status %>">
+      <label class="visually-hidden" for="q">Search</label>
+      <input class="input" id="q" name="q" type="search" value="<%= q %>" placeholder="Search title, company, owner, city">
+      <button class="kds-btn kds-btn--brand" type="submit">Search</button>
+      <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/jobs<%= qs({ q: '' }) %>">Clear</a><% } %>
+    </form>
+
+    <% if (!rows.length) { %><div class="empty">No jobs match.</div><% } else { %>
+    <div class="card card--table">
+      <div class="table-wrap"><table class="table table--stack table--stack-lg">
+        <thead><tr><th>Job</th><th>Company / owner</th><th>Status</th><th>Published</th><th>Expires</th><th>Views</th><th>Applicants</th><th>Actions</th></tr></thead>
+        <tbody>
+          <% rows.forEach(j => { const archived = C.ARCHIVED_STATUSES.includes(j.status); const isPublic = j.status === 'active' && j.expires_at && new Date(j.expires_at) > new Date(); %>
+            <tr>
+              <td data-label="Job">
+                <% if (isPublic) { %><a href="/jobs/<%= j.slug %>" class="row-title" target="_blank" rel="noopener"><%= j.title %></a><% } else { %><span class="row-title"><%= j.title %></span><% } %>
+                <br><span class="muted small">#<%= j.id %> · <%= h.location(j) %></span>
+              </td>
+              <td data-label="Company"><a href="/companies/<%= j.company_slug %>"><%= j.company_name %></a><br><span class="muted small"><a href="/admin/users?q=<%= encodeURIComponent(j.owner_email) %>"><%= j.owner_name %></a> · <%= j.owner_role %></span></td>
+              <td data-label="Status"><span class="badge badge--<%= h.statusBadge(j.status) %>"><%= h.statusLabel(j.status) %></span><% if (j.sub_cancel_at_end && j.status === 'active') { %><br><span class="small muted">cancels at period end</span><% } %></td>
+              <td data-label="Published"><%= j.published_at ? h.formatDate(j.published_at) : '—' %></td>
+              <td data-label="Expires"><%= j.expires_at ? h.formatDate(j.expires_at) : '—' %></td>
+              <td data-label="Views"><%= j.views %></td>
+              <td data-label="Applicants"><%= j.applicants %></td>
+              <td data-label="Actions">
+                <div class="cluster">
+                  <% if (!archived && j.status === 'active') { %>
+                    <form method="post" action="/admin/jobs/<%= j.id %>/archive" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm btn-danger-text" type="submit" data-confirm="Take down “<%= j.title %>”? It will disappear from the public site immediately.">Take down</button></form>
+                  <% } else if (archived) { %>
+                    <% if (j.restorable) { %>
+                      <form method="post" action="/admin/jobs/<%= j.id %>/restore" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Restore “<%= j.title %>” to the public site?">Restore</button></form>
+                    <% } else { %>
+                      <span class="muted small" title="No active, paid-up subscription — the owner must publish and pay again.">Not restorable</span>
+                    <% } %>
+                  <% } else { %><span class="muted small">—</span><% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+    </div>
+    <% } %>
+  </div>
+</section>

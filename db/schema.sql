@@ -280,3 +280,12 @@ CREATE TABLE IF NOT EXISTS "session" (
   expire timestamp(6) NOT NULL
 );
 CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session"(expire);
+
+-- ---------------------------------------------------------------- imported postings (Job Bank etc.) — additive, 2026-09-09
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source text;            -- NULL = posted on Canada Careers; 'jobbank' = imported from jobbank.gc.ca
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_id text;         -- Job Bank posting id
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_url text;        -- canonical URL of the original posting (link back / apply there)
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_employer text;   -- employer name as printed at the source
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_synced_at timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_source_uid ON jobs(source, source_id) WHERE source IS NOT NULL;
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS source text;  -- 'jobbank' for auto-created employer profiles

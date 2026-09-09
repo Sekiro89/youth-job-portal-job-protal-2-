@@ -1,0 +1,91 @@
+<% const forWho = { professionals: 'professionals', new_immigrants: 'new immigrants', indigenous: 'Indigenous peoples', refugees: 'refugees', youth: 'youth' };
+const audiences = {
+  professionals: ['Professionals', 'Senior roles, trades and licensed careers across every province — with salary ranges shown up front.', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>'],
+  new_immigrants: ['New Immigrants', 'Employers who welcome international credentials and first Canadian roles.', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>'],
+  indigenous: ['Indigenous', 'Postings from employers committed to Indigenous hiring, on and off reserve.', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v4H9zM5 7h14v4H5zM7 11h4v10H7zM13 11h4v10h-4z"/></svg>'],
+  refugees: ['Refugees', 'Entry-friendly jobs with paid training and support settling into work.', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6a1.5 1.5 0 0 1 3 0v5M10 10V4.5a1.5 1.5 0 0 1 3 0V10M13 10V6a1.5 1.5 0 0 1 3 0v6M16 12V9a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L4 13.5a1.5 1.5 0 0 1 2.4-1.8L8 14"/></svg>'],
+  youth: ['Youth', 'Co-ops, internships, apprenticeships and first jobs that grow with you.', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>'],
+}; %>
+<section class="js-hero">
+  <div class="container js-hero__grid">
+    <div class="js-hero__copy">
+      <p class="eyebrow">For job seekers · Always free</p>
+      <h1>Upload your resume once. Apply anywhere in one click.</h1>
+      <p class="lead">Canada Careers is a Canadian job bank built for everyone: professionals, new immigrants, Indigenous peoples, refugees and youth. Create a free profile and let matching jobs come to you.</p>
+      <div class="js-hero__cta">
+        <a class="kds-btn kds-btn--accent" href="/signup/seeker">Create my free profile</a>
+        <a class="kds-btn kds-btn--ghost" href="/jobs">Browse jobs</a>
+      </div>
+      <ul class="js-hero__points">
+        <li>No fees, ever</li><li>Resume never listed publicly</li><li>Alerts by email or in-app</li>
+      </ul>
+    </div>
+    <div class="js-hero__art" aria-hidden="true">
+      <div class="js-mock">
+        <div class="js-mock__bar"><span></span><span></span><span></span></div>
+        <div class="js-mock__row"><div class="js-mock__avatar">A</div><div><div class="js-mock__line js-mock__line--w"></div><div class="js-mock__line"></div></div></div>
+        <div class="js-mock__meter"><span style="width:83%"></span></div>
+        <div class="js-mock__card"><strong>Registered Nurse — Long-Term Care</strong><span>Prairie Health Group · Saskatoon, SK</span><em>Strong match</em></div>
+        <div class="js-mock__card"><strong>Personal Support Worker</strong><span>Regina, SK · $21–$25/hour</span><em>Match</em></div>
+        <div class="js-mock__btn">Apply with saved resume</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad">
+  <div class="container">
+    <p class="eyebrow">What you get</p>
+    <h2>Everything a job search needs, nothing you have to pay for</h2>
+    <div class="grid grid--3 js-features">
+      <div class="card"><div class="js-feature__icon js-feature__icon--navy" aria-hidden="true">1</div><h3>A free account</h3><p>Your profile lives in one place: headline, summary, skills, the categories you want and the provinces you will work in.</p></div>
+      <div class="card"><div class="js-feature__icon js-feature__icon--red" aria-hidden="true">2</div><h3>Upload your resume once</h3><p>PDF, DOC or DOCX. Every application sends it automatically — or attach a different one for a specific role.</p></div>
+      <div class="card"><div class="js-feature__icon js-feature__icon--teal" aria-hidden="true">3</div><h3>Job alerts matched to you</h3><p>When a posting matches your categories, keywords or skills you get an in-app notification and, if you choose, an email — instantly or as a daily digest.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad js-audiences">
+  <div class="container">
+    <p class="eyebrow">Jobs for every Canadian</p>
+    <h2>Five audiences, one job bank</h2>
+    <p class="lead">Every figure in the Canada Careers logo stands for someone we built this for. Tell us who you are and we highlight the employers hiring for you.</p>
+    <ul class="js-aud-grid">
+      <% C.AUDIENCES.forEach(([k]) => { const [name, line, svg] = audiences[k]; %>
+        <li class="js-aud js-aud--<%= k %>"><span class="js-aud__icon" aria-hidden="true"><%- svg %></span><h3><%= name %></h3><p><%= line %></p><a href="/jobs?audience=<%= k %>">See jobs for <%= forWho[k] %> →</a></li>
+      <% }) %>
+    </ul>
+  </div>
+</section>
+
+<section class="section-pad">
+  <div class="container">
+    <p class="eyebrow">How it works</p>
+    <h2>Three steps to your next job</h2>
+    <ol class="js-steps">
+      <li><span class="js-step__num">1</span><h3>Create your free profile</h3><p>Sign up with your email, add a headline and upload your resume. It takes about five minutes.</p></li>
+      <li><span class="js-step__num">2</span><h3>Choose what you want</h3><p>Pick job categories, provinces, keywords and skills. That becomes your alert criteria and your match list.</p></li>
+      <li><span class="js-step__num">3</span><h3>Apply in one click</h3><p>See matched jobs on your dashboard, apply with your saved resume, and track every application's status.</p></li>
+    </ol>
+    <div class="js-cta-band">
+      <div><h2>Ready to start?</h2><p class="muted">Free forever for job seekers. Employers post for $9.99/month + GST.</p></div>
+      <div class="cluster"><a class="kds-btn kds-btn--accent" href="/signup/seeker">Create my free profile</a><a class="kds-btn kds-btn--brand" href="/jobs">Find jobs</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad js-faq" id="alerts">
+  <div class="container js-faq__inner">
+    <p class="eyebrow">Questions</p>
+    <h2>Job seeker FAQ</h2>
+    <div class="faq">
+      <% faqs.forEach(([q, a], i) => { %>
+        <details class="faq__item" <%= i === 0 ? 'open' : '' %>>
+          <summary><%= q %></summary>
+          <div class="faq__body"><p><%= a %></p></div>
+        </details>
+      <% }) %>
+    </div>
+    <p class="small muted">Already have an account? <a href="/login">Sign in</a>.</p>
+  </div>
+</section>

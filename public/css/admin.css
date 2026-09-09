@@ -1,0 +1,86 @@
+/* Admin area (Veda) — page CSS over the .dash shell in theme.css. Mobile first, tokens only. */
+.is-admin .dash { padding-top: 16px; }
+.is-admin .dash__main > * { min-width: 0; }
+.admin-nav a.is-active { background: var(--cc-navy); }
+.h3 { font-size: 1.15rem; }
+.card__title.h3 { margin-bottom: 12px; }
+
+/* stats */
+.stats--admin { grid-template-columns: 1fr 1fr; }
+@media (min-width: 768px) { .stats--admin { grid-template-columns: repeat(4, 1fr); } }
+a.stat { text-decoration: none; display: block; transition: border-color .15s, box-shadow .15s; }
+a.stat:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow-2); }
+.stat--alert { border-color: var(--cc-red); background: var(--cc-red-100); }
+.stat--alert .stat__value { color: var(--cc-red-700); }
+
+/* role chips */
+.role-chips { list-style: none; margin: 0; padding: 0; }
+.role-chips a { text-decoration: none; padding: 8px 14px; font-size: .875rem; }
+.role-chips strong { font-size: 1rem; }
+
+/* filter tabs (status pills) + filter bar */
+.filter-tabs { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
+.filter-tabs::-webkit-scrollbar { display: none; }
+.filter-tabs a { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--kds-border); background: #fff; text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); white-space: nowrap; }
+.filter-tabs a.is-active { background: var(--cc-navy-100); border-color: var(--cc-navy); color: var(--cc-navy-700); }
+.filter-tabs .count { background: var(--cc-surface); border-radius: 999px; padding: 1px 8px; font-size: .75rem; color: var(--kds-fg-muted); }
+.filter-tabs a.is-active .count { background: #fff; }
+.filter-bar { display: grid; gap: 8px; grid-template-columns: 1fr; }
+.filter-bar .input { min-width: 0; }
+@media (min-width: 640px) { .filter-bar { grid-template-columns: 1fr auto auto; } .filter-bar select.input { grid-column: 1 / -1; } }
+@media (min-width: 1024px) { .filter-bar { grid-template-columns: minmax(180px, 220px) 1fr auto auto; } .filter-bar select.input { grid-column: auto; } .filter-bar:not(:has(select)) { grid-template-columns: 1fr auto auto; } }
+
+/* tables inside cards */
+.card--table { padding: 12px 16px; }
+.card--table .table-wrap { overflow-x: auto; }
+.card--table .table { font-size: .9rem; }
+.row-title { font-weight: 600; color: var(--cc-ink); text-decoration: none; }
+a.row-title:hover { color: var(--cc-red); }
+.row--new td { background: var(--cc-navy-50); }
+.row--muted { opacity: .6; }
+.btn-danger-text { color: var(--kds-danger); }
+@media (min-width: 768px) { .card--table .table th:first-child, .card--table .table td:first-child { padding-left: 0; } .card--table .table th:last-child, .card--table .table td:last-child { padding-right: 0; } }
+@media (max-width: 767px) { .card--table { padding: 12px; } .table--stack tr { margin-bottom: 8px; } .row--new td { background: transparent; } .row--new { border-color: var(--cc-navy) !important; } }
+
+/* simple row lists (overview cards) */
+.list-rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.list-row { display: grid; gap: 4px; padding: 10px 0; border-top: 1px solid var(--kds-border); }
+.list-row:first-child { border-top: 0; padding-top: 4px; }
+.list-row__title { font-weight: 600; text-decoration: none; color: var(--cc-ink); overflow-wrap: anywhere; }
+.list-row__title:hover { color: var(--cc-red); }
+.list-row__meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.grid--admin { align-items: start; }
+
+/* message detail */
+.msg-title { font-size: clamp(1.35rem, 1.5vw + .9rem, 1.9rem); overflow-wrap: anywhere; }
+.status-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.status-form .input { width: auto; min-width: 150px; text-transform: capitalize; }
+.msg-grid { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 1024px) { .msg-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
+.msg-body { background: var(--cc-surface); border-radius: 12px; padding: 16px; font-size: 1rem; overflow-wrap: anywhere; }
+.msg-body p:last-child { margin-bottom: 0; }
+.check--inline { padding: 8px 12px; min-height: 44px; align-items: center; }
+.dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 14px; margin: 0; font-size: .9375rem; }
+.dl dt { font-weight: 600; color: var(--kds-fg-muted); font-size: .8125rem; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+.dl dd { margin: 0; overflow-wrap: anywhere; }
+.dl--inline { margin-top: 8px; }
+.ua { font-size: .8125rem; }
+code { font-size: .875em; background: var(--cc-surface); padding: 1px 6px; border-radius: 6px; }
+
+/* mail outbox preview */
+.mail-preview { width: 100%; height: 720px; max-height: 80vh; border: 1px solid var(--kds-border); border-radius: 12px; background: #fff; }
+.mail-text { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--cc-surface); border-radius: 12px; padding: 16px; font-size: .875rem; margin: 0; }
+[data-mail-view].is-active { background: var(--cc-navy-100); border-color: var(--cc-navy); }
+.pager { justify-content: center; }
+
+/* settings */
+.setting .hint { line-height: 1.5; }
+.setting__effective .badge { vertical-align: middle; margin-right: 4px; }
+
+/* wide admin tables (jobs/users/payments): stack to cards below 1200px (the main column is only ~730-900px wide at 1024) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .table--stack-lg thead { display: none; }
+  .table--stack-lg tr { display: block; border: 1px solid var(--kds-border); border-radius: 12px; padding: 8px 12px; margin-bottom: 10px; background: #fff; }
+  .table--stack-lg td { display: flex; gap: 12px; justify-content: space-between; border: 0; padding: 6px 0 !important; }
+  .table--stack-lg td::before { content: attr(data-label); font-weight: 600; color: var(--kds-fg-muted); font-size: .8125rem; flex: none; }
+}

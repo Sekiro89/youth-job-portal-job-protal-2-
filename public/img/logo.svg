@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 112" width="400" height="112"><text x="0" y="60" font-family="Montserrat,Arial" font-weight="800" font-size="48" fill="#1F3A5F">CANADA</text><text x="0" y="100" font-family="Montserrat,Arial" font-weight="600" font-size="30" letter-spacing="8" fill="#D42E2E">CAREERS</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 112" width="400" height="112" role="img" aria-label="Canada Careers"><title>Canada Careers</title>
+<g transform="translate(-30.12,12) scale(0.175)"><path fill="#D42E2E" transform="translate(280.0,0) scale(4.4)" d="M50,0 L54,12 L61,8 L57,25 L74,14 L72,25 L86,22 L78,41 L98,45 L90,52 L94,62 L76,62 L80,76 L54,68 L53,100 L47,100 L46,68 L20,76 L24,62 L6,62 L10,52 L2,45 L22,41 L14,22 L28,25 L26,14 L43,25 L39,8 L46,12 L50,0 Z"/>
+<clipPath id="ccFigH"><path d="M195,0 H805 V452 Q500,520 195,452 Z"/></clipPath>
+<g clip-path="url(#ccFigH)">
+<g fill="#1F3A5F" stroke="#fff" stroke-width="8" stroke-linejoin="round"><rect x="276.0" y="336" width="96" height="420" rx="48.0"/><circle cx="324" cy="288" r="38"/></g>
+<g fill="#35A8B0" stroke="#fff" stroke-width="8" stroke-linejoin="round"><rect x="628.0" y="348" width="96" height="420" rx="48.0"/><circle cx="676" cy="300" r="38"/></g>
+<g fill="#7FB542" stroke="#fff" stroke-width="8" stroke-linejoin="round"><rect x="360.0" y="304" width="104" height="420" rx="52.0"/><circle cx="412" cy="256" r="38"/></g>
+<g fill="#F4A62A" stroke="#fff" stroke-width="8" stroke-linejoin="round"><rect x="536.0" y="308" width="104" height="420" rx="52.0"/><circle cx="588" cy="260" r="38"/></g>
+<g fill="#1F3A5F" stroke="#fff" stroke-width="8" stroke-linejoin="round"><rect x="448.0" y="286" width="104" height="420" rx="52.0"/><circle cx="500" cy="238" r="38"/></g>
+</g>
+<path d="M195,452 Q500,520 805,452" fill="none" stroke="#fff" stroke-width="12.8"/>
+<path fill="#1F3A5F" d="M195,452 Q500,520 805,452 Q500,562 195,452 Z"/></g>
+<text x="124" y="56" font-family="Montserrat, Arial Black, sans-serif" font-weight="800" font-size="48" letter-spacing="4" fill="#1F3A5F" text-anchor="start" >CANADA</text>
+<path fill="#fff" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" transform="translate(259.264,29.79200000000001) scale(0.14111999999999997)" d="M50,0 L54,12 L61,8 L57,25 L74,14 L72,25 L86,22 L78,41 L98,45 L90,52 L94,62 L76,62 L80,76 L54,68 L53,100 L47,100 L46,68 L20,76 L24,62 L6,62 L10,52 L2,45 L22,41 L14,22 L28,25 L26,14 L43,25 L39,8 L46,12 L50,0 Z"/>
+<path fill="#D42E2E" transform="translate(259.264,29.79200000000001) scale(0.14111999999999997)" d="M50,0 L54,12 L61,8 L57,25 L74,14 L72,25 L86,22 L78,41 L98,45 L90,52 L94,62 L76,62 L80,76 L54,68 L53,100 L47,100 L46,68 L20,76 L24,62 L6,62 L10,52 L2,45 L22,41 L14,22 L28,25 L26,14 L43,25 L39,8 L46,12 L50,0 Z"/>
+<text x="250.53" y="88" font-family="Montserrat, Arial Black, sans-serif" font-weight="600" font-size="21" letter-spacing="6.5" fill="#D42E2E" text-anchor="middle" >CAREERS</text>
+<path stroke="#D42E2E" stroke-width="1.8" stroke-linecap="round" d="M166.4,80.9 h-40.4 M328.2,80.9 h40.4"/>
+</svg>

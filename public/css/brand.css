@@ -1,0 +1,61 @@
+/* Canada Careers — brand helpers: audience icons + logo lockups.
+   Colours come from theme.css tokens (never hardcode hex here).
+   Icon files live in /img/audience/<key>.svg (24×24, fill="currentColor").
+
+   Usage (mask, no inline SVG needed — the icon takes the element's `color`):
+     <span class="audience-icon audience-icon--youth" aria-hidden="true"></span>
+   Usage (inline SVG pasted into the page — fill="currentColor" picks up the colour):
+     <span class="audience-icon audience-icon--refugees"><svg …></svg></span>
+   Sizes: default 24px; add .audience-icon--sm (18px) or .audience-icon--lg (40px).    */
+
+.audience-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  vertical-align: middle;
+  color: var(--cc-navy);
+}
+.audience-icon--sm { width: 18px; height: 18px; }
+.audience-icon--lg { width: 40px; height: 40px; }
+.audience-icon--xl { width: 56px; height: 56px; }
+
+/* keyed variants: colour + masked glyph (background-color paints the mask) */
+.audience-icon--professionals,
+.audience-icon--new_immigrants,
+.audience-icon--indigenous,
+.audience-icon--refugees,
+.audience-icon--youth {
+  background-color: currentColor;
+  -webkit-mask: var(--audience-icon-src) center / contain no-repeat;
+  mask: var(--audience-icon-src) center / contain no-repeat;
+}
+.audience-icon--professionals { color: var(--cc-aud-professionals); --audience-icon-src: url("/img/audience/briefcase.svg"); }
+.audience-icon--new_immigrants { color: var(--cc-aud-new_immigrants); --audience-icon-src: url("/img/audience/globe.svg"); }
+.audience-icon--indigenous     { color: var(--cc-aud-indigenous);     --audience-icon-src: url("/img/audience/inukshuk.svg"); }
+.audience-icon--refugees       { color: var(--cc-aud-refugees);       --audience-icon-src: url("/img/audience/hand.svg"); }
+.audience-icon--youth          { color: var(--cc-aud-youth);          --audience-icon-src: url("/img/audience/star.svg"); }
+
+/* when the SVG is inlined inside the span, drop the mask and let fill=currentColor do the work */
+.audience-icon > svg { display: block; width: 100%; height: 100%; }
+.audience-icon:has(> svg) { background: none; -webkit-mask: none; mask: none; }
+
+/* icon + label pair, e.g. in the audience strip / job-card chips */
+.audience-item { display: inline-flex; align-items: center; gap: 8px; font: 600 .8125rem/1 var(--cc-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--cc-ink-muted); }
+
+/* ---------- logo lockups ---------- */
+.logo-lockup { display: inline-flex; align-items: center; text-decoration: none; line-height: 0; }
+.logo-lockup img, .logo-lockup svg { display: block; height: 44px; width: auto; }
+.logo-lockup--sm img, .logo-lockup--sm svg { height: 32px; }
+.logo-lockup--lg img, .logo-lockup--lg svg { height: 64px; }
+.logo-lockup--stacked img, .logo-lockup--stacked svg { height: auto; width: 100%; max-width: 360px; }
+.logo-lockup--mark img, .logo-lockup--mark svg { height: 48px; }
+
+/* audience colour strip (used under the OG image / section dividers) */
+.audience-strip { display: flex; height: 6px; border-radius: 3px; overflow: hidden; }
+.audience-strip > span { flex: 1; }
+.audience-strip > span:nth-child(1) { background: var(--cc-navy); }
+.audience-strip > span:nth-child(2) { background: var(--cc-green); }
+.audience-strip > span:nth-child(3) { background: var(--cc-red); }
+.audience-strip > span:nth-child(4) { background: var(--cc-orange); }
+.audience-strip > span:nth-child(5) { background: var(--cc-teal); }

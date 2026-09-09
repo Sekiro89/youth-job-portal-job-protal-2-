@@ -129,13 +129,11 @@
 (function () {
   var t = document.querySelector('[data-toggle-account]'); if (!t) return;
   var fields = document.querySelectorAll('[data-account-field]');
-  var saved = {};
+  fields.forEach(function (f) { f.setAttribute('data-orig', f.value); });
   t.addEventListener('change', function () {
     fields.forEach(function (f) {
-      if (t.checked) { saved[f.id] = f.value; f.value = f.getAttribute('data-orig') || f.value; f.readOnly = true; }
-      else { f.readOnly = false; }
+      if (t.checked) { f.value = f.getAttribute('data-orig'); f.readOnly = true; } else { f.readOnly = false; }
     });
   });
-  fields.forEach(function (f) { f.setAttribute('data-orig', f.value); });
 })();
 </script>

@@ -1,0 +1,30 @@
+<%# expects: signupHref, audienceLabel %>
+<section class="landing-section" id="pricing">
+  <div class="container">
+    <p class="eyebrow">Pricing</p>
+    <h2>One simple price. No contracts.</h2>
+    <div class="pricing">
+      <div class="pricing__card">
+        <div class="pricing__amount"><span class="pricing__currency">$</span><%= (PRICE/100).toFixed(2) %><span class="pricing__per">/month + GST</span></div>
+        <p class="pricing__total">= <strong>$<%= (TOTAL/100).toFixed(2) %> CAD</strong> with GST, per posting</p>
+        <ul class="pricing__list">
+          <li>Live within seconds of payment — no approval queue</li>
+          <li>Renews monthly, cancel any time from your dashboard</li>
+          <li>Unlimited applicants, resumes in your dashboard</li>
+          <li>Instant email alerts to matching job seekers</li>
+          <li>Indexed by Google for Jobs</li>
+          <li>GST receipt for every charge</li>
+        </ul>
+        <a class="kds-btn kds-btn--accent kds-btn--block" href="<%= signupHref %>">Create <%= audienceLabel %> account</a>
+        <p class="small muted pricing__note">Pay by card. Nothing is charged until you publish a posting.</p>
+      </div>
+      <div class="pricing__aside">
+        <h3>What $<%= (TOTAL/100).toFixed(2) %> gets you</h3>
+        <p>A posting stays live for a full month and renews automatically. Pause it when you have enough applicants; cancel it the moment the role is filled — you are never locked in.</p>
+        <p>Compare: most Canadian job boards charge $200–$500 for a single 30-day posting.</p>
+        <div class="divider-maple" aria-hidden="true">🍁</div>
+        <p class="small muted">Prices in Canadian dollars. GST (5%) applies to all postings. No PST/HST is charged.</p>
+      </div>
+    </div>
+  </div>
+</section>

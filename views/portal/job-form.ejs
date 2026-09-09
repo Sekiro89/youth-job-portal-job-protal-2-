@@ -1,0 +1,212 @@
+<% const v = values; const err = (k) => errors[k] ? `<div class="error" id="err-${k}">${h.escapeHtml(errors[k])}</div>` : ''; const inv = (k) => errors[k] ? ` aria-invalid="true" aria-describedby="err-${k}"` : '';
+   const isEdit = !!job; const canPublish = !job || ['draft','pending_payment'].includes(job.status); const isLive = job && job.status === 'active'; %>
+<div class="container dash">
+  <%- include('partials/side') %>
+  <div class="dash__main">
+    <div class="split">
+      <div>
+        <p class="eyebrow"><%= isEdit ? 'Edit posting' : 'New posting' %></p>
+        <h1><%= isEdit ? job.title : 'Post a job' %></h1>
+        <% if (isEdit) { %><p class="muted"><%- include('partials/status-badge', { job }) %> <% if (isLive) { %>Changes to a live posting are published immediately.<% } %></p>
+        <% } else { %><p class="muted">Save as a draft for free. Publishing costs $<%= (PRICE/100).toFixed(2) %> + GST (<strong>$<%= (TOTAL/100).toFixed(2) %>/month</strong>), renews monthly, cancel any time.</p><% } %>
+      </div>
+      <% if (isEdit) { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Back to posting</a><% } %>
+    </div>
+
+    <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the <%= Object.keys(errors).length %> highlighted field<%= Object.keys(errors).length === 1 ? '' : 's' %> below.</div><% } %>
+
+    <form class="form job-form" method="post" action="<%= isEdit ? base + '/jobs/' + job.id + '/edit' : base + '/jobs/new' %>" novalidate>
+      <% if (isConsultant) { %>
+      <section class="card form-section">
+        <h2 class="form-section__title">Post as company</h2>
+        <div class="field">
+          <label for="employer_profile_id">Which client is this posting for? <span class="req">*</span></label>
+          <select class="input" id="employer_profile_id" name="employer_profile_id" required<%- inv('employer_profile_id') %><%= isEdit && ['active','pending_payment'].includes(job.status) ? ' disabled' : '' %>>
+            <option value="">Choose a company…</option>
+            <% profiles.forEach(p => { %><option value="<%= p.id %>" <%= String(v.employer_profile_id) === String(p.id) ? 'selected' : '' %>><%= p.company_name %><%= p.city ? ' — ' + h.location(p) : '' %></option><% }) %>
+          </select>
+          <% if (isEdit && ['active','pending_payment'].includes(job.status)) { %><input type="hidden" name="employer_profile_id" value="<%= job.employer_profile_id %>"><div class="hint">The company cannot change once billing has started.</div><% } else { %><div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div><% } %>
+          <%- err('employer_profile_id') %>
+        </div>
+      </section>
+      <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company profile</a></div>' : '' %><% } %>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">The role</h2>
+        <div class="field">
+          <label for="title">Job title <span class="req">*</span></label>
+          <input class="input" id="title" name="title" value="<%= v.title %>" maxlength="120" required placeholder="e.g. Registered Nurse — Long-Term Care"<%- inv('title') %>>
+          <%- err('title') %>
+        </div>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="category">Category <span class="req">*</span></label>
+            <select class="input" id="category" name="category" required<%- inv('category') %>>
+              <option value="">Choose…</option>
+              <% C.CATEGORIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.category === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('category') %>
+          </div>
+          <div class="field">
+            <label for="job_type">Job type <span class="req">*</span></label>
+            <select class="input" id="job_type" name="job_type"<%- inv('job_type') %>>
+              <% C.JOB_TYPES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.job_type === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('job_type') %>
+          </div>
+          <div class="field">
+            <label for="work_arrangement">Work arrangement <span class="req">*</span></label>
+            <select class="input" id="work_arrangement" name="work_arrangement"<%- inv('work_arrangement') %>>
+              <% C.WORK_ARRANGEMENTS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.work_arrangement === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('work_arrangement') %>
+          </div>
+        </div>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="experience_level">Experience level</label>
+            <select class="input" id="experience_level" name="experience_level"<%- inv('experience_level') %>>
+              <option value="">Any</option>
+              <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('experience_level') %>
+          </div>
+          <div class="field">
+            <label for="education">Education</label>
+            <input class="input" id="education" name="education" value="<%= v.education %>" maxlength="160" placeholder="e.g. High school diploma; College diploma">
+          </div>
+          <div class="field">
+            <label for="noc_code">NOC code <span class="muted">(optional)</span></label>
+            <input class="input" id="noc_code" name="noc_code" value="<%= v.noc_code %>" inputmode="numeric" maxlength="5" placeholder="e.g. 31301"<%- inv('noc_code') %>>
+            <div class="hint">2021 National Occupational Classification — helps LMIA and immigration-focused seekers.</div>
+            <%- err('noc_code') %>
+          </div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">Location</h2>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="city">City <span class="req">*</span></label>
+            <input class="input" id="city" name="city" value="<%= v.city %>" maxlength="80" required<%- inv('city') %>>
+            <%- err('city') %>
+          </div>
+          <div class="field">
+            <label for="province">Province / territory <span class="req">*</span></label>
+            <select class="input" id="province" name="province" required<%- inv('province') %>>
+              <option value="">Choose…</option>
+              <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('province') %>
+          </div>
+          <div class="field">
+            <label for="postal_code">Postal code</label>
+            <input class="input" id="postal_code" name="postal_code" value="<%= v.postal_code %>" maxlength="7" placeholder="A1A 1A1" autocomplete="postal-code"<%- inv('postal_code') %>>
+            <%- err('postal_code') %>
+          </div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">Pay &amp; openings</h2>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="salary_min">Salary from (CAD)</label>
+            <input class="input" id="salary_min" name="salary_min" value="<%= v.salary_min %>" inputmode="numeric" placeholder="e.g. 52000"<%- inv('salary_min') %>>
+            <%- err('salary_min') %>
+          </div>
+          <div class="field">
+            <label for="salary_max">Salary to (CAD)</label>
+            <input class="input" id="salary_max" name="salary_max" value="<%= v.salary_max %>" inputmode="numeric" placeholder="e.g. 60000"<%- inv('salary_max') %>>
+            <%- err('salary_max') %>
+          </div>
+          <div class="field">
+            <label for="salary_period">Per</label>
+            <select class="input" id="salary_period" name="salary_period">
+              <option value="year" <%= v.salary_period !== 'hour' ? 'selected' : '' %>>Year</option>
+              <option value="hour" <%= v.salary_period === 'hour' ? 'selected' : '' %>>Hour</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="vacancies">Number of positions <span class="req">*</span></label>
+            <input class="input" id="vacancies" name="vacancies" type="number" min="1" max="999" value="<%= v.vacancies %>" required<%- inv('vacancies') %>>
+            <%- err('vacancies') %>
+          </div>
+          <div class="field">
+            <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
+            <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
+            <div class="hint">Used for matching job seekers to your posting.</div>
+          </div>
+        </div>
+        <fieldset class="field fieldset">
+          <legend>Languages <span class="req">*</span></legend>
+          <div class="checks checks--3">
+            <% ['English', 'French', 'Other'].forEach(l => { %>
+              <label class="check"><input type="checkbox" name="languages" value="<%= l %>" <%= (v.languages || []).includes(l) ? 'checked' : '' %> <%= l === 'Other' ? 'data-toggles="language_other_wrap"' : '' %>> <%= l %></label>
+            <% }) %>
+          </div>
+          <div class="field" id="language_other_wrap" <%= (v.languages || []).includes('Other') ? '' : 'hidden' %>>
+            <label for="language_other">Other language(s)</label>
+            <input class="input" id="language_other" name="language_other" value="<%= v.language_other %>" maxlength="120" placeholder="e.g. Punjabi, Mandarin"<%- inv('language_other') %>>
+            <%- err('language_other') %>
+          </div>
+          <%- err('languages') %>
+        </fieldset>
+        <fieldset class="field fieldset">
+          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
+          <div class="checks checks--3 checks--aud">
+            <% C.AUDIENCES.forEach(([k, n]) => { %>
+              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
+            <% }) %>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">Description</h2>
+        <div class="field">
+          <label for="description">Job description <span class="req">*</span></label>
+          <textarea class="input" id="description" name="description" rows="10" minlength="100" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
+          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
+          <%- err('description') %>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="requirements">Requirements</label>
+            <textarea class="input" id="requirements" name="requirements" rows="6" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
+          </div>
+          <div class="field">
+            <label for="benefits">Benefits</label>
+            <textarea class="input" id="benefits" name="benefits" rows="6" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="card form-section">
+        <h2 class="form-section__title">How to apply</h2>
+        <p class="muted small">Applicants always apply through Canada Careers (resume + cover letter into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
+        <div class="form-row">
+          <div class="field">
+            <label for="apply_email">Application email</label>
+            <input class="input" id="apply_email" name="apply_email" type="email" value="<%= v.apply_email %>" maxlength="160" autocomplete="email"<%- inv('apply_email') %>>
+            <%- err('apply_email') %>
+          </div>
+          <div class="field">
+            <label for="apply_url">External application link</label>
+            <input class="input" id="apply_url" name="apply_url" value="<%= v.apply_url %>" maxlength="300" placeholder="https://…"<%- inv('apply_url') %>>
+            <%- err('apply_url') %>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions form-actions--sticky">
+        <button class="kds-btn kds-btn--ghost" type="submit" name="action" value="draft"><%= isEdit ? (isLive ? 'Save changes' : 'Save') : 'Save draft' %></button>
+        <% if (canPublish) { %><button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %> · $<%= (TOTAL/100).toFixed(2) %>/mo</button><% } %>
+        <% if (isEdit) { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">Cancel</a><% } %>
+      </div>
+    </form>
+  </div>
+</div>

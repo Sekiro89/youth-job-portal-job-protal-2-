@@ -1,0 +1,13 @@
+<section class="landing-section landing-section--alt">
+  <div class="container">
+    <p class="eyebrow">Reach</p>
+    <h2>Five audiences. One posting.</h2>
+    <p class="lead">Canada Careers is built for the people other job boards overlook — the five groups on our logo. Tag your posting and it is surfaced to the seekers who match.</p>
+    <div class="grid grid--3 aud-grid">
+      <% const blurbs = { professionals: 'Experienced Canadians and internationally-trained professionals looking for their next role.', new_immigrants: 'Newcomers with credentials, work permits and PR who are ready to start now.', indigenous: 'First Nations, Inuit and Métis job seekers across every province and territory.', refugees: 'Resettled refugees and protected persons legally entitled to work in Canada.', youth: 'Students, co-op candidates and recent graduates entering the workforce.' };
+       C.AUDIENCES.forEach(([k, n]) => { %>
+        <div class="aud-card aud-card--<%= k %>"><span class="aud aud--<%= k %>"><%= n %></span><p><%= blurbs[k] %></p></div>
+      <% }) %>
+    </div>
+  </div>
+</section>

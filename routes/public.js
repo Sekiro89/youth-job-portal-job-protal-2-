@@ -202,11 +202,13 @@ router.get('/jobs/:slug', async (req, res, next) => {
     if (!job) return notFound(res, 'This job posting is no longer available. It may have closed, expired or been removed by the employer.');
     db.query('UPDATE jobs SET views = views + 1 WHERE id = $1', [job.id]).catch(e => console.error('[views]', e.message));
 
-    const [more, similar, savedRow] = await Promise.all([
+    const [more, savedRow] = await Promise.all([
       db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.employer_profile_id = $1 AND jobs.id <> $2 AND ${PUBLIC_WHERE} ORDER BY ${NEWEST} LIMIT 4`, [job.employer_profile_id, job.id]),
-      db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.category = $1 AND jobs.id <> $2 AND ${PUBLIC_WHERE} ORDER BY (jobs.province = $3) DESC, ${NEWEST} LIMIT 4`, [job.category, job.id, job.province]),
       req.user && req.user.role === 'seeker' ? db.one('SELECT 1 FROM saved_jobs WHERE user_id = $1 AND job_id = $2', [req.user.id, job.id]) : null,
     ]);
+    // Similar = same category, same province first, excluding this job and anything already shown under "more from company".
+    const similar = await db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.category = $1 AND jobs.id <> ALL($2::bigint[]) AND ${PUBLIC_WHERE} ORDER BY (jobs.province = $3) DESC, ${NEWEST} LIMIT 4`,
+      [job.category, [job.id, ...more.map(j => j.id)], job.province]);
 
     const url = `${res.locals.PUBLIC_URL}/jobs/${job.slug}`;
     const salaryValue = job.salary_min || job.salary_max ? {
@@ -312,12 +314,12 @@ router.get('/robots.txt', (req, res) => {
 router.get('/privacy', (req, res) => res.render('public/privacy', {
   title: 'Privacy policy',
   metaDescription: 'How Canada Careers collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
-  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01',
+  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 router.get('/terms', (req, res) => res.render('public/terms', {
   title: 'Terms of use',
   metaDescription: 'The terms that govern use of Canada Careers, including job posting rules, the $9.99/month + GST subscription, acceptable use and Canadian governing law.',
-  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01',
+  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 
 module.exports = router;

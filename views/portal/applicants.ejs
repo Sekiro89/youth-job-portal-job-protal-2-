@@ -1,0 +1,72 @@
+<% const badgeFor = (s) => ({ submitted: '', viewed: 'teal', shortlisted: 'positive', rejected: 'danger', hired: 'positive' })[s] || ''; %>
+<div class="container dash">
+  <%- include('partials/side') %>
+  <div class="dash__main">
+    <div class="split">
+      <div>
+        <p class="eyebrow"><%= scope === 'job' ? job.company_name : 'All companies' %></p>
+        <h1><%= scope === 'job' ? 'Applicants — ' + job.title : 'Applicants' %></h1>
+        <p class="muted"><%= list.length %> application<%= list.length === 1 ? '' : 's' %><%= filters.status ? ' · ' + APP_STATUS_NAME[filters.status].toLowerCase() : '' %>. Changing a status notifies the applicant by email and in their dashboard.</p>
+      </div>
+      <% if (scope === 'job') { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">← Posting</a><% } %>
+    </div>
+
+    <form class="filters card card--flat" method="get" action="<%= scope === 'job' ? base + '/jobs/' + job.id + '/applicants' : base + '/applicants' %>">
+      <% if (scope === 'all') { %>
+      <div class="field">
+        <label for="f-job">Job</label>
+        <select class="input" id="f-job" name="job" data-autosubmit>
+          <option value="">All jobs</option>
+          <% jobsList.forEach(j => { %><option value="<%= j.id %>" <%= String(filters.job) === String(j.id) ? 'selected' : '' %>><%= j.title %><%= isConsultant ? ' — ' + j.company_name : '' %> (<%= j.n %>)</option><% }) %>
+        </select>
+      </div>
+      <% } %>
+      <div class="field">
+        <label for="f-status">Status</label>
+        <select class="input" id="f-status" name="status" data-autosubmit>
+          <option value="">Any status</option>
+          <% APP_STATUSES.forEach(s => { %><option value="<%= s %>" <%= filters.status === s ? 'selected' : '' %>><%= APP_STATUS_NAME[s] %></option><% }) %>
+        </select>
+      </div>
+      <div class="field field--btn"><button class="kds-btn kds-btn--ghost" type="submit">Filter</button></div>
+    </form>
+
+    <% if (!list.length) { %>
+      <div class="empty">No applications<%= filters.status || filters.job ? ' match these filters' : ' yet' %>.</div>
+    <% } else { %>
+    <div class="table-wrap">
+      <table class="table table--stack table--applicants">
+        <thead><tr><th>Applicant</th><% if (scope === 'all') { %><th>Job</th><% } %><th>Applied</th><th>Resume</th><th>Status &amp; notes</th></tr></thead>
+        <tbody>
+          <% list.forEach(a => { %>
+            <tr>
+              <td data-label="Applicant">
+                <strong><%= a.name %></strong>
+                <div class="small"><a href="mailto:<%= a.email %>"><%= a.email %></a><% if (a.phone) { %> · <a href="tel:<%= a.phone %>"><%= a.phone %></a><% } %></div>
+                <% if (a.cover_letter) { %><details class="small cover"><summary>Cover letter</summary><div class="prose"><%- h.paragraphs(a.cover_letter) %></div></details><% } %>
+              </td>
+              <% if (scope === 'all') { %><td data-label="Job"><a href="<%= base %>/jobs/<%= a.job_id %>"><%= a.job_title %></a><% if (isConsultant) { %><div class="small muted"><%= a.company_name %></div><% } %></td><% } %>
+              <td data-label="Applied"><%= h.formatDate(a.created_at) %><div class="small muted"><%= h.timeAgo(a.created_at) %></div></td>
+              <td data-label="Resume"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/applications/<%= a.id %>/resume">⬇ Download</a><div class="small muted"><%= a.resume_name %></div></td>
+              <td data-label="Status">
+                <form class="status-form" method="post" action="<%= base %>/applications/<%= a.id %>/status">
+                  <label class="visually-hidden" for="st-<%= a.id %>">Status for <%= a.name %></label>
+                  <div class="cluster">
+                    <span class="badge badge--<%= badgeFor(a.status) %>"><%= APP_STATUS_NAME[a.status] %></span>
+                    <select class="input input--sm" id="st-<%= a.id %>" name="status">
+                      <% APP_STATUSES.forEach(s => { %><option value="<%= s %>" <%= a.status === s ? 'selected' : '' %>><%= APP_STATUS_NAME[s] %></option><% }) %>
+                    </select>
+                  </div>
+                  <label class="visually-hidden" for="nt-<%= a.id %>">Notes for <%= a.name %></label>
+                  <textarea class="input input--sm" id="nt-<%= a.id %>" name="employer_notes" rows="2" placeholder="Private notes (never shown to the applicant)"><%= a.employer_notes || '' %></textarea>
+                  <button class="kds-btn kds-btn--brand kds-btn--sm" type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>

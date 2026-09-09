@@ -1,0 +1,30 @@
+<% const badge = { submitted: '', viewed: 'badge--teal', shortlisted: 'badge--positive', rejected: 'badge--danger', hired: 'badge--positive' }; %>
+<div class="container dash">
+  <%- include('_nav') %>
+  <div class="dash__main">
+    <div class="split"><div><h1>My applications</h1><p class="muted">Every job you applied to and where it stands.</p></div><a class="kds-btn kds-btn--brand" href="/jobs">Find jobs</a></div>
+    <% if (applications.length) { %>
+      <div class="table-wrap">
+        <table class="table table--stack">
+          <thead><tr><th>Job</th><th>Company</th><th>Applied</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+          <tbody>
+            <% applications.forEach(a => { %>
+              <tr>
+                <td data-label="Job"><% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><%= a.title %></a><% } else { %><%= a.title %> <span class="small muted">(no longer listed)</span><% } %></td>
+                <td data-label="Company"><%= a.company_name %><div class="small muted"><%= h.location(a) %></div></td>
+                <td data-label="Applied"><%= h.formatDate(a.created_at) %></td>
+                <td data-label="Status"><span class="badge <%= badge[a.status] || '' %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span></td>
+                <td data-label="">
+                  <% if (a.status === 'submitted') { %><form method="post" action="/jobseeker/applications/<%= a.id %>/withdraw" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Withdraw this application?">Withdraw</button></form><% } else { %><span class="small muted">Under review</span><% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">You can withdraw an application until the employer opens it.</p>
+    <% } else { %>
+      <div class="empty"><p><strong>No applications yet.</strong></p><p>Find a job you like and apply with your saved resume in one click.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs</a></div>
+    <% } %>
+  </div>
+</div>

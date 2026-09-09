@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="An employer posting a job"><title>An employer posting a job</title>
+<circle cx="380" cy="300" r="235" fill="#F1F5FA"/>
+<ellipse cx="400" cy="548" rx="330" ry="22" fill="#E4EBF4"/>
+<rect x="198" y="120" width="380" height="400" rx="22" fill="#E4EBF4"/><rect x="190" y="110" width="380" height="400" rx="22" fill="#fff" stroke="#C9D3E0" stroke-width="3"/>
+<rect x="230" y="150" width="96" height="24" rx="12" fill="#D42E2E"/>
+<rect x="230" y="196" width="250" height="22" rx="7" fill="#1F3A5F"/><rect x="230" y="232" width="170" height="14" rx="7.0" fill="#C9D3E0"/>
+<rect x="230" y="276" width="300" height="12" rx="6.0" fill="#E4EBF4"/><rect x="230" y="302" width="250" height="12" rx="6.0" fill="#E4EBF4"/><rect x="230" y="328" width="280" height="12" rx="6.0" fill="#E4EBF4"/>
+<rect x="230" y="368" width="128" height="34" rx="17" fill="#FDF0DA"/><circle cx="252" cy="385" r="11" fill="#F4A62A"/><rect x="272" y="379" width="70" height="12" rx="6.0" fill="#F4A62A"/>
+<rect x="230" y="420" width="78" height="22" rx="11" fill="#EAF4DE"/><rect x="316" y="420" width="78" height="22" rx="11" fill="#DFF3F4"/><rect x="402" y="420" width="78" height="22" rx="11" fill="#E4EBF4"/>
+<rect x="230" y="460" width="150" height="34" rx="17" fill="#1F3A5F"/><rect x="258" y="473" width="94" height="8" rx="4.0" fill="#fff"/>
+<circle cx="548" cy="132" r="38" fill="#fff" stroke="#C9D3E0" stroke-width="3"/><path fill="#D42E2E" transform="translate(524.0,108) scale(0.48)" d="M50,0 L54,12 L61,8 L57,25 L74,14 L72,25 L86,22 L78,41 L98,45 L90,52 L94,62 L76,62 L80,76 L54,68 L53,100 L47,100 L46,68 L20,76 L24,62 L6,62 L10,52 L2,45 L22,41 L14,22 L28,25 L26,14 L43,25 L39,8 L46,12 L50,0 Z"/>
+<circle cx="560" cy="470" r="34" fill="#7FB542"/><path d="M542,470 l12,12 l24,-26" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="680" cy="298.8" r="30.8" fill="#1F3A5F"/><rect x="638.0" y="338.0" width="84.0" height="112.0" rx="31.9" fill="#1F3A5F"/><rect x="646.4" y="438.8" width="30.8" height="109.2" rx="15.4" fill="#1F3A5F"/><rect x="682.8" y="438.8" width="30.8" height="109.2" rx="15.4" fill="#1F3A5F"/><path d="M680.0,354.8 l-52,30" stroke="#1F3A5F" stroke-width="23.8" stroke-linecap="round" fill="none"/>
+</svg>
