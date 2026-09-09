@@ -225,6 +225,7 @@ body.has-applybar { padding-bottom: 84px; }
 .co-head__row h1 { margin-bottom: 6px; }
 .co-head__meta { margin: 0; gap: 6px 14px; }
 .co-logo { flex: none; width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; background: var(--cc-navy); color: #fff; font: 800 1.75rem/1 var(--cc-font-display); }
+.co-logo--img { object-fit: contain; background: #fff; border: 1px solid var(--kds-border); padding: 4px; }
 .co-layout { display: grid; gap: 24px; grid-template-columns: 1fr; padding-top: 24px; padding-bottom: 24px; align-items: start; }
 .co-jobs { min-width: 0; }
 .co-jobs h2 { font-size: 1.3rem; }

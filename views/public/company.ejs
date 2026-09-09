@@ -2,7 +2,7 @@
   <div class="container">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">›</span><a href="/jobs">Jobs</a><span aria-hidden="true">›</span><span aria-current="page"><%= co.company_name %></span></nav>
     <div class="co-head__row">
-      <span class="co-logo" aria-hidden="true"><%= (co.company_name || '?').trim()[0].toUpperCase() %></span>
+      <% if (co.logo_path) { %><img class="co-logo co-logo--img" src="/logos/<%= co.id %>" alt="<%= co.company_name %> logo" width="64" height="64"><% } else { %><span class="co-logo" aria-hidden="true"><%= (co.company_name || '?').trim()[0].toUpperCase() %></span><% } %>
       <div>
         <h1><%= co.company_name %></h1>
         <p class="cluster co-head__meta muted">

@@ -196,9 +196,9 @@
 .preview [data-expand] { margin-top: 10px; }
 /* Applicant status form: badge on its own line, select full width on phones; dashboard rows stack on phones. */
 @media (max-width: 639px) {
-  .status-form .cluster { flex-direction: column; align-items: stretch; }
+  .status-form .cluster { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }   /* nowrap: a column container with a px flex-basis would wrap the select into a 2nd column */
   .status-form .cluster .badge { align-self: flex-start; }
-  .status-form select { width: 100%; flex: 1 1 100%; }
+  .status-form select { width: 100%; flex: 0 0 auto; }
   .applicant-row > * { flex: 1 1 100%; }
   .applicant-row .stack-tight, .applicant-row .cluster { justify-items: start; }
 }
