@@ -324,3 +324,63 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter_name text;
 -- Role-based pricing (cents, before GST). env EMPLOYER_PRICE_CENTS / CONSULTANT_PRICE_CENTS override these.
 INSERT INTO settings(key, value) VALUES ('employer_price_cents', '1499'), ('consultant_price_cents', '999') ON CONFLICT (key) DO NOTHING;
 UPDATE settings SET value='1499' WHERE key='posting_price_cents' AND value='999';  -- legacy key = employer price
+
+-- ---------------------------------------------------------------- client feedback PDF (2026-09-10) — additive
+-- Employer-level address book: locations are managed on the profile and SELECTED when posting.
+CREATE TABLE IF NOT EXISTS employer_locations (
+  id                  bigserial PRIMARY KEY,
+  employer_profile_id bigint NOT NULL REFERENCES employer_profiles(id) ON DELETE CASCADE,
+  label               text,                       -- e.g. "Head office", "Airport Rd warehouse"
+  street_address      text NOT NULL,
+  unit                text,
+  city                text NOT NULL,
+  province            text NOT NULL,
+  postal_code         text NOT NULL,
+  is_default          boolean NOT NULL DEFAULT false,
+  archived            boolean NOT NULL DEFAULT false,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS employer_locations_profile_idx ON employer_locations(employer_profile_id) WHERE NOT archived;
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS employer_location_id bigint REFERENCES employer_locations(id) ON DELETE SET NULL;
+
+-- Several operating (trade) names under one legal name; operating_name stays = the default one.
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS operating_names text[] NOT NULL DEFAULT '{}';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS operating_name text;          -- the operating name chosen for THIS posting (NULL = profile default)
+-- Work hours (Job Bank "Number of hours worked" + frequency)
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS hours_amount numeric(6,2);
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS hours_period text;             -- week | biweekly | month | year (C.HOURS_PERIODS)
+-- employer_profiles.industry now stores a KEY from C.INDUSTRIES (legacy free text is displayed raw)
+
+-- Settings become the client's control panel: values here override env. Secrets are stored encrypted ("enc:v1:...").
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS updated_by bigint;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS is_secret boolean NOT NULL DEFAULT false;
+
+-- Backfills (idempotent)
+INSERT INTO employer_locations(employer_profile_id, label, street_address, city, province, postal_code, is_default)
+SELECT p.id, 'Main location', p.street_address, p.city, p.province, p.postal_code, true
+FROM employer_profiles p WHERE p.street_address IS NOT NULL AND p.city IS NOT NULL AND p.province IS NOT NULL AND p.postal_code IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM employer_locations l WHERE l.employer_profile_id = p.id);
+UPDATE employer_profiles SET operating_names = ARRAY[operating_name] WHERE operating_name IS NOT NULL AND operating_name <> '' AND operating_names = '{}';
+-- education / experience vocabulary migration (old keys -> Job Bank keys)
+UPDATE jobs SET education = CASE education WHEN 'certificate' THEN 'college' WHEN 'professional' THEN 'professional_degree' ELSE education END WHERE education IN ('certificate','professional');
+UPDATE jobs SET experience_level = CASE experience_level WHEN 'entry' THEN '1_2_years' WHEN 'intermediate' THEN '2_3_years' WHEN 'senior' THEN '5_plus' WHEN 'manager' THEN '5_plus' WHEN 'executive' THEN '5_plus' ELSE experience_level END WHERE experience_level IN ('entry','intermediate','senior','manager','executive');
+
+-- ---------------------------------------------------------------- maps (2026-09-10)
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS lat double precision;
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS lng double precision;
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS geocoded_at timestamptz;
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS geocode_provider text;   -- google | nominatim | manual
+ALTER TABLE job_locations ADD COLUMN IF NOT EXISTS place_id text;           -- Google place id when available
+ALTER TABLE employer_locations ADD COLUMN IF NOT EXISTS lat double precision;
+ALTER TABLE employer_locations ADD COLUMN IF NOT EXISTS lng double precision;
+ALTER TABLE employer_locations ADD COLUMN IF NOT EXISTS geocoded_at timestamptz;
+ALTER TABLE employer_locations ADD COLUMN IF NOT EXISTS place_id text;
+CREATE INDEX IF NOT EXISTS job_locations_geo_idx ON job_locations(lat, lng) WHERE lat IS NOT NULL;
+CREATE TABLE IF NOT EXISTS geocode_cache (
+  query       text PRIMARY KEY,   -- normalised address string
+  lat         double precision, lng double precision,
+  provider    text, place_id text, raw jsonb,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);

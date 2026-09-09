@@ -29,12 +29,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", 'https://js.stripe.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://js.stripe.com', 'https://maps.googleapis.com', 'https://maps.gstatic.com'],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      workerSrc: ["'self'", 'blob:'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'https:'],
       frameSrc: ['https://js.stripe.com', 'https://checkout.stripe.com'],
-      connectSrc: ["'self'", 'https://api.stripe.com'],
+      connectSrc: ["'self'", 'https://api.stripe.com', 'https://maps.googleapis.com', 'https://*.tile.openstreetmap.org'],
     },
   },
   crossOriginEmbedderPolicy: false,
