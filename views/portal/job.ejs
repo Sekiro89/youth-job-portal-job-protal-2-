@@ -4,7 +4,7 @@
      { label: 'Published', at: job.published_at, done: !!job.published_at },
    ];
    if (job.status === 'active') timeline.push({ label: (sub && sub.cancel_at_period_end) ? 'Ends' : 'Renews', at: job.expires_at, done: false, future: true });
-   if (['expired','cancelled','inactive'].includes(job.status)) timeline.push({ label: h.statusLabel(job.status), at: job.archived_at || job.cancelled_at || job.expires_at, done: true, bad: true });
+   if (['expired','cancelled','inactive'].includes(job.status)) timeline.push({ label: job.status === 'inactive' ? 'Paused' : h.statusLabel(job.status), at: job.archived_at || job.cancelled_at || job.expires_at, done: true, bad: true });
    const subStatus = sub ? ({ pending: 'Awaiting payment', active: sub.cancel_at_period_end ? 'Cancels at period end' : 'Active — renews monthly', past_due: 'Payment failed', cancelled: 'Cancelled' })[sub.status] : 'No subscription yet';
    const subBadge = sub ? ({ pending: 'warning', active: sub.cancel_at_period_end ? 'warning' : 'positive', past_due: 'danger', cancelled: 'danger' })[sub.status] : ''; %>
 <div class="container dash">
@@ -70,7 +70,8 @@
           <% if (job.apply_url) { %><div><dt>Apply link</dt><dd><a href="<%= job.apply_url %>" rel="noopener" target="_blank"><%= job.apply_url %></a></dd></div><% } %>
         </dl>
         <h3>Description</h3>
-        <div class="prose"><%- h.paragraphs(job.description) %></div>
+        <div class="prose<%= job.description.length > 1500 ? ' prose--clamp' : '' %>" id="job-desc"><%- h.paragraphs(job.description) %></div>
+        <% if (job.description.length > 1500) { %><button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" data-expand="job-desc" aria-expanded="false" aria-controls="job-desc">Show full description</button><% } %>
         <% if (job.requirements) { %><h3>Requirements</h3><div class="prose"><%- h.paragraphs(job.requirements) %></div><% } %>
         <% if (job.benefits) { %><h3>Benefits</h3><div class="prose"><%- h.paragraphs(job.benefits) %></div><% } %>
       </section>

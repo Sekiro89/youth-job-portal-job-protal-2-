@@ -338,7 +338,7 @@ area.get('/jobs', async (req, res, next) => {
     if (status === 'archived') where.push(`j.status IN ('expired','cancelled','inactive')`);
     else if (status !== 'all') where.push(`j.status='${status}'`);
     if (profileId) { params.push(profileId); where.push(`j.employer_profile_id=$${params.length}`); }
-    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, p.company_name,
+    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, p.company_name,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.status AS sub_status, s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
@@ -533,7 +533,7 @@ area.get('/jobs/:id(\\d+)/applicants', loadJob, async (req, res, next) => {
   try {
     const status = APP_STATUSES.includes(req.query.status) ? req.query.status : '';
     const list = await db.many(`${APPLICANT_SQL} WHERE a.job_id=$1 ${status ? 'AND a.status=$2' : ''} ORDER BY a.created_at DESC`, status ? [req.job.id, status] : [req.job.id]);
-    res.render('portal/applicants', { title: `Applicants — ${req.job.title}`, nav: 'applicants', list, job: req.job, jobsList: [], filters: { status, job: req.job.id }, scope: 'job' });
+    res.render('portal/applicants', { title: `Applicants — ${req.job.title}`, nav: 'applicants', list, job: req.job, jobsList: [], filters: { status, job: req.job.id }, scope: 'job', returnTo: req.originalUrl });
   } catch (e) { next(e); }
 });
 area.get('/applicants', async (req, res, next) => {
@@ -545,7 +545,7 @@ area.get('/applicants', async (req, res, next) => {
     if (jobId) { params.push(jobId); where.push(`a.job_id=$${params.length}`); }
     const list = await db.many(`${APPLICANT_SQL} WHERE ${where.join(' AND ')} ORDER BY a.created_at DESC LIMIT 300`, params);
     const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
-    res.render('portal/applicants', { title: 'Applicants', nav: 'applicants', list, job: null, jobsList, filters: { status, job: jobId }, scope: 'all' });
+    res.render('portal/applicants', { title: 'Applicants', nav: 'applicants', list, job: null, jobsList, filters: { status, job: jobId }, scope: 'all', returnTo: req.originalUrl });
   } catch (e) { next(e); }
 });
 async function loadApplication(req, res, next) {
@@ -578,7 +578,9 @@ area.post('/applications/:id(\\d+)/status', loadApplication, async (req, res, ne
         html: mail.layout(title, `<p>Hi ${h.escapeHtml(a.name)},</p><p>${h.escapeHtml(msg)}</p><p>Status: <strong>${h.escapeHtml(APP_STATUS_NAME[status])}</strong></p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'View my applications' }) });
     }
     req.flash('success', changed ? `${a.name} marked as ${APP_STATUS_NAME[status].toLowerCase()} — they have been notified.` : 'Notes saved.');
-    res.redirect(back(req, `${res.locals.base}/jobs/${a.job_id}/applicants`));
+    // Referrer-Policy strips the Referer header, so the form carries its own return path (same portal only).
+    const rt = typeof req.body.return_to === 'string' && /^\/(employer|consultant)\/[^\s]*$/.test(req.body.return_to) ? req.body.return_to : null;
+    res.redirect(rt || back(req, `${res.locals.base}/jobs/${a.job_id}/applicants`));
   } catch (e) { next(e); }
 });
 area.get('/applications/:id(\\d+)/resume', loadApplication, async (req, res, next) => {

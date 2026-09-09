@@ -204,7 +204,7 @@
 
       <div class="form-actions form-actions--sticky">
         <button class="kds-btn kds-btn--ghost" type="submit" name="action" value="draft"><%= isEdit ? (isLive ? 'Save changes' : 'Save') : 'Save draft' %></button>
-        <% if (canPublish) { %><button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %> · $<%= (TOTAL/100).toFixed(2) %>/mo</button><% } %>
+        <% if (canPublish) { %><button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><span class="lbl-long"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %></span><span class="lbl-short"><%= isEdit && job.status === 'pending_payment' ? 'Pay now' : 'Publish' %></span> · $<%= (TOTAL/100).toFixed(2) %>/mo</button><% } %>
         <% if (isEdit) { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">Cancel</a><% } %>
       </div>
     </form>

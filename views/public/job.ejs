@@ -1,4 +1,7 @@
-<% const remote = job.work_arrangement === 'remote'; const closes = h.formatDate(job.expires_at); const mailto = job.apply_email ? `mailto:${job.apply_email}?subject=${encodeURIComponent('Application: ' + job.title)}` : ''; %>
+<% const remote = job.work_arrangement === 'remote'; const closes = h.formatDate(job.expires_at); const mailto = job.apply_email ? `mailto:${job.apply_email}?subject=${encodeURIComponent('Application: ' + job.title)}` : '';
+   // Imported (Job Bank) postings: applications happen on jobbank.gc.ca, so the JSON-LD must not claim direct apply and should point at the source.
+   const imported = job.source === 'jobbank' && !!job.source_url;
+   if (imported && typeof jsonLd !== 'undefined' && Array.isArray(jsonLd)) jsonLd.forEach(o => { if (o && o['@type'] === 'JobPosting') { o.directApply = false; o.url = job.source_url; } }); %>
 <div class="page-head job-head">
   <div class="container">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">›</span><a href="/jobs">Jobs</a><span aria-hidden="true">›</span><a href="/jobs?category=<%= job.category %>"><%= h.categoryName(job.category) %></a></nav>
@@ -7,6 +10,7 @@
       <a href="/companies/<%= job.company_slug %>"><%= job.company_name %></a>
       <span class="job-head__dot" aria-hidden="true">·</span>
       <span><%= h.location(job) %><%= remote ? ' (remote across Canada)' : '' %></span>
+      <% if (imported) { %><span class="badge badge--teal" title="Republished from Job Bank, Government of Canada">Source: Job Bank</span><% } %>
     </p>
     <ul class="job-head__meta" aria-label="Key facts">
       <li><%= h.jobTypeName(job.job_type) %></li>
@@ -20,6 +24,13 @@
 
 <div class="container job-layout">
   <article class="job-main">
+    <% if (imported) { %>
+      <aside class="card card--flat job-attribution" aria-labelledby="attribution-h">
+        <h2 id="attribution-h" class="small eyebrow">Source</h2>
+        <p>This posting was published on <strong>Job Bank (Government of Canada)</strong> and is republished here with attribution. Applications are made on Job Bank, not on Canada Careers.</p>
+        <p class="cluster"><a class="kds-btn kds-btn--brand" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Apply on Job Bank →</a><span class="small muted">Job Bank posting #<%= job.source_id %></span></p>
+      </aside>
+    <% } %>
     <section class="job-section">
       <h2>About the role</h2>
       <div class="prose"><%- h.paragraphs(job.description) %></div>
@@ -56,8 +67,13 @@
 
   <aside class="job-side">
     <div class="card apply-card">
-      <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/apply">Apply now</a>
-      <% if (job.apply_url) { %><a class="kds-btn kds-btn--ghost kds-btn--block" href="<%= job.apply_url %>" target="_blank" rel="noopener nofollow">Apply on company site ↗</a><% } else if (mailto) { %><a class="kds-btn kds-btn--ghost kds-btn--block" href="<%= mailto %>">Apply by email</a><% } %>
+      <% if (imported) { %>
+        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Apply on Job Bank ↗</a>
+        <p class="small muted apply-card__note">Opens the original posting on jobbank.gc.ca (Government of Canada).</p>
+      <% } else { %>
+        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/apply">Apply now</a>
+        <% if (job.apply_url) { %><a class="kds-btn kds-btn--ghost kds-btn--block" href="<%= job.apply_url %>" target="_blank" rel="noopener nofollow">Apply on company site ↗</a><% } else if (mailto) { %><a class="kds-btn kds-btn--ghost kds-btn--block" href="<%= mailto %>">Apply by email</a><% } %>
+      <% } %>
       <form method="post" action="/jobs/<%= job.slug %>/<%= saved ? 'unsave' : 'save' %>" class="apply-card__save">
         <button class="kds-btn kds-btn--ghost kds-btn--block" type="submit" aria-pressed="<%= saved ? 'true' : 'false' %>">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="<%= saved ? 'currentColor' : 'none' %>" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
@@ -73,6 +89,7 @@
         <% if (job.education) { %><div><dt>Education</dt><dd><%= job.education %></dd></div><% } %>
         <% if ((job.languages || []).length) { %><div><dt>Languages</dt><dd><%= job.languages.join(', ') %></dd></div><% } %>
         <% if (job.noc_code) { %><div><dt>NOC</dt><dd><%= job.noc_code %></dd></div><% } %>
+        <% if (imported) { %><div><dt>Source</dt><dd><a href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Job Bank #<%= job.source_id %></a></dd></div><% } %>
       </dl>
       <div class="share" aria-label="Share this job">
         <span class="small muted">Share</span>
@@ -82,7 +99,7 @@
         <a class="share__btn" href="mailto:?subject=<%= encodeURIComponent(job.title + ' at ' + job.company_name) %>&body=<%= encodeURIComponent('I thought you might be interested in this job on Canada Careers: ' + url) %>" aria-label="Share by email"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
         <span class="share__status small" role="status" aria-live="polite"></span>
       </div>
-      <p class="small muted apply-card__note">Job ID <%= job.slug %> · <a href="/contact?category=posting">Report this posting</a></p>
+      <p class="small muted apply-card__note">Job ID <%= job.slug %><% if (imported) { %> · Originally published on Job Bank, Government of Canada<% } %> · <a href="/contact?category=posting">Report this posting</a></p>
     </div>
   </aside>
 </div>
@@ -108,6 +125,6 @@
   <div class="applybar__inner">
     <div class="applybar__text"><strong><%= h.formatSalary(job) %></strong><span class="small muted">Closes <%= closes %></span></div>
     <form method="post" action="/jobs/<%= job.slug %>/<%= saved ? 'unsave' : 'save' %>" class="inline-form"><button class="kds-btn kds-btn--ghost applybar__save" type="submit" aria-label="<%= saved ? 'Unsave job' : 'Save job' %>"><svg width="20" height="20" viewBox="0 0 24 24" fill="<%= saved ? 'currentColor' : 'none' %>" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></form>
-    <a class="kds-btn kds-btn--accent applybar__apply" href="/jobs/<%= job.slug %>/apply">Apply now</a>
+    <% if (imported) { %><a class="kds-btn kds-btn--accent applybar__apply" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Apply on Job Bank ↗</a><% } else { %><a class="kds-btn kds-btn--accent applybar__apply" href="/jobs/<%= job.slug %>/apply">Apply now</a><% } %>
   </div>
 </div>

@@ -247,7 +247,7 @@ router.get('/jobseeker/resume', seekerOnly, async (req, res, next) => {
     const p = await getProfile(req.user.id);
     if (!p.resume_path) { req.flash('info', 'You have not uploaded a resume yet.'); return res.redirect('/jobseeker/profile'); }
     const abs = path.join(UPLOAD_DIR, p.resume_path);
-    if (!fs.existsSync(abs)) { req.flash('error', 'Your resume file could not be found. Please upload it again.'); return res.redirect('/jobseeker/profile'); }
+    if (!abs.startsWith(UPLOAD_DIR + path.sep) || !fs.existsSync(abs)) { req.flash('error', 'Your resume file could not be found. Please upload it again.'); return res.redirect('/jobseeker/profile'); }
     res.download(abs, p.resume_name || path.basename(abs));
   } catch (e) { next(e); }
 });

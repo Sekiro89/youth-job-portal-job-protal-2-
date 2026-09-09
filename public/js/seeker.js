@@ -13,6 +13,16 @@
   choices.forEach(function (r) { r.addEventListener('change', syncUpload); });
   syncUpload();
 
+  // Side nav (a horizontal pill strip below 1024px): scroll the current tab into view and hide the edge fade at the end.
+  var nav = document.querySelector('[data-seeker-nav]');
+  if (nav) {
+    var wrap = nav.parentNode;
+    var active = nav.querySelector('.is-active');
+    var fade = function () { wrap.classList.toggle('is-scrolled-end', nav.scrollWidth - nav.clientWidth - nav.scrollLeft < 8); };
+    if (active && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2);
+    nav.addEventListener('scroll', fade, { passive: true }); window.addEventListener('resize', fade); fade();
+  }
+
   // Character counters
   document.querySelectorAll('[data-counter]').forEach(function (ta) {
     var out = document.getElementById(ta.getAttribute('data-counter'));

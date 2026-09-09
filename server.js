@@ -24,6 +24,8 @@ app.set('layout', 'layout');
 app.set('layout extractScripts', false);
 
 app.use(helmet({
+  // Browsers send `Origin: null` on non-GET requests under `no-referrer`, which would trip sameOriginGuard on every form.
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],

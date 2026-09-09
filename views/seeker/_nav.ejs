@@ -7,10 +7,10 @@
   ['notifications', '/jobseeker/notifications', 'Notifications'],
   ['account', '/account', 'Account'],
 ]; %>
-<nav class="dash__side seeker-side" aria-label="Job seeker menu">
+<div class="seeker-side-wrap"><nav class="dash__side seeker-side" aria-label="Job seeker menu" data-seeker-nav>
   <% items.forEach(([key, href, label]) => { %>
     <a href="<%= href %>" class="<%= nav === key ? 'is-active' : '' %>" <%= nav === key ? 'aria-current="page"' : '' %>>
       <%= label %><% if (key === 'notifications' && unreadCount > 0) { %> <span class="side-badge" aria-label="<%= unreadCount %> unread"><%= unreadCount > 99 ? '99+' : unreadCount %></span><% } %>
     </a>
   <% }) %>
-</nav>
+</nav></div>

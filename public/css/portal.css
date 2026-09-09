@@ -4,7 +4,6 @@
 .req { color: var(--cc-red); }
 .list-plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .stack-tight { display: grid; gap: 4px; justify-items: start; }
-.td-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .td-actions .inline-form { display: inline-flex; }
 .input--sm { min-height: 40px; padding: 8px 10px; font-size: .9rem; }
 .kds-btn--danger-text { color: var(--cc-red); }
@@ -167,7 +166,40 @@
 @media (max-width: 767px) {
   .table--stack td[data-label="Title"], .table--stack td[data-label="Applicant"], .table--stack td[data-label="Status"], .table--stack td[data-label="Company"] { flex-direction: column; gap: 2px; align-items: flex-start; }
   .table--stack td[data-label="Actions"] { flex-wrap: wrap; }
-  .table--stack td[data-label="Actions"] .td-actions, .table--stack td.td-actions { justify-content: flex-start; }
+  .table--stack td[data-label="Actions"] .td-actions { justify-content: flex-start; }
 }
-@media (min-width: 768px) { .td-actions { flex-wrap: nowrap; } }
+
 .table--applicants .kds-btn { white-space: nowrap; }
+
+/* ---------- fixes from the T1 employer test pass (2026-09-09) ---------- */
+/* Table action cells: the <td> itself must stay a table-cell (a flex td loses its row border); the inner .td-actions flexes. */
+.td-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+@media (min-width: 768px) { .td-actions { flex-wrap: nowrap; } }
+/* Touch targets: small buttons grow to 44px where there is no hover pointer (phones, iPads) and on narrow screens. */
+@media (hover: none), (max-width: 767px) { .portal .kds-btn--sm { min-height: 44px; padding: .55rem .9rem; } .portal .input--sm { min-height: 44px; } }
+/* Status tabs wrap on phones instead of hiding tabs off-screen. */
+@media (max-width: 639px) { .tabs { flex-wrap: wrap; overflow: visible; row-gap: 0; } }
+/* Sticky save bar: one row on phones, short button labels. */
+.lbl-short { display: none; }
+@media (max-width: 639px) {
+  .form-actions--sticky { display: flex; flex-wrap: nowrap; gap: 8px; align-items: stretch; }
+  .form-actions--sticky .kds-btn { flex: 1 1 auto; min-height: 48px; padding-left: .6rem; padding-right: .6rem; font-size: .9rem; white-space: nowrap; }
+  .form-actions--sticky a.kds-btn { flex: 0 0 auto; }
+  .lbl-long { display: none; } .lbl-short { display: inline; }
+}
+/* Job detail: on phones and tablets the subscription / timeline column comes first; the long preview follows. */
+@media (max-width: 1023px) { .grid--job > aside { order: -1; } }
+.prose--clamp { max-height: 320px; overflow: hidden; position: relative; }
+.prose--clamp::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0), var(--cc-surface)); }
+.prose--clamp.is-open { max-height: none; }
+.prose--clamp.is-open::after { display: none; }
+.preview [data-expand] { margin-top: 10px; }
+/* Applicant status form: badge on its own line, select full width on phones; dashboard rows stack on phones. */
+@media (max-width: 639px) {
+  .status-form .cluster { flex-direction: column; align-items: stretch; }
+  .status-form .cluster .badge { align-self: flex-start; }
+  .status-form select { width: 100%; flex: 1 1 100%; }
+  .applicant-row > * { flex: 1 1 100%; }
+  .applicant-row .stack-tight, .applicant-row .cluster { justify-items: start; }
+}
+@media (max-width: 639px) { .table--stack td[data-label="Status"] .status-form, .table--stack td[data-label="Resume"] > * { width: 100%; min-width: 0; } .table--stack td[data-label="Resume"] { flex-direction: column; align-items: flex-start; gap: 4px; } }

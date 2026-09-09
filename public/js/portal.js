@@ -22,6 +22,12 @@
       setTimeout(function () { delete f.dataset.busy; f.querySelectorAll('button[type=submit]').forEach(function (b) { b.disabled = false; b.removeAttribute('aria-busy'); }); }, 8000);
     });
   });
+  // "Show full description" on long previews
+  document.querySelectorAll('[data-expand]').forEach(function (btn) {
+    var t = document.getElementById(btn.getAttribute('data-expand'));
+    if (!t) return;
+    btn.addEventListener('click', function () { var open = t.classList.toggle('is-open'); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); btn.textContent = open ? 'Show less' : 'Show full description'; });
+  });
   // Filters that submit on change (keep the button for no-JS)
   document.querySelectorAll('[data-autosubmit]').forEach(function (sel) {
     sel.addEventListener('change', function () { sel.form && sel.form.submit(); });

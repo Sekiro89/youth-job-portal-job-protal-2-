@@ -170,7 +170,12 @@
 @media (min-width: 1024px) {
   .jobs-layout { grid-template-columns: 300px minmax(0, 1fr); gap: 32px; padding-top: 24px; }
   .filters__toggle { display: none; }
-  .js .filters__body, .filters__body { display: grid; margin-top: 0; position: sticky; top: calc(var(--cc-header-h) + 16px); max-height: calc(100dvh - var(--cc-header-h) - 32px); overflow-y: auto; }
+  .js .filters__body, .filters__body { display: grid; margin-top: 0; }
+}
+/* Pin the filter panel only when the whole panel (~1050px) fits the viewport; on shorter screens a sticky, internally
+   scrolling panel hid the "Show results" button below the fold with no visible scrollbar. */
+@media (min-width: 1024px) and (min-height: 1150px) {
+  .filters__body { position: sticky; top: calc(var(--cc-header-h) + 16px); }
 }
 @media (min-width: 1280px) { .results__list { grid-template-columns: 1fr 1fr; } }
 

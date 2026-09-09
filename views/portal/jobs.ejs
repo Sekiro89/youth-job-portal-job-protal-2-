@@ -22,7 +22,7 @@
     <% } else { %>
     <div class="table-wrap">
       <table class="table table--stack">
-        <thead><tr><th>Title</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Applicants</th><th>Posted</th><th>Expires / renews</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Title</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Applicants</th><th>Posted</th><th>Renews / ended</th><th>Actions</th></tr></thead>
         <tbody>
           <% list.forEach(job => { %>
             <tr>
@@ -31,16 +31,22 @@
               <td data-label="Status"><%- include('partials/status-badge', { job }) %></td>
               <td data-label="Applicants"><a href="<%= base %>/jobs/<%= job.id %>/applicants"><%= job.applicants %></a></td>
               <td data-label="Posted"><%= job.published_at ? h.formatDate(job.published_at) : '—' %></td>
-              <td data-label="Expires / renews">
+              <td data-label="Renews / ended">
                 <% if (job.status === 'active') { %><%= job.cancel_at_period_end ? 'Ends ' : 'Renews ' %><%= h.formatDate(job.expires_at) %>
-                <% } else if (job.status === 'inactive' && job.sub_status === 'active') { %>Paid until <%= h.formatDate(job.current_period_end) %>
+                <% } else if (job.status === 'inactive' && job.sub_status === 'active') { %>Paused · paid until <%= h.formatDate(job.current_period_end) %>
+                <% } else if (job.status === 'inactive') { %>Paused <%= h.formatDate(job.archived_at) %>
                 <% } else if (job.status === 'pending_payment') { %><a href="/billing/checkout/<%= job.id %>">Pay $<%= (TOTAL/100).toFixed(2) %></a>
-                <% } else if (job.expires_at) { %><%= h.formatDate(job.expires_at) %><% } else { %>—<% } %>
+                <% } else if (job.status === 'cancelled') { %>Cancelled <%= h.formatDate(job.cancelled_at || job.archived_at) %>
+                <% } else if (job.status === 'expired') { %>Expired <%= h.formatDate(job.archived_at || job.expires_at) %>
+                <% } else { %>—<% } %>
               </td>
-              <td data-label="Actions" class="td-actions">
-                <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/jobs/<%= job.id %>">View</a>
-                <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/jobs/<%= job.id %>/edit">Edit</a>
-                <% if (['draft','pending_payment'].includes(job.status)) { %><form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/publish"><button class="kds-btn kds-btn--brand kds-btn--sm" type="submit"><%= job.status === 'draft' ? 'Publish' : 'Pay now' %></button></form><% } %>
+              <td data-label="Actions">
+                <div class="td-actions">
+                  <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/jobs/<%= job.id %>">View</a>
+                  <a class="kds-btn kds-btn--ghost kds-btn--sm" href="<%= base %>/jobs/<%= job.id %>/edit">Edit</a>
+                  <% if (['draft','pending_payment'].includes(job.status)) { %><form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/publish"><button class="kds-btn kds-btn--brand kds-btn--sm" type="submit"><%= job.status === 'draft' ? 'Publish' : 'Pay now' %></button></form><% } %>
+                  <% if (['expired','cancelled'].includes(job.status)) { %><form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/duplicate"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Repost</button></form><% } %>
+                </div>
               </td>
             </tr>
           <% }) %>
@@ -48,6 +54,6 @@
       </table>
     </div>
     <% } %>
-    <p class="small muted">Archived = expired, cancelled or paused postings. They are never shown to job seekers; duplicate one to post it again.</p>
+    <p class="small muted">Archived = expired, cancelled or paused postings. Job seekers never see them. Paused postings can be reactivated while paid up; use <strong>Repost</strong> to publish an expired or cancelled one again as a new draft.</p>
   </div>
 </div>

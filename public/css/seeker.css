@@ -25,6 +25,12 @@ fieldset.card > legend + * { clear: both; }
 .sticky-actions .kds-btn { flex: 1 1 auto; }
 @media (min-width: 768px) { .sticky-actions { position: static; background: none; backdrop-filter: none; border: 0; margin: 0; padding: 0; } .sticky-actions .kds-btn { flex: 0 0 auto; } }
 
+/* seeker side nav: on phones/tablets it is a horizontal pill strip (theme.css); show a fade at the right edge while more tabs are hidden */
+.seeker-side-wrap { position: relative; min-width: 0; }
+.seeker-side-wrap::after { content: ""; position: absolute; top: 0; right: 0; bottom: 4px; width: 40px; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), #fff 80%); opacity: 1; transition: opacity .2s; }
+.seeker-side-wrap.is-scrolled-end::after { opacity: 0; }
+@media (min-width: 1024px) { .seeker-side-wrap::after { display: none; } .seeker-side-wrap { position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; } .seeker-side-wrap .dash__side { position: static; } }
+
 /* ---------- profile completeness ---------- */
 .meter-card__pct { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .meter { height: 10px; border-radius: 999px; background: var(--cc-navy-100); overflow: hidden; margin: 12px 0; }

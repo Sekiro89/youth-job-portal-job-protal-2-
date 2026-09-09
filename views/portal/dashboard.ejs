@@ -46,7 +46,7 @@
                 <td data-label="Awaiting payment"><%= c.pending %></td>
                 <td data-label="Applicants"><%= c.applicants %></td>
                 <td data-label="Monthly spend"><%= h.money(c.spend_cents) %></td>
-                <td data-label="Actions" class="td-actions"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs?profile=<%= c.id %>">Jobs</a> <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs/new?profile=<%= c.id %>">Post</a></td>
+                <td data-label="Actions"><div class="td-actions"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs?profile=<%= c.id %>">Jobs</a> <a class="kds-btn kds-btn--ghost kds-btn--sm" href="/consultant/jobs/new?profile=<%= c.id %>">Post</a></div></td>
               </tr>
             <% }) %>
           </tbody>
