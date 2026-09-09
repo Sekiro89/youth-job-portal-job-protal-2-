@@ -23,9 +23,9 @@
       <div class="site-nav__auth">
         <% if (user) { %>
           <a class="kds-btn kds-btn--ghost" href="<%= ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role] %>">
-            <span class="avatar" aria-hidden="true"><%= (user.name||'?').trim()[0].toUpperCase() %></span><span class="nav-label">My account</span>
+            <span class="avatar" aria-hidden="true"><%= (user.name||'?').trim()[0].toUpperCase() %></span><span class="nav-label">My account</span><span class="visually-hidden">My account</span>
           </a>
-          <form method="post" action="/logout" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" aria-label="Sign out"><span class="nav-label">Sign out</span><span class="nav-label-short" aria-hidden="true">Out</span></button></form>
+          <form method="post" action="/logout" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" aria-label="Sign out">Sign out</button></form>
         <% } else { %>
           <a class="kds-btn kds-btn--ghost" href="/login">Sign in</a>
           <a class="kds-btn kds-btn--brand" href="/signup">Sign up</a>

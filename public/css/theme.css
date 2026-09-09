@@ -107,8 +107,6 @@ a:hover { color: var(--cc-red); }
   .site-nav__auth { gap: 6px; }
   .site-nav__auth .kds-btn { padding: .5rem .7rem; font-size: .8125rem; }
   .site-nav__auth .avatar + .nav-label { display: none; }
-  .site-nav__auth .nav-label-short { display: inline; }
-  .site-nav__auth form .nav-label { display: none; }
 }
 @media (min-width: 1280px) { .site-nav__tabs a { padding: 8px 10px; font-size: .9375rem; } .site-nav__auth .kds-btn { padding: .5rem .8rem; font-size: .875rem; } }
 @media (min-width: 1024px) { .site-nav__tabs a, .site-nav__auth .kds-btn { white-space: nowrap; } }
