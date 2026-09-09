@@ -1,0 +1,10 @@
+<%# Text-like input. locals: name, label, value?, error?, type?, hint?, required?, autocomplete?, placeholder?, inputmode? %>
+<% const f = { type: 'text', value: '', error: '', hint: '', required: true, autocomplete: '', placeholder: '', inputmode: '', ...locals.f }; %>
+<div class="field">
+  <label for="<%= f.name %>"><%= f.label %><% if (!f.required) { %> <span class="muted small">(optional)</span><% } %></label>
+  <input class="input" id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type %>" value="<%= f.value ?? '' %>"
+    <%= f.required ? 'required' : '' %> <% if (f.autocomplete) { %>autocomplete="<%= f.autocomplete %>"<% } %>
+    <% if (f.placeholder) { %>placeholder="<%= f.placeholder %>"<% } %> <% if (f.inputmode) { %>inputmode="<%= f.inputmode %>"<% } %>
+    <% if (f.error) { %>aria-invalid="true" aria-describedby="err-<%= f.name %>"<% } else if (f.hint) { %>aria-describedby="hint-<%= f.name %>"<% } %>>
+  <% if (f.error) { %><span class="error" id="err-<%= f.name %>"><%= f.error %></span><% } else if (f.hint) { %><span class="hint" id="hint-<%= f.name %>"><%= f.hint %></span><% } %>
+</div>

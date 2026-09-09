@@ -1,0 +1,49 @@
+<section class="auth container">
+  <div class="auth__card auth__card--wide">
+    <div class="auth__head">
+      <p class="eyebrow">Employer account</p>
+      <h1>Create your employer account</h1>
+      <p class="muted">Post jobs for your own company. <a href="/signup">Not an employer?</a></p>
+    </div>
+    <%- include('_form-errors', { errors }) %>
+    <form class="form" method="post" action="/signup/employer" novalidate>
+      <h2 class="auth__section">About you</h2>
+      <%- include('_field', { f: { name: 'name', label: 'Your full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
+      <div class="form-row">
+        <%- include('_field', { f: { name: 'email', label: 'Work email', type: 'email', value: values.email, error: errors.email, autocomplete: 'email', inputmode: 'email' } }) %>
+        <%- include('_field', { f: { name: 'phone', label: 'Phone', type: 'tel', value: values.phone, error: errors.phone, autocomplete: 'tel', inputmode: 'tel', required: false, placeholder: '(416) 555-0100' } }) %>
+      </div>
+      <div class="form-row">
+        <%- include('_password', { f: { name: 'password', label: 'Password', error: errors.password, hint: 'At least 8 characters.' } }) %>
+        <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm password', error: errors.password_confirm } }) %>
+      </div>
+
+      <h2 class="auth__section">Your company</h2>
+      <%- include('_field', { f: { name: 'company_name', label: 'Company name', value: values.company_name, error: errors.company_name, autocomplete: 'organization' } }) %>
+      <div class="form-row">
+        <%- include('_field', { f: { name: 'city', label: 'City', value: values.city, error: errors.city, autocomplete: 'address-level2' } }) %>
+        <div class="field">
+          <label for="province">Province / territory</label>
+          <select class="input" id="province" name="province" required <% if (errors.province) { %>aria-invalid="true" aria-describedby="err-province"<% } %>>
+            <option value="">Choose…</option>
+            <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= values.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
+          </select>
+          <% if (errors.province) { %><span class="error" id="err-province"><%= errors.province %></span><% } %>
+        </div>
+      </div>
+      <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
+
+      <label class="check <%= errors.agree ? 'check--error' : '' %>" for="agree">
+        <input type="checkbox" id="agree" name="agree" value="1" <%= values.agree ? 'checked' : '' %> required>
+        <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+      </label>
+      <% if (errors.agree) { %><span class="error" id="err-agree"><%= errors.agree %></span><% } %>
+
+      <div class="form-actions">
+        <button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Create employer account</button>
+      </div>
+      <p class="small muted auth__note">Posting a job costs $9.99 + GST per month per posting. Creating an account is free — you only pay when you publish.</p>
+    </form>
+    <p class="auth__foot">Already have an account? <a href="/login?role=employer">Sign in</a></p>
+  </div>
+</section>

@@ -1,0 +1,141 @@
+<% const catName = Object.fromEntries(C.CONTACT_CATEGORIES); const hasErrors = Object.keys(errors || {}).length > 0; %>
+<section class="page-head">
+  <div class="container">
+    <p class="eyebrow">Support</p>
+    <h1>Contact Us</h1>
+    <p class="lead">Stuck on something? Tell us what happened. Technical issues go straight to <%= supportName %>, our technical support, who resolves them directly.</p>
+  </div>
+</section>
+
+<section class="container contact">
+  <div class="contact__form card">
+    <h2 class="contact__h2">Send us a message</h2>
+    <% if (hasErrors) { %>
+      <div class="contact-alert" role="alert" tabindex="-1" id="form-errors">
+        <% if (errors.form) { %><p><%= errors.form %></p><% } else { %>
+          <p><strong>Please fix the following:</strong></p>
+          <ul><% Object.keys(errors).forEach(k => { %><li><a href="#<%= k %>"><%= errors[k] %></a></li><% }) %></ul>
+        <% } %>
+      </div>
+    <% } %>
+    <form method="post" action="/contact" class="form" novalidate>
+      <%# Honeypot: hidden from humans (CSS + aria-hidden + tabindex=-1). Bots that fill it are silently dropped. %>
+      <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+
+      <% if (user) { %>
+        <label class="check contact__account">
+          <input type="checkbox" name="include_account" value="1" <%= values.include_account ? 'checked' : '' %> data-toggle-account>
+          <span><strong>Include my account</strong> — send as <%= user.name %> (<%= user.email %>, <%= ({employer:'Employer',consultant:'Third Party Consultant',seeker:'Job Seeker',admin:'Admin'})[user.role] || user.role %>) so <%= supportName %> can look at your account straight away.</span>
+        </label>
+      <% } %>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="name">Your name</label>
+          <input class="input" id="name" name="name" type="text" value="<%= values.name %>" required autocomplete="name" <%= values.include_account ? 'readonly' : '' %> data-account-field
+            <% if (errors.name) { %>aria-invalid="true" aria-describedby="err-name"<% } %>>
+          <% if (errors.name) { %><span class="error" id="err-name"><%= errors.name %></span><% } %>
+        </div>
+        <div class="field">
+          <label for="email">Email address</label>
+          <input class="input" id="email" name="email" type="email" value="<%= values.email %>" required autocomplete="email" inputmode="email" <%= values.include_account ? 'readonly' : '' %> data-account-field
+            <% if (errors.email) { %>aria-invalid="true" aria-describedby="err-email"<% } else { %>aria-describedby="hint-email"<% } %>>
+          <% if (errors.email) { %><span class="error" id="err-email"><%= errors.email %></span><% } else { %><span class="hint" id="hint-email">We reply to this address.</span><% } %>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="phone">Phone <span class="muted small">(optional)</span></label>
+          <input class="input" id="phone" name="phone" type="tel" value="<%= values.phone %>" autocomplete="tel" inputmode="tel">
+        </div>
+        <div class="field">
+          <label for="category">What is this about?</label>
+          <select class="input" id="category" name="category">
+            <% C.CONTACT_CATEGORIES.forEach(([k, label]) => { %>
+              <option value="<%= k %>" <%= values.category === k ? 'selected' : '' %>><%= label %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="subject">Subject</label>
+        <input class="input" id="subject" name="subject" type="text" value="<%= values.subject %>" required maxlength="200" placeholder="e.g. Logo upload does nothing on iPad"
+          <% if (errors.subject) { %>aria-invalid="true" aria-describedby="err-subject"<% } %>>
+        <% if (errors.subject) { %><span class="error" id="err-subject"><%= errors.subject %></span><% } %>
+      </div>
+
+      <div class="field">
+        <label for="message">Message</label>
+        <textarea class="input contact__message" id="message" name="message" required minlength="20" maxlength="10000" rows="7" placeholder="What did you do, what did you expect, and what happened? Include the page address and your device/browser for technical issues."
+          <% if (errors.message) { %>aria-invalid="true" aria-describedby="err-message"<% } else { %>aria-describedby="hint-message"<% } %>><%= values.message %></textarea>
+        <% if (errors.message) { %><span class="error" id="err-message"><%= errors.message %></span><% } else { %><span class="hint" id="hint-message">At least 20 characters. The more detail, the faster we can fix it.</span><% } %>
+      </div>
+
+      <div class="form-actions">
+        <button class="kds-btn kds-btn--brand" type="submit">Send message</button>
+        <span class="muted small">We usually reply within one business day.</span>
+      </div>
+    </form>
+  </div>
+
+  <aside class="contact__side" aria-labelledby="help-h">
+    <h2 id="help-h" class="contact__h2">How we can help</h2>
+    <ul class="help-cards">
+      <li class="help-card help-card--tech">
+        <span class="help-card__icon" aria-hidden="true">🛠</span>
+        <div>
+          <h3>Technical issue</h3>
+          <p>Something not working — a page error, an upload that fails, a login problem? <strong>Handled by <%= supportName %>, our technical support</strong>, who resolves it directly.</p>
+          <a href="/contact?category=technical#category" class="help-card__link">Report a technical issue</a>
+        </div>
+      </li>
+      <li class="help-card">
+        <span class="help-card__icon" aria-hidden="true">💳</span>
+        <div>
+          <h3>Billing</h3>
+          <p>Receipts, the $9.99 + GST monthly posting fee, cancellations and refunds.</p>
+          <a href="/contact?category=billing#category" class="help-card__link">Ask about billing</a>
+        </div>
+      </li>
+      <li class="help-card">
+        <span class="help-card__icon" aria-hidden="true">📋</span>
+        <div>
+          <h3>Job postings</h3>
+          <p>Editing, pausing or renewing a posting, or reporting a posting that looks wrong.</p>
+          <a href="/contact?category=posting#category" class="help-card__link">Ask about a posting</a>
+        </div>
+      </li>
+      <li class="help-card">
+        <span class="help-card__icon" aria-hidden="true">👤</span>
+        <div>
+          <h3>Accounts</h3>
+          <p>Email changes, password resets, closing an account, or privacy questions.</p>
+          <a href="/contact?category=account#category" class="help-card__link">Get account help</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="card card--flat contact__promise">
+      <h3>Our response-time promise</h3>
+      <p>Every message gets a ticket number right away. <strong>Technical issues are answered within one business day</strong>, Monday to Friday, 9am–5pm Eastern. Everything else within two business days.</p>
+      <p class="small muted">Employers, third party consultants and job seekers can also reach support from their dashboard — the same team, the same ticket queue.</p>
+    </div>
+  </aside>
+</section>
+
+<script>
+(function () {
+  var t = document.querySelector('[data-toggle-account]'); if (!t) return;
+  var fields = document.querySelectorAll('[data-account-field]');
+  var saved = {};
+  t.addEventListener('change', function () {
+    fields.forEach(function (f) {
+      if (t.checked) { saved[f.id] = f.value; f.value = f.getAttribute('data-orig') || f.value; f.readOnly = true; }
+      else { f.readOnly = false; }
+    });
+  });
+  fields.forEach(function (f) { f.setAttribute('data-orig', f.value); });
+})();
+</script>

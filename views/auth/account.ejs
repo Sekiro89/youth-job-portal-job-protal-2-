@@ -1,0 +1,58 @@
+<section class="auth container">
+  <div class="auth__card auth__card--wide auth__card--plain">
+    <div class="auth__head auth__head--left">
+      <p class="eyebrow">My account</p>
+      <h1>Account settings</h1>
+      <p class="muted">Manage your sign-in details. <a href="<%= ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role] %>">Back to dashboard</a></p>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h2 class="auth__section">Your details</h2>
+        <dl class="auth-meta">
+          <div><dt>Account type</dt><dd><span class="badge badge--teal"><%= roleLabel %></span></dd></div>
+          <div><dt>Email</dt><dd><%= user.email %> <span class="small muted">(contact us to change)</span></dd></div>
+          <div><dt>Member since</dt><dd><%= h.formatDate(user.created_at) %></dd></div>
+        </dl>
+        <%- include('_form-errors', { errors }) %>
+        <form class="form" method="post" action="/account" novalidate>
+          <input type="hidden" name="form" value="profile">
+          <div class="form-row">
+            <%- include('_field', { f: { name: 'name', label: 'Full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
+            <%- include('_field', { f: { name: 'phone', label: 'Phone', type: 'tel', value: values.phone, error: errors.phone, autocomplete: 'tel', inputmode: 'tel', required: false } }) %>
+          </div>
+          <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save details</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="auth__section">Change password</h2>
+        <%- include('_form-errors', { errors: pwErrors }) %>
+        <form class="form" method="post" action="/account" novalidate>
+          <input type="hidden" name="form" value="password">
+          <input type="hidden" name="email" value="<%= user.email %>" autocomplete="username">
+          <%- include('_password', { f: { name: 'current_password', label: 'Current password', error: pwErrors.current_password, autocomplete: 'current-password' } }) %>
+          <div class="form-row">
+            <%- include('_password', { f: { name: 'password', label: 'New password', error: pwErrors.password, hint: 'At least 8 characters.' } }) %>
+            <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm new password', error: pwErrors.password_confirm } }) %>
+          </div>
+          <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Change password</button></div>
+        </form>
+      </div>
+
+      <div class="card danger-zone">
+        <h2 class="auth__section">Danger zone</h2>
+        <p class="muted">Deactivating signs you out and disables sign-in. Your postings and applications are kept but hidden. Contact us to restore the account.</p>
+        <% if (locals.deactivateError) { %><div class="auth-alert" role="alert"><p><%= deactivateError %></p></div><% } %>
+        <form class="form" method="post" action="/account" novalidate>
+          <input type="hidden" name="form" value="deactivate">
+          <div class="field">
+            <label for="confirm_text">Type <strong>DEACTIVATE</strong> to confirm</label>
+            <input class="input" id="confirm_text" name="confirm_text" type="text" autocomplete="off" autocapitalize="characters" required>
+          </div>
+          <div class="form-actions"><button class="kds-btn kds-btn--danger" type="submit" data-confirm="Deactivate your account and sign out?">Deactivate my account</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,75 @@
+/* Canada Careers — auth pages (signup / login / forgot / reset / account). Mobile first. */
+.auth { padding: 24px 0 40px; }
+.auth__card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 24px 20px; box-shadow: 0 1px 2px rgba(27, 43, 63, .04); }
+.auth__card--wide { max-width: 640px; }
+.auth__card--plain { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.auth__head { text-align: center; margin-bottom: 20px; }
+.auth__head--left { text-align: left; }
+.auth__head h1 { font-size: clamp(1.5rem, 1.6vw + 1rem, 2rem); margin-bottom: 6px; }
+.auth__head p { margin: 0; }
+.auth__head .eyebrow { margin-bottom: 8px; }
+.auth__section { font-size: 1.0625rem; margin: 8px 0 -4px; padding-bottom: 8px; border-bottom: 1px solid var(--kds-border); }
+.auth__foot { text-align: center; margin: 20px 0 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+.auth__note { margin: 0; text-align: center; }
+.auth-links { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.auth-links a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 10px 14px; border: 1px solid var(--kds-border); border-radius: 10px; text-decoration: none; font-weight: 600; background: var(--cc-surface); }
+.auth-links a::after { content: "→"; color: var(--cc-red); }
+.auth-links a:hover, .auth-links a.is-hint { border-color: var(--cc-navy); background: var(--cc-navy-50); }
+.auth-alert { background: var(--cc-red-100); border: 1px solid #f3b1b1; color: #8a1b1b; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: .9375rem; }
+.auth-alert p { margin: 0; } .auth-alert ul { margin: 6px 0 0; padding-left: 18px; } .auth-alert a { color: inherit; }
+.auth-info { background: var(--cc-navy-50); border: 1px solid var(--cc-navy-100); border-radius: 10px; padding: 14px 16px; font-size: .9375rem; }
+.auth-info ol { margin: 6px 0 0; padding-left: 20px; } .auth-info p { margin: 6px 0 0; }
+.auth-info--ok { background: var(--cc-green-100); border-color: #b9dc93; color: #2f5d11; }
+.auth-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.auth-fieldset legend { font-weight: 600; font-size: .9rem; padding: 0; margin-bottom: 6px; }
+.check--error { border-color: var(--kds-danger); }
+.check > span { line-height: 1.4; }
+.field .split label { margin: 0; }
+select.input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235A6B7E' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+/* password show/hide */
+.pw { position: relative; }
+.pw .input { padding-right: 72px; }
+.pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
+.pw__toggle:hover { background: var(--cc-navy-50); }
+
+/* /signup role chooser */
+.auth--choose .auth__head { max-width: 640px; margin-left: auto; margin-right: auto; }
+.role-grid { display: grid; gap: 16px; grid-template-columns: 1fr; max-width: 1040px; margin: 0 auto; }
+.role-card { display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "icon title" "icon desc" "icon cta"; column-gap: 14px; row-gap: 6px; align-content: start; padding: 20px; border: 2px solid var(--kds-border); border-radius: 16px; background: #fff; text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s, transform .15s; }
+.role-card:hover, .role-card:focus-visible { border-color: var(--cc-navy); box-shadow: 0 8px 24px rgba(31, 58, 95, .12); transform: translateY(-2px); color: var(--cc-ink); }
+.role-card__icon { grid-area: icon; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; background: var(--cc-navy-100); color: var(--cc-navy); }
+.role-card__icon svg { width: 28px; height: 28px; }
+.role-card--consultant .role-card__icon { background: var(--cc-teal-100); color: var(--cc-teal); }
+.role-card--seeker .role-card__icon { background: var(--cc-green-100); color: #3E8E2E; }
+.role-card__title { grid-area: title; font: 700 1.2rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
+.role-card__desc { grid-area: desc; color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
+.role-card__cta { grid-area: cta; font-weight: 600; color: var(--cc-red); margin-top: 4px; }
+
+/* login role hint chips */
+.role-hints { display: flex; gap: 6px; margin: -6px 0 16px; }
+.role-hint { flex: 1; text-align: center; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 8px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .8125rem; color: var(--cc-navy); }
+.role-hint.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
+
+/* account */
+.auth-meta { display: grid; gap: 10px; margin: 0 0 16px; }
+.auth-meta div { display: grid; gap: 2px; }
+.auth-meta dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-muted); font-weight: 600; }
+.auth-meta dd { margin: 0; }
+.danger-zone { border-color: #f3b1b1; background: #fffafa; }
+.danger-zone .auth__section { color: var(--cc-red-700); border-bottom-color: #f3b1b1; }
+.kds-btn--danger { background: var(--cc-red); color: #fff; }
+.kds-btn--danger:hover { background: var(--cc-red-700); }
+
+@media (min-width: 640px) {
+  .auth { padding: 40px 0 56px; }
+  .auth__card { padding: 32px; }
+  .auth-meta { grid-template-columns: repeat(3, 1fr); }
+  .form-actions .kds-btn--block { width: auto; min-width: 240px; margin: 0 auto; }
+}
+@media (min-width: 768px) {
+  .role-grid { grid-template-columns: repeat(3, 1fr); }
+  .role-card { grid-template-columns: 1fr; grid-template-areas: "icon" "title" "desc" "cta"; padding: 28px 24px; row-gap: 10px; }
+  .role-card__desc { flex: 1; }
+}
+@media (min-width: 1024px) { .auth { padding: 56px 0 72px; } }

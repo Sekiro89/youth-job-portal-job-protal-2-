@@ -1,0 +1,18 @@
+<section class="container section-pad contact-thanks">
+  <div class="card contact-thanks__card">
+    <div class="contact-thanks__check" aria-hidden="true">✓</div>
+    <p class="eyebrow">Message received</p>
+    <h1>Thanks — we have your message</h1>
+    <% if (ref && ref !== '0') { %>
+      <p class="lead">Your ticket number is <strong class="contact-thanks__ref">#<%= ref %></strong>. We have emailed you a copy.</p>
+    <% } else { %>
+      <p class="lead">We have emailed you a copy.</p>
+    <% } %>
+    <p><strong><%= supportName %> or a member of the team will get back to you</strong>, usually within one business day (technical issues) or two business days (everything else).</p>
+    <p class="muted small">Need to add something? Reply to the confirmation email and quote your ticket number.</p>
+    <div class="form-actions">
+      <a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs</a>
+      <a class="kds-btn kds-btn--ghost" href="/">Back to home</a>
+    </div>
+  </div>
+</section>

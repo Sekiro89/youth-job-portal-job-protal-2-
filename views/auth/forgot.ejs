@@ -1,0 +1,26 @@
+<section class="auth container">
+  <div class="auth__card">
+    <div class="auth__head">
+      <p class="eyebrow">Account help</p>
+      <h1>Reset your password</h1>
+      <% if (!sent) { %><p class="muted">Enter the email you signed up with and we will send you a link to choose a new password.</p><% } %>
+    </div>
+    <% if (sent) { %>
+      <div class="auth-info auth-info--ok" role="status">
+        <strong>Check your inbox</strong>
+        <p>If an account exists for <strong><%= values.email %></strong>, we have sent a password reset link. It works for 1 hour.</p>
+        <p class="small muted">Nothing arrived? Check your spam folder, or <a href="/forgot">try again</a>.</p>
+      </div>
+      <p class="auth__foot"><a href="/login">Back to sign in</a></p>
+    <% } else { %>
+      <%- include('_form-errors', { errors }) %>
+      <form class="form" method="post" action="/forgot" novalidate>
+        <%- include('_field', { f: { name: 'email', label: 'Email', type: 'email', value: values.email, error: errors.email, autocomplete: 'email', inputmode: 'email' } }) %>
+        <div class="form-actions">
+          <button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Send reset link</button>
+        </div>
+      </form>
+      <p class="auth__foot"><a href="/login">Back to sign in</a> · <a href="/signup">Create an account</a></p>
+    <% } %>
+  </div>
+</section>

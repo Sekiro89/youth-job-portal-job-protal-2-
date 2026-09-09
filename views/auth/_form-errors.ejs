@@ -1,0 +1,9 @@
+<%# Summary banner shown above a form when it re-renders with errors. Expects `errors` (object). %>
+<% const keys = Object.keys(errors || {}); if (keys.length) { %>
+<div class="auth-alert" role="alert" tabindex="-1" id="form-errors">
+  <% if (errors.form) { %><p><%= errors.form %></p><% } else { %>
+  <p><strong>Please fix the following:</strong></p>
+  <ul><% keys.forEach(k => { %><li><a href="#<%= k %>"><%= errors[k] %></a></li><% }) %></ul>
+  <% } %>
+</div>
+<% } %>
