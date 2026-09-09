@@ -289,3 +289,38 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_employer text;   -- employer na
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source_synced_at timestamptz;
 CREATE UNIQUE INDEX IF NOT EXISTS jobs_source_uid ON jobs(source, source_id) WHERE source IS NOT NULL;
 ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS source text;  -- 'jobbank' for auto-created employer profiles
+
+-- ---------------------------------------------------------------- client feedback 2026-09-09 (Vishal call) — additive
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS operating_name text;     -- trade / "doing business as" name shown to seekers
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS street_address text;
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS postal_code text;
+
+-- One posting may have several work locations (same region). jobs.city/province stay = the PRIMARY location (first row).
+CREATE TABLE IF NOT EXISTS job_locations (
+  id             bigserial PRIMARY KEY,
+  job_id         bigint NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  street_address text,             -- REQUIRED for postings created on Canada Careers (validated in the form); may be NULL for imported reference postings
+  unit           text,
+  city           text NOT NULL,
+  province       text NOT NULL,
+  postal_code    text,             -- REQUIRED for native postings; format A1A 1A1
+  sort_order     integer NOT NULL DEFAULT 0,
+  created_at     timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS job_locations_job_idx ON job_locations(job_id, sort_order);
+CREATE INDEX IF NOT EXISTS job_locations_city_idx ON job_locations(lower(city), province);
+
+-- Backfill: every existing job gets one location row from its city/province (idempotent).
+INSERT INTO job_locations(job_id, city, province, sort_order)
+SELECT j.id, j.city, j.province, 0 FROM jobs j WHERE NOT EXISTS (SELECT 1 FROM job_locations l WHERE l.job_id = j.id);
+
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS education_other text;   -- free text when education = 'other'
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS experience_other text;  -- free text when experience_level = 'other'
+-- jobs.salary_period now allows: hour | day | week | biweekly | month | year (see lib/constants.js SALARY_PERIODS)
+
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter_path text;  -- uploaded cover sheet (pdf/doc/docx), relative to UPLOAD_DIR
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS cover_letter_name text;
+
+-- Role-based pricing (cents, before GST). env EMPLOYER_PRICE_CENTS / CONSULTANT_PRICE_CENTS override these.
+INSERT INTO settings(key, value) VALUES ('employer_price_cents', '1499'), ('consultant_price_cents', '999') ON CONFLICT (key) DO NOTHING;
+UPDATE settings SET value='1499' WHERE key='posting_price_cents' AND value='999';  -- legacy key = employer price
