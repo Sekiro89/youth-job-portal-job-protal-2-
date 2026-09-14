@@ -2,14 +2,13 @@
   <%- include('_nav') %>
   <div class="dash__main">
     <header class="app-head">
-      <div class="app-head__inner">
-        <div>
-          <p class="eyebrow">Job seeker</p>
-          <h1>Job alerts</h1>
-          <p class="muted">When a new posting matches your profile you always get an in-app notification. Choose whether we also email you.</p>
-        </div>
+      <div>
+        <p class="eyebrow">Job seeker</p>
+        <h1>Job alerts</h1>
+        <p class="app-head__context">When a new posting matches your profile you always get an in-app notification. Choose whether we also email you.</p>
       </div>
     </header>
+
     <form method="post" action="/jobseeker/alerts" class="form" id="alerts">
       <section class="card stack" aria-labelledby="email-h">
         <div class="card__head"><h2 id="email-h" class="h3">Email alerts</h2><span class="badge <%= profile.notify_email ? 'badge--positive' : '' %>"><%= profile.notify_email ? 'On' : 'Off' %></span></div>
@@ -17,13 +16,14 @@
         <fieldset class="field">
           <legend>How often</legend>
           <div class="checks">
-            <label class="check"><input type="radio" name="notify_frequency" value="instant" <%= profile.notify_frequency !== 'daily' ? 'checked' : '' %>> <span><strong>Instantly</strong><br><span class="small muted">One email per matching job, as soon as it goes live</span></span></label>
-            <label class="check"><input type="radio" name="notify_frequency" value="daily" <%= profile.notify_frequency === 'daily' ? 'checked' : '' %>> <span><strong>Daily digest</strong><br><span class="small muted">One email a day listing every new match</span></span></label>
+            <label class="check check--multi"><input type="radio" name="notify_frequency" value="instant" <%= profile.notify_frequency !== 'daily' ? 'checked' : '' %>> <span><strong>Instantly</strong><br><span class="small muted">One email per matching job, as soon as it goes live</span></span></label>
+            <label class="check check--multi"><input type="radio" name="notify_frequency" value="daily" <%= profile.notify_frequency === 'daily' ? 'checked' : '' %>> <span><strong>Daily digest</strong><br><span class="small muted">One email a day listing every new match</span></span></label>
           </div>
         </fieldset>
         <div class="form-actions"><button class="kds-btn kds-btn--accent" type="submit">Save alert settings</button></div>
       </section>
     </form>
+
     <section class="card stack" aria-labelledby="crit-h">
       <div class="card__head"><h2 id="crit-h" class="h3">Your alert criteria</h2><a class="kds-btn kds-btn--ghost" href="/jobseeker/profile#f-categories">Edit in profile</a></div>
       <p class="small muted">A job matches when it is in one of your categories, mentions one of your keywords (as a whole word — “RN” will not match “learn”), or lists one of your skills — and is in a province you will work in (or is remote). Matches are ranked: category counts most, then keywords, skills, province and whether the employer is hiring for the audience you identified with. Instant alerts go out the moment a posting is paid and live; the daily digest is one email a day covering the previous 24 hours, and is only sent when there is something new.</p>

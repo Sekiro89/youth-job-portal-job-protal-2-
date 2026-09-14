@@ -62,7 +62,7 @@
           <% latestJobs.forEach(j => { %>
             <li class="list-row">
               <a href="/admin/jobs?q=<%= encodeURIComponent(j.title) %>" class="list-row__title"><%= j.title %></a>
-              <div class="list-row__meta"><span class="badge badge--<%= h.statusBadge(j.status) %>"><%= h.statusLabel(j.status) %></span><span class="muted small"><%= j.company_name %> · created <%= h.timeAgo(j.created_at) %></span></div>
+              <div class="list-row__meta"><span class="badge badge--<%= h.statusBadge(j.status) %>"><%= h.statusLabel(j.status) %></span><span class="muted small"><% if (typeof j.public_id !== 'undefined' && j.public_id) { %>Posting ID <code class="pid"><%= j.public_id %></code> · <% } %><%= j.company_name %> · created <%= h.timeAgo(j.created_at) %></span></div>
             </li>
           <% }) %>
         </ul>

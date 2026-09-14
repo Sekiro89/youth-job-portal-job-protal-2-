@@ -1,5 +1,6 @@
-<section class="container section-pad bill-status">
-  <div class="card bill-status__card" <% if (pending) { %>data-poll="/billing/success?job=<%= job.id %>"<% } %>>
+<% if (typeof extraCss !== 'undefined' && !extraCss.includes('/css/portal.css')) extraCss.unshift('/css/portal.css'); %>
+<section class="section"><div class="container container--narrow bill-status">
+  <div class="card card--pad-lg bill-status__card" <% if (pending) { %>data-poll="/billing/success?job=<%= job.id %>"<% } %>>
     <% if (pending) { %>
       <div class="bill-status__icon bill-status__icon--wait" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
       <p class="eyebrow">Almost there</p>
@@ -14,12 +15,13 @@
       <p class="eyebrow">Payment received</p>
       <h1>Your posting is live until <%= h.formatDate(job.expires_at) %></h1>
       <p class="lead"><strong><%= job.title %></strong> at <%= job.company_name %> is now visible to job seekers across Canada. It renews automatically on <%= h.formatDate(job.expires_at) %> unless you cancel from Billing.</p>
+      <% if (job.public_id) { %><p class="posting-id">Posting ID <b><%= job.public_id %></b></p><% } %>
       <div class="bill-status__actions">
-        <a class="kds-btn kds-btn--brand" href="/jobs/<%= job.slug %>">See the public listing</a>
+        <a class="kds-btn kds-btn--accent" href="/jobs/<%= job.slug %>">See the public listing</a>
         <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Manage posting</a>
         <a class="kds-btn kds-btn--ghost" href="/billing">Billing &amp; receipts</a>
       </div>
       <p class="small muted">A receipt has been emailed to <%= user.email %>.</p>
     <% } %>
   </div>
-</section>
+</div></section>

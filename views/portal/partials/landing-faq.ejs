@@ -3,19 +3,19 @@
 %>
 <% const faqWho = typeof audienceLabel === 'string' && audienceLabel ? audienceLabel : 'employers'; %>
 <section class="section" id="faq">
-  <div class="container container--prose">
+  <div class="container">
     <div class="section__head">
       <p class="eyebrow">FAQ</p>
       <h2>Questions <%= faqWho %> ask us</h2>
     </div>
-    <div class="faq">
+    <div class="landing-faq">
       <% items.forEach(([q, a], i) => { %>
-        <details class="card faq__item" <%= i === 0 ? 'open' : '' %>>
+        <details class="card landing-faq__item" <%= i === 0 ? 'open' : '' %>>
           <summary><span><%= q %></span></summary>
-          <div class="faq__body"><p><%= a %></p></div>
+          <div class="landing-faq__body"><p><%= a %></p></div>
         </details>
       <% }) %>
     </div>
-    <p class="muted faq__foot">Something else? <a href="/contact">Contact us</a> — our support team replies within one business day.</p>
+    <p class="muted landing-faq__foot">Something else? <a href="/contact">Contact us</a> — our support team replies within one business day.</p>
   </div>
 </section>

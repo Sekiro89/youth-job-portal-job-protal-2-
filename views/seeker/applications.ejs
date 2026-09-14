@@ -1,38 +1,41 @@
-<% const badge = { submitted: '', viewed: 'badge--teal', shortlisted: 'badge--positive', rejected: 'badge--danger', hired: 'badge--positive' }; %>
+<% const badge = { submitted: '', viewed: 'badge--teal', shortlisted: 'badge--positive', rejected: 'badge--danger', hired: 'badge--positive' };
+   const cap = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1); %>
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
     <header class="app-head">
-      <div class="app-head__inner">
-        <div>
-          <p class="eyebrow">Job seeker</p>
-          <h1>My applications</h1>
-          <p class="muted">Every job you applied to, what you sent and where it stands.</p>
-        </div>
-        <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/jobs">Find jobs</a></div>
+      <div>
+        <p class="eyebrow">Job seeker</p>
+        <h1>My applications</h1>
+        <p class="app-head__context">Every job you applied to, what you sent and where it stands.</p>
       </div>
+      <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/jobs">Find jobs</a></div>
     </header>
+
     <% if (applications.length) { %>
-      <section class="card" aria-labelledby="apps-h">
-        <div class="card__head"><h2 id="apps-h" class="h3"><%= applications.length %> application<%= applications.length === 1 ? '' : 's' %></h2><span class="small muted">Withdraw is available until the employer opens it</span></div>
+      <section class="card card--table" aria-labelledby="apps-h">
+        <div class="card__head"><h2 id="apps-h" class="h3"><%= applications.length %> application<%= applications.length === 1 ? '' : 's' %></h2><span class="small muted">Withdraw until the employer opens it</span></div>
         <div class="table-wrap">
-          <table class="table table--stack">
+          <table class="table table--stack seeker-table">
             <thead><tr><th>Job</th><th>Company</th><th>Sent</th><th>Applied</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>
-              <% applications.forEach(a => { const more = (a.location_count || 1) - 1; %>
+              <% applications.forEach(a => { const more = (a.location_count || 1) - 1; const closed = typeof a.applications_closed === 'boolean' && a.applications_closed; %>
                 <tr>
-                  <td data-label="Job"><% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><strong><%= a.title %></strong></a><% } else { %><strong><%= a.title %></strong> <span class="small muted">(no longer listed)</span><% } %></td>
-                  <td data-label="Company"><div><%= h.displayCompany(a) %><div class="small muted"><%= h.location(a) %><% if (more > 0) { %> · +<%= more %> more<% } %></div></div></td>
+                  <td class="row-title" data-label="Job">
+                    <% if (a.is_public) { %><a href="/jobs/<%= a.slug %>"><%= a.title %></a><% } else { %><span class="row-title__text"><%= a.title %></span><% } %>
+                    <span class="small muted row-title__sub"><% if (a.public_id) { %>Posting ID <%= a.public_id %><% } %><% if (!a.is_public) { %><% if (a.public_id) { %> · <% } %>No longer listed<% } else if (closed) { %><% if (a.public_id) { %> · <% } %>Applications closed<% } %></span>
+                  </td>
+                  <td data-label="Company"><div class="row-stack"><span><%= h.displayCompany(a) %></span><span class="small muted"><%= h.location(a) %><% if (more > 0) { %> · +<%= more %> more<% } %></span></div></td>
                   <td data-label="Sent">
                     <ul class="sent-list">
                       <li><span class="sent-list__k">Resume</span> <span class="sent-list__v"><%= a.resume_name || '—' %></span></li>
-                      <li><span class="sent-list__k">Cover sheet</span> <span class="sent-list__v"><% if (a.cover_letter_path) { %><a href="/jobseeker/applications/<%= a.id %>/cover" title="Download the cover sheet you sent"><%= a.cover_letter_name || 'Download' %></a><% } else if (a.cover_letter) { %><span class="muted">typed note</span><% } else { %><span class="muted">none</span><% } %></span></li>
+                      <li><span class="sent-list__k">Cover sheet</span> <span class="sent-list__v"><% if (a.cover_letter_path) { %><a href="/jobseeker/applications/<%= a.id %>/cover" title="Download the cover sheet you sent"><%= a.cover_letter_name || 'Download' %></a><% } else if (a.cover_letter) { %>typed note<% } else { %>none<% } %></span></li>
                     </ul>
                   </td>
-                  <td data-label="Applied"><%= h.formatDate(a.created_at) %></td>
-                  <td data-label="Status"><span class="badge <%= badge[a.status] || '' %>"><%= a.status.charAt(0).toUpperCase() + a.status.slice(1) %></span></td>
-                  <td data-label="Action">
-                    <% if (a.status === 'submitted') { %><form method="post" action="/jobseeker/applications/<%= a.id %>/withdraw" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Withdraw this application?">Withdraw</button></form><% } else { %><span class="small muted">Under review</span><% } %>
+                  <td data-label="Applied"><span class="nowrap"><%= h.formatDate(a.created_at) %></span></td>
+                  <td data-label="Status"><span class="badge <%= badge[a.status] || '' %>"><%= cap(a.status) %></span></td>
+                  <td class="row-actions" data-label="Action">
+                    <% if (a.status === 'submitted') { %><form method="post" action="/jobseeker/applications/<%= a.id %>/withdraw" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Withdraw this application?">Withdraw</button></form><% } else { %><span class="small muted">Under review</span><% } %>
                   </td>
                 </tr>
               <% }) %>

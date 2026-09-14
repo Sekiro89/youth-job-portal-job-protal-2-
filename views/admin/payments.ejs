@@ -40,12 +40,12 @@
         <tbody>
           <% rows.forEach(p => { %>
             <tr>
-              <td data-label="Receipt"><a href="/billing/receipt/<%= p.id %>" target="_blank" rel="noopener"><%= p.receipt_number || ('#' + p.id) %></a><br><span class="muted small"><%= p.provider %></span></td>
+              <td data-label="Receipt"><div class="cell"><a href="/billing/receipt/<%= p.id %>" target="_blank" rel="noopener" class="nowrap"><%= p.receipt_number || ('#' + p.id) %></a><br><span class="muted small"><%= p.provider %></span></div></td>
               <td data-label="Paid"><%= h.formatDate(p.paid_at) %></td>
-              <td data-label="Job"><span class="row-title"><%= p.job_title %></span><br><span class="muted small"><%= p.company_name %> · <span class="badge badge--<%= h.statusBadge(p.job_status) %>"><%= h.statusLabel(p.job_status) %></span></span></td>
-              <td data-label="Payer"><%= p.payer_name %><br><span class="muted small"><%= p.payer_email %></span></td>
+              <td data-label="Job" class="td--main"><div class="cell"><span class="row-title"><%= p.job_title %></span><br><span class="muted small"><% if (typeof p.job_public_id !== 'undefined' && p.job_public_id) { %>Posting ID <code class="pid"><%= p.job_public_id %></code> · <% } %><%= p.company_name %> · <span class="badge badge--<%= h.statusBadge(p.job_status) %>"><%= h.statusLabel(p.job_status) %></span></span></div></td>
+              <td data-label="Payer"><div class="cell"><%= p.payer_name %><br><span class="muted small"><%= p.payer_email %></span></div></td>
               <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
-              <td data-label="Total"><strong><%= h.money(p.total_cents) %></strong><br><span class="muted small"><%= h.money(p.amount_cents) %> + GST <%= h.money(p.tax_cents) %></span></td>
+              <td data-label="Total"><div class="cell"><strong><%= h.money(p.total_cents) %></strong><br><span class="muted small nowrap"><%= h.money(p.amount_cents) %> + GST <%= h.money(p.tax_cents) %></span></div></td>
               <td data-label="Status"><span class="badge badge--<%= ({paid:'positive',failed:'danger',refunded:'warning'})[p.status] %>"><%= p.status %></span></td>
             </tr>
           <% }) %>

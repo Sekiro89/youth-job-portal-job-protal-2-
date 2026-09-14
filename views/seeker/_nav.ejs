@@ -1,3 +1,4 @@
+<%# Seeker side nav — same shell as the portal (.dash__side): pill strip on phones/tablets (edge fades + active tab scrolled into view by seeker.js), column at ≥1024. %>
 <% const items = [
   ['dashboard', '/jobseeker/dashboard', 'Dashboard'],
   ['profile', '/jobseeker/profile', 'My profile'],
@@ -6,11 +7,7 @@
   ['alerts', '/jobseeker/alerts', 'Job alerts'],
   ['notifications', '/jobseeker/notifications', 'Notifications'],
   ['account', '/account', 'Account'],
-]; %>
-<div class="seeker-side-wrap"><nav class="dash__side seeker-side" aria-label="Job seeker menu" data-seeker-nav>
-  <% items.forEach(([key, href, label]) => { %>
-    <a href="<%= href %>" class="<%= nav === key ? 'is-active' : '' %>" <%= nav === key ? 'aria-current="page"' : '' %>>
-      <%= label %><% if (key === 'notifications' && unreadCount > 0) { %> <span class="side-badge" aria-label="<%= unreadCount %> unread"><%= unreadCount > 99 ? '99+' : unreadCount %></span><% } %>
-    </a>
-  <% }) %>
+]; const current = (typeof nav === 'undefined') ? '' : nav; const unread = (typeof unreadCount === 'undefined') ? 0 : Number(unreadCount) || 0; %>
+<div class="seeker-side-wrap"><nav class="dash__side" aria-label="Job seeker menu" data-seeker-nav>
+  <% items.forEach(([key, href, label]) => { %><a href="<%= href %>" class="<%= current === key ? 'is-active' : '' %>"<%- current === key ? ' aria-current="page"' : '' %>><%= label %><% if (key === 'notifications' && unread > 0) { %> <span class="side-badge" aria-label="<%= unread %> unread"><%= unread > 99 ? '99+' : unread %></span><% } %></a><% }) %>
 </nav></div>

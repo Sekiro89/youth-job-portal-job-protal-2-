@@ -211,13 +211,13 @@ router.get('/billing/portal', owners, wrap(async (req, res) => {
 // ---------------------------------------------------------------- billing overview
 router.get('/billing', owners, wrap(async (req, res) => {
   const subs = await db.many(`
-    SELECT s.*, j.title AS job_title, j.slug AS job_slug, j.status AS job_status, j.expires_at, p.company_name, p.id AS profile_id,
+    SELECT s.*, j.title AS job_title, j.slug AS job_slug, j.status AS job_status, j.public_id AS job_public_id, j.expires_at, p.company_name, p.id AS profile_id,
            (SELECT count(*)::int FROM payments x WHERE x.subscription_id = s.id AND x.status='paid') AS payment_count
     FROM subscriptions s JOIN jobs j ON j.id = s.job_id JOIN employer_profiles p ON p.id = j.employer_profile_id
     WHERE p.owner_user_id = $1
     ORDER BY (s.status='active') DESC, (s.status='past_due') DESC, (s.status='pending') DESC, s.current_period_end DESC NULLS LAST, s.id DESC`, [req.user.id]);
   const payments = await db.many(`
-    SELECT pay.*, j.title AS job_title, p.company_name
+    SELECT pay.*, j.title AS job_title, j.public_id AS job_public_id, p.company_name
     FROM payments pay JOIN jobs j ON j.id = pay.job_id JOIN employer_profiles p ON p.id = j.employer_profile_id
     WHERE p.owner_user_id = $1 ORDER BY pay.paid_at DESC, pay.id DESC LIMIT 200`, [req.user.id]);
   const now = new Date();

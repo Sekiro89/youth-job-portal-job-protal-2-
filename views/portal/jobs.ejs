@@ -28,15 +28,15 @@
       <% } else { %>
       <div class="table-wrap">
         <table class="table table--stack">
-          <thead><tr><th>Title</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Applicants</th><th>Posted</th><th>Renews / ended</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Posting ID</th><th>Title</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Applicants</th><th>Renews / ended</th><th>Actions</th></tr></thead>
           <tbody>
-            <% list.forEach(job => { %>
+            <% list.forEach(job => { const closed = typeof job.applications_closed !== 'undefined' ? !!job.applications_closed : false; %>
               <tr>
-                <td data-label="Title" class="td-stack"><a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a><div class="small muted job-meta-line"><span><%= h.location(job) %><%= job.n_locations > 1 ? ' +' + (job.n_locations - 1) + ' more' : '' %></span><% if (h.formatHours(job)) { %><span>· <%= h.formatHours(job) %></span><% } %><span>· <%= job.views %> views</span></div></td>
+                <td data-label="Posting ID"><% if (job.public_id) { %><span class="posting-id__code"><%= job.public_id %></span><% } else { %><span class="muted">—</span><% } %></td>
+                <td data-label="Title" class="td-stack"><a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a><div class="small muted job-meta-line"><span><%= h.location(job) || 'No location' %><%= job.n_locations > 1 ? ' +' + (job.n_locations - 1) + ' more' : '' %></span><% if (h.formatHours(job)) { %><span>· <%= h.formatHours(job) %></span><% } %><span>· <%= job.views %> views</span><span>· <%= job.published_at ? 'Posted ' + h.formatDate(job.published_at) : 'Not published' %></span></div></td>
                 <% if (isConsultant) { %><td data-label="Company"><%= h.displayCompany(job) %></td><% } %>
-                <td data-label="Status"><%- include('partials/status-badge', { job }) %></td>
+                <td data-label="Status"><span class="cluster cluster--tight"><%- include('partials/status-badge', { job }) %><% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } else if (job.application_deadline) { %><span class="badge">Closes <%= h.formatDate(job.application_deadline) %></span><% } %></span></td>
                 <td data-label="Applicants"><a href="<%= base %>/jobs/<%= job.id %>/applicants"><%= job.applicants %></a></td>
-                <td data-label="Posted"><%= job.published_at ? h.formatDate(job.published_at) : '—' %></td>
                 <td data-label="Renews / ended">
                   <% if (job.status === 'active') { %><%= job.cancel_at_period_end ? 'Ends ' : 'Renews ' %><%= h.formatDate(job.expires_at) %>
                   <% } else if (job.status === 'inactive' && job.sub_status === 'active') { %>Paused · paid until <%= h.formatDate(job.current_period_end) %>

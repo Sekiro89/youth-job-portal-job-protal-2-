@@ -1,40 +1,39 @@
-<% const roles = [['employer', 'Employer'], ['consultant', 'Consultant'], ['seeker', 'Job seeker']]; %>
-<section class="auth container">
-  <div class="auth__card">
-    <div class="auth__head">
-      <p class="eyebrow">Welcome back</p>
-      <h1>Sign in</h1>
-      <p class="muted">One login for employers, consultants and job seekers.</p>
-    </div>
-    <% if (roleHint) { %>
-    <div class="role-hints" aria-label="Account type">
-      <% roles.forEach(([k, n]) => { %><a class="role-hint <%= roleHint === k ? 'is-active' : '' %>" href="/login?role=<%= k %>" <%= roleHint === k ? 'aria-current="true"' : '' %>><%= n %></a><% }) %>
-    </div>
-    <% } %>
-    <%- include('_form-errors', { errors }) %>
-    <form class="form" method="post" action="/login" novalidate>
-      <%- include('_field', { f: { name: 'email', label: 'Email', type: 'email', value: values.email, autocomplete: 'email', inputmode: 'email' } }) %>
-      <div class="field">
-        <div class="split"><label for="password">Password</label><a class="small" href="/forgot">Forgot password?</a></div>
-        <div class="pw">
-          <input class="input" id="password" name="password" type="password" required autocomplete="current-password">
-          <button class="pw__toggle" type="button" aria-pressed="false" aria-label="Show password" data-pw-toggle="password">Show</button>
+<% const roles = [['employer', 'Employer'], ['consultant', 'Third Party Consultant'], ['seeker', 'Job Seeker']]; %>
+<%- include('_head', { h: { eyebrow: 'Welcome back', h1: 'Sign in', lead: 'One login for employers, third party consultants and job seekers.' } }) %>
+
+<section class="section auth">
+  <div class="container container--narrow">
+    <div class="card card--pad-lg auth__card">
+      <% if (roleHint) { %>
+      <div class="role-hints" aria-label="Account type">
+        <% roles.forEach(([k, n]) => { %><a class="role-hint <%= roleHint === k ? 'is-active' : '' %>" href="/login?role=<%= k %>" <%= roleHint === k ? 'aria-current="true"' : '' %>><%= n %></a><% }) %>
+      </div>
+      <% } %>
+      <%- include('_form-errors', { errors }) %>
+      <form class="form" method="post" action="/login" novalidate>
+        <%- include('_field', { f: { name: 'email', label: 'Email', type: 'email', value: values.email, autocomplete: 'email', inputmode: 'email' } }) %>
+        <div class="field">
+          <div class="split"><label for="password">Password</label><a class="small" href="/forgot">Forgot password?</a></div>
+          <div class="pw">
+            <input class="input" id="password" name="password" type="password" required autocomplete="current-password">
+            <button class="pw__toggle" type="button" aria-pressed="false" aria-label="Show password" data-pw-toggle="password">Show</button>
+          </div>
         </div>
-      </div>
-      <label class="check" for="remember">
-        <input type="checkbox" id="remember" name="remember" value="1" <%= values.remember ? 'checked' : '' %>>
-        <span>Keep me signed in for 30 days</span>
-      </label>
-      <div class="form-actions">
-        <button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Sign in</button>
-      </div>
-    </form>
-    <div class="divider-maple" aria-hidden="true">🍁</div>
-    <p class="auth__foot"><strong>New to Canada Careers?</strong></p>
-    <ul class="auth-links">
-      <li><a href="/signup/employer" <%= roleHint === 'employer' ? 'class="is-hint"' : '' %>>Sign up as an employer</a></li>
-      <li><a href="/signup/consultant" <%= roleHint === 'consultant' ? 'class="is-hint"' : '' %>>Sign up as a third party consultant</a></li>
-      <li><a href="/signup/seeker" <%= roleHint === 'seeker' ? 'class="is-hint"' : '' %>>Sign up as a job seeker</a></li>
-    </ul>
+        <label class="check" for="remember">
+          <input type="checkbox" id="remember" name="remember" value="1" <%= values.remember ? 'checked' : '' %>>
+          <span>Keep me signed in for 30 days</span>
+        </label>
+        <div class="form-actions">
+          <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Sign in</button>
+        </div>
+      </form>
+      <div class="divider-maple" aria-hidden="true">🍁</div>
+      <p class="auth__foot"><strong>New to Canada Careers?</strong></p>
+      <ul class="auth-links">
+        <li><a href="/signup/employer" <%= roleHint === 'employer' ? 'class="is-hint"' : '' %>>Sign up as an employer</a></li>
+        <li><a href="/signup/consultant" <%= roleHint === 'consultant' ? 'class="is-hint"' : '' %>>Sign up as a third party consultant</a></li>
+        <li><a href="/signup/seeker" <%= roleHint === 'seeker' ? 'class="is-hint"' : '' %>>Sign up as a job seeker</a></li>
+      </ul>
+    </div>
   </div>
 </section>

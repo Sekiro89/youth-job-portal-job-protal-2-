@@ -1,17 +1,20 @@
+<%# Employer profile page: page-head band + one prose-width column (about card, locations + map card, open jobs). %>
 <% const legalNote = h.legalNameNote(co); %>
-<script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script>
+<% if (typeof mapConfig !== 'undefined' && mapConfig) { %><script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script><% } %>
 <header class="page-head co-head">
   <div class="container page-head__inner">
     <div>
       <ol class="breadcrumb"><li><a href="/">Home</a></li><li><a href="/jobs">Jobs</a></li><li aria-current="page"><%= companyName %></li></ol>
-      <% if (co.logo_path) { %><img class="co-logo co-logo--img" src="/logos/<%= co.id %>" alt="<%= companyName %> logo" width="64" height="64"><% } else { %><span class="co-logo co-logo--mark" aria-hidden="true"><%= (companyName || '?').trim()[0].toUpperCase() %></span><% } %>
-      <h1><%= companyName %></h1>
-      <% if (legalNote) { %><p class="co-head__legal small muted"><%= legalNote %></p><% } %>
-      <p class="cluster co-head__meta muted">
-        <% if (industryText) { %><span><%= industryText %></span><% } %>
-        <% if (address) { %><span class="co-head__addr"><%= address %></span><% } %>
-        <% if (co.company_size) { %><span><%= co.company_size %> employees</span><% } %>
-        <span><%= jobs.length %> open job<%= jobs.length === 1 ? '' : 's' %></span>
+      <div class="co-head__row">
+        <% if (co.logo_path) { %><img class="co-logo co-logo--img" src="/logos/<%= co.id %>" alt="<%= companyName %> logo" width="64" height="64"><% } else { %><span class="co-logo co-logo--mark" aria-hidden="true"><%= (companyName || '?').trim()[0].toUpperCase() %></span><% } %>
+        <div class="co-head__text">
+          <h1><%= companyName %></h1>
+          <% if (legalNote) { %><p class="co-head__legal small muted"><%= legalNote %></p><% } %>
+        </div>
+      </div>
+      <p class="lead co-head__meta">
+        <% const bits = [industryText, address, co.company_size ? `${co.company_size} employees` : '', `${jobs.length} open job${jobs.length === 1 ? '' : 's'}`].filter(Boolean); %>
+        <%= bits.join(' · ') %>
       </p>
     </div>
     <% if (co.website) { %><div class="page-head__actions"><a class="kds-btn kds-btn--ghost" href="<%= co.website %>" target="_blank" rel="noopener nofollow">Visit website ↗</a></div><% } %>
@@ -19,50 +22,46 @@
 </header>
 
 <div class="section">
-<div class="container co-layout">
-  <div class="co-main">
-    <% if (coLocations.length) { %>
-      <section class="co-block" aria-labelledby="co-loc-h">
-        <h2 id="co-loc-h">Location<%= coLocations.length === 1 ? '' : `s (${coLocations.length})` %></h2>
-        <div class="card co-map">
-          <% if (mapMarkers.length) { %>
-            <div class="cc-map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
-          <% } else { %>
-            <p class="small muted">Map unavailable — use the links below.</p>
-          <% } %>
-          <ul class="co-locations">
-            <% coLocations.forEach(l => { %>
-              <li><% if (l.label) { %><span class="co-locations__label"><%= l.label %></span><% } %><span><%= h.fullAddress(l) %></span><% if (l.is_default && coLocations.length > 1) { %><span class="small muted">(main)</span><% } %><a class="small" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow">Open in Google Maps ↗</a></li>
-            <% }) %>
-          </ul>
-        </div>
-      </section>
-    <% } %>
-    <section class="co-block" aria-labelledby="co-jobs-h">
-      <h2 id="co-jobs-h"><%= jobs.length %> open job<%= jobs.length === 1 ? '' : 's' %> at <%= companyName %></h2>
-      <% if (jobs.length) { %>
-        <div class="jobs-stack"><% jobs.forEach(job => { %><%- include('_job-card', { job }) %><% }) %></div>
-      <% } else { %>
-        <div class="empty"><p><%= companyName %> has no open positions right now.</p><p><a class="kds-btn kds-btn--ghost" href="/jobs">Browse all jobs</a></p></div>
-      <% } %>
-    </section>
-  </div>
-  <aside class="co-about">
-    <div class="card">
-      <h2 class="h3">About <%= companyName %></h2>
-      <% if (co.description) { %><div class="prose small"><%- h.paragraphs(co.description) %></div><% } else { %><p class="muted small">This employer has not added a description yet.</p><% } %>
-      <dl class="facts">
+  <div class="container container--prose co-stack">
+    <section class="card co-about" aria-labelledby="co-about-h">
+      <h2 id="co-about-h">About <%= companyName %></h2>
+      <% if (co.description) { %><div class="prose"><%- h.paragraphs(co.description) %></div><% } else { %><p class="muted">This employer has not added a description yet.</p><% } %>
+      <dl class="facts facts--cols">
         <% if (legalNote) { %>
           <div><dt>Operating name</dt><dd><%= companyName %></dd></div>
           <div><dt>Legal name</dt><dd><%= co.company_name %></dd></div>
         <% } %>
         <% if (industryText) { %><div><dt>Industry</dt><dd><%= industryText %></dd></div><% } %>
-        <% if (co.company_size) { %><div><dt>Size</dt><dd><%= co.company_size %></dd></div><% } %>
+        <% if (co.company_size) { %><div><dt>Size</dt><dd><%= co.company_size %> employees</dd></div><% } %>
         <% if (address) { %><div><dt>Address</dt><dd><%= address %><%= co.country && co.country !== 'Canada' ? ', ' + co.country : '' %></dd></div><% } %>
         <% if (co.website) { %><div><dt>Website</dt><dd><a href="<%= co.website %>" target="_blank" rel="noopener nofollow"><%= co.website.replace(/^https?:\/\//, '') %></a></dd></div><% } %>
         <div><dt>On Canada Careers since</dt><dd><%= h.formatDate(co.created_at, { day: undefined }) %></dd></div>
       </dl>
-    </div>
-  </aside>
-</div>
+    </section>
+
+    <% if (coLocations.length) { %>
+      <section class="card co-map" aria-labelledby="co-loc-h">
+        <h2 id="co-loc-h">Location<%= coLocations.length === 1 ? '' : `s (${coLocations.length})` %></h2>
+        <% if (mapMarkers.length) { %>
+          <div class="cc-map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
+        <% } else { %>
+          <p class="small muted">Map unavailable — use the links below.</p>
+        <% } %>
+        <ul class="co-locations">
+          <% coLocations.forEach(l => { %>
+            <li><% if (l.label) { %><span class="co-locations__label"><%= l.label %></span><% } %><span><%= h.fullAddress(l) %></span><% if (l.is_default && coLocations.length > 1) { %><span class="small muted">(main)</span><% } %><a class="small" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow">Open in Google Maps ↗</a></li>
+          <% }) %>
+        </ul>
+      </section>
+    <% } %>
+
+    <section class="co-jobs" aria-labelledby="co-jobs-h">
+      <div class="section__head"><h2 id="co-jobs-h"><%= jobs.length %> open job<%= jobs.length === 1 ? '' : 's' %> at <%= companyName %></h2></div>
+      <% if (jobs.length) { %>
+        <div class="jobs-stack"><% jobs.forEach(job => { %><%- include('_job-card', { job }) %><% }) %></div>
+      <% } else { %>
+        <div class="empty"><p><%= companyName %> has no open positions right now.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse all jobs</a></div>
+      <% } %>
+    </section>
+  </div>
 </div>

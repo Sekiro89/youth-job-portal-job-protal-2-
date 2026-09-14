@@ -1,13 +1,14 @@
-<section class="container section-pad bill-status">
-  <div class="card bill-status__card">
+<% if (typeof extraCss !== 'undefined' && !extraCss.includes('/css/portal.css')) extraCss.unshift('/css/portal.css'); %>
+<section class="section"><div class="container container--narrow bill-status">
+  <div class="card card--pad-lg bill-status__card">
     <div class="bill-status__icon bill-status__icon--warn" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
     <p class="eyebrow">Payment not completed</p>
     <h1>No charge was made</h1>
-    <p class="lead">You left before paying, so <strong><%= job.title %></strong> is still <em><%= h.statusLabel(job.status) %></em> and not visible to job seekers. Nothing was saved from the card step.</p>
+    <p class="lead">You left before paying, so <strong><%= job.title %></strong><% if (job.public_id) { %> (Posting ID <%= job.public_id %>)<% } %> is still <em><%= h.statusLabel(job.status) %></em> and not visible to job seekers. Nothing was saved from the card step.</p>
     <div class="bill-status__actions">
-      <a class="kds-btn kds-btn--brand" href="/billing/checkout/<%= job.id %>">Try again</a>
+      <a class="kds-btn kds-btn--accent" href="/billing/checkout/<%= job.id %>">Try again</a>
       <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Back to posting</a>
     </div>
     <p class="small muted">Need help? <a href="/contact">Contact us</a> and mention the posting title.</p>
   </div>
-</section>
+</div></section>

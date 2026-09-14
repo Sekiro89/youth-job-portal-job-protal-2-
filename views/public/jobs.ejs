@@ -3,7 +3,9 @@
     List | Map segmented control on phones). Styles: /css/jobs-search.css · behaviour: /js/jobs-search.js (both pushed by
     the route). Every query param (q, category, province, city, job_type, work_arrangement, audience, salary_min, near,
     lat/lng, radius_km, sort, view, page) keeps its meaning — see routes/public.js parseFilters/jobsUrl. %>
-<script>document.documentElement.classList.add('js');try{var s=localStorage.getItem('cc:jobs-map');if(s==='hide')document.documentElement.classList.add('jobs-map-off');else if(s==='show')document.documentElement.classList.add('jobs-map-on');}catch(e){}</script>
+<%# Before first paint: mark JS available and restore the visitor's map preference (cc:jobs-map = show | hide). With no
+    preference the map is on at ≥1024 and off below, so the ≥768 layout never shifts once jobs-search.js runs. %>
+<script>(function(d){d.classList.add('js');var s=null;try{s=localStorage.getItem('cc:jobs-map');}catch(e){}if(s==='hide')d.classList.add('jobs-map-off');else if(s==='show'||(window.matchMedia&&matchMedia('(min-width: 1024px)').matches))d.classList.add('jobs-map-on');else d.classList.add('jobs-map-off');})(document.documentElement);</script>
 <script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script>
 <% const hasPoint = !!point; const isMapView = f.view === 'map'; %>
 <header class="page-head">

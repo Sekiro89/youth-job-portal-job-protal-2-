@@ -5,7 +5,8 @@
 //
 // Runs against a RUNNING, SEEDED instance (scripts/seed.js logins). Every step prints PASS/FAIL + detail and
 // the script keeps going after a failure; exit code is 1 if anything failed. Where a route may have deviated
-// from docs/CONTRACT.md / docs/CHANGES-2026-09-09-CLIENT.md / docs/CHANGES-2026-09-10-PDF.md, the actual status +
+// from docs/CONTRACT.md / docs/CHANGES-2026-09-09-CLIENT.md / docs/CHANGES-2026-09-10-PDF.md /
+// docs/CHANGES-2026-09-14-ROUND3.md (public id, locking, decimal salary, posting dates, "Other platform link"), the actual status +
 // Location header (and the form's own error text) is printed so the orchestrator can reconcile.
 //
 // It mutates the DB (jobs, an application, a contact message, address-book rows, an extra admin login, a few
@@ -44,6 +45,8 @@ const SUPPORT_RECIPIENTS = ['veda-smoke@example.com', 'second-smoke@example.com'
 const CITY_COORDS = { Mississauga: [43.589, -79.6441], Brampton: [43.7315, -79.7624], Toronto: [43.6532, -79.3832], Saskatoon: [52.1332, -106.67], Vancouver: [49.2827, -123.1207], Ottawa: [45.4215, -75.6972], Calgary: [51.0447, -114.0719], Edmonton: [53.5461, -113.4938], Winnipeg: [49.8951, -97.1384], Halifax: [44.6488, -63.5752] };
 
 let C = {}; try { C = require('../lib/constants'); } catch (e) { console.log(`(lib/constants not loadable: ${e.message})`); }
+let jobsLib = null; try { jobsLib = require('../lib/jobs'); } catch (e) { console.log(`(lib/jobs not loadable: ${e.message})`); }
+const PUBLIC_ID_RE = (jobsLib && jobsLib.PUBLIC_ID_RE) || /^[A-Z][0-9][A-Z][0-9][A-Z][0-9]$/;
 let settingsLib = null, settingsErr = '';
 try { settingsLib = require('../lib/settings'); } catch (e) { settingsErr = e.message; }
 
@@ -404,7 +407,7 @@ async function applyEmailStep(employer, consultant) {
     const r = await request(BASE, '/employer/jobs/new', { jar: employer });
     const v = inputValue(r.text, 'apply_email');
     report(r.status === 200 && v === emp.contact_email, `employer: /employer/jobs/new defaults apply_email to the profile's contact_email (${emp.contact_email})`, `${describe(r)} value=${v === null ? '(no apply_email input)' : JSON.stringify(v)}`);
-    report(/Application email \(the employer.s inbox\)/i.test(r.text), 'job form label reads "Application email (the employer’s inbox)"', (r.text.match(/<label[^>]*for="apply_email"[^>]*>([^<]*)/) || [])[1] || 'label not found');
+    report(/Application email\s*(?:<[^>]+>\s*)*\(the employer.s inbox\)/i.test(r.text), 'job form label reads "Application email (the employer’s inbox)"', ((r.text.match(/<label[^>]*for="apply_email"[^>]*>([\s\S]*?)<\/label>/) || [])[1] || 'label not found').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
   }
   if (consultant && con) {
     const r = await request(BASE, `/consultant/jobs/new?profile=${con.id}`, { jar: consultant });
@@ -591,6 +594,244 @@ async function contactStep(guest, recipients) {
   } else report(rows.length === 2 && auto, 'contact POST recorded 2 mail_outbox rows (support + auto-reply)', `delta=${rows.length} to: ${to.join(' | ')}`);
 }
 
+// ---------------------------------------------------------------- round 3 (2026-09-14): public id, locking, decimal salary, posting dates, "Other platform link", preview hours
+const ymd = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });   // yyyy-mm-dd like h.formatDateInput
+const daysFromNow = (n) => ymd(Date.now() + n * 86400000);
+/** Distinct job slugs linked from a listing page (excludes /jobs/id/…, /jobs/…/apply, query URLs). */
+const listedSlugs = (html) => [...new Set([...String(html || '').matchAll(/href="\/jobs\/([a-z0-9-]+)"/g)].map(m => m[1]).filter(s => s !== 'id'))];
+const jobRow = (id) => one('SELECT id, slug, title, status, description, public_id, locked_at, published_at, application_deadline::text AS application_deadline, expires_at, salary_min, salary_max, salary_period, hours_amount, hours_period, employer_profile_id FROM jobs WHERE id=$1', [id]);
+const locKeys = (id) => q('SELECT employer_location_id, street_address, postal_code FROM job_locations WHERE job_id=$1 ORDER BY sort_order, id', [id]).then(rows => rows.map(r => `${r.employer_location_id ?? ''}:${r.street_address}:${noSpace(r.postal_code)}`));
+
+/**
+ * One employer posting drives every round-3 rule: decimal salary on create → draft has a public id → draft edit changes
+ * the title → preview shows hours → "Other platform link" label → publish + sandbox pay → locked_at → locked edit keeps
+ * title/locations but saves the description → public page shows Posting ID + "$21.18 – $25.00/hour" → /jobs?q=<pid> →
+ * /jobs/id/<pid> → deadline yesterday closes applications (page, seeker GET, seeker POST) → +30 days reopens →
+ * published_at = Sep 1 shows as "Posted". The job is cancelled at the end.
+ */
+async function round3Flow(employer, seeker, guest, form) {
+  const base = '/employer';
+  const profile = await profileOf('employer');
+  if (!profile) return report(false, 'R3: employer profile', 'none in DB');
+  const select = form.mode === 'select';
+  const ids = [];
+  if (select) for (const l of LOCATIONS) ids.push((await ensureEmployerLocation('employer', employer, base, profile, l)).id);
+  const stamp = Date.now().toString(36);
+  const title = `${MARK} R3 Coordinator ${stamp}`;
+  const build = (t, overrides = {}, locs = [LOCATIONS[0]]) => {
+    const p = jobForm(profile.id, t, { salary_min: '21.18', salary_max: '25', salary_period: 'hour', ...overrides });
+    if (select) { for (const l of locs) p.append(form.locField, String(ids[LOCATIONS.indexOf(l)])); p.append(`operating_name_choice_${profile.id}`, '__legal'); p.append(`operating_name_new_${profile.id}`, ''); }
+    else locs.forEach((l, i) => locationParams(p, l, i, form.template));
+    return p;
+  };
+  const postEdit = (id, params) => postForm(`${base}/jobs/${id}/edit`, params, employer);
+
+  // --- salary: decimals accepted, letters rejected
+  const bad = await postForm(`${base}/jobs/new`, build(`${MARK} R3 bad-salary ${stamp}`, { salary_min: 'abc' }), employer);
+  const stray = await one('SELECT id FROM jobs WHERE title=$1', [`${MARK} R3 bad-salary ${stamp}`]);
+  report(bad.status === 422 && !stray, 'R3 salary: POST /employer/jobs/new salary_min=abc → 422, no row', `${describe(bad)}${stray ? ' STRAY row (deleted)' : ''}${bad.status !== 422 ? ' ' + (errorsIn(bad.text) || '(no error text)') : ''}`);
+  if (stray) await q('DELETE FROM jobs WHERE id=$1', [stray.id]);
+  const c = await postForm(`${base}/jobs/new`, build(title), employer);
+  let job = await one('SELECT id FROM jobs WHERE title=$1', [title]).then(r => r && jobRow(r.id));
+  report(c.status === 302 && !!job, 'R3 salary: POST /employer/jobs/new salary_min=21.18 salary_max=25 salary_period=hour → 302 + draft', describe(c) + (job ? ` job#${job.id}` : ` no row; ${errorsIn(c.text) || '(no error text)'}`));
+  let decimals = !!job;
+  if (!job) {   // decimal validation not landed: create the posting with whole dollars so the public-id / lock / date checks below still run, then set the cents with SQL
+    const c2 = await postForm(`${base}/jobs/new`, build(title, { salary_min: '21', salary_max: '25' }), employer);
+    job = await one('SELECT id FROM jobs WHERE title=$1', [title]).then(r => r && jobRow(r.id));
+    if (!job) return report(false, 'R3: fallback draft with whole-dollar salary', `${describe(c2)} ${errorsIn(c2.text) || '(no error text)'} — cannot continue the round-3 flow`) && null;
+    await q('UPDATE jobs SET salary_min=21.18, salary_max=25 WHERE id=$1', [job.id]); job = await jobRow(job.id);
+    console.log(`      (fallback: draft job#${job.id} created with salary 21/25 and set to 21.18/25.00 by SQL so the rest of the flow can run)`);
+  }
+  if (decimals) report(Number(job.salary_min) === 21.18 && Number(job.salary_max) === 25, 'R3 salary: jobs.salary_min stored as 21.18 (numeric(10,2))', `salary_min=${job.salary_min} salary_max=${job.salary_max}`);
+  const withSalary = (o = {}) => decimals ? o : { ...o, salary_min: '21', salary_max: '25' };   // edits below re-post the form; keep them valid while decimals are rejected
+
+  // --- public id on the draft (fixes agent allocates on create; activateJob allocates on first activation)
+  let pid = job.public_id;
+  report(!!pid && PUBLIC_ID_RE.test(pid), `R3 public id: created draft has public_id matching ${PUBLIC_ID_RE}`, pid ? `public_id=${pid}` : 'public_id NULL on the draft (allocate-on-create not landed in routes/portal.js)');
+
+  // --- draft edit still changes the title (not locked yet)
+  const t2 = `${MARK} R3 Coordinator renamed ${stamp}`;
+  const e1 = await postEdit(job.id, build(t2, withSalary({ description: jobForm(profile.id, t2).get('description') })));
+  job = await jobRow(job.id);
+  report((e1.status === 302 || e1.status === 200) && job.title === t2, `R3 lock: draft edit POST ${base}/jobs/${job.id}/edit with a new title → title changes`, `${describe(e1)} title=${JSON.stringify(job.title)}${e1.status === 422 ? ' ' + (errorsIn(e1.text) || '') : ''}`);
+  report(!job.locked_at, 'R3 lock: draft has no locked_at', `locked_at=${job.locked_at}`);
+
+  // --- owner preview + form vocabulary
+  const pv = await request(BASE, `${base}/jobs/${job.id}`, { jar: employer });
+  report(pv.status === 200 && /35 hours per week/.test(pv.text), `R3 preview: GET ${base}/jobs/${job.id} shows "35 hours per week" (h.formatHours)`, `${describe(pv)} ${(pv.text.match(/\d+(?:\.\d+)?\s*hours\s+[^<]{0,20}/) || ['no "N hours …" text'])[0].trim()}`);
+  if (pv.status === 200 && pid) report(has(pv.text, `Posting ID ${pid}`), `R3 public id: owner job page shows "Posting ID ${pid}"`, (pv.text.match(/Posting ID[^<]{0,12}/) || ['no "Posting ID" text'])[0]);
+  const ef = await request(BASE, `${base}/jobs/${job.id}/edit`, { jar: employer });
+  const label = (re) => re.test(ef.text);
+  report(ef.status === 200 && label(/Other platform link/), 'R3 vocabulary: job form label "Other platform link"', `${describe(ef)} ${(ef.text.match(/<label[^>]*for="apply_url"[^>]*>([^<]*)/) || [])[1] || 'no label for apply_url'}`);
+  report(ef.status === 200 && !label(/Apply link/) && !label(/External application link/), 'R3 vocabulary: job form has no "Apply link" / "External application link"', [/Apply link/, /External application link/].filter(label).map(String).join(', ') || '');
+  report(ef.status === 200 && /name="application_deadline"/.test(ef.text), 'R3 dates: job form has an application_deadline input ("Applications close on")', /name="application_deadline"/.test(ef.text) ? '' : 'no input named application_deadline');
+  const draftForLocked = /Locked after publishing/.test(ef.text);
+  report(!draftForLocked, 'R3 lock: draft edit form does NOT say "Locked after publishing"', draftForLocked ? 'the draft form shows the locked note' : '');
+
+  // --- publish → pay (sandbox) → active + locked
+  const pub = await expectRedirect(`R3: POST ${base}/jobs/${job.id}/publish → /billing/checkout`, `${base}/jobs/${job.id}/publish`, employer, new RegExp(`/billing/checkout/${job.id}`), { method: 'POST', form: {} });
+  if (pub.status !== 302) return job;
+  const cs = await expectRedirect(`R3: POST /billing/checkout/${job.id} → /billing/sandbox`, `/billing/checkout/${job.id}`, employer, /\/billing\/sandbox\//, { method: 'POST', form: {} });
+  const sandboxPath = stripHost(cs.location);
+  if (!sandboxPath) return report(false, 'R3: sandbox card page', 'no sandbox Location (Stripe mode?)') && job;
+  const card = { card_number: '4242424242424242', number: '4242424242424242', name: 'Maria Santos', exp: '12/34', expiry: '12/34', exp_month: '12', exp_year: '2034', cvc: '123', cvv: '123', postal_code: 'L5B 1M2' };
+  const pay = await expectRedirect(`R3: POST ${sandboxPath} (card 4242) → /billing/success`, sandboxPath, employer, /\/billing\/success/, { method: 'POST', form: card });
+  job = await jobRow(job.id);
+  report(job.status === 'active' && !!job.locked_at && !!job.published_at, 'R3 lock: after sandbox payment jobs.locked_at + published_at set, status active', `status=${job.status} locked_at=${job.locked_at} published_at=${job.published_at}`);
+  if (!pid) { pid = job.public_id; report(!!pid && PUBLIC_ID_RE.test(pid), 'R3 public id: allocated on first activation (activateJob → ensurePublicId)', `public_id=${pid}`); }
+  if (!pid && jobsLib) { try { pid = await jobsLib.ensurePublicId(job.id); console.log(`      (fallback: lib/jobs.ensurePublicId allocated ${pid} so the public-id checks below can run)`); } catch (e) { console.log(`      ensurePublicId fallback failed: ${e.message}`); } }
+  if (job.status !== 'active') return job;
+
+  // --- locked edit: title + locations rejected, description saved
+  const lockedTitle = `${MARK} R3 HACKED TITLE ${stamp}`;
+  const newDesc = `Updated after publishing by scripts/smoke.js (${stamp}). The description stays editable by the owner at any time — only the company, operating name, title and work locations are frozen once a posting has been paid and published.`;
+  const before = await locKeys(job.id);
+  const e2 = await postEdit(job.id, build(lockedTitle, withSalary({ description: newDesc }), [LOCATIONS[1]]));
+  job = await jobRow(job.id);
+  const after = await locKeys(job.id);
+  report(e2.status === 302 || e2.status === 200, `R3 lock: POST ${base}/jobs/${job.id}/edit on the published job (new title + different location_ids[] + new description) → 200/302`, `${describe(e2)}${e2.status === 422 ? ' ' + (errorsIn(e2.text) || '(no error text)') : ''}`);
+  report(job.title === t2, 'R3 lock: title unchanged in DB after the locked edit', `title=${JSON.stringify(job.title)}`);
+  report(before.join('|') === after.join('|'), 'R3 lock: job_locations unchanged in DB after the locked edit', `before=${before.join(' | ')} after=${after.join(' | ')}`);
+  report(job.description === newDesc, 'R3 lock: description DID change (still editable after publishing)', job.description === newDesc ? '' : `description=${JSON.stringify(String(job.description).slice(0, 60))}`);
+  const ef2 = await request(BASE, `${base}/jobs/${job.id}/edit`, { jar: employer });
+  report(ef2.status === 200 && /Locked after publishing/.test(ef2.text), 'R3 lock: edit form of the published job says "Locked after publishing"', `${describe(ef2)}${/Locked after publishing/.test(ef2.text) ? '' : ' (no such text; view not landed?)'}`);
+  if (ef2.status === 200) report(!/<input[^>]*name="title"[^>]*type="text"/.test(ef2.text) && !/<input[^>]*type="text"[^>]*name="title"/.test(ef2.text), 'R3 lock: locked edit form renders the title as static text (no editable title input)', (ef2.text.match(/<input[^>]*name="title"[^>]*>/) || ['no title input'])[0].slice(0, 120));
+  if (ef2.status === 200) report(/name="published_at"/.test(ef2.text), 'R3 dates: published job form has a published_at input ("Posted on")', /name="published_at"/.test(ef2.text) ? '' : 'no input named published_at');
+
+  // --- public page: posting id, decimal salary, search by id, /jobs/id/<pid>
+  if (!decimals) await q('UPDATE jobs SET salary_min=21.18, salary_max=25 WHERE id=$1', [job.id]);
+  const pg = await request(BASE, `/jobs/${job.slug}`, { jar: guest });
+  report(pg.status === 200, `R3: public GET /jobs/${job.slug} → 200`, describe(pg));
+  if (pg.status === 200) {
+    if (pid) report(has(pg.text, `Posting ID ${pid}`), `R3 public id: public job page shows "Posting ID ${pid}"`, (pg.text.match(/Posting ID[^<]{0,12}/) || ['no "Posting ID" text'])[0]);
+    report(has(pg.text, '$21.18 – $25.00/hour'), 'R3 salary: public page prints "$21.18 – $25.00/hour"', (pg.text.match(/\$[\d,.]+(?:\s*[–-]\s*\$[\d,.]+)?\s*\/?[^<]{0,12}/) || ['no $ amount'])[0].trim());
+    report(/\/jobs\/[a-z0-9-]+\/apply"/.test(pg.text), 'R3 dates: Apply visible while no deadline is set', '');
+  }
+  if (pid) {
+    const s1 = await request(BASE, `/jobs?q=${encodeURIComponent(pid)}`, { jar: guest });
+    const slugs = listedSlugs(s1.text);
+    report(s1.status === 200 && slugs.length === 1 && slugs[0] === job.slug, `R3 public id: GET /jobs?q=${pid} lists exactly that job`, `${describe(s1)} listed: ${slugs.join(', ') || 'none'}`);
+    const s2 = await request(BASE, `/jobs?q=${encodeURIComponent(pid.toLowerCase())}`, { jar: guest });
+    const slugs2 = listedSlugs(s2.text);
+    report(s2.status === 200 && slugs2.length === 1 && slugs2[0] === job.slug, `R3 public id: GET /jobs?q=${pid.toLowerCase()} (lower case) also finds it`, `listed: ${slugs2.join(', ') || 'none'}`);
+    await expectRedirect(`R3 public id: GET /jobs/id/${pid} → 302 /jobs/${job.slug}`, `/jobs/id/${pid}`, guest, new RegExp(`/jobs/${job.slug}$`));
+    const nf = await request(BASE, '/jobs/id/ZZ9ZZ9', { jar: guest });
+    report(nf.status === 404, 'R3 public id: GET /jobs/id/ZZ9ZZ9 → 404', describe(nf));
+  }
+
+  // --- dates: deadline yesterday closes applications; +30 days reopens; published_at shows as Posted
+  const yesterday = daysFromNow(-1), today = daysFromNow(0), soon = daysFromNow(30);
+  // The form refuses a date in the past ("must be today or later"), so the closed state is reached the way it happens in
+  // real life: save today's date through the form, then let the calendar move on (SQL sets it to yesterday).
+  const e3 = await postEdit(job.id, build(t2, withSalary({ description: newDesc, application_deadline: today })));
+  job = await jobRow(job.id);
+  report((e3.status === 302 || e3.status === 200) && job.application_deadline === today, `R3 dates: edit application_deadline=${today} (today) → stored, posting still open on the deadline day`, `${describe(e3)} application_deadline=${job.application_deadline}${e3.status === 422 ? ' ' + (errorsIn(e3.text) || '') : ''}`);
+  const sameDay = await request(BASE, `/jobs/${job.slug}`, { jar: guest });
+  report(sameDay.status === 200 && !/Applications closed/i.test(sameDay.text) && sameDay.text.includes(`/jobs/${job.slug}/apply"`), 'R3 dates: on the deadline day itself Apply is still visible', describe(sameDay));
+  const e3b = await postEdit(job.id, build(t2, withSalary({ description: newDesc, application_deadline: yesterday })));
+  report(e3b.status === 422, `R3 dates: edit application_deadline=${yesterday} (past) through the form → 422`, `${describe(e3b)} ${e3b.status === 422 ? (errorsIn(e3b.text) || '') : '(a past date was accepted)'}`);
+  await q('UPDATE jobs SET application_deadline=$2 WHERE id=$1', [job.id, yesterday]);
+  job = await jobRow(job.id);
+  report(job.application_deadline === yesterday, `R3 dates: application_deadline moved to ${yesterday} (SQL — the calendar moved on)`, `application_deadline=${job.application_deadline}`);
+  const closed = await request(BASE, `/jobs/${job.slug}`, { jar: guest });
+  report(closed.status === 200 && /Applications closed/i.test(closed.text), 'R3 dates: public page shows "Applications closed" after the deadline', `${describe(closed)}${/Applications closed/i.test(closed.text) ? '' : ' (no such text)'}`);
+  report(closed.status === 200 && !closed.text.includes(`/jobs/${job.slug}/apply"`), 'R3 dates: public page hides the Apply link after the deadline', closed.text.includes(`/jobs/${job.slug}/apply"`) ? 'still links /apply' : '');
+  report(closed.status === 200, 'R3 dates: closed posting is still visible until billing expiry', describe(closed));
+  if (seeker) {
+    const ag = await request(BASE, `/jobs/${job.slug}/apply`, { jar: seeker });
+    const closedState = (ag.status === 200 && /closed/i.test(ag.text)) || (ag.status >= 300 && ag.status < 400);
+    report(closedState, `R3 dates: seeker GET /jobs/${job.slug}/apply shows the closed state (200 + "closed" text, or a redirect)`, describe(ag));
+    const fd = new FormData();
+    fd.append('cover_letter', `${MARK} R3 apply after deadline`); fd.append('resume_choice', 'upload');
+    fd.append('resume', new Blob([tinyPdf('R3 resume')], { type: 'application/pdf' }), 'smoke-resume.pdf');
+    const ap = await request(BASE, `/jobs/${job.slug}/apply`, { method: 'POST', body: fd, jar: seeker });
+    const row = await one('SELECT id FROM applications WHERE job_id=$1', [job.id]);
+    report((ap.status === 422 || (ap.status >= 300 && ap.status < 400) || ap.status === 403 || ap.status === 410) && !row, `R3 dates: seeker POST /jobs/${job.slug}/apply after the deadline → 422/redirect, no applications row`, `${describe(ap)}${row ? ` ROW CREATED id=${row.id}` : ''}`);
+    if (row) await q('DELETE FROM applications WHERE id=$1', [row.id]);
+  } else report(false, 'R3 dates: seeker apply after deadline', 'seeker login failed');
+  const e4 = await postEdit(job.id, build(t2, withSalary({ description: newDesc, application_deadline: soon, published_at: '2026-09-01' })));
+  job = await jobRow(job.id);
+  report((e4.status === 302 || e4.status === 200) && job.application_deadline === soon, `R3 dates: edit application_deadline=${soon} → stored`, `${describe(e4)} application_deadline=${job.application_deadline}${e4.status === 422 ? ' ' + (errorsIn(e4.text) || '') : ''}`);
+  report(!!job.published_at && ymd(job.published_at) === '2026-09-01', 'R3 dates: edit published_at=2026-09-01 → stored', `published_at=${job.published_at}`);
+  const open = await request(BASE, `/jobs/${job.slug}`, { jar: guest });
+  report(open.status === 200 && open.text.includes(`/jobs/${job.slug}/apply"`) && !/Applications closed/i.test(open.text), 'R3 dates: Apply visible again with a future deadline', describe(open));
+  report(open.status === 200 && /Sep\.?\s+1,\s+2026|2026-09-01/.test(open.text), 'R3 dates: public page "Posted" reflects Sep 1, 2026', (open.text.match(/Posted[^<]*<[^>]*>[^<]*<[^>]*>([^<]*)/) || [])[1] || (open.text.match(/datetime="2026-09-01[^"]*"/) || ['no Sep 1 date on the page'])[0]);
+  const soonText = new Date(soon + 'T12:00:00-04:00').toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'America/Toronto' });
+  report(open.status === 200 && /Applications close|Closes/.test(open.text) && (has(open.text, soonText) || open.text.includes(`datetime="${soon}`)), `R3 dates: public page "Applications close"/"Closes" row shows the deadline (${soonText})`, (open.text.match(/(?:Applications close|Closes)[^<]{0,40}(?:<[^>]+>){0,3}[^<]{0,30}/) || ['no Closes row'])[0].replace(/\s+/g, ' ').slice(0, 120));
+  if (employer) { const pv2 = await request(BASE, `${base}/jobs/${job.id}`, { jar: employer }); report(pv2.status === 200, `R3: owner detail renders for the published job with deadline + posted date → 200`, describe(pv2)); }
+
+  // --- cancel now → gone
+  await expectRedirect(`R3: POST /billing/cancel/${job.id}?now=1 → 302`, `/billing/cancel/${job.id}?now=1`, employer, /./, { method: 'POST', form: {} });
+  const gone = await request(BASE, `/jobs/${job.slug}`, { jar: guest });
+  report(gone.status === 404, 'R3: cancelled job 404s publicly', describe(gone));
+  return job;
+}
+
+/** Every job status renders for the owner (detail + edit form) and the public page is 200 only for active. Rows are inserted with psql and removed afterwards. */
+async function stateRenderStep(employer, guest) {
+  const profile = await profileOf('employer');
+  if (!profile) return report(false, 'R3 states: employer profile', 'none in DB');
+  const owner = await one('SELECT id FROM users WHERE email=$1', [LOGINS.employer]);
+  const statuses = ['draft', 'pending_payment', 'active', 'inactive', 'cancelled', 'expired'];
+  const made = [];
+  try {
+    for (const st of statuses) {
+      // vary the shape too: active = 3 locations + operating name + hours; pending = 0 locations, no salary/hours; others = 1 location
+      const nLoc = st === 'active' ? 3 : st === 'pending_payment' ? 0 : 1;
+      const r = await one(`INSERT INTO jobs(employer_profile_id, created_by, title, slug, description, category, job_type, work_arrangement, city, province, status, expires_at, published_at, locked_at, archived_at, salary_min, salary_max, salary_period, hours_amount, hours_period, operating_name, application_deadline)
+        VALUES ($1,$2,$3,$4,'State fixture created by scripts/smoke.js to prove every template renders for this status. It is deleted at the end of the run.','administration','full_time','on_site','Mississauga','ON',$5::job_status,
+          CASE WHEN $5 IN ('active','inactive') THEN now() + interval '20 days' WHEN $5='expired' THEN now() - interval '1 day' ELSE NULL END,
+          CASE WHEN $5 IN ('draft','pending_payment') THEN NULL ELSE now() - interval '3 days' END,
+          CASE WHEN $5 IN ('draft','pending_payment') THEN NULL ELSE now() - interval '3 days' END,
+          CASE WHEN $5 IN ('inactive','cancelled','expired') THEN now() ELSE NULL END,
+          CASE WHEN $5='pending_payment' THEN NULL ELSE 21.18 END, CASE WHEN $5='pending_payment' THEN NULL ELSE 25 END, 'hour',
+          CASE WHEN $5='pending_payment' THEN NULL ELSE 37.5 END, 'week', CASE WHEN $5='active' THEN 'State Fixture Trading' ELSE NULL END,
+          CASE WHEN $5='active' THEN current_date + 10 ELSE NULL END) RETURNING id, slug`,
+        [profile.id, owner.id, `${MARK} state ${st}`, `smoke-state-${st}-${Date.now().toString(36)}`, st]);
+      for (let i = 0; i < nLoc; i++) await q('INSERT INTO job_locations(job_id, street_address, unit, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7)', [r.id, ['2400 Derry Rd E', '7100 Airport Rd', '100 City Centre Dr'][i], i === 1 ? '12' : null, 'Mississauga', 'ON', ['L5S 1B1', 'L4T 2H3', 'L5B 2C9'][i], i]);
+      if (st === 'active' && jobsLib) { try { await jobsLib.ensurePublicId(r.id); } catch (_) {} }
+      made.push({ ...r, status: st, nLoc });
+    }
+    for (const j of made) {
+      const d = await request(BASE, `/employer/jobs/${j.id}`, { jar: employer });
+      report(d.status === 200, `R3 states: owner detail GET /employer/jobs/${j.id} (${j.status}, ${j.nLoc} location${j.nLoc === 1 ? '' : 's'}) → 200`, describe(d) + (d.status >= 500 ? ' ' + (d.text.match(/ReferenceError[^<]{0,120}|TypeError[^<]{0,120}/) || [''])[0] : ''));
+      const e = await request(BASE, `/employer/jobs/${j.id}/edit`, { jar: employer });
+      report(e.status === 200, `R3 states: edit form GET /employer/jobs/${j.id}/edit (${j.status}) → 200`, describe(e) + (e.status >= 500 ? ' ' + (e.text.match(/ReferenceError[^<]{0,120}|TypeError[^<]{0,120}/) || [''])[0] : ''));
+      if (e.status === 200 && j.status !== 'draft' && j.status !== 'pending_payment') report(/Locked after publishing/.test(e.text), `R3 states: edit form of the ${j.status} job (locked_at set) says "Locked after publishing"`, /Locked after publishing/.test(e.text) ? '' : 'no such text');
+      const a = await request(BASE, `/employer/jobs/${j.id}/applicants`, { jar: employer });
+      report(a.status === 200, `R3 states: applicants GET /employer/jobs/${j.id}/applicants (${j.status}) → 200`, describe(a));
+      const p = await request(BASE, `/jobs/${j.slug}`, { jar: guest });
+      const want = j.status === 'active' ? 200 : 404;
+      report(p.status === want, `R3 states: public GET /jobs/${j.slug} (${j.status}) → ${want}`, describe(p));
+      if (j.status === 'active' && p.status === 200) {
+        report(/State Fixture Trading/.test(p.text) && /37\.5 hours per week/.test(p.text) && has(p.text, '$21.18 – $25.00/hour'), 'R3 states: active fixture page shows operating name, "37.5 hours per week" and "$21.18 – $25.00/hour"', `${/State Fixture Trading/.test(p.text) ? '' : 'no operating name '}${/37\.5 hours per week/.test(p.text) ? '' : 'no hours '}${has(p.text, '$21.18 – $25.00/hour') ? '' : 'no decimal salary'}`.trim());
+        const locs = ['2400 Derry Rd E, Mississauga, ON L5S 1B1', '7100 Airport Rd, Unit 12, Mississauga, ON L4T 2H3', '100 City Centre Dr, Mississauga, ON L5B 2C9'].filter(a => !has(p.text, a));
+        report(!locs.length, 'R3 states: active fixture page lists all 3 work locations', locs.length ? `missing: ${locs.join(' | ')}` : '');
+      }
+    }
+    for (const [path, jar, name] of [['/employer/jobs', employer, 'owner jobs list'], ['/employer/dashboard', employer, 'owner dashboard'], ['/billing', employer, 'billing'], ['/employer/applicants', employer, 'applicants (all)']]) {
+      const r = await request(BASE, path, { jar });
+      report(r.status === 200, `R3 states: ${name} GET ${path} renders with every status present → 200`, describe(r));
+    }
+    const list = await request(BASE, '/employer/jobs', { jar: employer });
+    const act = made.find(j => j.status === 'active'); const actRow = act && await one('SELECT public_id FROM jobs WHERE id=$1', [act.id]);
+    if (actRow && actRow.public_id) report(has(list.text, actRow.public_id), `R3 public id: owner jobs list shows the posting id ${actRow.public_id}`, has(list.text, actRow.public_id) ? '' : 'id not on /employer/jobs');
+  } finally {
+    for (const j of made) await q('DELETE FROM jobs WHERE id=$1', [j.id]).catch(() => {});
+  }
+}
+
+/** Layout hygiene (UX standard §2): every page has exactly one <h1> and a .page-head / .app-head band (home: the hero). */
+async function layoutHygieneStep(pages) {
+  for (const { path, jar, role } of pages) {
+    const r = await request(BASE, path, { jar });
+    if (r.status !== 200) { report(false, `R3 layout: ${path}${role ? ' (' + role + ')' : ''} → 200`, describe(r)); continue; }
+    const h1s = (r.text.match(/<h1[\s>]/gi) || []).length;
+    const band = /class="[^"]*\b(?:page-head|app-head|hero)\b/.test(r.text);
+    report(h1s === 1 && band, `R3 layout: ${path}${role ? ' (' + role + ')' : ''} has exactly one <h1> + page-head/app-head/hero band`, `${h1s === 1 ? '' : `${h1s} <h1> elements`} ${band ? '' : 'no page-head/app-head/hero class'}`.trim());
+  }
+}
+
 // ---------------------------------------------------------------- main
 async function main() {
   console.log(`smoke: ${BASE}  db=${(process.env.DATABASE_URL || '').replace(/\/\/.*@/, '//***@')}`);
@@ -617,7 +858,7 @@ async function main() {
     // a live NATIVE job the seeder has NOT applied to yet (applications are UNIQUE per job+seeker); prefer one the
     // seeded employer owns so the employer-side cover download can be checked with the employer login
     const applyTo = seeker && await one(`SELECT j.id, j.slug, j.employer_profile_id FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id
-      WHERE j.status='active' AND j.expires_at > now() AND j.source IS NULL AND j.id NOT IN (SELECT job_id FROM applications WHERE seeker_user_id=$1)
+      WHERE j.status='active' AND j.expires_at > now() AND j.source IS NULL AND (j.application_deadline IS NULL OR j.application_deadline >= (now() AT TIME ZONE 'America/Toronto')::date) AND j.id NOT IN (SELECT job_id FROM applications WHERE seeker_user_id=$1)
       ORDER BY (p.owner_user_id = (SELECT id FROM users WHERE email=$2)) DESC, j.id LIMIT 1`, [seeker.id, LOGINS.employer]);
     const opName = await one(`SELECT j.slug, coalesce(j.operating_name, p.operating_name) AS operating_name, p.company_name FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id
       WHERE j.status='active' AND j.expires_at > now() AND coalesce(j.operating_name, p.operating_name) IS NOT NULL AND coalesce(j.operating_name, p.operating_name) <> '' AND coalesce(j.operating_name, p.operating_name) <> p.company_name ORDER BY j.id LIMIT 1`);
@@ -655,7 +896,8 @@ async function main() {
     const missing = locs.map(fullAddress).filter(a => !has(r.text, a));
     report(locs.length > 0 && !missing.length, 'job detail lists every job_locations full address', missing.length ? `missing: ${missing.join(' | ')}` : locs.map(fullAddress).join(' | ') || 'no job_locations rows');
     const jl = jp && jp.jobLocation; const arr = Array.isArray(jl) ? jl : (jl ? [jl] : []);
-    report(Array.isArray(jl) && arr.length === locs.length && arr.every(x => x.address && x.address.postalCode), `JSON-LD jobLocation is an array (${locs.length}) with postalCode`, jp ? JSON.stringify(jl).slice(0, 160) : 'no JSON-LD');
+    const withPostal = locs.filter(l => l.postal_code).length;
+    report(Array.isArray(jl) && arr.length === locs.length && arr.filter(x => x.address && x.address.postalCode).length === withPostal, `JSON-LD jobLocation is an array (${locs.length}) with postalCode${withPostal < locs.length ? ` (${locs.length - withPostal} DB row(s) have no postal code)` : ''}`, jp ? JSON.stringify(jl).slice(0, 160) : 'no JSON-LD');
     report(/<link[^>]+print\.css/.test(r.text), 'job detail links print.css');
     report(/data-print/.test(r.text), 'job detail has a data-print button');
   });
@@ -760,6 +1002,21 @@ async function main() {
 
   // ---- 8. maps
   if (db.active) await step('maps', () => mapsStep(guest, db.active));
+
+  // ---- 8b. round 3 (2026-09-14): public id, locking, decimal salary, posting dates, vocabulary, preview hours, every status renders, layout hygiene
+  if (employer) await step('round 3 posting flow', () => round3Flow(employer, seeker, guest, form)); else report(false, 'round 3 posting flow', 'employer login failed');
+  if (employer) await step('round 3 job states', () => stateRenderStep(employer, guest)); else report(false, 'round 3 job states', 'employer login failed');
+  await step('round 3 layout hygiene', async () => {
+    const slug = db.active ? db.active.slug : null;
+    const company = slug ? await one('SELECT p.slug FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.slug=$1', [slug]) : null;
+    const pages = [];
+    for (const p of ['/', '/jobs', '/jobs?q=nurse', '/about', '/contact', '/employer', '/consultant', '/jobseeker', '/login', '/signup', '/signup/employer', '/signup/seeker', '/forgot', '/privacy', '/terms', ...(slug ? [`/jobs/${slug}`, `/jobs/${slug}/apply`] : []), ...(company ? [`/companies/${company.slug}`] : [])]) pages.push({ path: p, jar: guest });
+    if (employer) for (const p of ['/employer/dashboard', '/employer/jobs', '/employer/jobs/new', '/employer/profile', '/employer/applicants', '/billing', '/account', ...(draft ? [`/employer/jobs/${draft.id}`, `/employer/jobs/${draft.id}/edit`, `/billing/checkout/${draft.id}`] : [])]) pages.push({ path: p, jar: employer, role: 'employer' });
+    if (consultant) for (const p of ['/consultant/dashboard', '/consultant/profiles', '/consultant/profiles/new', '/consultant/jobs/new']) pages.push({ path: p, jar: consultant, role: 'consultant' });
+    if (seeker) for (const p of ['/jobseeker/dashboard', '/jobseeker/profile', '/jobseeker/applications', '/jobseeker/saved', '/jobseeker/alerts', '/jobseeker/notifications', ...(slug ? [`/jobs/${slug}/apply`] : [])]) pages.push({ path: p, jar: seeker, role: 'seeker' });
+    if (admin) for (const p of ['/admin', '/admin/jobs', '/admin/users', '/admin/messages', '/admin/payments', '/admin/outbox', '/admin/integrations/unlock']) pages.push({ path: p, jar: admin, role: 'admin' });
+    await layoutHygieneStep(pages);
+  });
 
   // ---- 9. admin integrations (passcode gate, pricing → checkout, encrypted secrets, test email, admin users, support routing)
   let integ = { recipients: null };

@@ -1,110 +1,118 @@
-<div class="page-head">
-  <div class="container split">
-    <div>
-      <p class="eyebrow"><%= isConsultant ? 'Third Party Consultant' : 'Employer' %></p>
-      <h1>Billing</h1>
-      <p class="muted">Subscriptions and receipts for <%= isConsultant ? 'all the companies you manage' : 'your postings' %>.</p>
+<%# /billing — lives in the portal app shell (side nav + .app-head) like every other owner page. The billing route only loads billing.css,
+    so the shell components (.card--table, .app-head layout, .td-actions …) are pulled in here: express-ejs-layouts renders the view
+    before the layout, so pushing onto extraCss still reaches <head>. %>
+<% if (typeof extraCss !== 'undefined' && !extraCss.includes('/css/portal.css')) extraCss.unshift('/css/portal.css'); const nav = 'billing'; %>
+<div class="container dash">
+  <%- include('../portal/partials/side', { nav, base, isConsultant }) %>
+  <div class="dash__main">
+    <header class="app-head">
+      <div>
+        <p class="eyebrow"><%= isConsultant ? 'Third Party Consultant' : 'Employer' %></p>
+        <h1>Billing</h1>
+        <p class="app-head__context"><span>Subscriptions and receipts for <%= isConsultant ? 'all the companies you manage' : 'your postings' %>. Every receipt is available here any time.</span></p>
+      </div>
+      <div class="app-head__actions">
+        <% if (mode === 'stripe' && hasStripeCustomer) { %><a class="kds-btn kds-btn--brand" href="/billing/portal" rel="noopener">Manage card &amp; invoices</a><% } %>
+        <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">My jobs</a>
+      </div>
+    </header>
+
+    <% if (mode === 'sandbox') { %><div class="bill-sandbox-banner" role="note"><strong>Sandbox mode — no real charge.</strong> Card payments are simulated; nothing is billed to a real card until Stripe is connected.</div><% } %>
+    <% if (totals.pastDue) { %><div class="flash flash--error" role="alert">A payment failed on <%= totals.pastDue %> posting<%= totals.pastDue === 1 ? '' : 's' %>. Update your card to keep <%= totals.pastDue === 1 ? 'it' : 'them' %> live.</div><% } %>
+
+    <div class="stats">
+      <div class="stat"><div class="stat__value"><%= totals.activeCount %></div><div class="stat__label">Live posting<%= totals.activeCount === 1 ? '' : 's' %></div></div>
+      <div class="stat"><div class="stat__value"><%= money(totals.monthly) %></div><div class="stat__label">Monthly total (CAD, incl. GST)</div></div>
+      <div class="stat"><div class="stat__value stat__value--sm"><%= totals.nextRenewal ? h.formatDate(totals.nextRenewal) : '—' %></div><div class="stat__label">Next renewal</div></div>
+      <div class="stat"><div class="stat__value"><%= money(totals.paid) %></div><div class="stat__label">Paid to date</div></div>
     </div>
-    <div class="cluster">
-      <% if (mode === 'stripe' && hasStripeCustomer) { %><a class="kds-btn kds-btn--brand" href="/billing/portal" rel="noopener">Manage card &amp; invoices</a><% } %>
-      <a class="kds-btn kds-btn--ghost" href="<%= base %>/dashboard">← Dashboard</a>
-    </div>
+
+    <section class="card card--table" aria-labelledby="subs-title">
+      <div class="card__head"><h2 id="subs-title">Subscriptions</h2><span class="small muted"><%= subs.length %> total</span></div>
+      <% if (!subs.length) { %>
+        <div class="empty">No subscriptions yet. Publish a posting from your dashboard and it will appear here.</div>
+      <% } else { %>
+      <div class="table-wrap">
+        <table class="table table--stack bill-table">
+          <thead><tr>
+            <th>Posting ID</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Next renewal</th><th>Monthly</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+          <% subs.forEach(s => {
+               const live = s.status === 'active' && s.current_period_end && new Date(s.current_period_end) > new Date();
+               const label = s.status === 'active' ? (s.cancel_at_period_end ? 'Ends at period end' : 'Active') : s.status === 'past_due' ? 'Payment failed' : s.status === 'pending' ? 'Awaiting payment' : 'Cancelled';
+               const cls = s.status === 'active' ? (s.cancel_at_period_end ? 'warning' : 'positive') : s.status === 'past_due' ? 'danger' : s.status === 'pending' ? 'warning' : 'danger'; %>
+            <tr>
+              <td data-label="Posting ID"><% if (s.job_public_id) { %><span class="posting-id__code"><%= s.job_public_id %></span><% } else { %><span class="muted">—</span><% } %></td>
+              <td data-label="Posting" class="td-stack"><a href="<%= base %>/jobs/<%= s.job_id %>"><%= s.job_title %></a><div class="small muted">Posting <%= h.statusLabel(s.job_status).toLowerCase() %><% if (s.payment_count) { %> · <%= s.payment_count %> payment<%= s.payment_count === 1 ? '' : 's' %><% } %></div></td>
+              <% if (isConsultant) { %><td data-label="Company"><%= s.company_name %></td><% } %>
+              <td data-label="Status"><span class="badge badge--<%= cls %>"><%= label %></span></td>
+              <td data-label="Next renewal">
+                <% if (live && !s.cancel_at_period_end) { %><%= h.formatDate(s.current_period_end) %>
+                <% } else if (live && s.cancel_at_period_end) { %><span class="muted">Live until <%= h.formatDate(s.current_period_end) %></span>
+                <% } else if (s.status === 'past_due') { %><span class="muted">Overdue since <%= h.formatDate(s.current_period_end) %></span>
+                <% } else { %><span class="muted">—</span><% } %>
+              </td>
+              <td data-label="Monthly"><%= money(s.total_cents) %></td>
+              <td data-label="Actions"><div class="td-actions">
+                <% if (s.status === 'pending' || s.status === 'past_due' || (!live && s.status !== 'active')) { %>
+                  <% if (['draft','pending_payment','expired','cancelled','inactive'].includes(s.job_status)) { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="/billing/checkout/<%= s.job_id %>"><%= s.status === 'pending' ? 'Pay now' : 'Re-activate' %></a><% } %>
+                <% } %>
+                <% if (live && !s.cancel_at_period_end) { %>
+                  <form method="post" action="/billing/cancel/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Stop auto-renewal? The posting stays live until <%= h.formatDate(s.current_period_end) %>.">Cancel at period end</button></form>
+                  <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
+                <% } else if (live && s.cancel_at_period_end) { %>
+                  <form method="post" action="/billing/resume/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--brand kds-btn--sm" type="submit">Resume renewal</button></form>
+                  <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm kds-btn--danger-text" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
+                <% } %>
+              </div></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% if (isConsultant && byCompany.length) { %>
+        <div class="card__foot bill-subtotals">
+          <h3>Per company</h3>
+          <ul>
+            <% byCompany.forEach(c => { %><li><span><%= c.company_name %> <span class="muted small">· <%= c.count %> live</span></span><strong><%= money(c.monthly) %>/mo</strong></li><% }) %>
+          </ul>
+        </div>
+      <% } %>
+      <% } %>
+    </section>
+
+    <section class="card card--table" aria-labelledby="receipts-title">
+      <div class="card__head"><h2 id="receipts-title">Receipts</h2><span class="small muted"><%= payments.length %> receipt<%= payments.length === 1 ? '' : 's' %></span></div>
+      <% if (!payments.length) { %>
+        <div class="empty">No payments yet.</div>
+      <% } else { %>
+      <div class="table-wrap">
+        <table class="table table--stack bill-table">
+          <thead><tr><th>Receipt</th><th>Date</th><th>Posting ID</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Period</th><th>Total</th><th>Open</th></tr></thead>
+          <tbody>
+          <% payments.forEach(p => { %>
+            <tr>
+              <td data-label="Receipt"><code class="bill-receipt-no"><%= p.receipt_number %></code></td>
+              <td data-label="Date"><%= h.formatDate(p.paid_at) %></td>
+              <td data-label="Posting ID"><% if (p.job_public_id) { %><span class="posting-id__code"><%= p.job_public_id %></span><% } else { %><span class="muted">—</span><% } %></td>
+              <td data-label="Posting"><%= p.job_title %></td>
+              <% if (isConsultant) { %><td data-label="Company"><%= p.company_name %></td><% } %>
+              <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
+              <td data-label="Total"><span class="bill-total"><%= money(p.total_cents) %> <span class="small muted">(<%= money(p.amount_cents) %> + GST <%= money(p.tax_cents) %>)</span><% if (p.status !== 'paid') { %> <span class="badge badge--danger"><%= p.status %></span><% } %></span></td>
+              <td data-label="Open"><div class="td-actions"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/billing/receipt/<%= p.id %>">View</a><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/billing/receipt/<%= p.id %>?print=1" title="Opens the receipt with the print dialog — choose Save as PDF">PDF</a></div></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <p class="card__foot small muted"><strong>View</strong> opens the receipt; <strong>PDF</strong> opens it with the print dialog ready — choose “Save as PDF”.</p>
+      <% } %>
+    </section>
+
+    <section class="card card--flat bill-pricing-note">
+      <div class="card__head"><h2>How pricing works</h2></div>
+      <p>As <%= isConsultant ? 'a third party consultant' : 'an employer' %>, each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong> (<%= isConsultant ? 'employers pay ' + money(allPricing.employer.price_cents) : 'third party consultants pay ' + money(allPricing.consultant.price_cents) %> + GST), charged on the day you publish and then every month on the same date until you cancel. The price you pay at checkout is locked in for that posting — later price changes never alter an existing subscription. “Cancel at period end” keeps the posting live until the date you already paid for; “Cancel now” removes it immediately with no further charges. Every payment gets an itemised receipt showing GST<% if (pricing.gst_number) { %> (registration no. <%= pricing.gst_number %>)<% } %>, viewable and downloadable as PDF from this page.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } else { %> Cards are processed by Stripe; use <a href="/billing/portal">Manage card &amp; invoices</a> to update your card or download Stripe invoices.<% } %></p>
+    </section>
   </div>
 </div>
-<section class="container section-pad bill-index">
-  <% if (mode === 'sandbox') { %><div class="bill-sandbox-banner" role="note"><strong>Sandbox mode — no real charge.</strong> Card payments are simulated; nothing is billed to a real card until Stripe is connected.</div><% } %>
-  <div class="stats">
-    <div class="stat"><div class="stat__value"><%= totals.activeCount %></div><div class="stat__label">Live posting<%= totals.activeCount === 1 ? '' : 's' %></div></div>
-    <div class="stat"><div class="stat__value"><%= money(totals.monthly) %></div><div class="stat__label">Monthly total (CAD, incl. GST)</div></div>
-    <div class="stat"><div class="stat__value"><%= totals.nextRenewal ? h.formatDate(totals.nextRenewal) : '—' %></div><div class="stat__label">Next renewal</div></div>
-    <div class="stat"><div class="stat__value"><%= money(totals.paid) %></div><div class="stat__label">Paid to date</div></div>
-  </div>
-
-  <% if (totals.pastDue) { %><div class="flash flash--error">A payment failed on <%= totals.pastDue %> posting<%= totals.pastDue === 1 ? '' : 's' %>. Update your card to keep <%= totals.pastDue === 1 ? 'it' : 'them' %> live.</div><% } %>
-
-  <div class="bill-section">
-    <div class="split"><h2 class="bill-h2">Subscriptions</h2><span class="small muted"><%= subs.length %> total</span></div>
-    <% if (!subs.length) { %>
-      <div class="empty">No subscriptions yet. Publish a posting from your dashboard and it will appear here.</div>
-    <% } else { %>
-    <div class="table-wrap">
-      <table class="table table--stack bill-table">
-        <thead><tr>
-          <th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Status</th><th>Next renewal</th><th>Monthly</th><th>Actions</th>
-        </tr></thead>
-        <tbody>
-        <% subs.forEach(s => {
-             const live = s.status === 'active' && s.current_period_end && new Date(s.current_period_end) > new Date();
-             const label = s.status === 'active' ? (s.cancel_at_period_end ? 'Ends at period end' : 'Active') : s.status === 'past_due' ? 'Payment failed' : s.status === 'pending' ? 'Awaiting payment' : 'Cancelled';
-             const cls = s.status === 'active' ? (s.cancel_at_period_end ? 'warning' : 'positive') : s.status === 'past_due' ? 'danger' : s.status === 'pending' ? 'warning' : 'danger'; %>
-          <tr>
-            <td data-label="Posting"><div><a href="<%= base %>/jobs/<%= s.job_id %>"><%= s.job_title %></a><div class="small muted">Posting <%= h.statusLabel(s.job_status).toLowerCase() %><% if (s.payment_count) { %> · <%= s.payment_count %> payment<%= s.payment_count === 1 ? '' : 's' %><% } %></div></div></td>
-            <% if (isConsultant) { %><td data-label="Company"><%= s.company_name %></td><% } %>
-            <td data-label="Status"><span class="badge badge--<%= cls %>"><%= label %></span></td>
-            <td data-label="Next renewal">
-              <% if (live && !s.cancel_at_period_end) { %><%= h.formatDate(s.current_period_end) %>
-              <% } else if (live && s.cancel_at_period_end) { %><span class="muted">Live until <%= h.formatDate(s.current_period_end) %></span>
-              <% } else if (s.status === 'past_due') { %><span class="muted">Overdue since <%= h.formatDate(s.current_period_end) %></span>
-              <% } else { %><span class="muted">—</span><% } %>
-            </td>
-            <td data-label="Monthly"><%= money(s.total_cents) %></td>
-            <td data-label="Actions" class="bill-actions-cell"><div class="bill-actions">
-              <% if (s.status === 'pending' || s.status === 'past_due' || (!live && s.status !== 'active')) { %>
-                <% if (['draft','pending_payment','expired','cancelled','inactive'].includes(s.job_status)) { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="/billing/checkout/<%= s.job_id %>"><%= s.status === 'pending' ? 'Pay now' : 'Re-activate' %></a><% } %>
-              <% } %>
-              <% if (live && !s.cancel_at_period_end) { %>
-                <form method="post" action="/billing/cancel/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" data-confirm="Stop auto-renewal? The posting stays live until <%= h.formatDate(s.current_period_end) %>.">Cancel at period end</button></form>
-                <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm bill-btn-danger" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
-              <% } else if (live && s.cancel_at_period_end) { %>
-                <form method="post" action="/billing/resume/<%= s.job_id %>" class="inline-form"><button class="kds-btn kds-btn--brand kds-btn--sm" type="submit">Resume renewal</button></form>
-                <form method="post" action="/billing/cancel/<%= s.job_id %>?now=1" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm bill-btn-danger" type="submit" data-confirm="Cancel now? The posting is removed from public view immediately.">Cancel now</button></form>
-              <% } %>
-            </div></td>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
-    </div>
-    <% if (isConsultant && byCompany.length) { %>
-      <div class="bill-subtotals">
-        <h3>Per company</h3>
-        <ul>
-          <% byCompany.forEach(c => { %><li><span><%= c.company_name %> <span class="muted small">· <%= c.count %> live</span></span><strong><%= money(c.monthly) %>/mo</strong></li><% }) %>
-        </ul>
-      </div>
-    <% } %>
-    <% } %>
-  </div>
-
-  <div class="bill-section">
-    <div class="split"><h2 class="bill-h2">Receipts</h2><span class="small muted"><%= payments.length %> receipt<%= payments.length === 1 ? '' : 's' %></span></div>
-    <p class="small muted bill-receipts-note">All receipts are available from your login, any time. <strong>View</strong> opens the receipt; <strong>Download (PDF)</strong> opens it with the print dialog ready — choose “Save as PDF”.</p>
-    <% if (!payments.length) { %>
-      <div class="empty">No payments yet.</div>
-    <% } else { %>
-    <div class="table-wrap">
-      <table class="table table--stack bill-table">
-        <thead><tr><th>Receipt</th><th>Date</th><th>Posting</th><% if (isConsultant) { %><th>Company</th><% } %><th>Period</th><th>Total</th><th>Open</th></tr></thead>
-        <tbody>
-        <% payments.forEach(p => { %>
-          <tr>
-            <td data-label="Receipt"><code class="bill-receipt-no"><%= p.receipt_number %></code></td>
-            <td data-label="Date"><%= h.formatDate(p.paid_at) %></td>
-            <td data-label="Posting"><%= p.job_title %></td>
-            <% if (isConsultant) { %><td data-label="Company"><%= p.company_name %></td><% } %>
-            <td data-label="Period"><%= h.formatDate(p.period_start) %> – <%= h.formatDate(p.period_end) %></td>
-            <td data-label="Total"><%= money(p.total_cents) %> <span class="small muted">(<%= money(p.amount_cents) %> + GST <%= money(p.tax_cents) %>)</span><% if (p.status !== 'paid') { %> <span class="badge badge--danger"><%= p.status %></span><% } %></td>
-            <td data-label="Receipt" class="bill-actions-cell"><div class="bill-actions bill-actions--links"><a href="/billing/receipt/<%= p.id %>">View</a><a href="/billing/receipt/<%= p.id %>?print=1" title="Opens the receipt with the print dialog — choose Save as PDF">Download (PDF)</a></div></td>
-          </tr>
-        <% }) %>
-        </tbody>
-      </table>
-    </div>
-    <% } %>
-  </div>
-
-  <div class="card card--flat bill-pricing-note">
-    <h3>How pricing works</h3>
-    <p>As <%= isConsultant ? 'a third party consultant' : 'an employer' %>, each job posting costs <strong><%= money(pricing.price_cents) %> + <%= pricing.gst_label %> <%= money(pricing.tax_cents) %> = <%= money(pricing.total_cents) %> CAD per month</strong> (<%= isConsultant ? 'employers pay ' + money(allPricing.employer.price_cents) : 'third party consultants pay ' + money(allPricing.consultant.price_cents) %> + GST), charged on the day you publish and then every month on the same date until you cancel. The price you pay at checkout is locked in for that posting — later price changes never alter an existing subscription. "Cancel at period end" keeps the posting live until the date you already paid for; "Cancel now" removes it immediately with no further charges. Every payment gets an itemised receipt showing GST<% if (pricing.gst_number) { %> (registration no. <%= pricing.gst_number %>)<% } %>, viewable and downloadable as PDF from this page.<% if (mode === 'sandbox') { %> <em>Sandbox mode is on: payments are simulated and no card is charged.</em><% } else { %> Cards are processed by Stripe; use <a href="/billing/portal">Manage card &amp; invoices</a> to update your card or download Stripe invoices.<% } %></p>
-  </div>
-</section>

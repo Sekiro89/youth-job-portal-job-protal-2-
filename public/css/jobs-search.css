@@ -51,7 +51,7 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .jseg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 .jseg__opt { position: relative; }
 .jseg__opt input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.jseg__opt span { display: grid; place-items: center; min-height: 44px; padding: 6px 8px; border: 1px solid var(--kds-border); border-radius: 10px; font-size: .9rem; font-weight: 500; background: #fff; text-align: center; }
+.jseg__opt span { display: grid; place-items: center; min-height: 44px; padding: 6px 6px; white-space: nowrap; border: 1px solid var(--kds-border); border-radius: 10px; font-size: .9rem; font-weight: 500; background: #fff; text-align: center; }
 .jseg__opt input:checked + span { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
 .jseg__opt input:focus-visible + span { outline: 2px solid var(--kds-focus-ring); outline-offset: 2px; }
 @media (min-width: 480px) { .jseg { grid-template-columns: repeat(4, 1fr); } }
@@ -183,3 +183,13 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 
 /* ---------- print ---------- */
 @media print { .jsearch__form, .jsearch__toolbar, .jsearch__map, .jpager { display: none !important; } .jsearch__body { display: block; } }
+
+/* ---------- round 3 (2026-09-14) additions ---------- */
+/* Posting ID (client item 6): small, quotable, never competes with the salary */
+.jrow__pid { margin: 0; font-size: .75rem; color: var(--kds-fg-faint); letter-spacing: .01em; }
+.jrow__pid span { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--kds-fg-muted); }
+/* With the map open at ≥1024 the page uses the one permitted wider measure (UX standard §1: .container--wide, /jobs only).
+   The page-head band widens with it so the h1 and the filter bar keep the same left edge. */
+@media (min-width: 1024px) {
+  .jobs-map-on .page-jobs .page-head__inner, .jobs-map-on .page-jobs .jsearch__top, .jobs-map-on .page-jobs .jsearch__body { max-width: 1360px; }
+}

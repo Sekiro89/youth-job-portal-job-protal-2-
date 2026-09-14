@@ -12,6 +12,7 @@ const h = require('../lib/helpers');
 const C = require('../lib/constants');
 const jobs = require('../lib/jobs');
 const mail = require('../lib/mail');
+const jd = require('../lib/job-dates');   // application_deadline / published_at rules (round 3)
 
 const router = express.Router();
 const ROOT = path.join(__dirname, '..');
@@ -175,6 +176,7 @@ async function loadJob(req, res, next) {
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.id=$1`, [req.params.id]);
     if (!req.job) return res.status(404).render('error', { title: 'Job not found', code: 404, message: 'That posting does not exist.', noindex: true });
     req.job.locations = await db.many('SELECT * FROM job_locations WHERE job_id=$1 ORDER BY sort_order, id', [req.job.id]);
+    jd.decorateJob(req.job);   // application_deadline @ Toronto noon, application_deadline_date, applications_closed, locked
     next();
   } catch (e) { next(e); }
 }
@@ -192,14 +194,14 @@ area.get('/dashboard', async (req, res, next) => {
         coalesce(sum((SELECT count(*) FROM applications a WHERE a.job_id=j.id AND a.created_at > now() - interval '7 days')),0)::int AS applicants_week
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1`, [uid]);
     const spend = await db.one(`SELECT coalesce(sum(s.total_cents),0)::int AS cents, count(*)::int AS n FROM subscriptions s JOIN employer_profiles p ON p.id=s.employer_profile_id WHERE p.owner_user_id=$1 AND s.status='active'`, [uid]);
-    const recent = await db.many(`SELECT a.id, a.status, a.created_at, u.name, u.email, j.id AS job_id, j.title
+    const recent = await db.many(`SELECT a.id, a.status, a.created_at, u.name, u.email, j.id AS job_id, j.title, j.public_id AS job_public_id
       FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id
       WHERE p.owner_user_id=$1 ORDER BY a.created_at DESC LIMIT 6`, [uid]);
-    const active = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, j.hours_amount, j.hours_period, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
+    const active = jd.decorateJobs(await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.expires_at, j.published_at, j.views, j.hours_amount, j.hours_period, j.public_id, j.locked_at, j.application_deadline, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
-      WHERE p.owner_user_id=$1 AND j.status IN ('active','pending_payment','draft') ORDER BY (j.status='active') DESC, j.updated_at DESC LIMIT 8`, [uid]);
+      WHERE p.owner_user_id=$1 AND j.status IN ('active','pending_payment','draft') ORDER BY (j.status='active') DESC, j.updated_at DESC LIMIT 8`, [uid]));
     let byCompany = [];
     if (req.user.role === 'consultant') {
       byCompany = await db.many(`SELECT p.id, p.company_name, p.operating_name, p.logo_path,
@@ -513,12 +515,12 @@ area.get('/jobs', async (req, res, next) => {
     if (status === 'archived') where.push(`j.status IN ('expired','cancelled','inactive')`);
     else if (status !== 'all') where.push(`j.status='${status}'`);
     if (profileId) { params.push(profileId); where.push(`j.employer_profile_id=$${params.length}`); }
-    const list = await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, j.hours_amount, j.hours_period, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
+    const list = jd.decorateJobs(await db.many(`SELECT j.id, j.title, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.cancelled_at, j.created_at, j.updated_at, j.views, j.employer_profile_id, j.hours_amount, j.hours_period, j.public_id, j.locked_at, j.application_deadline, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name,
         (SELECT count(*)::int FROM job_locations l WHERE l.job_id=j.id) AS n_locations,
         (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS applicants,
         s.status AS sub_status, s.cancel_at_period_end, s.current_period_end
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id LEFT JOIN subscriptions s ON s.job_id=j.id
-      WHERE ${where.join(' AND ')} ORDER BY j.updated_at DESC`, params);
+      WHERE ${where.join(' AND ')} ORDER BY j.updated_at DESC`, params));
     const counts = await db.one(`SELECT count(*)::int AS all, count(*) FILTER (WHERE j.status='active')::int AS active, count(*) FILTER (WHERE j.status='pending_payment')::int AS pending_payment,
         count(*) FILTER (WHERE j.status='draft')::int AS draft, count(*) FILTER (WHERE j.status IN ('expired','cancelled','inactive'))::int AS archived
       FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ${profileId ? 'AND j.employer_profile_id=$2' : ''}`, profileId ? [req.user.id, profileId] : [req.user.id]);
@@ -564,7 +566,8 @@ function blankJob(req, byProfile) {
     operating_name_choice: profile && profile.operating_name ? profile.operating_name : '__legal', operating_name_new: '',
     hours_amount: '', hours_period: 'week',
     salary_min: '', salary_max: '', salary_period: 'year', vacancies: 1, languages: ['English'], language_other: '', skills: '', audiences: [],
-    description: '', requirements: '', benefits: '', apply_email: defaultApplyEmail(req, profile), apply_url: '', noc_code: '', employer_profile_id: profileId };
+    description: '', requirements: '', benefits: '', apply_email: defaultApplyEmail(req, profile), apply_url: '', noc_code: '', employer_profile_id: profileId,
+    published_at: '', application_deadline: '' };
 }
 function jobToValues(req, j, byProfile) {
   const langs = j.languages || [];
@@ -586,11 +589,26 @@ function jobToValues(req, j, byProfile) {
   v.hours_period = j.hours_period || 'week';
   v.apply_email = j.apply_email || '';
   v.apply_url = j.apply_url || ''; v.noc_code = j.noc_code || ''; v.requirements = j.requirements || ''; v.benefits = j.benefits || '';
+  // Dates (round 3): yyyy-mm-dd strings for <input type=date>. published_at is a timestamptz (Toronto day); application_deadline a DATE.
+  v.published_at = j.published_at ? h.formatDateInput(j.published_at) : '';
+  v.application_deadline = j.application_deadline_date !== undefined ? (j.application_deadline_date || '') : jd.dateOnly(j.application_deadline);
   return v;
 }
+/** Money input -> numeric string with 2 decimals ("21.18"), or null when it is not a valid amount. Accepts "$21.18", "21,18", "1,234.50". */
+function parseMoney(s) {
+  let t = String(s ?? '').replace(/[$\s]/g, '');
+  if (/^\d+,\d{1,2}$/.test(t)) t = t.replace(',', '.');   // European decimal comma
+  t = t.replace(/,/g, '');                                 // thousands separators
+  if (!/^\d{1,12}(\.\d{1,2})?$/.test(t)) return null;   // range (0.01 – 9,999,999.99) is checked by the caller so it gets its own message
+  return Number(t).toFixed(2);
+}
+const SALARY_MAX = 9999999.99;
 async function validateJob(req, byProfile) {
   const b = req.body || {};
   const langs = arr(b.languages).filter(l => ['English', 'French', 'Other'].includes(l));
+  // Round 3: once published (jobs.isLocked) the company, operating name, title and work locations are frozen. Whatever
+  // the form posts for those fields is ignored and the stored values are echoed back; job_locations rows are left untouched.
+  const locked = !!(req.job && jobs.isLocked(req.job));
   const values = {
     title: clean(b.title, 120), category: clean(b.category, 60), job_type: clean(b.job_type, 30), work_arrangement: clean(b.work_arrangement, 20),
     experience_level: clean(b.experience_level, 30), experience_other: clean(b.experience_other, 120), education: clean(b.education, 30), education_other: clean(b.education_other, 160),
@@ -600,15 +618,17 @@ async function validateJob(req, byProfile) {
     vacancies: clean(b.vacancies, 5), languages: langs, language_other: clean(b.language_other, 120), skills: clean(b.skills, 600),
     audiences: arr(b.audiences).filter(a => C.AUDIENCE_NAME[a]), description: clean(b.description, 12000), requirements: clean(b.requirements, 6000), benefits: clean(b.benefits, 6000),
     apply_email: clean(b.apply_email, 160).toLowerCase(), apply_url: clean(b.apply_url, 300), noc_code: clean(b.noc_code, 10),
+    published_at: clean(b.published_at, 10), application_deadline: clean(b.application_deadline, 10),
     // Employers own exactly one profile: the posted id is never trusted. Consultants choose among THEIR profiles (checked below).
     employer_profile_id: req.user.role === 'consultant' ? intOrNull(b.employer_profile_id) : (req.profiles[0] ? req.profiles[0].id : null),
   };
-  // Once billing exists the company is locked to the job's profile, whatever the form says.
-  if (req.job && ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(req.job.status)) values.employer_profile_id = Number(req.job.employer_profile_id);
+  // Once billing exists (or the posting is locked) the company is locked to the job's profile, whatever the form says.
+  if (req.job && (locked || ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(req.job.status))) values.employer_profile_id = Number(req.job.employer_profile_id);
+  if (locked) values.title = req.job.title;
   if (C.EDUCATION_LEGACY[values.education]) values.education = C.EDUCATION_LEGACY[values.education];
   if (C.EXPERIENCE_LEGACY[values.experience_level]) values.experience_level = C.EXPERIENCE_LEGACY[values.experience_level];
   const errors = {};
-  if (values.title.length < 3) errors.title = 'Enter a job title (at least 3 characters).';
+  if (!locked && values.title.length < 3) errors.title = 'Enter a job title (at least 3 characters).';
   if (!C.CATEGORY_NAME[values.category]) errors.category = 'Choose a category.';
   if (!C.JOB_TYPE_NAME[values.job_type]) errors.job_type = 'Choose a job type.';
   if (!C.WORK_ARRANGEMENT_NAME[values.work_arrangement]) errors.work_arrangement = 'Choose a work arrangement.';
@@ -622,7 +642,11 @@ async function validateJob(req, byProfile) {
   let operatingName = null; let appendOperatingName = null;
   values.operating_name_choice = profile ? clean(b['operating_name_choice_' + profile.id], 120) : '';
   values.operating_name_new = profile ? clean(b['operating_name_new_' + profile.id], 120) : '';
-  if (profile) {
+  if (locked) {
+    operatingName = req.job.job_operating_name || null;   // the raw per-posting column stays exactly as stored
+    const stored = jobToValues(req, req.job, byProfile);
+    values.operating_name_choice = stored.operating_name_choice; values.operating_name_new = '';
+  } else if (profile) {
     const names = profile.operating_names || [];
     const choice = values.operating_name_choice;
     if (choice === '__new') {
@@ -639,20 +663,24 @@ async function validateJob(req, byProfile) {
   }
   // Work locations: ticked address-book rows of THIS profile + kept legacy rows of THIS job + an optional new address (saved to the profile).
   const active = (profile && byProfile[profile.id]) || [];
-  const chosen = active.filter(l => values.location_ids.includes(l.id));
+  let chosen = active.filter(l => values.location_ids.includes(l.id));
   values.location_ids = chosen.map(l => l.id);
   const legacy = req.job ? matchJobLocations(req.job, active).legacy : [];
-  const kept = legacy.filter(l => values.keep_job_locations.includes(Number(l.id)));
+  let kept = legacy.filter(l => values.keep_job_locations.includes(Number(l.id)));
   values.keep_job_locations = kept.map(l => Number(l.id));
   const nl = parseLocation(b, NEW_LOC, { optional: true });
   values.new_loc = nl.values;
   let newLoc = null;
-  if (!nl.blank) {
+  if (locked) {
+    // Locations are frozen: echo the stored selection, ignore ticks and the inline "new location" block entirely.
+    const m = matchJobLocations(req.job, active);
+    chosen = []; kept = []; values.location_ids = m.ids; values.keep_job_locations = m.legacy.map(l => Number(l.id)); values.new_loc = {};
+  } else if (!nl.blank) {
     if (Object.keys(nl.errors).length) { Object.assign(errors, nl.errors); errors.locations = 'Complete the new location (street, city, province and postal code) or clear it.'; }
     else if (active.some(l => locKey(l) === locKey(nl.values))) { const dupe = active.find(l => locKey(l) === locKey(nl.values)); if (!chosen.includes(dupe)) chosen.push(dupe); values.location_ids = chosen.map(l => l.id); values.new_loc = {}; }   // already in the address book: just select it
     else newLoc = nl.values;
   }
-  if (!errors.locations && !chosen.length && !kept.length && !newLoc) errors.locations = 'Select at least one work location.';
+  if (!locked && !errors.locations && !chosen.length && !kept.length && !newLoc) errors.locations = 'Select at least one work location.';
   if (chosen.length + kept.length + (newLoc ? 1 : 0) > MAX_JOB_LOCATIONS) errors.locations = `A posting can have at most ${MAX_JOB_LOCATIONS} work locations.`;
   // Hours worked (Job Bank "Number of hours worked" + frequency) — optional
   let hours = null;
@@ -661,18 +689,42 @@ async function validateJob(req, byProfile) {
     if (!Number.isFinite(hours) || hours < 0.5 || hours > 168) { errors.hours_amount = 'Enter the number of hours (0.5 to 168).'; hours = null; }
     else hours = Math.round(hours * 100) / 100;
   }
-  const smin = values.salary_min === '' ? null : intOrNull(values.salary_min), smax = values.salary_max === '' ? null : intOrNull(values.salary_max);
-  if (values.salary_min !== '' && (smin == null || smin < 0)) errors.salary_min = 'Enter a whole number.';
-  if (values.salary_max !== '' && (smax == null || smax < 0)) errors.salary_max = 'Enter a whole number.';
-  if (smin != null && smax != null && smax < smin) errors.salary_max = 'Maximum must be at least the minimum.';
+  // Pay: decimals with 2 places ($21.18/hour), 0.01 – 9,999,999.99; stored as numeric(10,2) strings. Blank = not disclosed.
+  const smin = values.salary_min === '' ? null : parseMoney(values.salary_min), smax = values.salary_max === '' ? null : parseMoney(values.salary_max);
+  const moneyError = (raw, parsed) => (raw !== '' && parsed == null) ? 'Enter an amount like 21.18 (up to 2 decimals).' : (parsed != null && (Number(parsed) <= 0 || Number(parsed) > SALARY_MAX)) ? 'Enter an amount between 0.01 and 9,999,999.99.' : null;
+  if (moneyError(values.salary_min, smin)) errors.salary_min = moneyError(values.salary_min, smin);
+  if (moneyError(values.salary_max, smax)) errors.salary_max = moneyError(values.salary_max, smax);
+  if (!errors.salary_min && !errors.salary_max && smin != null && smax != null && Number(smax) < Number(smin)) errors.salary_max = 'Maximum must be at least the minimum.';
+  if (smin != null && !errors.salary_min) values.salary_min = smin;
+  if (smax != null && !errors.salary_max) values.salary_max = smax;
   const vac = intOrNull(values.vacancies); if (vac == null || vac < 1 || vac > 999) errors.vacancies = 'Enter the number of positions (1–999).';
   if (!langs.length) errors.languages = 'Select at least one language.';
   if (langs.includes('Other') && !values.language_other) errors.language_other = 'Name the other language(s).';
   if (values.description.length < 100) errors.description = `Describe the role in at least 100 characters (${values.description.length} so far).`;
   if (values.apply_email && !EMAIL_RE.test(values.apply_email)) errors.apply_email = 'Enter a valid email address.';
+  // "Other platform link" (field name apply_url): https only; a bare domain gets https:// prepended.
   if (values.apply_url && !/^https?:\/\//i.test(values.apply_url)) values.apply_url = 'https://' + values.apply_url;
-  if (values.apply_url && !URL_RE.test(values.apply_url)) errors.apply_url = 'Enter a valid link (https://…).';
+  if (values.apply_url && !isHttpsUrl(values.apply_url)) errors.apply_url = 'Other platform link must be a valid https:// URL';
   if (values.noc_code && !/^\d{4,5}$/.test(values.noc_code)) errors.noc_code = 'NOC codes are 5 digits (2021 NOC).';
+  // Dates (round 3). published_at ("Posted on"): only once the posting has been published, <= today (Toronto), stored at 12:00 Toronto;
+  // display/sort only — billing (expires_at) is untouched. application_deadline ("Applications close on"): optional, >= today unless unchanged.
+  const today = jd.todayToronto();
+  const canEditPublishedAt = !!(req.job && req.job.published_at);
+  let publishedAt;   // undefined = leave the column alone
+  if (canEditPublishedAt) {
+    const cur = h.formatDateInput(req.job.published_at);
+    if (!values.published_at) values.published_at = cur;   // blank = keep
+    const p = jd.parseDateInput(values.published_at);
+    if (p.error) errors.published_at = p.error;
+    else if (p.value > today) errors.published_at = 'The posted date cannot be in the future.';
+    else if (p.value !== cur) publishedAt = jd.torontoNoon(p.value);
+  } else values.published_at = '';
+  const curDeadline = req.job ? (req.job.application_deadline_date !== undefined ? req.job.application_deadline_date : jd.dateOnly(req.job.application_deadline)) : '';
+  const dl = jd.parseDateInput(values.application_deadline);
+  let deadline = null;
+  if (dl.error) errors.application_deadline = dl.error;
+  else if (dl.value && dl.value < today && dl.value !== curDeadline) errors.application_deadline = 'The closing date must be today or later.';
+  else deadline = dl.value || null;
   const row = {
     title: values.title, category: values.category, job_type: values.job_type, work_arrangement: values.work_arrangement,
     experience_level: values.experience_level || null, experience_other: values.experience_level === 'other' ? values.experience_other : null,
@@ -683,9 +735,18 @@ async function validateJob(req, byProfile) {
     vacancies: vac || 1, languages: langs.filter(l => l !== 'Other').concat(langs.includes('Other') ? values.language_other.split(/[,;]/).map(s => s.trim()).filter(Boolean) : []),
     skills: values.skills.split(/[,;\n]/).map(s => s.trim()).filter(Boolean).slice(0, 30), audiences: values.audiences, description: values.description, requirements: values.requirements || null,
     benefits: values.benefits || null, apply_email: values.apply_email || null, apply_url: values.apply_url || null, noc_code: values.noc_code || null, employer_profile_id: values.employer_profile_id,
+    application_deadline: deadline,
   };
-  return { values, errors, row, profile, chosen, kept, newLoc, appendOperatingName };
+  if (publishedAt !== undefined) row.published_at = publishedAt;
+  if (locked) {
+    // Frozen columns are not part of the UPDATE at all; city/province/postal_code mirror the (untouched) first location.
+    row.title = req.job.title; row.operating_name = req.job.job_operating_name || null; row.employer_profile_id = Number(req.job.employer_profile_id);
+    delete row.city; delete row.province; delete row.postal_code;
+  }
+  return { values, errors, row, profile, chosen, kept, newLoc, appendOperatingName, locked };
 }
+/** https:// URL with a host — the only shape accepted for the "Other platform link". */
+function isHttpsUrl(s) { try { const u = new URL(s); return u.protocol === 'https:' && /^[^\s.]+(\.[^\s.]+)+$/.test(u.hostname); } catch (_) { return false; } }
 /** Replace a job's snapshot rows. rows = employer_locations rows (id → employer_location_id) and/or job_locations rows being kept. */
 async function saveLocations(c, jobId, rows) {
   await c.query('DELETE FROM job_locations WHERE job_id=$1', [jobId]);
@@ -699,6 +760,7 @@ async function saveLocations(c, jobId, rows) {
 }
 /** Inside the save transaction: create the inline "new location" (address book + selected), order = default first, snapshot, append a new operating name to the profile. Returns { rows, newLocId }. */
 async function persistJobLocations(c, req, jobId, v) {
+  if (v.locked) return { rows: (req.job && req.job.locations) || [], newLocId: null };   // locked posting: job_locations rows are never deleted/reinserted
   let created = null;
   if (v.newLoc) created = await insertLocation(c, v.profile.id, v.newLoc, false);
   const book = v.chosen.slice(); if (created) book.push(created);
@@ -709,11 +771,22 @@ async function persistJobLocations(c, req, jobId, v) {
   return { rows, newLocId: created && created.id };
 }
 async function jobFormLocals(req, extra) {
-  const byProfile = await locationsByProfile(req);
+  const byProfile = extra.byProfile || await locationsByProfile(req);
   const job = extra.job || null;
   const profile = job ? req.profiles.find(p => p.id === Number(job.employer_profile_id)) : null;
   const legacyLocs = job ? matchJobLocations(job, (profile && byProfile[profile.id]) || []).legacy : [];
-  return Object.assign({ nav: 'post', errors: {}, COMPANY_SIZES, byProfile, legacyLocs }, extra);
+  // Round 3 template contract (docs/TEMPLATE-VARS-R3.md): lock state + date inputs.
+  const locked = !!(job && jobs.isLocked(job));
+  const lockedSummary = locked ? {
+    company: job.company_name, operating_name: h.legalNameNote(job) ? job.operating_name : '', title: job.title,
+    locations: (job.locations || []).map(l => (l.street_address ? h.fullAddress(l) : h.location(l))),
+  } : null;
+  const companyLocked = !!(job && (locked || ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(job.status)));
+  const canEditPublishedAt = !!(job && job.published_at);
+  const v = extra.values || {};
+  const formPublishedAt = canEditPublishedAt ? (v.published_at || h.formatDateInput(job.published_at)) : '';
+  const formDeadline = v.application_deadline !== undefined ? v.application_deadline : (job ? (job.application_deadline_date !== undefined ? job.application_deadline_date : jd.dateOnly(job.application_deadline)) : '');
+  return Object.assign({ nav: 'post', errors: {}, COMPANY_SIZES, byProfile, legacyLocs, locked, lockedFields: locked ? jobs.LOCKED_FIELDS : [], lockedSummary, companyLocked, canEditPublishedAt, formPublishedAt, formDeadline, today: jd.todayToronto() }, extra);
 }
 
 area.get('/jobs/new', (req, res, next) => {
@@ -741,6 +814,7 @@ area.post('/jobs/new', async (req, res, next) => {
       if (d) return { id: d.id, dup: d };
       const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, created_by, slug, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, 'draft') RETURNING id`, [...cols.map(c => row[c]), req.user.id, slug]);
       const saved = await persistJobLocations(c, req, r.rows[0].id, v);
+      await jobs.ensurePublicId(r.rows[0].id, c);   // drafts get their Posting ID immediately
       return { id: r.rows[0].id, dup: null, saved };
     });
     if (dup) {
@@ -767,10 +841,11 @@ area.post('/jobs/:id(\\d+)/edit', loadJob, async (req, res, next) => {
     const cols = Object.keys(row);
     const saved = await db.tx(async (c) => {
       await c.query(`UPDATE jobs SET ${cols.map((c, i) => `${c}=$${i + 2}`).join(', ')}, updated_at=now() WHERE id=$1`, [req.job.id, ...cols.map(c => row[c])]);
+      await jobs.ensurePublicId(req.job.id, c);   // legacy rows without a Posting ID get one on their next save
       return persistJobLocations(c, req, req.job.id, v);
     });
     if (saved.newLocId) geocodeLater(saved.newLocId);
-    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status, locations: saved.rows.length, new_location: saved.newLocId || null });
+    await auth.audit(req.user.id, 'job.update', 'job', req.job.id, { title: row.title, status: req.job.status, locked: !!v.locked, locations: saved.rows.length, new_location: saved.newLocId || null, published_at: row.published_at ? row.published_at.toISOString() : undefined, application_deadline: row.application_deadline });
     if (req.body.action === 'publish' && ['draft', 'pending_payment'].includes(req.job.status)) return publish(req, res, next, req.job.id);
     req.flash('success', req.job.status === 'active' ? 'Posting updated — changes are live.' : 'Posting updated.');
     res.redirect(`${res.locals.base}/jobs/${req.job.id}`);
@@ -784,6 +859,7 @@ area.get('/jobs/:id(\\d+)', loadJob, async (req, res, next) => {
     const payments = await db.many('SELECT id, receipt_number, total_cents, status, paid_at, period_start, period_end FROM payments WHERE job_id=$1 ORDER BY paid_at DESC LIMIT 12', [req.job.id]);
     const recent = await db.many(`SELECT a.id, a.status, a.created_at, u.name, u.email FROM applications a JOIN users u ON u.id=a.seeker_user_id WHERE a.job_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [req.job.id]);
     const job = req.job;
+    job.hours_text = h.formatHours(job); job.salary_text = h.formatSalary(job);   // owner preview convenience (round 3)
     const canReactivate = job.status === 'inactive' && sub && sub.status === 'active' && sub.current_period_end && new Date(sub.current_period_end) > new Date();
     const canDelete = ['draft', 'pending_payment'].includes(job.status) && payments.length === 0;
     res.render('portal/job', { title: job.title, nav: 'jobs', job, sub, payments, recent, canReactivate, canDelete });
@@ -833,6 +909,7 @@ area.post('/jobs/:id(\\d+)/duplicate', loadJob, async (req, res, next) => {
       const r = await c.query(`INSERT INTO jobs(${cols.join(',')}, title, slug, created_by, status) VALUES (${cols.map((_, i) => '$' + (i + 1)).join(',')}, $${cols.length + 1}, $${cols.length + 2}, $${cols.length + 3}, 'draft') RETURNING id`,
         [...cols.map(c => c === 'operating_name' ? j.job_operating_name : j[c]), title, slug, req.user.id]);
       await saveLocations(c, r.rows[0].id, j.locations || []);   // every work location comes along (snapshot rows keep their employer_location_id)
+      await jobs.ensurePublicId(r.rows[0].id, c);                // new Posting ID; published_at/locked_at/application_deadline are NOT copied, so the copy is an unlocked draft
       return r.rows[0].id;
     });
     await auth.audit(req.user.id, 'job.duplicate', 'job', id, { from: j.id, locations: (j.locations || []).length });
@@ -853,7 +930,7 @@ area.post('/jobs/:id(\\d+)/delete', loadJob, async (req, res, next) => {
 
 // ---- applicants
 const APPLICANT_SQL = `SELECT a.id, a.status, a.created_at, a.updated_at, a.viewed_at, a.employer_notes, a.resume_name, a.resume_path, a.seeker_user_id, a.cover_letter, a.cover_letter_path, a.cover_letter_name,
-    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name
+    u.name, u.email, u.phone, j.id AS job_id, j.title AS job_title, j.status AS job_status, j.public_id AS job_public_id, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name
   FROM applications a JOIN jobs j ON j.id=a.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=a.seeker_user_id`;
 area.get('/jobs/:id(\\d+)/applicants', loadJob, async (req, res, next) => {
   try {
@@ -870,7 +947,7 @@ area.get('/applicants', async (req, res, next) => {
     if (status) { params.push(status); where.push(`a.status=$${params.length}`); }
     if (jobId) { params.push(jobId); where.push(`a.job_id=$${params.length}`); }
     const list = await db.many(`${APPLICANT_SQL} WHERE ${where.join(' AND ')} ORDER BY a.created_at DESC LIMIT 300`, params);
-    const jobsList = await db.many(`SELECT j.id, j.title, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
+    const jobsList = await db.many(`SELECT j.id, j.title, j.public_id, p.company_name, coalesce(j.operating_name, p.operating_name) AS operating_name, (SELECT count(*)::int FROM applications a WHERE a.job_id=j.id) AS n FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=$1 ORDER BY j.title`, [req.user.id]);
     res.render('portal/applicants', { title: 'Applicants', nav: 'applicants', list, job: null, jobsList, filters: { status, job: jobId }, scope: 'all', returnTo: req.originalUrl });
   } catch (e) { next(e); }
 });
@@ -899,9 +976,10 @@ area.post('/applications/:id(\\d+)/status', loadApplication, async (req, res, ne
         submitted: `Your application for ${a.job_title} at ${a.company_name} was reset to “submitted”.`,
       }[status];
       const title = `Application update: ${a.job_title}`;
+      const pid = a.job_public_id ? `Posting ID ${a.job_public_id}` : '';
       await db.query(`INSERT INTO notifications(user_id, type, title, body, link, job_id, emailed_at) VALUES ($1,'application_update',$2,$3,'/jobseeker/applications',$4, now())`, [a.seeker_user_id, title, msg, a.job_id]);
-      await mail.send({ to: a.email, subject: title, text: `${msg}\n\n${mail.PUBLIC_URL}/jobseeker/applications`,
-        html: mail.layout(title, `<p>Hi ${h.escapeHtml(a.name)},</p><p>${h.escapeHtml(msg)}</p><p>Status: <strong>${h.escapeHtml(APP_STATUS_NAME[status])}</strong></p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'View my applications' }) });
+      await mail.send({ to: a.email, subject: title, text: `${msg}${pid ? `\n${pid}` : ''}\n\n${mail.PUBLIC_URL}/jobseeker/applications`,
+        html: mail.layout(title, `<p>Hi ${h.escapeHtml(a.name)},</p><p>${h.escapeHtml(msg)}</p><p>Status: <strong>${h.escapeHtml(APP_STATUS_NAME[status])}</strong>${pid ? `<br><span style="color:#5A6B7E">${h.escapeHtml(pid)}</span>` : ''}</p>`, { href: `${mail.PUBLIC_URL}/jobseeker/applications`, label: 'View my applications' }) });
     }
     req.flash('success', changed ? `${a.name} marked as ${APP_STATUS_NAME[status].toLowerCase()} — they have been notified.` : 'Notes saved.');
     // Referrer-Policy strips the Referer header, so the form carries its own return path (same portal only).

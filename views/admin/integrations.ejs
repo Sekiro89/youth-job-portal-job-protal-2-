@@ -1,173 +1,184 @@
 <%
-const SRC = { db: ['src--db', 'Saved here'], env: ['src--env', 'From server .env'], default: ['src--default', 'Default'] };
-const srcTag = (src) => `<span class="src ${SRC[src][0]}" title="${src === 'db' ? 'Set on this page' : src === 'env' ? 'Comes from the .env file on the server; saving here overrides it' : 'Built-in default; nothing is set'}">${SRC[src][1]}</span>`;
+// Integrations = the client's own settings page. One card per group, one navy Save per card (tied to the card's form with
+// form="…"), ghost test buttons in the card foot. Everything the route sends: groups[{key,label,blurb,fields[]}], status, admins,
+// passcodeSource, passcodeMin, passwordMin, unlockMinutes, values (draft after a validation error), publicUrl, user.
+const SRC = { db: ['badge--positive', 'Saved here', 'Set on this page'], env: ['badge--teal', 'From server .env', 'Comes from the .env file on the server; saving here overrides it'], default: ['', 'Default', 'Built-in default; nothing is set'] };
+const srcBadge = (src) => { const s = SRC[src] || SRC.default; return `<span class="badge badge--xs ${s[0]}" title="${s[2]}">${s[1]}</span>`; };
 const val = (f) => (values[f.key] !== undefined ? values[f.key] : f.value);
+// Plain-English copy that the settings registry's technical labels don't carry. Anything not listed falls back to the registry label.
+const INTRO = {
+  branding: 'How the site introduces itself: the name in the browser tab and emails, the public address every link is built on, and the contact details printed in the footer and on receipts.',
+  pricing: 'What one posting costs per month before tax, and the GST details printed on every receipt. New checkouts use the new prices immediately.',
+  stripe: 'Paste the keys from your Stripe dashboard → Developers → API keys. Leave the secret key empty to stay in sandbox mode (simulated card, no money collected); a test key (sk_test_…) tries real checkout with test cards; a live key (sk_live_…) goes live.',
+  email: 'Every email the site sends — acknowledgements, receipts, alerts, password resets — goes out through the provider below. With no provider, emails are only recorded in the Mail outbox.',
+  support: 'Where Contact Us messages are delivered. Add one or more addresses separated by commas; each one gets every message with the visitor as Reply-To.',
+  maps: 'With a Google key the site shows Google maps on postings and address autocomplete on location forms. Without one it uses OpenStreetMap automatically — free, no key needed.',
+  jobbank: 'The daily reference import of Government of Canada Job Bank postings. Turn it off to skip the import; existing reference postings stay.',
+};
+const LABEL = {
+  site_name: 'Site name', public_url: 'Public URL', contact_phone: 'Contact phone', contact_address: 'Business address',
+  employer_price_cents: 'Employer price (cents per month)', consultant_price_cents: 'Consultant price (cents per month)', gst_rate: 'GST rate', gst_number: 'GST/HST registration number',
+  stripe_secret_key: 'Secret key', stripe_publishable_key: 'Publishable key', stripe_webhook_secret: 'Webhook signing secret', stripe_tax: 'Use Stripe Tax instead of the fixed GST line',
+  mail_provider: 'Email provider', smtp_url: 'SMTP URL', resend_api_key: 'Resend API key', mail_from_name: 'Sender name', mail_from_email: 'Sender email address',
+  support_email: 'Contact Us recipients', support_name: 'Support name',
+  google_maps_api_key: 'Google Maps API key', maps_provider: 'Map provider', jobbank_sync: 'Daily import',
+};
+const label = (f) => LABEL[f.key] || f.label;
+const SAVE = { branding: 'Save branding', pricing: 'Save pricing', stripe: 'Save Stripe keys', email: 'Save email settings', support: 'Save routing', maps: 'Save maps settings', jobbank: 'Save import setting' };
+const modeName = { sandbox: 'Sandbox', test: 'Stripe test', live: 'Stripe live' }[status.mode] || status.mode;
+const payDot = status.mode === 'sandbox' ? 'warn' : status.webhookSet ? 'ok' : 'bad';
+const payNote = status.mode === 'sandbox' ? 'Simulated card — no money is collected.' : !status.webhookSet ? 'Webhook secret missing — postings will not activate after payment.' : status.mode === 'test' ? 'Real checkout with Stripe test cards only.' : 'Real cards, real money.';
+const mailName = { none: 'None', smtp: 'SMTP', resend: 'Resend' }[status.mailProvider] || status.mailProvider;
+const mapsNote = status.mapsProvider === 'google' ? (status.mapsKeySet ? 'Google key saved.' : 'Forced to Google but no key is saved — maps will fail.') : (status.mapsSetting === 'osm' ? 'Forced to OpenStreetMap.' : 'No Google key — free OpenStreetMap in use.');
+const tiles = [
+  ['Payments', modeName, payNote, payDot, '#stripe'],
+  ['Email provider', mailName, status.mailProvider === 'none' ? 'Emails are recorded in the outbox, not delivered.' : 'Sending as ' + status.mailFrom, status.mailProvider === 'none' ? 'warn' : 'ok', '#email'],
+  ['Support recipients', status.supportEmails.length ? status.supportEmails.length + (status.supportEmails.length === 1 ? ' address' : ' addresses') : 'Nobody', status.supportEmails.length ? status.supportEmails.join(', ') : 'Contact Us messages are stored but not emailed.', status.supportEmails.length ? 'ok' : 'warn', '#support'],
+  ['Maps', status.mapsProvider === 'google' ? 'Google Maps' : 'OpenStreetMap', mapsNote, status.mapsProvider === 'google' && !status.mapsKeySet ? 'bad' : 'ok', '#maps'],
+  ['Job Bank', status.jobbank ? 'Import on' : 'Import off', status.jobbank ? 'Runs with the daily scheduled job.' : 'Daily import skipped.', status.jobbank ? 'ok' : 'off', '#jobbank'],
+];
 %>
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split">
-      <div><p class="eyebrow">Admin</p><h1>Integrations</h1><p class="muted">Your site's own back end: payments, email, support routing, pricing, maps and admin logins. Every change takes effect immediately — no restart. Unlocked for about <%= unlockMinutes %> more minute<%= unlockMinutes === 1 ? '' : 's' %> of activity.</p></div>
-      <form method="post" action="/admin/integrations/lock" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Lock now</button></form>
-    </div>
-
-    <div class="integrations">
-      <nav class="integrations__nav" aria-label="Sections">
-        <a href="#status">Status</a>
-        <% groups.forEach(g => { %><a href="#<%= g.key %>"><%= g.label %></a><% }) %>
-      </nav>
-
-      <div class="integrations__body stack">
-        <section class="card int-group" id="status">
-          <h2 class="h3 card__title">Payments status</h2>
-          <div class="status-grid">
-            <div class="status-tile <%= status.mode === 'live' ? 'is-live' : status.mode === 'test' ? 'is-test' : 'is-sandbox' %>">
-              <div class="status-tile__label">Payment mode</div>
-              <div class="status-tile__value"><%= status.mode === 'live' ? 'Stripe LIVE' : status.mode === 'test' ? 'Stripe test' : 'Sandbox' %></div>
-              <div class="status-tile__note"><%= status.mode === 'sandbox' ? 'Simulated card — no money is collected.' : status.mode === 'test' ? 'Real checkout with test cards only.' : 'Real cards, real money.' %></div>
-            </div>
-            <div class="status-tile <%= status.webhookSet ? 'is-ok' : (status.mode === 'sandbox' ? '' : 'is-warn') %>">
-              <div class="status-tile__label">Webhook secret</div>
-              <div class="status-tile__value"><%= status.webhookSet ? 'Set' : 'Not set' %></div>
-              <div class="status-tile__note"><%= status.webhookSet ? 'Stripe events are verified.' : status.mode === 'sandbox' ? 'Not needed in sandbox.' : 'Postings will not activate until this is set.' %></div>
-            </div>
-            <div class="status-tile <%= status.mailProvider === 'none' ? 'is-warn' : 'is-ok' %>">
-              <div class="status-tile__label">Email provider</div>
-              <div class="status-tile__value"><%= { none: 'None', smtp: 'SMTP', resend: 'Resend' }[status.mailProvider] || status.mailProvider %></div>
-              <div class="status-tile__note"><%= status.mailProvider === 'none' ? 'Emails are recorded in the outbox, not delivered.' : 'Sending as ' + status.mailFrom %></div>
-            </div>
-            <div class="status-tile is-ok">
-              <div class="status-tile__label">Maps</div>
-              <div class="status-tile__value"><%= status.mapsProvider === 'google' ? 'Google Maps' : 'OpenStreetMap' %></div>
-              <div class="status-tile__note"><%= status.mapsProvider === 'google' ? (status.mapsKeySet ? 'Key saved.' : 'Forced to Google but NO key is saved — maps will fail.') : (status.mapsSetting === 'osm' ? 'Forced to OpenStreetMap.' : 'No Google key — free OpenStreetMap in use.') %></div>
-            </div>
-            <div class="status-tile <%= status.supportEmails.length ? 'is-ok' : 'is-warn' %>">
-              <div class="status-tile__label">Contact Us goes to</div>
-              <div class="status-tile__value"><%= status.supportEmails.length ? status.supportEmails.length + ' address' + (status.supportEmails.length === 1 ? '' : 'es') : 'Nobody' %></div>
-              <div class="status-tile__note"><%= status.supportEmails.length ? status.supportEmails.join(', ') : 'Messages are stored but not emailed.' %></div>
-            </div>
-            <div class="status-tile <%= status.jobbank ? 'is-ok' : '' %>">
-              <div class="status-tile__label">Job Bank import</div>
-              <div class="status-tile__value"><%= status.jobbank ? 'On' : 'Off' %></div>
-              <div class="status-tile__note"><%= status.jobbank ? 'Runs with the daily cron.' : 'Daily import skipped.' %></div>
-            </div>
-          </div>
-        </section>
-
-        <% groups.forEach(g => { %>
-        <section class="card int-group" id="<%= g.key %>">
-          <h2 class="h3 card__title"><%= g.label %></h2>
-          <p class="muted small int-group__blurb"><%= g.blurb %></p>
-
-          <% if (g.key !== 'access') { %>
-          <form method="post" action="/admin/integrations/<%= g.key %>" class="form" autocomplete="off">
-            <% g.fields.forEach(f => { const id = 'f-' + f.key; %>
-              <div class="field int-field">
-                <% if (f.type === 'checkbox') { %>
-                  <label class="check"><input type="checkbox" name="<%= f.key %>" value="1" <%= val(f) === '1' ? 'checked' : '' %>> <span><%= f.label %></span></label>
-                <% } else if (f.secret) { %>
-                  <label for="<%= id %>"><%= f.label %></label>
-                  <div class="secret">
-                    <span class="secret__current"><% if (f.isSet) { %><code><%= f.display %></code><% } else { %><em class="muted">not set</em><% } %></span>
-                    <input class="input input--mono" id="<%= id %>" name="<%= f.key %>" type="text" placeholder="<%= f.isSet ? 'Paste a new value to replace' : (f.placeholder || 'Paste the value') %>" autocomplete="off" spellcheck="false" autocapitalize="off">
-                    <% if (f.isSet) { %><label class="check check--sm"><input type="checkbox" name="<%= f.key %>__clear" value="1"> <span>Clear</span></label><% } %>
-                  </div>
-                <% } else if (f.type === 'select') { %>
-                  <label for="<%= id %>"><%= f.label %></label>
-                  <select class="input" id="<%= id %>" name="<%= f.key %>">
-                    <% f.options.forEach(([k, l]) => { %><option value="<%= k %>" <%= (val(f) || (f.key === 'mail_provider' ? 'none' : '')) === k ? 'selected' : '' %>><%= l %></option><% }) %>
-                  </select>
-                <% } else if (f.type === 'textarea') { %>
-                  <label for="<%= id %>"><%= f.label %></label>
-                  <textarea class="input" id="<%= id %>" name="<%= f.key %>" rows="3" placeholder="<%= f.placeholder || '' %>"><%= val(f) %></textarea>
-                <% } else { %>
-                  <label for="<%= id %>"><%= f.label %></label>
-                  <input class="input <%= f.type === 'int' || f.type === 'decimal' ? 'input--num' : '' %>" id="<%= id %>" name="<%= f.key %>"
-                    type="<%= ['url','tel','email'].includes(f.type) ? f.type : 'text' %>" value="<%= val(f) %>" placeholder="<%= f.placeholder || '' %>"
-                    <%- f.type === 'int' ? 'inputmode="numeric" pattern="[0-9]*"' : f.type === 'decimal' ? 'inputmode="decimal"' : '' %> autocomplete="off">
-                <% } %>
-                <span class="hint"><%- srcTag(f.source) %><% if (f.help) { %> <%= f.help %><% } %></span>
-              </div>
-            <% }) %>
-            <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save <%= g.label %></button></div>
-          </form>
-
-          <% if (g.key === 'stripe') { %>
-            <div class="int-actions">
-              <form method="post" action="/admin/integrations/stripe/test" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" <%= status.mode === 'sandbox' ? 'title="Save a secret key first"' : '' %>>Test connection</button></form>
-              <form method="post" action="/admin/integrations/stripe/setup" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Create the employer and consultant prices in Stripe and register the webhook at <%= publicUrl %>/billing/webhook? Safe to run again — existing prices are reused.">Create prices &amp; webhook</button></form>
-              <span class="muted small">Webhook address: <code><%= publicUrl %>/billing/webhook</code>. Step-by-step in <code>docs/STRIPE-GO-LIVE.md</code>.</span>
-            </div>
-          <% } else if (g.key === 'email') { %>
-            <form method="post" action="/admin/integrations/email/test" class="int-actions int-actions--test">
-              <label for="test-to" class="visually-hidden">Send test email to</label>
-              <input class="input" id="test-to" name="to" type="email" value="<%= user.email %>" placeholder="you@example.com" inputmode="email">
-              <button class="kds-btn kds-btn--ghost" type="submit">Send test email</button>
-              <span class="muted small">Uses the saved provider. Failures show here and in the <a href="/admin/outbox?status=failed">outbox</a>.</span>
-            </form>
-          <% } else if (g.key === 'maps') { %>
-            <div class="int-actions">
-              <form method="post" action="/admin/integrations/maps/test" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Test key</button></form>
-              <span class="muted small">Geocodes “Parliament Hill, Ottawa” with the saved key.</span>
-            </div>
-          <% } %>
-
-          <% } else { %>
-            <%# ---------------- Access & admins ---------------- %>
-            <h3 class="h4">Admin logins</h3>
-            <p class="muted small">Everyone below signs in at <code>/login</code> with their own email and password and sees this whole admin area. Disabling signs them out everywhere; their history is kept.</p>
-            <div class="table-wrap"><table class="table admins">
-              <thead><tr><th>Admin</th><th>Last login</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>
-                <% admins.forEach(a => { %>
-                  <tr class="<%= a.is_active ? '' : 'row--muted' %>">
-                    <td data-label="Admin"><span class="row-title"><%= a.name %></span><% if (a.id === user.id) { %> <span class="badge">you</span><% } %><br><span class="muted small"><%= a.email %> · since <%= h.formatDate(a.created_at) %></span></td>
-                    <td data-label="Last login"><%= a.last_login_at ? h.timeAgo(a.last_login_at) : 'never' %></td>
-                    <td data-label="Status"><span class="badge <%= a.is_active ? 'badge--positive' : 'badge--danger' %>"><%= a.is_active ? 'active' : 'disabled' %></span></td>
-                    <td data-label="Actions">
-                      <div class="cluster">
-                        <% if (a.id !== user.id) { %>
-                          <form method="post" action="/admin/integrations/access/admins/<%= a.id %>/toggle" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm <%= a.is_active ? 'btn-danger-text' : '' %>" type="submit" data-confirm="<%= a.is_active ? `Disable ${a.name}? They will be signed out and unable to sign in.` : `Enable ${a.name} again?` %>"><%= a.is_active ? 'Disable' : 'Enable' %></button></form>
-                        <% } %>
-                        <details class="reset">
-                          <summary class="kds-btn kds-btn--ghost kds-btn--sm">Reset password</summary>
-                          <form method="post" action="/admin/integrations/access/admins/<%= a.id %>/password" class="reset__form" autocomplete="off">
-                            <label class="visually-hidden" for="pw-<%= a.id %>">New password for <%= a.name %></label>
-                            <input class="input" id="pw-<%= a.id %>" name="password" type="password" minlength="<%= passwordMin %>" required placeholder="New password (<%= passwordMin %>+ characters)" autocomplete="new-password">
-                            <button class="kds-btn kds-btn--brand kds-btn--sm" type="submit">Set</button>
-                          </form>
-                        </details>
-                      </div>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table></div>
-
-            <h3 class="h4">Add an admin</h3>
-            <form method="post" action="/admin/integrations/access/admins" class="form form--add-admin" autocomplete="off">
-              <div class="form-row form-row--3">
-                <div class="field"><label for="adm-name">Name</label><input class="input" id="adm-name" name="name" type="text" required minlength="2" autocomplete="off"></div>
-                <div class="field"><label for="adm-email">Email (their login)</label><input class="input" id="adm-email" name="email" type="email" required inputmode="email" autocomplete="off"></div>
-                <div class="field"><label for="adm-pw">Password</label><input class="input" id="adm-pw" name="password" type="password" required minlength="<%= passwordMin %>" autocomplete="new-password"><span class="hint">At least <%= passwordMin %> characters. Tell them privately; they can change it later.</span></div>
-              </div>
-              <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Add admin</button></div>
-            </form>
-
-            <h3 class="h4">Integrations passcode</h3>
-            <p class="muted small"><%- srcTag(passcodeSource) %> Required to open this page, on top of the admin login. Changing it signs nobody out, but every admin needs the new passcode next time they unlock.</p>
-            <form method="post" action="/admin/integrations/access/passcode" class="form" autocomplete="off">
-              <div class="form-row form-row--3">
-                <div class="field"><label for="pc-cur">Current passcode</label><input class="input" id="pc-cur" name="current" type="password" required autocomplete="current-password"></div>
-                <div class="field"><label for="pc-new">New passcode</label><input class="input" id="pc-new" name="passcode" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password"></div>
-                <div class="field"><label for="pc-new2">Repeat new passcode</label><input class="input" id="pc-new2" name="passcode2" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password"></div>
-              </div>
-              <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Change passcode</button></div>
-            </form>
-          <% } %>
-        </section>
-        <% }) %>
+    <header class="app-head app-head--actions">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Integrations</h1>
+        <p class="lead">Payments, email, support routing, pricing, maps and admin logins. Every change takes effect immediately — no restart.</p>
       </div>
-    </div>
+      <div class="app-head__actions"><form method="post" action="/admin/integrations/lock" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Lock now</button></form></div>
+    </header>
+
+    <nav class="filter-tabs integrations__nav" aria-label="Sections">
+      <a href="#status">Status</a>
+      <% groups.forEach(g => { %><a href="#<%= g.key %>"><%= g.label %></a><% }) %>
+    </nav>
+
+    <%# ---------------- status summary ---------------- %>
+    <section class="card int-group" id="status">
+      <div class="card__head"><h2 class="h3">Status</h2><span class="small muted">Unlocked for about <%= unlockMinutes %> more minute<%= unlockMinutes === 1 ? '' : 's' %></span></div>
+      <ul class="status-list">
+        <% tiles.forEach(([name, value, note, dot, href]) => { %>
+          <li><a class="status-tile" href="<%= href %>">
+            <span class="status-tile__label"><span class="dot dot--<%= dot %>" aria-hidden="true"></span><%= name %></span>
+            <span class="status-tile__value"><%= value %></span>
+            <span class="status-tile__note"><%= note %></span>
+          </a></li>
+        <% }) %>
+      </ul>
+    </section>
+
+    <% groups.forEach(g => { if (g.key === 'access') return; const formId = 'form-' + g.key; %>
+    <section class="card int-group" id="<%= g.key %>">
+      <div class="card__head"><h2 class="h3"><%= g.label %></h2></div>
+      <p class="card__intro"><%= INTRO[g.key] || g.blurb %></p>
+
+      <form method="post" action="/admin/integrations/<%= g.key %>" class="form int-form" id="<%= formId %>" autocomplete="off">
+        <% g.fields.forEach(f => { const id = 'f-' + f.key; %>
+          <div class="field int-field">
+            <% if (f.type === 'checkbox') { %>
+              <label class="check"><input type="checkbox" name="<%= f.key %>" value="1" <%= val(f) === '1' ? 'checked' : '' %>> <span><%= label(f) %></span></label>
+            <% } else if (f.secret) { %>
+              <label for="<%= id %>"><%= label(f) %></label>
+              <div class="secret">
+                <span class="secret__current"><% if (f.isSet) { %>Current: <code><%= f.display %></code><% } else { %><em class="muted">Not set</em><% } %></span>
+                <input class="input" id="<%= id %>" name="<%= f.key %>" type="text" placeholder="<%= f.isSet ? 'Replace — paste a new value' : (f.placeholder || 'Paste the value') %>" autocomplete="off" spellcheck="false" autocapitalize="off" aria-label="<%= f.isSet ? 'Replace ' + label(f) : label(f) %>">
+                <% if (f.isSet) { %><label class="check check--sm"><input type="checkbox" name="<%= f.key %>__clear" value="1"> <span>Clear</span></label><% } %>
+              </div>
+            <% } else if (f.type === 'select') { %>
+              <label for="<%= id %>"><%= label(f) %></label>
+              <select class="input" id="<%= id %>" name="<%= f.key %>">
+                <% f.options.forEach(([k, l]) => { %><option value="<%= k %>" <%= (val(f) || (f.key === 'mail_provider' ? 'none' : '')) === k ? 'selected' : '' %>><%= l %></option><% }) %>
+              </select>
+            <% } else if (f.type === 'textarea') { %>
+              <label for="<%= id %>"><%= label(f) %></label>
+              <textarea class="input" id="<%= id %>" name="<%= f.key %>" rows="3" placeholder="<%= f.placeholder || '' %>"><%= val(f) %></textarea>
+            <% } else { %>
+              <label for="<%= id %>"><%= label(f) %></label>
+              <input class="input <%= f.type === 'int' || f.type === 'decimal' ? 'input--num' : '' %>" id="<%= id %>" name="<%= f.key %>"
+                type="<%= ['url','tel','email'].includes(f.type) ? f.type : 'text' %>" value="<%= val(f) %>" placeholder="<%= f.placeholder || '' %>"
+                <%- f.type === 'int' ? 'inputmode="numeric" pattern="[0-9]*"' : f.type === 'decimal' ? 'inputmode="decimal"' : '' %> autocomplete="off">
+            <% } %>
+            <span class="hint"><%- srcBadge(f.source) %><% if (f.help) { %> <%= f.help %><% } %></span>
+          </div>
+        <% }) %>
+      </form>
+
+      <div class="card__foot">
+        <% if (g.key === 'stripe') { %>
+          <form method="post" action="/admin/integrations/stripe/test" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" <%= status.mode === 'sandbox' ? 'title="Save a secret key first"' : '' %>>Test connection</button></form>
+          <form method="post" action="/admin/integrations/stripe/setup" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Create the employer and consultant prices in Stripe and register the webhook at <%= publicUrl %>/billing/webhook? Safe to run again — existing prices are reused.">Create prices &amp; webhook</button></form>
+        <% } else if (g.key === 'email') { %>
+          <form method="post" action="/admin/integrations/email/test" class="foot-test">
+            <label for="test-to" class="visually-hidden">Send a test email to</label>
+            <input class="input" id="test-to" name="to" type="email" value="<%= user.email %>" placeholder="you@example.com" inputmode="email">
+            <button class="kds-btn kds-btn--ghost" type="submit">Send test email</button>
+          </form>
+        <% } else if (g.key === 'maps') { %>
+          <form method="post" action="/admin/integrations/maps/test" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Test key</button></form>
+        <% } %>
+        <button class="kds-btn kds-btn--brand card__foot-save" type="submit" form="<%= formId %>"><%= SAVE[g.key] || 'Save' %></button>
+        <% if (g.key === 'stripe') { %><p class="card__foot-note">Webhook address: <code><%= publicUrl %>/billing/webhook</code>. Step-by-step in <code>docs/STRIPE-GO-LIVE.md</code>.</p>
+        <% } else if (g.key === 'email') { %><p class="card__foot-note">The test uses the saved provider. Failures show here and in the <a href="/admin/outbox?status=failed">outbox</a>.</p>
+        <% } else if (g.key === 'maps') { %><p class="card__foot-note">The test geocodes “Parliament Hill, Ottawa” with the saved key.</p><% } %>
+      </div>
+    </section>
+    <% }) %>
+
+    <%# ---------------- Access & admins: three cards, one primary action each ---------------- %>
+    <section class="card int-group" id="access">
+      <div class="card__head"><h2 class="h3">Admin logins</h2><span class="small muted"><%= admins.length %> admin<%= admins.length === 1 ? '' : 's' %></span></div>
+      <p class="card__intro">Everyone below signs in at <code>/login</code> with their own email and password and sees this whole admin area. Disabling signs them out everywhere; their history is kept.</p>
+      <ul class="admin-list">
+        <% admins.forEach(a => { %>
+          <li class="admin-row <%= a.is_active ? '' : 'row--muted' %>">
+            <div>
+              <div class="cluster"><span class="row-title"><%= a.name %></span><% if (a.id === user.id) { %><span class="badge">you</span><% } %><span class="badge <%= a.is_active ? 'badge--positive' : 'badge--danger' %>"><%= a.is_active ? 'active' : 'disabled' %></span></div>
+              <div class="admin-row__meta"><span><%= a.email %></span><span>since <%= h.formatDate(a.created_at) %></span><span>last login <%= a.last_login_at ? h.timeAgo(a.last_login_at) : 'never' %></span></div>
+            </div>
+            <div class="admin-row__actions">
+              <% if (a.id !== user.id) { %>
+                <form method="post" action="/admin/integrations/access/admins/<%= a.id %>/toggle" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm <%= a.is_active ? 'btn-danger-text' : '' %>" type="submit" data-confirm="<%= a.is_active ? `Disable ${a.name}? They will be signed out and unable to sign in.` : `Enable ${a.name} again?` %>"><%= a.is_active ? 'Disable' : 'Enable' %></button></form>
+              <% } %>
+              <details class="reset">
+                <summary class="kds-btn kds-btn--ghost kds-btn--sm">Reset password</summary>
+                <form method="post" action="/admin/integrations/access/admins/<%= a.id %>/password" class="reset__form" autocomplete="off">
+                  <label class="visually-hidden" for="pw-<%= a.id %>">New password for <%= a.name %></label>
+                  <input class="input" id="pw-<%= a.id %>" name="password" type="password" minlength="<%= passwordMin %>" required placeholder="New password (<%= passwordMin %>+ characters)" autocomplete="new-password">
+                  <button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Set password</button>
+                </form>
+              </details>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    </section>
+
+    <section class="card int-group" id="access-add">
+      <div class="card__head"><h2 class="h3">Add an admin</h2></div>
+      <p class="card__intro">Their email is their login. Tell them the first password privately; they can change it under My account after signing in.</p>
+      <form method="post" action="/admin/integrations/access/admins" class="form int-form" id="form-add-admin" autocomplete="off">
+        <div class="form-row">
+          <div class="field"><label for="adm-name">Name</label><input class="input" id="adm-name" name="name" type="text" required minlength="2" autocomplete="off"></div>
+          <div class="field"><label for="adm-email">Email</label><input class="input" id="adm-email" name="email" type="email" required inputmode="email" autocomplete="off"></div>
+        </div>
+        <div class="field"><label for="adm-pw">First password</label><input class="input" id="adm-pw" name="password" type="password" required minlength="<%= passwordMin %>" autocomplete="new-password"><span class="hint">At least <%= passwordMin %> characters.</span></div>
+      </form>
+      <div class="card__foot"><button class="kds-btn kds-btn--brand card__foot-save" type="submit" form="form-add-admin">Add admin</button></div>
+    </section>
+
+    <section class="card int-group" id="passcode">
+      <div class="card__head"><h2 class="h3">Integrations passcode</h2><%- srcBadge(passcodeSource) %></div>
+      <p class="card__intro">Required to open this page, on top of the admin login. Changing it signs nobody out, but every admin needs the new passcode next time they unlock.</p>
+      <form method="post" action="/admin/integrations/access/passcode" class="form int-form" id="form-passcode" autocomplete="off">
+        <div class="field"><label for="pc-cur">Current passcode</label><input class="input" id="pc-cur" name="current" type="password" required autocomplete="current-password"></div>
+        <div class="form-row">
+          <div class="field"><label for="pc-new">New passcode</label><input class="input" id="pc-new" name="passcode" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password"><span class="hint">At least <%= passcodeMin %> characters.</span></div>
+          <div class="field"><label for="pc-new2">Repeat new passcode</label><input class="input" id="pc-new2" name="passcode2" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password"></div>
+        </div>
+      </form>
+      <div class="card__foot"><button class="kds-btn kds-btn--brand card__foot-save" type="submit" form="form-passcode">Change passcode</button></div>
+    </section>
   </div>
 </section>

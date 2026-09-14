@@ -39,8 +39,8 @@
           <% rows.forEach(m => { %>
             <tr class="<%= m.status === 'new' ? 'row--new' : '' %>">
               <td data-label="Ticket"><a href="/admin/messages/<%= m.id %>">#<%= m.id %></a></td>
-              <td data-label="Subject"><a href="/admin/messages/<%= m.id %>" class="row-title"><%= m.subject %></a></td>
-              <td data-label="From"><%= m.name %><br><span class="muted small"><%= m.email %><% if (m.user_role) { %> · <%= m.user_role %><% } %></span></td>
+              <td data-label="Subject" class="td--main"><a href="/admin/messages/<%= m.id %>" class="row-title"><%= m.subject %></a></td>
+              <td data-label="From"><div class="cell"><%= m.name %><br><span class="muted small"><%= m.email %><% if (m.user_role) { %> · <%= m.user_role %><% } %></span></div></td>
               <td data-label="Category"><span class="badge <%= m.category === 'technical' ? 'badge--teal' : '' %>"><%= categoryName[m.category] || m.category %></span></td>
               <td data-label="Status"><span class="badge badge--<%= badge[m.status] %>"><%= m.status.replace('_',' ') %></span></td>
               <td data-label="Age"><span title="<%= h.formatDateTime(m.created_at) %>"><%= h.timeAgo(m.created_at) %></span></td>

@@ -6,7 +6,7 @@
       <div>
         <p class="eyebrow"><%= scope === 'job' ? h.displayCompany(job) : 'Applicants' %></p>
         <h1><%= scope === 'job' ? 'Applicants — ' + job.title : 'Applicants' %></h1>
-        <p class="app-head__context"><span><%= list.length %> application<%= list.length === 1 ? '' : 's' %><%= filters.status ? ' · ' + APP_STATUS_NAME[filters.status].toLowerCase() : '' %>. Changing a status notifies the applicant by email and in their dashboard.</span></p>
+        <p class="app-head__context"><% if (scope === 'job') { %><%- include('partials/status-badge', { job }) %><% if (job.public_id) { %><span class="posting-id">Posting ID <b><%= job.public_id %></b></span><% } %><% } %><span><%= list.length %> application<%= list.length === 1 ? '' : 's' %><%= filters.status ? ' · ' + APP_STATUS_NAME[filters.status].toLowerCase() : '' %>. Changing a status notifies the applicant by email and in their dashboard.</span></p>
       </div>
       <% if (scope === 'job') { %><div class="app-head__actions"><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Back to posting</a></div><% } %>
     </header>
@@ -17,7 +17,7 @@
         <label for="f-job">Job</label>
         <select class="input" id="f-job" name="job" data-autosubmit>
           <option value="">All jobs</option>
-          <% jobsList.forEach(j => { %><option value="<%= j.id %>" <%= String(filters.job) === String(j.id) ? 'selected' : '' %>><%= j.title %><%= isConsultant ? ' — ' + h.displayCompany(j) : '' %> (<%= j.n %>)</option><% }) %>
+          <% jobsList.forEach(j => { %><option value="<%= j.id %>" <%= String(filters.job) === String(j.id) ? 'selected' : '' %>><%= j.public_id ? j.public_id + ' · ' : '' %><%= j.title %><%= isConsultant ? ' — ' + h.displayCompany(j) : '' %> (<%= j.n %>)</option><% }) %>
         </select>
       </div>
       <% } %>
@@ -46,7 +46,7 @@
                   <div class="small"><a href="mailto:<%= a.email %>"><%= a.email %></a><% if (a.phone) { %> · <a href="tel:<%= a.phone %>"><%= a.phone %></a><% } %></div>
                   <% if (a.cover_letter) { %><details class="small cover"><summary>Cover letter</summary><div class="prose"><%- h.paragraphs(a.cover_letter) %></div></details><% } %>
                 </td>
-                <% if (scope === 'all') { %><td data-label="Job" class="td-stack"><a href="<%= base %>/jobs/<%= a.job_id %>"><%= a.job_title %></a><% if (isConsultant) { %><div class="small muted"><%= h.displayCompany(a) %></div><% } %></td><% } %>
+                <% if (scope === 'all') { %><td data-label="Job" class="td-stack"><a href="<%= base %>/jobs/<%= a.job_id %>"><%= a.job_title %></a><div class="small muted"><% if (a.job_public_id) { %>Posting ID <%= a.job_public_id %><% } %><% if (isConsultant) { %><%= a.job_public_id ? ' · ' : '' %><%= h.displayCompany(a) %><% } %></div></td><% } %>
                 <td data-label="Applied"><span><%= h.formatDate(a.created_at) %> <span class="small muted">· <%= h.timeAgo(a.created_at) %></span></span></td>
                 <td data-label="Documents" class="td-stack">
                   <div class="doc-links">

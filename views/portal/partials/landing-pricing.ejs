@@ -19,13 +19,13 @@ const pButton = { consultant: 'Create consultant account', employer: 'Create emp
       <p class="eyebrow">Pricing</p>
       <h2><%= pSeeker ? 'Free for job seekers. Always.' : 'One simple price per posting. No contracts.' %></h2>
     </div>
-    <div class="pricing">
-      <div class="card card--pad-lg pricing__card">
+    <div class="landing-pricing">
+      <div class="card card--pad-lg landing-pricing__card">
         <p class="eyebrow"><%= pRoleName %></p>
         <% if (pSeeker) { %>
-          <div class="pricing__amount"><span class="pricing__currency">$</span>0<span class="pricing__per">forever</span></div>
-          <p class="pricing__total">No fees to sign up, apply or receive alerts — <strong>ever</strong>.</p>
-          <ul class="pricing__list">
+          <div class="landing-pricing__amount"><span class="landing-pricing__currency">$</span>0<span class="landing-pricing__per">forever</span></div>
+          <p class="landing-pricing__total">No fees to sign up, apply or receive alerts — <strong>ever</strong>.</p>
+          <ul class="landing-pricing__list">
             <li>Free profile with your headline, skills and preferences</li>
             <li>Upload your resume once (PDF, DOC or DOCX); every application sends it</li>
             <li>Apply to any posting in one click and track its status</li>
@@ -34,9 +34,9 @@ const pButton = { consultant: 'Create consultant account', employer: 'Create emp
             <li>Your resume is never listed publicly or searchable</li>
           </ul>
         <% } else { %>
-          <div class="pricing__amount"><span class="pricing__currency">$</span><%= (pBase / 100).toFixed(2) %><span class="pricing__per">/month + GST</span></div>
-          <p class="pricing__total"><%= pDollars(pBase) %> per posting per month + GST = <strong><%= pDollars(pTotal) %> CAD</strong></p>
-          <ul class="pricing__list">
+          <div class="landing-pricing__amount"><span class="landing-pricing__currency">$</span><%= (pBase / 100).toFixed(2) %><span class="landing-pricing__per">/month + GST</span></div>
+          <p class="landing-pricing__total"><%= pDollars(pBase) %> per posting per month + GST = <strong><%= pDollars(pTotal) %> CAD</strong></p>
+          <ul class="landing-pricing__list">
             <li>Live within seconds of payment — no approval queue</li>
             <li>Renews monthly at the price you paid, cancel any time from your dashboard</li>
             <li>Full work address on every posting — several addresses on one posting allowed</li>
@@ -48,9 +48,9 @@ const pButton = { consultant: 'Create consultant account', employer: 'Create emp
           </ul>
         <% } %>
         <a class="kds-btn kds-btn--accent kds-btn--block" href="<%= signupHref %>"><%= pButton %></a>
-        <p class="small muted pricing__note"><%= pSeeker ? 'Takes about five minutes. No card, no fees.' : 'Pay by card. Nothing is charged until you publish a posting.' %></p>
+        <p class="small muted landing-pricing__note"><%= pSeeker ? 'Takes about five minutes. No card, no fees.' : 'Pay by card. Nothing is charged until you publish a posting.' %></p>
       </div>
-      <div class="pricing__aside prose">
+      <div class="landing-pricing__aside prose">
         <% if (pSeeker) { %>
           <h3>Who pays, then?</h3>
           <p>Employers and third party consultants pay a small flat fee to post — <%= pDollars(C.priceCentsFor('employer')) %> + GST per posting per month for employers, <%= pDollars(C.priceCentsFor('consultant')) %> + GST for third party consultants. That keeps the job bank free for every job seeker, with no pay-to-apply and no featured-candidate upsells.</p>

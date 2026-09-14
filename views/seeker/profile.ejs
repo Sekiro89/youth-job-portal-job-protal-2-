@@ -1,16 +1,14 @@
-<% const checked = (arr, k) => (arr || []).includes(k) ? 'checked' : ''; %>
+<% const checked = (arr, k) => (arr || []).includes(k) ? 'checked' : ''; const errs = (typeof errors !== 'undefined' && errors) || {}; const maxMb = Math.round(C.RESUME_MAX_BYTES / 1024 / 1024); %>
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
     <header class="app-head">
-      <div class="app-head__inner">
-        <div>
-          <p class="eyebrow">Job seeker</p>
-          <h1>My profile</h1>
-          <p class="muted">Your profile powers your job matches and alerts. Employers only see it when you apply.</p>
-        </div>
-        <div class="app-head__actions"><span class="badge <%= meter.percent === 100 ? 'badge--positive' : 'badge--warning' %>"><%= meter.percent %>% complete</span></div>
+      <div>
+        <p class="eyebrow">Job seeker</p>
+        <h1>My profile</h1>
+        <p class="app-head__context">Your profile powers your job matches and alerts. Employers only see it when you apply.</p>
       </div>
+      <div class="app-head__actions"><span class="badge <%= meter.percent === 100 ? 'badge--positive' : 'badge--warning' %>"><%= meter.percent %>% complete</span></div>
     </header>
 
     <form method="post" action="/jobseeker/profile" enctype="multipart/form-data" class="form profile-form" novalidate>
@@ -24,7 +22,7 @@
         <div class="field" id="f-summary">
           <label for="summary">Summary</label>
           <textarea class="input" id="summary" name="summary" maxlength="2000" rows="5" placeholder="A short introduction: your experience, what you are looking for, your work authorization."><%= profile.summary || '' %></textarea>
-          <% if (errors.summary) { %><span class="error"><%= errors.summary %></span><% } %>
+          <% if (errs.summary) { %><span class="error"><%= errs.summary %></span><% } %>
         </div>
         <div class="form-row">
           <div class="field"><label for="city">City</label><input class="input" id="city" name="city" maxlength="80" value="<%= profile.city || '' %>"></div>
@@ -43,16 +41,16 @@
         <div class="card__head"><h2 id="want-h" class="h3">What you are looking for</h2><span class="small muted">Also your job-alert criteria</span></div>
         <fieldset class="field" id="f-categories">
           <legend>Job categories</legend>
-          <div class="checks checks--3"><% C.CATEGORIES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="categories" value="<%= k %>" <%= checked(profile.categories, k) %>> <%= n %></label><% }) %></div>
+          <div class="checks checks--3"><% C.CATEGORIES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="categories" value="<%= k %>" <%= checked(profile.categories, k) %>> <span><%= n %></span></label><% }) %></div>
         </fieldset>
         <div class="form-row">
           <fieldset class="field">
             <legend>Job types</legend>
-            <div class="checks"><% C.JOB_TYPES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="job_types" value="<%= k %>" <%= checked(profile.job_types, k) %>> <%= n %></label><% }) %></div>
+            <div class="checks"><% C.JOB_TYPES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="job_types" value="<%= k %>" <%= checked(profile.job_types, k) %>> <span><%= n %></span></label><% }) %></div>
           </fieldset>
           <fieldset class="field">
             <legend>Work arrangement</legend>
-            <div class="checks"><% C.WORK_ARRANGEMENTS.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="work_arrangements" value="<%= k %>" <%= checked(profile.work_arrangements, k) %>> <%= n %></label><% }) %></div>
+            <div class="checks"><% C.WORK_ARRANGEMENTS.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="work_arrangements" value="<%= k %>" <%= checked(profile.work_arrangements, k) %>> <span><%= n %></span></label><% }) %></div>
           </fieldset>
         </div>
         <div class="form-row">
@@ -74,7 +72,7 @@
         <fieldset class="field">
           <legend>Provinces and territories</legend>
           <span class="hint">Leave all unchecked to match jobs anywhere in Canada. Remote jobs always match.</span>
-          <div class="checks checks--3"><% C.PROVINCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="provinces" value="<%= k %>" <%= checked(profile.provinces, k) %>> <%= n %></label><% }) %></div>
+          <div class="checks checks--3"><% C.PROVINCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="provinces" value="<%= k %>" <%= checked(profile.provinces, k) %>> <span><%= n %></span></label><% }) %></div>
         </fieldset>
       </section>
 
@@ -84,16 +82,16 @@
           <div class="resume-box">
             <div class="resume-box__icon" aria-hidden="true">📄</div>
             <div class="resume-box__meta"><strong><%= profile.resume_name %></strong><span class="small muted">Uploaded <%= h.formatDate(profile.resume_uploaded_at) %></span></div>
-            <div class="cluster"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/resume">Download</a><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" form="remove-resume" data-confirm="Remove your resume? You will need to upload one before applying.">Remove</button></div>
+            <div class="resume-box__actions"><a class="kds-btn kds-btn--ghost" href="/jobseeker/resume">Download</a><button class="kds-btn kds-btn--ghost" type="submit" form="remove-resume" data-confirm="Remove your resume? You will need to upload one before applying.">Remove</button></div>
           </div>
         <% } else { %>
-          <p class="muted" style="margin:0">No resume on file yet. You need one to apply.</p>
+          <p class="muted apply-note">No resume on file yet. You need one to apply.</p>
         <% } %>
         <div class="field">
           <label for="resume"><%= profile.resume_path ? 'Replace resume' : 'Upload resume' %></label>
           <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-          <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB<%= profile.resume_path ? ' · replaces the file above' : '' %></span>
-          <% if (errors.resume) { %><span class="error"><%= errors.resume %></span><% } %>
+          <span class="hint">PDF, DOC or DOCX · up to <%= maxMb %> MB<%= profile.resume_path ? ' · replaces the file above' : '' %></span>
+          <% if (errs.resume) { %><span class="error"><%= errs.resume %></span><% } %>
         </div>
       </section>
 

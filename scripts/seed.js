@@ -3,7 +3,7 @@
 require('dotenv').config();
 const db = require('../lib/db');
 const { hashPassword } = require('../lib/auth');
-const { uniqueJobSlug, uniqueProfileSlug } = require('../lib/jobs');
+const { uniqueJobSlug, uniqueProfileSlug, ensurePublicId } = require('../lib/jobs');
 
 async function main() {
   if (await db.one("SELECT 1 FROM users WHERE email='veda@canadacareers.local'")) { console.log('seed: already seeded'); return; }
@@ -23,31 +23,46 @@ async function main() {
   const p3 = await prof(con, 'Maple Byte Software', { website: 'https://maplebyte.example', industry: 'IT & Software', size: '11-50', city: 'Vancouver', province: 'BC', description: 'A remote-first SaaS studio building tools for Canadian small businesses.', contact: 'Raj Patel', email: 'jobs@maplebyte.example' });
 
   const now = Date.now(); const day = 86400000;
+  const ymd = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+  // Round 3 states every view must render: decimal hourly rates ($19.50 – $22.25/hour), one active posting whose application
+  // deadline has PASSED (Dispatch Coordinator → "Applications closed"), one with a future deadline (Registered Nurse), the
+  // published (locked) postings, one unlocked draft (DevOps Engineer) and one pending_payment row. `extra` = { deadline, hours, applyUrl }.
   const jobs = [
-    [p1, emp, 'Warehouse Associate (Days)', 'warehouse_general_labour', 'full_time', 'on_site', 'entry', 'Mississauga', 'ON', 19, 22, 'hour', ['new_immigrants', 'youth', 'refugees'], 'active', 25],
-    [p1, emp, 'AZ Truck Driver — Regional Routes', 'transport_logistics', 'full_time', 'on_site', 'intermediate', 'Brampton', 'ON', 68000, 82000, 'year', ['professionals', 'new_immigrants'], 'active', 20],
-    [p1, emp, 'Dispatch Coordinator', 'administration', 'full_time', 'hybrid', 'intermediate', 'Mississauga', 'ON', 52000, 60000, 'year', ['professionals'], 'active', 12],
-    [p2, con, 'Registered Nurse — Long-Term Care', 'healthcare', 'full_time', 'on_site', 'intermediate', 'Saskatoon', 'SK', 78000, 96000, 'year', ['professionals', 'new_immigrants'], 'active', 18],
-    [p2, con, 'Personal Support Worker', 'healthcare', 'part_time', 'on_site', 'entry', 'Regina', 'SK', 21, 25, 'hour', ['new_immigrants', 'refugees', 'indigenous'], 'active', 28],
-    [p3, con, 'Full-Stack Developer (Node/React)', 'it_software', 'full_time', 'remote', 'senior', 'Vancouver', 'BC', 110000, 140000, 'year', ['professionals'], 'active', 9],
-    [p3, con, 'Junior QA Analyst — Co-op', 'it_software', 'internship', 'remote', 'entry', 'Vancouver', 'BC', 24, 28, 'hour', ['youth', 'indigenous'], 'active', 14],
-    [p3, con, 'Customer Success Specialist', 'customer_service', 'full_time', 'hybrid', 'entry', 'Burnaby', 'BC', 48000, 55000, 'year', ['new_immigrants', 'youth'], 'active', 6],
-    [p1, emp, 'Forklift Operator (Nights)', 'warehouse_general_labour', 'full_time', 'on_site', 'intermediate', 'Mississauga', 'ON', 23, 26, 'hour', ['new_immigrants'], 'expired', -3],
-    [p2, con, 'Medical Office Assistant', 'administration', 'full_time', 'on_site', 'entry', 'Saskatoon', 'SK', 42000, 48000, 'year', ['youth', 'new_immigrants'], 'cancelled', 10],
-    [p3, con, 'DevOps Engineer', 'it_software', 'contract', 'remote', 'senior', 'Vancouver', 'BC', 90, 110, 'hour', ['professionals'], 'draft', null],
-    [p1, emp, 'Fleet Maintenance Technician', 'construction_trades', 'full_time', 'on_site', 'intermediate', 'Brampton', 'ON', 60000, 72000, 'year', ['professionals', 'indigenous'], 'pending_payment', null],
+    [p1, emp, 'Warehouse Associate (Days)', 'warehouse_general_labour', 'full_time', 'on_site', 'entry', 'Mississauga', 'ON', 19.50, 22.25, 'hour', ['new_immigrants', 'youth', 'refugees'], 'active', 25, { hours: 40 }],
+    [p1, emp, 'AZ Truck Driver — Regional Routes', 'transport_logistics', 'full_time', 'on_site', 'intermediate', 'Brampton', 'ON', 68000, 82000, 'year', ['professionals', 'new_immigrants'], 'active', 20, { hours: 44 }],
+    [p1, emp, 'Dispatch Coordinator', 'administration', 'full_time', 'hybrid', 'intermediate', 'Mississauga', 'ON', 52000, 60000, 'year', ['professionals'], 'active', 12, { deadline: ymd(now - 2 * day), hours: 37.5 }],
+    [p2, con, 'Registered Nurse — Long-Term Care', 'healthcare', 'full_time', 'on_site', 'intermediate', 'Saskatoon', 'SK', 78000, 96000, 'year', ['professionals', 'new_immigrants'], 'active', 18, { deadline: ymd(now + 14 * day), hours: 37.5, applyUrl: 'https://careers.prairiehealth.example/rn-ltc' }],
+    [p2, con, 'Personal Support Worker', 'healthcare', 'part_time', 'on_site', 'entry', 'Regina', 'SK', 21.18, 24.50, 'hour', ['new_immigrants', 'refugees', 'indigenous'], 'active', 28, { hours: 24 }],
+    [p3, con, 'Full-Stack Developer (Node/React)', 'it_software', 'full_time', 'remote', 'senior', 'Vancouver', 'BC', 110000, 140000, 'year', ['professionals'], 'active', 9, { hours: 40 }],
+    [p3, con, 'Junior QA Analyst — Co-op', 'it_software', 'internship', 'remote', 'entry', 'Vancouver', 'BC', 24.00, 27.75, 'hour', ['youth', 'indigenous'], 'active', 14, { hours: 35, deadline: ymd(now + 30 * day) }],
+    [p3, con, 'Customer Success Specialist', 'customer_service', 'full_time', 'hybrid', 'entry', 'Burnaby', 'BC', 48000, 55000, 'year', ['new_immigrants', 'youth'], 'active', 6, {}],
+    [p1, emp, 'Forklift Operator (Nights)', 'warehouse_general_labour', 'full_time', 'on_site', 'intermediate', 'Mississauga', 'ON', 23.40, 26.15, 'hour', ['new_immigrants'], 'expired', -3, { hours: 40 }],
+    [p2, con, 'Medical Office Assistant', 'administration', 'full_time', 'on_site', 'entry', 'Saskatoon', 'SK', 42000, 48000, 'year', ['youth', 'new_immigrants'], 'cancelled', 10, {}],
+    [p3, con, 'DevOps Engineer', 'it_software', 'contract', 'remote', 'senior', 'Vancouver', 'BC', 90.00, 110.00, 'hour', ['professionals'], 'draft', null, { hours: 30 }],
+    [p1, emp, 'Fleet Maintenance Technician', 'construction_trades', 'full_time', 'on_site', 'intermediate', 'Brampton', 'ON', 60000, 72000, 'year', ['professionals', 'indigenous'], 'pending_payment', null, { hours: 40 }],
   ];
   const desc = (t, c) => `${c} is hiring a ${t}.\n\nWhat you will do:\n- Work with a supportive, diverse team\n- Follow safety and quality procedures\n- Grow into more senior roles with paid training\n\nWho we are looking for:\n- Legally entitled to work in Canada\n- Reliable, punctual and eager to learn\n- Foreign credentials and experience welcome`;
   const names = { [p1]: 'Northern Lights Logistics', [p2]: 'Prairie Health Group', [p3]: 'Maple Byte Software' };
   const ids = [];
-  for (const [pid, by, title, cat, type, wa, exp, city, prov, smin, smax, per, aud, status, daysLeft] of jobs) {
-    const published = status === 'draft' ? null : new Date(now - (30 - (daysLeft || 0)) * day);
+  for (const [pid, by, title, cat, type, wa, exp, city, prov, smin, smax, per, aud, status, daysLeft, extra = {}] of jobs) {
+    // published_at + locked_at only for postings that have been published at least once; pending_payment was never live → unlocked.
+    const published = ['draft', 'pending_payment'].includes(status) ? null : new Date(now - (30 - (daysLeft || 0)) * day);
     const expires = daysLeft == null ? null : new Date(now + daysLeft * day);
-    const r = await db.one(`INSERT INTO jobs(employer_profile_id,created_by,title,slug,description,requirements,benefits,category,job_type,work_arrangement,experience_level,city,province,salary_min,salary_max,salary_period,audiences,apply_email,status,published_at,expires_at,archived_at,views,skills)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) RETURNING id`,
-      [pid, by, title, await uniqueJobSlug(title, city), desc(title, names[pid]), 'High school diploma or equivalent.\nValid work authorization in Canada.', 'Extended health and dental after 3 months.\nPaid training.\nTransit-accessible workplace.', cat, type, wa, exp, city, prov, smin, smax, per, aud, 'apply@example.com', status, published, expires, ['expired', 'cancelled'].includes(status) ? new Date() : null, Math.floor(Math.random() * 400), ['Teamwork', 'Communication']]);
+    const r = await db.one(`INSERT INTO jobs(employer_profile_id,created_by,title,slug,description,requirements,benefits,category,job_type,work_arrangement,experience_level,city,province,salary_min,salary_max,salary_period,audiences,apply_email,status,published_at,expires_at,archived_at,views,skills,locked_at,application_deadline,hours_amount,hours_period,apply_url)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29) RETURNING id`,
+      [pid, by, title, await uniqueJobSlug(title, city), desc(title, names[pid]), 'High school diploma or equivalent.\nValid work authorization in Canada.', 'Extended health and dental after 3 months.\nPaid training.\nTransit-accessible workplace.', cat, type, wa, exp, city, prov, smin.toFixed(2), smax.toFixed(2), per, aud, 'apply@example.com', status, published, expires, ['expired', 'cancelled'].includes(status) ? new Date() : null, Math.floor(Math.random() * 400), ['Teamwork', 'Communication'],
+        published, extra.deadline || null, extra.hours || null, extra.hours ? 'week' : null, extra.applyUrl || null]);
+    await ensurePublicId(r.id);   // every posting (drafts included) carries a Posting ID X1X1X1
+    // Work locations: the schema backfill only covers rows that exist at migrate time, so seed them here (first job gets 3 addresses).
+    const locs = title === 'Warehouse Associate (Days)'
+      ? [['6120 Kestrel Rd', null, 'Mississauga', 'ON', 'L5T 1Y9'], ['2 Airport Rd', '4', 'Brampton', 'ON', 'L6S 0C4'], ['100 Steeles Ave E', null, 'Milton', 'ON', 'L9T 6P8']]
+      : [[null, null, city, prov, null]];
+    for (let i = 0; i < locs.length; i++) await db.query('INSERT INTO job_locations(job_id, street_address, unit, city, province, postal_code, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7)', [r.id, ...locs[i], i]);
     ids.push([r.id, pid, by, status, expires]);
   }
+  // Operating-name fixture (scripts/smoke.js expects it): the truck-driver posting is published under a trade name that differs from the legal name.
+  await db.query(`UPDATE employer_profiles SET operating_names = array_append(operating_names, 'Northern Lights Freight') WHERE id=$1 AND NOT ('Northern Lights Freight' = ANY(operating_names))`, [p1]);
+  await db.query(`UPDATE jobs SET operating_name='Northern Lights Freight' WHERE title LIKE 'AZ Truck Driver%'`);
   // subscriptions + one payment for every active/expired/cancelled job (sandbox provider)
   for (const [jid, pid, by, status, expires] of ids) {
     if (status === 'draft') continue;

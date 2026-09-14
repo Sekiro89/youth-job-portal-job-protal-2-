@@ -1,4 +1,4 @@
-/* Canada Careers — employer / consultant portal + the two public landings. Mobile first; tokens only.
+/* Canada Careers — employer / consultant portal. Mobile first; tokens only.
    Primitives (.dash, .app-head, .card, .stats, .table--stack, .form, .sticky-bar …) live in theme.css — see docs/UX-STANDARDS.md.
    This file only adds portal-specific components. ONE definition per selector; media queries sit next to their base rule. */
 
@@ -38,7 +38,27 @@
 /* Touch targets: small buttons grow to 44px where there is no hover pointer (phones, iPads). Narrow screens are covered by theme.css. */
 @media (hover: none) { .portal .kds-btn--sm { min-height: 44px; padding: .55rem .9rem; } .portal .input--sm { min-height: 44px; } }
 
-/* stats: the dashboard has five */
+/* Posting ID (X1X1X1) — inline label + mono code, same look everywhere (lists, detail, billing, receipts) */
+.posting-id { display: inline-flex; align-items: center; gap: 5px; font-size: .8125rem; color: var(--kds-fg-muted); white-space: nowrap; }
+.posting-id b, .posting-id__code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: .8125rem; letter-spacing: .06em; color: var(--cc-navy-700); background: var(--cc-navy-50); border: 1px solid var(--cc-navy-100); padding: 1px 6px; border-radius: 6px; }
+.cluster--tight { gap: 6px; }
+/* Locked fields (published postings): static text with a lock icon; the hidden input beside it carries the current value */
+.lock-ico { flex: none; color: var(--kds-fg-muted); vertical-align: -2px; }
+.field__label { font-weight: 600; font-size: .9rem; color: var(--cc-ink); }
+.locked-field { display: flex; gap: 8px; align-items: flex-start; min-height: 44px; padding: 10px 12px; border: 1px solid var(--kds-border); border-radius: 10px; background: var(--cc-surface); color: var(--cc-ink); overflow-wrap: anywhere; }
+.locked-field > .lock-ico { margin-top: 3px; }
+.locked-field--plain { background: #fff; }
+.locked-tag { display: inline-flex; vertical-align: middle; margin-left: 4px; }
+.locked-note { display: flex; gap: 6px; align-items: flex-start; margin: 0 0 4px; }
+.locked-note .lock-ico { margin-top: 3px; }
+.locked-flash { display: flex; gap: 8px; align-items: flex-start; }
+.locked-flash .lock-ico { margin-top: 3px; color: currentColor; }
+.addr-list--plain li { padding-left: 0; }
+.addr-list--plain li::before { display: none; }
+.card__foot-link { margin: 12px 0 0; }
+
+/* stats: the dashboard has five; a date value gets a smaller size so it never wraps */
+.stat__value--sm { font-size: 1.25rem; padding: 6px 0; }
 .stats--5 { grid-template-columns: 1fr 1fr; }
 @media (min-width: 768px) { .stats--5 { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1200px) { .stats--5 { grid-template-columns: repeat(5, 1fr); } }
@@ -59,7 +79,13 @@
 /* table cells: action buttons; stacked cells whose value must sit under its label on phones */
 .td-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .td-actions .inline-form { display: inline-flex; }
-@media (min-width: 768px) { .td-actions { flex-wrap: nowrap; } }
+.td-actions .kds-btn { white-space: nowrap; }
+.table td.td-stack { min-width: 160px; }
+.card__head .kds-btn { white-space: nowrap; }
+/* Dense app tables: tighter cells between the tablet and desktop breakpoints so 7 columns fit beside the side nav; actions stay on one row only from 1200. */
+@media (min-width: 768px) and (max-width: 1199px) { .card--table .table th, .card--table .table td { padding: 12px 6px; } .card--table .table th:first-child, .card--table .table td:first-child { padding-left: 14px; } .card--table .table th:last-child, .card--table .table td:last-child { padding-right: 14px; } .td-actions { max-width: 132px; } }
+@media (max-width: 767px) { .table td.td-stack { min-width: 0; } }
+@media (min-width: 1200px) { .td-actions { flex-wrap: nowrap; } }
 @media (max-width: 767px) {
   .table--stack td.td-stack { flex-direction: column; gap: 2px; align-items: flex-start; }
   .table--stack td.td-stack > * { width: 100%; min-width: 0; }
@@ -106,6 +132,7 @@
 .error--block { padding: 10px 12px; border-radius: 10px; background: var(--cc-red-100); color: var(--kds-danger); font-weight: 500; font-size: .875rem; }
 .field--sub { margin-top: 2px; padding: 10px; border-radius: 10px; background: var(--cc-surface); }
 .field--sub label { font-size: .85rem; }
+@media (min-width: 640px) { .form-row--skills { grid-template-columns: 2fr 1fr; } }
 .filters { display: grid; gap: 12px; }
 @media (min-width: 640px) { .filters { grid-template-columns: 1fr 1fr auto; align-items: end; } }
 .field--btn { align-self: end; }
@@ -117,6 +144,8 @@
 @media (max-width: 639px) { .lbl-long { display: none; } .lbl-short { display: inline; } .sticky-bar__cancel { display: none; } .sticky-bar .kds-btn { padding-left: .7rem; padding-right: .7rem; font-size: .9rem; } }
 @media (min-width: 768px) { .sticky-bar { margin: 0 -24px; } }
 @media (min-width: 1024px) { .sticky-bar { margin: 0; justify-content: flex-start; } .sticky-bar .kds-btn { flex: 0 0 auto; } }
+/* While the bar is sticky (phones/tablets) a focused field must scroll clear of it, and the page needs room under the last card. */
+@media (max-width: 1023px) { html:has(.sticky-bar) { scroll-padding-bottom: 96px; } .job-form, .profile-form { padding-bottom: 4px; } }
 
 /* applicants: per-row status form, document links, cover letter */
 .status-form { display: grid; gap: 8px; min-width: 220px; }
@@ -228,61 +257,3 @@
 .loc-new > .hint { margin: 0 0 12px; }
 .loc-new > .kds-btn { margin-top: 12px; }
 
-/* ---------- public landings ---------- */
-.landing-hero { background: linear-gradient(160deg, var(--cc-navy-50), #fff 60%); border-bottom: 1px solid var(--kds-border); padding: 40px 0; }
-.landing-hero--consultant { background: linear-gradient(160deg, var(--cc-teal-100), #fff 60%); }
-.landing-hero__inner { display: grid; gap: 28px; align-items: center; }
-.landing-hero h1 { max-width: 16ch; }
-.landing-hero .lead { max-width: 56ch; }
-.landing-hero__cta { margin: 20px 0 8px; }
-.landing-hero__cta .kds-btn { flex: 1 1 auto; }
-@media (min-width: 640px) { .landing-hero__cta .kds-btn { flex: 0 0 auto; } }
-@media (min-width: 1024px) { .landing-hero { padding: 72px 0; } .landing-hero__inner { grid-template-columns: 1.2fr 1fr; gap: 48px; } }
-.landing-hero__art { display: flex; justify-content: center; }
-.mock-card { width: 100%; max-width: 380px; background: #fff; border: 1px solid var(--kds-border); border-radius: 16px; padding: 18px; box-shadow: var(--kds-shadow-2); display: grid; gap: 10px; transform: rotate(-1.5deg); }
-.mock-card__bar { display: flex; gap: 5px; } .mock-card__bar span { width: 9px; height: 9px; border-radius: 50%; background: var(--cc-line-strong); }
-.mock-card__bar span:first-child { background: var(--cc-red); } .mock-card__bar span:nth-child(2) { background: var(--cc-orange); } .mock-card__bar span:nth-child(3) { background: var(--cc-green); }
-.mock-card__title { font: 700 1.05rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
-.mock-card__sub { color: var(--kds-fg-muted); font-size: .875rem; }
-.mock-card__foot { display: flex; justify-content: space-between; align-items: center; font-size: .8125rem; color: var(--kds-fg-muted); padding-top: 6px; border-top: 1px solid var(--kds-border); }
-.mock-card--stack { transform: rotate(1.5deg); }
-.mock-card__row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--kds-border); }
-.mock-card__row--add { justify-content: center; border: 1px dashed var(--cc-line-strong); border-radius: 10px; color: var(--cc-navy); font-weight: 600; padding: 12px; }
-.landing-section { padding: 48px 0; }
-.landing-section--alt { background: var(--cc-surface); }
-@media (min-width: 1024px) { .landing-section { padding: 72px 0; } }
-.container--narrow { max-width: 800px; }
-.aud-grid { margin-top: 20px; }
-.aud-card { background: #fff; border: 1px solid var(--kds-border); border-left: 5px solid var(--cc-navy); border-radius: 12px; padding: 16px; }
-.aud-card p { margin: 10px 0 0; color: var(--kds-fg-muted); font-size: .9375rem; }
-.aud-card--professionals { border-left-color: var(--cc-aud-professionals); }
-.aud-card--new_immigrants { border-left-color: var(--cc-aud-new_immigrants); }
-.aud-card--indigenous { border-left-color: var(--cc-aud-indigenous); }
-.aud-card--refugees { border-left-color: var(--cc-aud-refugees); }
-.aud-card--youth { border-left-color: var(--cc-aud-youth); }
-.steps { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 16px; counter-reset: step; }
-@media (min-width: 768px) { .steps { grid-template-columns: repeat(3, 1fr); } }
-.step { position: relative; background: #fff; border: 1px solid var(--kds-border); border-radius: 14px; padding: 22px 20px 16px; }
-.step h3 { font-size: 1.05rem; margin: 10px 0 6px; }
-.step p { color: var(--kds-fg-muted); margin: 0; font-size: .9375rem; }
-.step__n { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cc-red); color: #fff; font: 800 1rem var(--cc-font-display); }
-.pricing { display: grid; gap: 24px; margin-top: 20px; align-items: start; }
-@media (min-width: 900px) { .pricing { grid-template-columns: minmax(300px, 420px) 1fr; gap: 40px; } }
-.pricing__card { background: #fff; border: 2px solid var(--cc-navy); border-radius: 18px; padding: 26px 22px; display: grid; gap: 12px; }
-.pricing__amount { font: 800 3rem/1 var(--cc-font-display); color: var(--cc-navy); display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
-.pricing__currency { font-size: 1.5rem; align-self: flex-start; margin-top: .3em; }
-.pricing__per { font-size: 1rem; font-weight: 600; color: var(--kds-fg-muted); }
-.pricing__total { margin: 0; color: var(--cc-ink); }
-.pricing__list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 8px; }
-.pricing__list li { padding-left: 26px; position: relative; font-size: .9375rem; }
-.pricing__list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--cc-green); font-weight: 800; }
-.pricing__note { margin: 0; text-align: center; }
-.pricing__aside h3 { margin-top: 8px; }
-.faq { display: grid; gap: 8px; margin-top: 16px; }
-.faq__item { background: #fff; border: 1px solid var(--kds-border); border-radius: 12px; padding: 0 16px; }
-.faq__item summary { cursor: pointer; font-weight: 600; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 12px; align-items: center; color: var(--cc-navy); min-height: 44px; }
-.faq__item summary::-webkit-details-marker { display: none; }
-.faq__item summary::after { content: "+"; font: 700 1.25rem/1 var(--cc-font-display); color: var(--cc-red); flex: none; }
-.faq__item[open] summary::after { content: "–"; }
-.faq__item p { margin: 0 0 16px; color: var(--kds-fg-muted); }
-.landing-cta-row { margin-top: 24px; }

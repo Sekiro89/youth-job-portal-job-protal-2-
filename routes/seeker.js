@@ -13,6 +13,7 @@ const C = require('../lib/constants');
 const h = require('../lib/helpers');
 const { PUBLIC_WHERE } = require('../lib/jobs');
 const matching = require('../lib/matching');
+const jd = require('../lib/job-dates');   // application_deadline / applications_closed (round 3)
 
 const router = express.Router();
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'data', 'uploads');
@@ -137,9 +138,12 @@ function completeness(p) {
   return { items, done, total: items.length, percent: Math.round((done / items.length) * 100) };
 }
 async function publicJob(slug) {
-  return db.one(`SELECT jobs.*, ${JOB_COMPANY}, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id, ${LOCATION_COUNT}
-                 FROM jobs JOIN employer_profiles ep ON ep.id = jobs.employer_profile_id WHERE jobs.slug=$1 AND ${PUBLIC_WHERE}`, [slug]);
+  return jd.decorateJob(await db.one(`SELECT jobs.*, ${JOB_COMPANY}, ep.slug AS company_slug, ep.contact_email, ep.owner_user_id, ${LOCATION_COUNT}
+                 FROM jobs JOIN employer_profiles ep ON ep.id = jobs.employer_profile_id WHERE jobs.slug=$1 AND ${PUBLIC_WHERE}`, [slug]));
 }
+const CLOSED_MSG = 'Applications for this posting have closed';
+/** Show a flash on THIS response (req.flash only surfaces on the next request). */
+const flashNow = (res, type, message) => { res.locals.flash = (res.locals.flash || []).concat([{ type, message }]); };
 const backTo = (req, fallback) => {
   const ref = req.get('referer');
   try { if (ref && new URL(ref).host === req.get('host')) return new URL(ref).pathname + new URL(ref).search; } catch (_) {}
@@ -203,9 +207,9 @@ router.get('/jobseeker/dashboard', seekerOnly, async (req, res, next) => {
       getProfile(uid),
       matching.matchesForSeeker(uid, 6),
       matching.countMatchesForSeeker(uid),
-      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public
+      db.many(`SELECT a.id, a.status, a.created_at, jobs.title, jobs.slug, jobs.public_id, jobs.application_deadline, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public
                FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
-               WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]),
+               WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC LIMIT 5`, [uid]).then(jd.decorateJobs),
       db.many('SELECT * FROM notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 5', [uid]),
       db.one(`SELECT (SELECT count(*)::int FROM applications WHERE seeker_user_id=$1) AS applications,
                      (SELECT count(*)::int FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id WHERE s.user_id=$1 AND ${PUBLIC_WHERE}) AS saved`, [uid]),
@@ -315,6 +319,7 @@ router.get('/jobs/:slug/apply', applyGate, async (req, res, next) => {
   try {
     const [profile, existing, locations] = await Promise.all([getProfile(req.user.id), db.one('SELECT * FROM applications WHERE job_id=$1 AND seeker_user_id=$2', [req.job.id, req.user.id]), jobLocations(req.job.id)]);
     req.job.locations = locations;
+    // Past application deadline: the template renders the closed state from job.applications_closed (no form).
     renderApply(res, req, { profile, existing, values: { cover_letter: '', resume_choice: profile.resume_path ? 'profile' : 'upload', save_to_profile: true } });
   } catch (e) { next(e); }
 });
@@ -325,6 +330,7 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
     job.locations = locations;
     const company = h.displayCompany(job);
     if (existing) { req.flash('info', `You already applied to this job on ${h.formatDate(existing.created_at)}.`); return res.redirect('/jobseeker/applications'); }
+    if (job.applications_closed) { flashNow(res, 'error', CLOSED_MSG); res.status(422); return renderApply(res, req, { profile, existing: null, errors: { closed: CLOSED_MSG } }); }
     const values = { cover_letter: clean(req.body.cover_letter, COVER_MAX + 1), resume_choice: req.body.resume_choice === 'upload' ? 'upload' : 'profile', save_to_profile: !!req.body.save_to_profile };
     const errors = {};
     if (values.cover_letter.length > COVER_MAX) errors.cover_letter = `Cover letter must be ${COVER_MAX} characters or fewer.`;
@@ -352,13 +358,14 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
     const PUBLIC_URL = await publicUrl();
     const jobLink = `${PUBLIC_URL}/jobs/${job.slug}`;
     const hours = h.formatHours(job);
-    const jobLine = `${h.escapeHtml(h.location(job))}${hours ? ` · ${h.escapeHtml(hours)}` : ''}`;
+    const pid = job.public_id ? `Posting ID ${job.public_id}` : '';
+    const jobLine = `${h.escapeHtml(h.location(job))}${hours ? ` · ${h.escapeHtml(hours)}` : ''}${pid ? ` · ${h.escapeHtml(pid)}` : ''}`;
     const attached = `your resume (<strong>${h.escapeHtml(resume.name)}</strong>)${cover.path ? ` and cover sheet (<strong>${h.escapeHtml(cover.name)}</strong>)` : ''}`;
     await mail.send({
       to: req.user.email,
       subject: `Application sent: ${job.title} at ${company}`,
       html: mail.layout('Your application was sent', `<p>Hi ${h.escapeHtml(req.user.name || 'there')},</p><p>We sent your application and ${attached} to <strong>${h.escapeHtml(company)}</strong> for:</p><p><strong>${h.escapeHtml(job.title)}</strong><br>${jobLine}</p><p>You can follow its status and withdraw it from your applications page.</p>`, { href: `${PUBLIC_URL}/jobseeker/applications`, label: 'My applications' }),
-      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${company} was sent with resume ${resume.name}${cover.path ? ` and cover sheet ${cover.name}` : ''}.\n${jobLink}\n\nTrack it: ${PUBLIC_URL}/jobseeker/applications`,
+      text: `Hi ${req.user.name || 'there'},\n\nYour application for ${job.title} at ${company} was sent with resume ${resume.name}${cover.path ? ` and cover sheet ${cover.name}` : ''}.${pid ? `\n${pid}` : ''}\n${jobLink}\n\nTrack it: ${PUBLIC_URL}/jobseeker/applications`,
     });
     const employerTo = job.apply_email || job.contact_email || (await db.one('SELECT email FROM users WHERE id=$1', [job.owner_user_id]) || {}).email;
     if (employerTo) {
@@ -369,8 +376,8 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
         to: employerTo,
         replyTo: `${req.user.name.replace(/["<>\r\n]/g, '')} <${req.user.email}>`,   // "Reply" in the employer's mail client goes to the applicant, never to the system sender
         subject: `New applicant for ${job.title}`,
-        html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(company)}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${note}<p>${files}</p>`, { href: applicantsHref, label: 'View applicants' }),
-        text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${company}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}Resume: ${resume.name}${cover.path ? `\nCover sheet: ${cover.name}` : ''}\nView applicants: ${applicantsHref}`,
+        html: mail.layout(`New applicant for ${job.title}`, `<p><strong>${h.escapeHtml(req.user.name)}</strong> (${h.escapeHtml(req.user.email)}) applied to <strong>${h.escapeHtml(job.title)}</strong> at ${h.escapeHtml(company)}${pid ? ` <span style="color:#5A6B7E">(${h.escapeHtml(pid)})</span>` : ''}.</p>${profile.headline ? `<p style="color:#5A6B7E">${h.escapeHtml(profile.headline)}</p>` : ''}${note}<p>${files}</p>`, { href: applicantsHref, label: 'View applicants' }),
+        text: `${req.user.name} (${req.user.email}) applied to ${job.title} at ${company}${pid ? ` (${pid})` : ''}.\n\n${values.cover_letter ? values.cover_letter + '\n\n' : ''}Resume: ${resume.name}${cover.path ? `\nCover sheet: ${cover.name}` : ''}\nView applicants: ${applicantsHref}`,
       });
     }
     await auth.audit(uid, 'application.create', 'application', app.id, { job_id: job.id, resume: resume.path, cover_sheet: cover.path });
@@ -385,9 +392,9 @@ router.post('/jobs/:slug/apply', applyGate, resumeUpload, async (req, res, next)
 // ------------------------------------------------------------------ 5. applications
 router.get('/jobseeker/applications', seekerOnly, async (req, res, next) => {
   try {
-    const applications = await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT}
+    const applications = jd.decorateJobs(await db.many(`SELECT a.*, jobs.title, jobs.slug, jobs.city, jobs.province, jobs.public_id, jobs.application_deadline, ${JOB_COMPANY}, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT}
       FROM applications a JOIN jobs ON jobs.id=a.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
-      WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC`, [req.user.id]);
+      WHERE a.seeker_user_id=$1 ORDER BY a.created_at DESC`, [req.user.id]));
     res.render('seeker/applications', { title: 'My applications', nav: 'applications', applications });
   } catch (e) { next(e); }
 });
@@ -438,10 +445,10 @@ router.post('/jobs/:slug/unsave', saveGate, async (req, res, next) => {
 });
 router.get('/jobseeker/saved', seekerOnly, async (req, res, next) => {
   try {
-    const jobs = await db.many(`SELECT jobs.*, ${JOB_COMPANY}, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT},
+    const jobs = jd.decorateJobs(await db.many(`SELECT jobs.*, ${JOB_COMPANY}, s.created_at AS saved_at, (${PUBLIC_WHERE}) AS is_public, ${LOCATION_COUNT},
         EXISTS (SELECT 1 FROM applications a WHERE a.job_id=jobs.id AND a.seeker_user_id=s.user_id) AS applied
       FROM saved_jobs s JOIN jobs ON jobs.id=s.job_id JOIN employer_profiles ep ON ep.id=jobs.employer_profile_id
-      WHERE s.user_id=$1 ORDER BY s.created_at DESC`, [req.user.id]);
+      WHERE s.user_id=$1 ORDER BY s.created_at DESC`, [req.user.id]));
     res.render('seeker/saved', { title: 'Saved jobs', nav: 'saved', jobs });
   } catch (e) { next(e); }
 });

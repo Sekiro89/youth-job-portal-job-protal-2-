@@ -1,0 +1,12 @@
+<%# Standard page header band for auth pages. locals: h — { eyebrow, h1, lead (html allowed via leadHtml), crumb } %>
+<% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', ...locals.h }; %>
+<header class="page-head">
+  <div class="container page-head__inner">
+    <div>
+      <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page"><%= hd.crumb || hd.h1 %></li></ol>
+      <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
+      <h1><%= hd.h1 %></h1>
+      <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
+    </div>
+  </div>
+</header>

@@ -38,7 +38,8 @@ const WIDTHS = argv.widths ? String(argv.widths).split(',').map(Number).filter(B
 // with >= 2 job_locations), {employerJob} / {consultantJob} (an unpaid draft/pending job owned by that login) and {receiptId}
 // (a payment owned by the employer) and {geoslug} (a live job with a geocoded job_locations row) come from DATABASE_URL;
 // `--seed-extra` creates them when missing (never on production). `unlock: true` posts the Integrations passcode after the
-// admin login so the gated page is captured unlocked (QA_ADMIN_PASSCODE, default qa-pass-123).
+// admin login so the gated page is captured unlocked (QA_ADMIN_PASSCODE, default qa-pass-123); `locked: true` uses a second, never-unlocked admin session.
+// `storage: { key: value }` writes localStorage on the site origin before the page loads (cleared again for the next page).
 function pageList() {
   return [
     { key: 'home', path: '/' }, { key: 'jobs', path: '/jobs' }, { key: 'jobs-search', path: '/jobs?q=nurse&province=SK' },
@@ -67,6 +68,22 @@ function pageList() {
     { key: 'admin-integrations', path: '/admin/integrations', as: 'admin', unlock: true },
     { key: 'admin-users', path: '/admin/users', as: 'admin' },
     { key: 'profile-locations', path: '/employer/profile#locations', as: 'employer' },
+    // round 3 (2026-09-14): locked edit form, closed posting (+ seeker apply closed state), map hidden via localStorage, posting-id search,
+    // owner detail/edit of an unpaid draft, applicants, saved jobs, company page, remaining admin pages, consultant job form, locked integrations gate
+    { key: 'job-locked-edit', path: '/employer/jobs/{lockedJob}/edit', as: 'employer' },
+    { key: 'job-locked-detail', path: '/employer/jobs/{lockedJob}', as: 'employer' },
+    { key: 'job-closed', path: '/jobs/{closedslug}' },
+    { key: 'job-closed-apply', path: '/jobs/{closedslug}/apply', as: 'seeker' },
+    { key: 'jobs-map-hidden', path: '/jobs', storage: { 'cc:jobs-map': 'hide' } },
+    { key: 'jobs-search-id', path: '/jobs?q={publicId}' },
+    { key: 'employer-job-detail', path: '/employer/jobs/{employerJob}', as: 'employer' },
+    { key: 'employer-job-edit', path: '/employer/jobs/{employerJob}/edit', as: 'employer' },
+    { key: 'employer-applicants', path: '/employer/applicants', as: 'employer' },
+    { key: 'consultant-job-new', path: '/consultant/jobs/new', as: 'consultant' },
+    { key: 'seeker-saved', path: '/jobseeker/saved', as: 'seeker' }, { key: 'seeker-notifications', path: '/jobseeker/notifications', as: 'seeker' },
+    { key: 'company', path: '/companies/{companySlug}' }, { key: 'forgot', path: '/forgot' }, { key: 'signup-consultant', path: '/signup/consultant' },
+    { key: 'admin-payments', path: '/admin/payments', as: 'admin' }, { key: 'admin-outbox', path: '/admin/outbox', as: 'admin' },
+    { key: 'admin-integrations-locked', path: '/admin/integrations/unlock', as: 'admin', locked: true },   // a second admin session that was never unlocked
   ];
 }
 
@@ -123,6 +140,25 @@ async function dbFixtures(seed) {
       if (l) { const c = CITY_COORDS[l.city]; await pool.query("UPDATE job_locations SET lat=$2, lng=$3, geocoded_at=now(), geocode_provider='manual' WHERE id=$1", [l.id, c[0], c[1]]); geo = l; console.log(`seed-extra: set manual coordinates on job_locations#${l.id} (${l.city}) — run node jobs/geocode.js for real ones`); }
     }
     if (geo) out.geoslug = geo.slug;
+    // round 3: a job the employer owns that has been published at least once (jobs.isLocked → the edit form shows the locked fields)
+    const ownerJobs = `SELECT j.id, j.slug, j.status FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE p.owner_user_id=(SELECT id FROM users WHERE email=$1) AND p.archived IS NOT TRUE AND j.source IS NULL`;
+    let locked = await one(`${ownerJobs} AND (j.locked_at IS NOT NULL OR j.published_at IS NOT NULL) ORDER BY (j.status='active') DESC, j.id LIMIT 1`, [LOGINS.employer]);
+    if (!locked && seed) {
+      const j = await one(`${ownerJobs} AND j.status='active' AND j.expires_at > now() ORDER BY j.id LIMIT 1`, [LOGINS.employer]);
+      if (j) { await pool.query('UPDATE jobs SET locked_at=coalesce(locked_at, now()), published_at=coalesce(published_at, now()) WHERE id=$1', [j.id]); locked = j; console.log(`seed-extra: set locked_at/published_at on job#${j.id} (${j.slug})`); }
+    }
+    if (locked) out.lockedJob = String(locked.id);
+    // round 3: a live posting whose application_deadline has passed ("Applications closed"; still visible until billing expiry). Never the first live job ({slug}).
+    let closed = await one(`SELECT j.slug FROM jobs j WHERE ${live} AND j.application_deadline < (now() AT TIME ZONE 'America/Toronto')::date ORDER BY j.id LIMIT 1`);
+    if (!closed && seed) {
+      const j = await one(`SELECT j.id, j.slug FROM jobs j WHERE ${live} AND j.id <> (SELECT min(id) FROM jobs WHERE ${live}) ORDER BY j.id DESC LIMIT 1`);
+      if (j) { await pool.query("UPDATE jobs SET application_deadline=(now() AT TIME ZONE 'America/Toronto')::date - 1 WHERE id=$1", [j.id]); closed = j; console.log(`seed-extra: set application_deadline to yesterday on job#${j.id} (${j.slug}) — applications closed`); }
+    }
+    if (closed) out.closedslug = closed.slug;
+    const pidRow = await one(`SELECT j.public_id FROM jobs j WHERE ${live} AND j.public_id IS NOT NULL ORDER BY j.id LIMIT 1`);
+    if (pidRow) out.publicId = pidRow.public_id; else console.log('fixtures: no live job has a public_id yet (jobs-search-id skipped)');
+    const comp = await one("SELECT p.slug FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id WHERE j.status='active' AND j.expires_at > now() AND j.source IS NULL ORDER BY j.id LIMIT 1");
+    if (comp) out.companySlug = comp.slug;
     if (seed) {   // the Integrations passcode the admin pages are unlocked with
       try { const settings = require('../lib/settings'); await settings.set('admin_passcode', ADMIN_PASSCODE); console.log('seed-extra: admin_passcode set (lib/settings)'); try { await require('../lib/db').pool.end(); } catch (_) {} }
       catch (e) { console.log(`seed-extra: could not set admin_passcode via lib/settings: ${e.message}`); }
@@ -145,7 +181,7 @@ async function main() {
 
   const slug = pages.some(p => p.path.includes('{slug}')) ? await liveJobSlug() : null;
   if (pages.some(p => p.path.includes('{slug}'))) console.log(`live job slug: ${slug || '(none found — {slug} pages will be skipped)'}`);
-  const vars = { slug, ...(pages.some(p => /\{(multislug|employerJob|consultantJob|receiptId|geoslug)\}/.test(p.path) || p.unlock) ? await dbFixtures(!!argv['seed-extra']) : {}) };
+  const vars = { slug, ...(pages.some(p => /\{(multislug|employerJob|consultantJob|receiptId|geoslug|lockedJob|closedslug|publicId|companySlug)\}/.test(p.path) || p.unlock) ? await dbFixtures(!!argv['seed-extra']) : {}) };
   pages = pages.filter(p => {
     const missing = [...p.path.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(k => !vars[k]);
     if (missing.length) console.log(`skip ${p.key}: no fixture for {${missing.join('}, {')}}${process.env.DATABASE_URL ? ' (run with --seed-extra)' : ' (set DATABASE_URL)'}`);
@@ -159,6 +195,10 @@ async function main() {
       const s = await login(BASE, LOGINS[role], PASSWORD);
       if (s.ok) sessions[role] = s; else console.log(`login ${role}: FAILED (${s.status}${s.location ? ' → ' + s.location : ''}) — its pages will be captured as guest`);
     } catch (e) { console.log(`login ${role}: threw ${e.message}`); }
+  }
+  // `locked: true` pages need an admin session that was NOT unlocked (the unlock below is per session): log the admin in a second time.
+  if (sessions.admin && pages.some(p => p.locked)) {
+    try { const s = await login(BASE, LOGINS.admin, PASSWORD); if (s.ok) sessions['admin:locked'] = s; else console.log('second (locked) admin login FAILED'); } catch (e) { console.log(`second (locked) admin login threw ${e.message}`); }
   }
   // Integrations is passcode-gated per session: unlock the admin session once so `unlock: true` pages render the real panel.
   if (sessions.admin && pages.some(p => p.unlock)) {
@@ -187,10 +227,11 @@ async function main() {
   let docStatus = null;
   cdp.on('Network.responseReceived', (p) => { if (p.type === 'Document' && docStatus == null) docStatus = p.response.status; });
 
-  const rows = [];   // { key, path, as, width, status, iw, sw, h, overflow, file, errors, err }
+  const rows = [];   // { key, path, as, width, status, iw, sw, h, overflow, wide, file, errors, err }
   let failures = 0;
+  let storageDirty = false;   // localStorage persists in the profile: clear it before the next page that did not ask for any
   for (const page of pages) {
-    const sess = page.as && sessions[page.as];
+    const sess = page.as && (sessions[page.locked ? page.as + ':locked' : page.as] || sessions[page.as]);
     for (const width of WIDTHS) {
       const row = { key: page.key, path: page.path, as: page.as || 'guest', width, expect: page.expect, file: `${page.key}-${width}.png` };
       rows.push(row);
@@ -199,6 +240,13 @@ async function main() {
         if (sess) await cdp.send('Network.setCookie', { name: sess.cookieName, value: sess.cookie, domain: host, path: '/', httpOnly: true, sameSite: 'Lax' });
         await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: width < 500 ? 844 : width < 1100 ? 1024 : 900, deviceScaleFactor: width < 500 ? 2 : 1, mobile: width < 500, screenWidth: width, screenHeight: width < 500 ? 844 : 1024 });
         if (width < 500) await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+        // localStorage must be written from the site's own origin BEFORE the page loads (e.g. cc:jobs-map=hide hides the Find Jobs map)
+        if (page.storage || storageDirty) {
+          const l0 = cdp.waitFor('Page.loadEventFired', 10000);
+          await cdp.send('Page.navigate', { url: BASE + '/robots.txt' }); await l0.catch(() => {});
+          await cdp.eval(`(() => { try { localStorage.clear(); const s = ${JSON.stringify(page.storage || {})}; for (const k in s) localStorage.setItem(k, s[k]); return Object.keys(localStorage).length; } catch (e) { return 'localStorage: ' + e.message; } })()`);
+          storageDirty = !!page.storage;
+        }
         // a fresh document every time: navigating to a URL that differs only by #fragment (or is identical) would be a
         // same-document navigation — no new response, status stays "?"; about:blank in between forces a real load
         await cdp.send('Page.navigate', { url: 'about:blank' }); await sleep(100);
@@ -218,13 +266,24 @@ async function main() {
           // name the widest offenders so the owning agent can fix them without guessing
           row.offenders = await cdp.eval(`(() => { const iw = innerWidth, out = []; for (const el of document.querySelectorAll('body *')) { const r = el.getBoundingClientRect(); if (r.right > iw + 1 && r.width > 0) out.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.') : '') + ' right=' + Math.round(r.right)); } return out.slice(0, 5); })()`);
         }
+        // Round 3 layout hygiene at phone width: no VISIBLE element may start on-screen and run past the viewport, unless an ancestor
+        // scrolls/clips it on purpose (tables in .table-wrap, the portal tab strip). Off-screen drawers (translateX(100%)) start at x >= iw and are not counted.
+        if (width < 500) {
+          row.wide = await cdp.eval(`(() => { const iw = innerWidth, out = [];
+            const clipped = (el) => { for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === 'auto' || o === 'scroll' || o === 'hidden' || o === 'clip') return true; } return false; };
+            for (const el of document.querySelectorAll('body *')) { const r = el.getBoundingClientRect(); if (!(r.width > 0 && r.left < iw - 1 && r.right > iw + 1)) continue;
+              const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0 || cs.position === 'fixed' && r.left >= iw) continue; if (clipped(el)) continue;
+              out.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).slice(0,2).join('.') : '') + ' ' + Math.round(r.left) + '→' + Math.round(r.right)); }
+            return out.slice(0, 6); })()`);
+        }
         const clipH = Math.min(row.h || 800, MAX_HEIGHT);
         const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: clipH, scale: 1 } }, 60000);
         fs.writeFileSync(path.join(OUT, row.file), Buffer.from(shot.data, 'base64'));
         row.errors = consoleBucket.slice();
-        const bad = row.overflow || row.redirected || !(page.expect ? row.status === page.expect : row.status >= 200 && row.status < 300);
+        const wide = !!(row.wide && row.wide.length);
+        const bad = row.overflow || wide || row.redirected || !(page.expect ? row.status === page.expect : row.status >= 200 && row.status < 300);
         if (bad) failures++;
-        console.log(`${bad ? 'FAIL' : 'PASS'}  ${page.key.padEnd(22)} ${String(width).padStart(4)}px  status=${row.status ?? '?'}  iw=${row.iw} sw=${row.sw} h=${row.h}${row.overflow ? '  OVERFLOW ' + (row.offenders || []).join(', ') : ''}${row.redirected ? '  REDIRECTED→' + row.finalPath : ''}${row.errors.length ? `  console:${row.errors.length}` : ''}`);
+        console.log(`${bad ? 'FAIL' : 'PASS'}  ${page.key.padEnd(22)} ${String(width).padStart(4)}px  status=${row.status ?? '?'}  iw=${row.iw} sw=${row.sw} h=${row.h}${row.overflow ? '  OVERFLOW ' + (row.offenders || []).join(', ') : ''}${wide ? '  WIDE ' + row.wide.join(', ') : ''}${row.redirected ? '  REDIRECTED→' + row.finalPath : ''}${row.errors.length ? `  console:${row.errors.length}` : ''}`);
       } catch (e) {
         row.err = e.message; failures++;
         console.log(`FAIL  ${page.key.padEnd(22)} ${String(width).padStart(4)}px  ${e.message}`);
@@ -242,9 +301,9 @@ async function main() {
 function writeReport(rows, roles) {
   const byKey = new Map();
   for (const r of rows) { if (!byKey.has(r.key)) byKey.set(r.key, []); byKey.get(r.key).push(r); }
-  const cell = (r) => r.err ? `ERR` : `${r.overflow ? 'OVERFLOW' : r.redirected ? 'REDIRECT→' + r.finalPath : (r.expect ? r.status === r.expect : r.status >= 200 && r.status < 300) ? 'OK' : 'HTTP ' + r.status}${r.overflow ? ` (${r.sw}>${r.iw})` : ''} ${r.h}px`;
+  const cell = (r) => r.err ? `ERR` : `${r.overflow ? 'OVERFLOW' : r.wide && r.wide.length ? `WIDE ×${r.wide.length}` : r.redirected ? 'REDIRECT→' + r.finalPath : (r.expect ? r.status === r.expect : r.status >= 200 && r.status < 300) ? 'OK' : 'HTTP ' + r.status}${r.overflow ? ` (${r.sw}>${r.iw})` : ''} ${r.h}px`;
   const lines = [`# QA screenshot report`, '', `- Base: ${BASE}`, `- Generated: ${new Date().toISOString()}`, `- Widths: ${WIDTHS.join(', ')} (390 = mobile, deviceScaleFactor 2)`, `- Logged-in roles: ${roles.join(', ') || 'none (all logins failed)'}`, '',
-    `Cell = status + page height. **OVERFLOW** means \`document.scrollWidth > innerWidth\` (horizontal scroll) at that width. PNGs are \`shots/qa/<page>-<width>.png\`.`, '',
+    `Cell = status + page height. **OVERFLOW** means \`document.scrollWidth > innerWidth\` (horizontal scroll) at that width; **WIDE ×n** (390 only) = n visible elements run past the viewport edge (listed below). PNGs are \`shots/qa/<page>-<width>.png\`.`, '',
     `| page | path | as | ${WIDTHS.map(w => w + 'px').join(' | ')} |`, `|---|---|---|${WIDTHS.map(() => '---').join('|')}|`];
   for (const [key, rs] of byKey) {
     const first = rs[0];
@@ -254,6 +313,10 @@ function writeReport(rows, roles) {
   lines.push('', `## Overflow details (${overflow.length})`, '');
   if (!overflow.length) lines.push('None.');
   for (const r of overflow) lines.push(`- **${r.key} @ ${r.width}px** \`${r.path}\` — scrollWidth ${r.sw} > innerWidth ${r.iw}; widest elements: ${(r.offenders || []).map(o => '`' + o + '`').join(', ') || '(none isolated)'}`);
+  const wide = rows.filter(r => r.wide && r.wide.length);
+  lines.push('', `## Elements wider than the phone viewport at 390 (${wide.length} captures)`, '', 'Visible elements that start on-screen and run past \`innerWidth\` without a scrolling/clipping ancestor (\`left→right\` in css px).', '');
+  if (!wide.length) lines.push('None.');
+  for (const r of wide) lines.push(`- **${r.key}** \`${r.path}\` — ${r.wide.map(o => '`' + o + '`').join(', ')}`);
   const errs = rows.filter(r => r.err);
   lines.push('', `## Navigation / capture errors (${errs.length})`, '');
   if (!errs.length) lines.push('None.');

@@ -33,7 +33,7 @@
             <tr>
               <td data-label="Email"><a href="/admin/outbox/<%= e.id %>">#<%= e.id %></a></td>
               <td data-label="To"><%= e.to_email %></td>
-              <td data-label="Subject"><a href="/admin/outbox/<%= e.id %>" class="row-title"><%= e.subject %></a><% if (e.error) { %><br><span class="small text-danger"><%= e.error %></span><% } %></td>
+              <td data-label="Subject" class="td--main"><div class="cell"><a href="/admin/outbox/<%= e.id %>" class="row-title"><%= e.subject %></a><% if (e.error) { %><br><span class="small text-danger"><%= e.error %></span><% } %></div></td>
               <td data-label="Status"><span class="badge badge--<%= badge[e.status] || '' %>"><%= e.status %></span></td>
               <td data-label="Created"><span title="<%= h.formatDateTime(e.created_at) %>"><%= h.timeAgo(e.created_at) %></span></td>
             </tr>

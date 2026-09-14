@@ -288,3 +288,9 @@ textarea.input { min-height: 120px; resize: vertical; }
 /* Sticky mobile action bar — shared by apply, job form, checkout */
 .sticky-bar { position: sticky; bottom: 0; z-index: 20; background: rgba(255,255,255,.97); backdrop-filter: blur(6px); border-top: 1px solid var(--kds-border); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; }
 @media (min-width: 1024px) { .sticky-bar { position: static; background: none; border: 0; padding: 0; backdrop-filter: none; } }
+/* shared: required marker + 5-column grid (were duplicated in portal/contact/auth/about/landing css) */
+.req { color: var(--cc-red); font-weight: 700; margin-left: 2px; }
+.grid--5 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

@@ -17,8 +17,8 @@
     </div>
     <div class="grid grid--5">
       <% C.AUDIENCES.forEach(([k, n, icon]) => { %>
-        <div class="card aud-card aud-card--<%= k %>">
-          <img class="aud-card__icon" src="/img/audience/<%= icon %>.svg" alt="" width="44" height="44" loading="lazy">
+        <div class="card landing-aud landing-aud--<%= k %>">
+          <img class="landing-aud__icon" src="/img/audience/<%= icon %>.svg" alt="" width="44" height="44" loading="lazy">
           <h3><%= n %></h3>
           <p><%= audBlurbs[k] %></p>
           <% if (audMode === 'seek') { %><a href="/jobs?audience=<%= k %>">See jobs for <%= audFor[k] %> →</a><% } else { %><span class="aud aud--<%= k %>"><%= n %></span><% } %>

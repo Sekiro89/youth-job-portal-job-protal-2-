@@ -1,4 +1,5 @@
 (function () {
+  'use strict';
   // Apply form: reveal the upload field only when "upload a different resume" is chosen.
   var choices = document.querySelectorAll('[data-resume-choice]');
   var uploadBox = document.querySelector('[data-resume-upload]');
@@ -13,12 +14,17 @@
   choices.forEach(function (r) { r.addEventListener('change', syncUpload); });
   syncUpload();
 
-  // Side nav (a horizontal pill strip below 1024px): scroll the current tab into view and hide the edge fade at the end.
+  // Side nav (a horizontal pill strip below 1024px): scroll the current tab into view; show an edge fade on whichever
+  // side still has hidden tabs (.is-scrolled-start = fade on the left, .is-scrolled-end = no fade on the right).
   var nav = document.querySelector('[data-seeker-nav]');
   if (nav) {
     var wrap = nav.parentNode;
     var active = nav.querySelector('.is-active');
-    var fade = function () { wrap.classList.toggle('is-scrolled-end', nav.scrollWidth - nav.clientWidth - nav.scrollLeft < 8); };
+    var fade = function () {
+      var max = nav.scrollWidth - nav.clientWidth;
+      wrap.classList.toggle('is-scrolled-end', max - nav.scrollLeft < 8);
+      wrap.classList.toggle('is-scrolled-start', nav.scrollLeft > 8);
+    };
     if (active && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2);
     nav.addEventListener('scroll', fade, { passive: true }); window.addEventListener('resize', fade); fade();
   }
@@ -31,7 +37,7 @@
     ta.addEventListener('input', tick); tick();
   });
 
-  // Alerts switch: keep aria-checked in sync; disable frequency when off
+  // Alerts switch: keep aria-checked in sync; dim frequency when off
   var sw = document.querySelector('[data-switch]');
   if (sw) {
     var freq = document.querySelectorAll('input[name=notify_frequency]');

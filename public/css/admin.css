@@ -13,7 +13,6 @@
 .back { display: inline-block; font-size: .875rem; text-decoration: none; margin-bottom: 8px; }
 .h3 { font-size: 1.15rem; }                    /* h2 used as a card title */
 .card__head { flex-wrap: wrap; }
-.card__head .small { white-space: nowrap; }
 .card__intro { margin: -4px 0 16px; max-width: 68ch; line-height: 1.5; color: var(--kds-fg-muted); font-size: .9375rem; }
 .card__intro a { color: inherit; }
 .card--warn { border-color: var(--cc-orange); background: var(--cc-orange-100); }
@@ -53,6 +52,10 @@ a.row-title:hover { color: var(--cc-red); }
 .text-danger { color: var(--kds-danger); }
 @media (min-width: 768px) { .card--table .table th:first-child, .card--table .table td:first-child { padding-left: 0; } .card--table .table th:last-child, .card--table .table td:last-child { padding-right: 0; } }
 @media (max-width: 767px) { .card--table { padding: 12px; } .table--stack tr { margin-bottom: 8px; } .row--new td { background: transparent; } .row--new { border-color: var(--cc-navy) !important; } }
+/* multi-line cell content stays one block when the row stacks (otherwise each <br> line becomes its own flex column) */
+.cell { min-width: 0; }
+.nowrap { white-space: nowrap; }
+@media (max-width: 1199px) { .table--stack td.td--main { flex-direction: column; align-items: stretch; gap: 2px; } .table--stack td.td--main::before { font-size: .75rem; } }
 /* wide admin tables (jobs / users / payments): the main column is only ~700-900px at 1024, so they stack to cards below 1200px */
 @media (min-width: 768px) and (max-width: 1199px) {
   .table--stack-lg thead { display: none; }
@@ -95,9 +98,10 @@ code { font-size: .875em; background: var(--cc-surface); padding: 1px 6px; borde
 /* ---------- integrations (the client's control panel) ---------- */
 /* status summary: one tile per service, a coloured dot says green (working) / amber (needs attention) / grey (off) */
 .status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: 1fr; }
+.status-list li { display: grid; }
 @media (min-width: 640px) { .status-list { grid-template-columns: 1fr 1fr; gap: 10px; } }
 @media (min-width: 1200px) { .status-list { grid-template-columns: repeat(3, 1fr); } }
-.status-tile { display: grid; gap: 2px; border: 1px solid var(--kds-border); border-radius: 12px; padding: 12px 14px; background: var(--cc-surface); text-decoration: none; color: inherit; min-height: 44px; transition: border-color .15s; }
+.status-tile { display: grid; gap: 2px; align-content: start; border: 1px solid var(--kds-border); border-radius: 12px; padding: 12px 14px; background: var(--cc-surface); text-decoration: none; color: inherit; min-height: 44px; transition: border-color .15s; }
 .status-tile:hover { border-color: var(--cc-navy); color: inherit; }
 .status-tile__label { display: flex; align-items: center; gap: 8px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); }
 .status-tile__value { font-weight: 700; color: var(--cc-ink); }
@@ -106,14 +110,15 @@ code { font-size: .875em; background: var(--cc-surface); padding: 1px 6px; borde
 .dot--ok { background: var(--cc-green); }
 .dot--warn { background: var(--cc-orange); }
 .dot--bad { background: var(--cc-red); }
+.dot--off { background: var(--cc-line-strong); }
 /* group cards */
 .int-group { scroll-margin-top: calc(var(--cc-header-h, 64px) + 16px); }
 .int-form { max-width: 720px; }
-.input--mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; }
+.int-form .field .hint { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .input--num { max-width: 220px; }
-.badge--xs { font-size: .6875rem; padding: 1px 8px; vertical-align: middle; margin-right: 4px; }
+.badge--xs { font-size: .6875rem; padding: 1px 8px; vertical-align: middle; }
 .secret { display: grid; gap: 8px; grid-template-columns: 1fr; }
-.secret__current { font-size: .9rem; overflow-wrap: anywhere; align-self: center; }
+.secret__current { font-size: .875rem; color: var(--kds-fg-muted); overflow-wrap: anywhere; align-self: center; }
 .secret__current code { padding: 4px 8px; }
 .check--sm { padding: 6px 10px; font-size: .875rem; min-height: 44px; }
 @media (min-width: 640px) { .secret { grid-template-columns: minmax(0, 1fr) auto; } .secret__current { grid-column: 1 / -1; } }
@@ -149,3 +154,7 @@ code { font-size: .875em; background: var(--cc-surface); padding: 1px 6px; borde
 .unlock__head h1 { font-size: clamp(1.5rem, 1.6vw + 1rem, 2rem); margin-bottom: 6px; }
 .unlock__head p { margin: 0; }
 .unlock__foot { margin: 16px 0 0; font-size: .875rem; }
+/* jobs list: stacked date / activity lines inside one cell; Posting ID in mono */
+.dates { display: grid; gap: 2px; font-size: .875rem; white-space: nowrap; }
+.pid { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; color: var(--cc-ink); }
+@media (min-width: 1200px) { .jobs-table th:first-child, .jobs-table td:first-child { width: 34%; min-width: 240px; } .jobs-table td:last-child { min-width: 130px; } .jobs-table .cluster .kds-btn, .jobs-table td:last-child .muted { white-space: nowrap; } }

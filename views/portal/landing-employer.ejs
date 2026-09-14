@@ -5,19 +5,19 @@ const _gst = (c) => Math.round(c * C.PRICING.gst_rate), _d = (c) => '$' + (c / 1
 const EMP = C.priceCentsFor('employer'), CON = C.priceCentsFor('consultant');
 const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON), TOTAL_CON = _d(CON + _gst(CON));
 %>
-<header class="page-head landing-hero">
+<header class="page-head landing-head">
   <div class="container page-head__inner">
     <div>
       <p class="eyebrow">For employers</p>
       <h1>Post a job across Canada for <%= PRICE_EMP %> a month</h1>
       <p class="lead">Reach professionals, new immigrants, Indigenous peoples, refugees and youth — the people who are ready to work and hard to find on the big boards. Live in seconds, cancel any time.</p>
-      <div class="page-head__actions landing-hero__cta">
+      <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/employer">Post a job</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=employer">Employer sign in</a>
       </div>
-      <p class="small muted landing-hero__note"><%= PRICE_EMP %> per posting per month + GST (<%= TOTAL_EMP %>) · renews monthly · no contracts</p>
+      <p class="small muted landing-head__note"><%= PRICE_EMP %> per posting per month + GST (<%= TOTAL_EMP %>) · renews monthly · no contracts</p>
     </div>
-    <div class="landing-hero__art" aria-hidden="true">
+    <div class="landing-head__art" aria-hidden="true">
       <div class="card mock">
         <div class="mock__bar"><span></span><span></span><span></span></div>
         <div class="mock__title">Registered Nurse — Long-Term Care</div>
@@ -51,10 +51,10 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">How it works</p>
       <h2>Three steps. Ten minutes.</h2>
     </div>
-    <ol class="grid grid--3 steps">
-      <li class="card step"><span class="step__n">1</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
-      <li class="card step"><span class="step__n">2</span><h3>Write the posting</h3><p>Title, the full work address (add more than one if the job is offered at several sites), pay with its period, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
-      <li class="card step"><span class="step__n">3</span><h3>Pay <%= PRICE_EMP %> + GST and go live</h3><p>Your posting is live instantly and renews every month for <%= TOTAL_EMP %> — the price you pay at checkout stays locked in for that posting. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
+    <ol class="grid grid--3 landing-steps">
+      <li class="card landing-step"><span class="landing-step__n">1</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
+      <li class="card landing-step"><span class="landing-step__n">2</span><h3>Write the posting</h3><p>Title, the full work address (add more than one if the job is offered at several sites), pay with its period, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
+      <li class="card landing-step"><span class="landing-step__n">3</span><h3>Pay <%= PRICE_EMP %> + GST and go live</h3><p>Your posting is live instantly and renews every month for <%= TOTAL_EMP %> — the price you pay at checkout stays locked in for that posting. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
     </ol>
   </div>
 </section>

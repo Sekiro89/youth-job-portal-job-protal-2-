@@ -2,19 +2,22 @@
    Skeleton (identical on all three): .page-head hero (+ illustration card at >=1024) → .section features (3 cards)
    → .section--alt audiences (5-grid) → .section how it works (3 steps) → .section--alt what every posting needs (3 cards)
    → .section pricing card → .section FAQ (details cards) → .section--alt closing CTA band.
-   Containers, bands, section paddings, card and button styles all come from theme.css — nothing is redefined here. */
+   Containers, bands, section paddings, card and button styles all come from theme.css — nothing is redefined here.
+   Every class is prefixed `landing-` (or `mock`, `feature`, `cta-band`) so the stale landing blocks still in portal.css /
+   seeker.css (loaded before this file) cannot leak in. */
 
 /* ---------- hero: the standard .page-head with an illustration card on desktop ---------- */
-.landing-hero .lead { max-width: 60ch; }
-.landing-hero h1 { max-width: 18ch; }
-.landing-hero__note { margin: 12px 0 0; }
-.landing-hero__cta .kds-btn { flex: 1 1 auto; }
-.landing-hero__art { display: none; }
-@media (min-width: 640px) { .landing-hero__cta .kds-btn { flex: 0 0 auto; } }
-@media (min-width: 768px) { .landing-hero .page-head__inner { grid-template-columns: 1fr; } }
+.landing-head .lead { max-width: 60ch; }
+.landing-head h1 { max-width: 18ch; }
+.landing-head__note { margin: 12px 0 0; }
+.landing-head__cta { margin-top: 12px; }
+.landing-head__cta .kds-btn { flex: 1 1 auto; }
+.landing-head__art { display: none; }
+@media (min-width: 640px) { .landing-head__cta .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 768px) { .landing-head .page-head__inner { grid-template-columns: 1fr; } }
 @media (min-width: 1024px) {
-  .landing-hero .page-head__inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 48px; }
-  .landing-hero__art { display: flex; justify-content: center; }
+  .landing-head .page-head__inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 48px; }
+  .landing-head__art { display: flex; justify-content: center; }
 }
 
 /* illustration cards (decorative, aria-hidden) */
@@ -42,63 +45,64 @@
 .mock__btn { text-align: center; background: var(--cc-red); color: #fff; font-weight: 700; padding: 12px; border-radius: 10px; font-size: .9rem; }
 
 /* ---------- five-column audience grid (1 → 2 → 5) ---------- */
-.grid--5 { grid-template-columns: 1fr; }
-@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, 1fr); } }
-.aud-card { display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
-.aud-card--professionals { border-top-color: var(--cc-aud-professionals); }
-.aud-card--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
-.aud-card--indigenous { border-top-color: var(--cc-aud-indigenous); }
-.aud-card--refugees { border-top-color: var(--cc-aud-refugees); }
-.aud-card--youth { border-top-color: var(--cc-aud-youth); }
-.aud-card__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
-.aud-card--indigenous .aud-card__icon { background: var(--cc-orange-100); }
-.aud-card--new_immigrants .aud-card__icon, .aud-card--refugees .aud-card__icon { background: var(--cc-teal-100); }
-.aud-card--youth .aud-card__icon { background: var(--cc-green-100); }
-.aud-card h3 { margin: 0; }
-.aud-card p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
-.aud-card a { font-weight: 600; font-size: .9rem; text-decoration: none; margin-top: auto; }
-.aud-card .aud { justify-self: start; }
+.grid--5 { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.landing-aud { display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
+.landing-aud--professionals { border-top-color: var(--cc-aud-professionals); }
+.landing-aud--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
+.landing-aud--indigenous { border-top-color: var(--cc-aud-indigenous); }
+.landing-aud--refugees { border-top-color: var(--cc-aud-refugees); }
+.landing-aud--youth { border-top-color: var(--cc-aud-youth); }
+.landing-aud__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
+.landing-aud--indigenous .landing-aud__icon { background: var(--cc-orange-100); }
+.landing-aud--new_immigrants .landing-aud__icon, .landing-aud--refugees .landing-aud__icon { background: var(--cc-teal-100); }
+.landing-aud--youth .landing-aud__icon { background: var(--cc-green-100); }
+.landing-aud h3 { margin: 0; }
+.landing-aud p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
+.landing-aud a { font-weight: 600; font-size: .9rem; text-decoration: none; margin-top: auto; display: inline-flex; align-items: center; min-height: 44px; }
+.landing-aud .aud { justify-self: start; }
 
 /* ---------- feature cards + numbered steps ---------- */
 .feature { display: grid; gap: 8px; align-content: start; }
+.feature h3 { margin: 0; }
 .feature p { margin: 0; color: var(--kds-fg-muted); }
 .feature__icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font: 800 1rem var(--cc-font-display); color: #fff; background: var(--cc-navy); margin-bottom: 4px; }
 .feature__icon--red { background: var(--cc-red); } .feature__icon--teal { background: var(--cc-teal); }
-.steps { list-style: none; margin: 0; padding: 0; }
-.step { display: grid; gap: 6px; align-content: start; }
-.step h3 { margin: 4px 0 0; }
-.step p { margin: 0; color: var(--kds-fg-muted); }
-.step__n { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cc-red); color: #fff; font: 800 1rem var(--cc-font-display); }
+.landing-steps { list-style: none; margin: 0; padding: 0; }
+.landing-step { display: grid; gap: 6px; align-content: start; }
+.landing-step h3 { margin: 4px 0 0; }
+.landing-step p { margin: 0; color: var(--kds-fg-muted); }
+.landing-step__n { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cc-red); color: #fff; font: 800 1rem var(--cc-font-display); }
 
 /* ---------- pricing: one card (the accent button) + a plain aside ---------- */
-.pricing { display: grid; gap: 24px; align-items: start; }
-@media (min-width: 1024px) { .pricing { grid-template-columns: minmax(300px, 440px) minmax(0, 1fr); gap: 40px; } }
-.pricing__card { display: grid; gap: 12px; border-color: var(--cc-navy); }
-.pricing__card .eyebrow { margin-bottom: 0; }
-.pricing__amount { font: 800 3rem/1 var(--cc-font-display); color: var(--cc-navy); display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
-.pricing__currency { font-size: 1.5rem; align-self: flex-start; margin-top: .3em; }
-.pricing__per { font-size: 1rem; font-weight: 600; color: var(--kds-fg-muted); }
-.pricing__total { margin: 0; }
-.pricing__list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 8px; }
-.pricing__list li { padding-left: 26px; position: relative; font-size: .9375rem; }
-.pricing__list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--cc-green); font-weight: 800; }
-.pricing__note { margin: 0; text-align: center; }
-.pricing__aside h3 { margin-top: 0; }
+.landing-pricing { display: grid; gap: 24px; align-items: start; }
+@media (min-width: 1024px) { .landing-pricing { grid-template-columns: minmax(300px, 440px) minmax(0, 1fr); gap: 40px; } }
+.landing-pricing__card { display: grid; gap: 12px; border-color: var(--cc-navy); }
+.landing-pricing__card .eyebrow { margin-bottom: 0; }
+.landing-pricing__amount { font: 800 3rem/1 var(--cc-font-display); color: var(--cc-navy); display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.landing-pricing__currency { font-size: 1.5rem; align-self: flex-start; margin-top: .3em; }
+.landing-pricing__per { font-size: 1rem; font-weight: 600; color: var(--kds-fg-muted); }
+.landing-pricing__total { margin: 0; }
+.landing-pricing__list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.landing-pricing__list li { padding-left: 26px; position: relative; font-size: .9375rem; }
+.landing-pricing__list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--cc-green); font-weight: 800; }
+.landing-pricing__note { margin: 0; text-align: center; }
+.landing-pricing__aside h3 { margin-top: 0; }
 
 /* ---------- FAQ: native <details> styled as cards ---------- */
-.faq { display: grid; gap: 10px; }
-.faq__item { padding: 0; }
-.faq__item summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 20px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
-.faq__item summary::-webkit-details-marker { display: none; }
-.faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); }
-.faq__item[open] { border-color: var(--cc-line-strong); }
-.faq__item[open] summary::after { content: "–"; background: var(--cc-navy); color: #fff; }
-.faq__item summary:hover { color: var(--cc-red); }
-.faq__body { padding: 0 20px 16px; color: var(--kds-fg-muted); }
-.faq__body p { margin: 0 0 .5em; }
-.faq__body p:last-child { margin-bottom: 0; }
-.faq__foot { margin: 20px 0 0; }
+.landing-faq { display: grid; gap: 10px; max-width: 820px; }   /* reading width, left-aligned with every other section (container--prose would centre it) */
+.landing-faq__item { padding: 0; }
+.landing-faq__item summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 20px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
+.landing-faq__item summary::-webkit-details-marker { display: none; }
+.landing-faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); }
+.landing-faq__item[open] { border-color: var(--cc-line-strong); }
+.landing-faq__item[open] summary::after { content: "–"; background: var(--cc-navy); color: #fff; }
+.landing-faq__item summary:hover { color: var(--cc-red); }
+.landing-faq__body { padding: 0 20px 16px; color: var(--kds-fg-muted); }
+.landing-faq__body p { margin: 0 0 .5em; }
+.landing-faq__body p:last-child { margin-bottom: 0; }
+.landing-faq__foot { margin: 20px 0 0; }
 
 /* ---------- closing CTA band (inside .section--alt) ---------- */
 .cta-band { display: grid; gap: 16px; align-items: center; }

@@ -12,6 +12,7 @@ const jobs = require('../lib/jobs');
 const settings = require('../lib/settings');
 const C = require('../lib/constants');
 const { escapeHtml, paragraphs } = require('../lib/helpers');
+const jd = require('../lib/job-dates');   // application_deadline / applications_closed / locked on admin job rows (round 3)
 
 const router = express.Router();
 const isProd = process.env.NODE_ENV === 'production';
@@ -81,7 +82,7 @@ router.get('/admin', wrap(async (req, res) => {
     db.many('SELECT role, count(*)::int AS n FROM users GROUP BY role'),
     db.one(`SELECT coalesce(sum(total_cents),0)::bigint AS total, count(*)::int AS n FROM payments WHERE status='paid' AND paid_at >= date_trunc('month', now())`),
     db.many('SELECT id, name, email, category, subject, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 5'),
-    db.many(`SELECT j.id, j.title, j.status, j.created_at, j.published_at, j.expires_at, p.company_name FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id ORDER BY j.created_at DESC LIMIT 5`),
+    db.many(`SELECT j.id, j.title, j.status, j.created_at, j.published_at, j.expires_at, j.public_id, p.company_name FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id ORDER BY j.created_at DESC LIMIT 5`),
     mail.config(),
   ]);
   const usersByRole = Object.fromEntries(ROLES.map(r => [r, 0]));
@@ -186,11 +187,12 @@ router.get('/admin/jobs', wrap(async (req, res) => {
   const where = []; const params = [];
   if (status === 'archived') { params.push(C.ARCHIVED_STATUSES); where.push(`j.status = ANY($${params.length}::job_status[])`); }
   else if (status !== 'all') { params.push(status); where.push(`j.status=$${params.length}::job_status`); }
-  if (q) { params.push(`%${q}%`); where.push(`(j.title ILIKE $${params.length} OR p.company_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.name ILIKE $${params.length} OR j.city ILIKE $${params.length})`); }
+  // Keyword also matches an exact Posting ID (X1X1X1, case-insensitive) so support can paste the id from an email.
+  if (q) { params.push(`%${q}%`); const like = params.length; params.push(q.toUpperCase()); where.push(`(j.title ILIKE $${like} OR p.company_name ILIKE $${like} OR u.email ILIKE $${like} OR u.name ILIKE $${like} OR j.city ILIKE $${like} OR j.public_id = $${params.length})`); }
   const FROM = `FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=p.owner_user_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`;
   const pg = paging(req.query, (await db.one(`SELECT count(*)::int AS n ${FROM}`, params)).n);
   const [rows, tally] = await Promise.all([
-    db.many(`SELECT j.id, j.title, j.slug, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.views, j.created_at,
+    db.many(`SELECT j.id, j.title, j.slug, j.status, j.city, j.province, j.published_at, j.expires_at, j.archived_at, j.views, j.created_at, j.public_id, j.application_deadline, j.locked_at,
                     p.id AS profile_id, p.company_name, p.slug AS company_slug, u.id AS owner_id, u.name AS owner_name, u.email AS owner_email, u.role AS owner_role,
                     (SELECT count(*) FROM applications a WHERE a.job_id=j.id)::int AS applicants,
                     sub.status AS sub_status, sub.current_period_end AS sub_period_end, sub.cancel_at_period_end AS sub_cancel_at_end,
@@ -199,7 +201,7 @@ router.get('/admin/jobs', wrap(async (req, res) => {
              FROM jobs j JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=p.owner_user_id
              LEFT JOIN subscriptions sub ON sub.job_id=j.id
              ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-             ORDER BY j.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${pg.offset}`, params),
+             ORDER BY j.created_at DESC LIMIT ${PAGE_SIZE} OFFSET ${pg.offset}`, params).then(jd.decorateJobs),
     db.many('SELECT status, count(*)::int AS n FROM jobs GROUP BY status'),
   ]);
   const counts = { all: 0, archived: 0 }; C.JOB_STATUSES.forEach(k => { counts[k] = 0; });
@@ -280,7 +282,7 @@ router.post('/admin/users/:id/toggle-active', wrap(async (req, res, next) => {
 router.get('/admin/payments', wrap(async (req, res) => {
   const [rows, months, totals, pricing] = await Promise.all([
     db.many(`SELECT pay.id, pay.receipt_number, pay.amount_cents, pay.tax_cents, pay.total_cents, pay.currency, pay.status, pay.provider, pay.period_start, pay.period_end, pay.paid_at,
-                    j.id AS job_id, j.title AS job_title, j.status AS job_status, p.company_name, u.name AS payer_name, u.email AS payer_email
+                    j.id AS job_id, j.title AS job_title, j.status AS job_status, j.public_id AS job_public_id, p.company_name, u.name AS payer_name, u.email AS payer_email
              FROM payments pay JOIN jobs j ON j.id=pay.job_id JOIN employer_profiles p ON p.id=j.employer_profile_id JOIN users u ON u.id=pay.payer_user_id
              ORDER BY pay.paid_at DESC LIMIT 500`),
     db.many(`SELECT to_char(date_trunc('month', paid_at AT TIME ZONE 'America/Toronto'), 'YYYY-MM') AS month,

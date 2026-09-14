@@ -1,7 +1,7 @@
 <%# Text-like input. locals: name, label, value?, error?, type?, hint?, required?, autocomplete?, placeholder?, inputmode? %>
 <% const f = { type: 'text', value: '', error: '', hint: '', required: true, autocomplete: '', placeholder: '', inputmode: '', ...locals.f }; %>
 <div class="field">
-  <label for="<%= f.name %>"><%= f.label %><% if (!f.required) { %> <span class="muted small">(optional)</span><% } %></label>
+  <label for="<%= f.name %>"><%= f.label %><% if (f.required) { %> <span class="req">*</span><% } else { %> <span class="muted small">(optional)</span><% } %></label>
   <input class="input" id="<%= f.name %>" name="<%= f.name %>" type="<%= f.type %>" value="<%= f.value ?? '' %>"
     <%= f.required ? 'required' : '' %> <% if (f.autocomplete) { %>autocomplete="<%= f.autocomplete %>"<% } %>
     <% if (f.placeholder) { %>placeholder="<%= f.placeholder %>"<% } %> <% if (f.inputmode) { %>inputmode="<%= f.inputmode %>"<% } %>

@@ -2,33 +2,34 @@
   <%- include('_nav') %>
   <div class="dash__main">
     <header class="app-head">
-      <div class="app-head__inner">
-        <div>
-          <p class="eyebrow">Job seeker</p>
-          <h1>Notifications</h1>
-          <p class="muted"><%= unreadCount ? `${unreadCount} unread` : 'You are all caught up.' %></p>
-        </div>
-        <% if (unreadCount) { %><div class="app-head__actions"><form method="post" action="/jobseeker/notifications/read" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Mark all as read</button></form></div><% } %>
+      <div>
+        <p class="eyebrow">Job seeker</p>
+        <h1>Notifications</h1>
+        <p class="app-head__context"><%= unreadCount ? `${unreadCount} unread` : 'You are all caught up.' %></p>
       </div>
+      <% if (unreadCount) { %><div class="app-head__actions"><form method="post" action="/jobseeker/notifications/read" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Mark all as read</button></form></div><% } %>
     </header>
+
     <% if (notifications.length) { %>
-      <ul class="list-plain card notif-list">
-        <% notifications.forEach(n => { %>
-          <li class="list-plain__item notif <%= n.read_at ? '' : 'is-unread' %>">
-            <div class="notif__main">
-              <span class="notif__type notif__type--<%= n.type %>" aria-hidden="true"></span>
-              <div>
-                <a href="<%= n.link || '#' %>"><%= n.title %></a>
-                <% if (n.body) { %><div class="small muted"><%= n.body %></div><% } %>
-                <div class="small muted"><%= h.formatDateTime(n.created_at) %><% if (!n.read_at) { %> · <strong>Unread</strong><% } %></div>
+      <section class="card notif-list" aria-label="Notifications">
+        <ul class="list-plain">
+          <% notifications.forEach(n => { const pid = n.job_public_id || n.public_id || (n.meta && n.meta.public_id) || ''; %>
+            <li class="list-plain__item notif <%= n.read_at ? '' : 'is-unread' %>">
+              <div class="notif__main">
+                <span class="notif__type notif__type--<%= n.type %>" aria-hidden="true"></span>
+                <div class="notif__body">
+                  <a href="<%= n.link || '/jobseeker/notifications' %>"><%= n.title %></a>
+                  <% if (n.body) { %><div class="small muted"><%= n.body %></div><% } %>
+                  <div class="small muted"><%= h.formatDateTime(n.created_at) %><% if (pid) { %> · Posting ID <%= pid %><% } %><% if (!n.read_at) { %> · <strong>Unread</strong><% } %></div>
+                </div>
               </div>
-            </div>
-            <% if (!n.read_at) { %><form method="post" action="/jobseeker/notifications/read" class="inline-form notif__action"><input type="hidden" name="id" value="<%= n.id %>"><button class="kds-btn kds-btn--ghost" type="submit">Mark read</button></form><% } %>
-          </li>
-        <% }) %>
-      </ul>
+              <% if (!n.read_at) { %><form method="post" action="/jobseeker/notifications/read" class="inline-form notif__action"><input type="hidden" name="id" value="<%= n.id %>"><button class="kds-btn kds-btn--ghost" type="submit">Mark read</button></form><% } %>
+            </li>
+          <% }) %>
+        </ul>
+      </section>
     <% } else { %>
-      <div class="empty"><p><strong>No notifications yet.</strong></p><p>Job matches and application updates will show up here.</p><a class="kds-btn kds-btn--ghost" href="/jobseeker/alerts">Check my alert settings</a></div>
+      <div class="empty"><p><strong>No notifications yet.</strong></p><p>Job matches and application updates will show up here.</p><a class="kds-btn kds-btn--brand" href="/jobseeker/alerts">Check my alert settings</a></div>
     <% } %>
   </div>
 </div>

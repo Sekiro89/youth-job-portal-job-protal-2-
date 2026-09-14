@@ -1,12 +1,19 @@
-<section class="auth container">
-  <div class="auth__card auth__card--wide auth__card--plain">
-    <div class="auth__head auth__head--left">
+<% const dashHref = ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role]; %>
+<header class="page-head">
+  <div class="container page-head__inner">
+    <div>
+      <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="<%= dashHref %>">Dashboard</a></li><li aria-current="page">Account settings</li></ol>
       <p class="eyebrow">My account</p>
       <h1>Account settings</h1>
-      <p class="muted">Manage your sign-in details. <a href="<%= ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role] %>">Back to dashboard</a></p>
+      <p class="lead">Manage your sign-in details.</p>
     </div>
+    <div class="page-head__actions"><a class="kds-btn kds-btn--ghost" href="<%= dashHref %>">Back to dashboard</a></div>
+  </div>
+</header>
 
-    <div class="stack">
+<section class="section auth">
+  <div class="container container--narrow">
+    <div class="stack auth__stack">
       <% if (locals.isAdmin) { %><div class="auth-info auth-info--admin"><strong>Administrator</strong> — this page only covers your own sign-in details. Manage the site from <a href="/admin">/admin</a>.</div><% } %>
       <div class="card">
         <h2 class="auth__section">Your details</h2>
@@ -57,7 +64,7 @@
         <form class="form" method="post" action="/account" novalidate>
           <input type="hidden" name="form" value="deactivate">
           <div class="field">
-            <label for="confirm_text">Type <strong>DEACTIVATE</strong> to confirm</label>
+            <label for="confirm_text">Type <strong>DEACTIVATE</strong> to confirm <span class="req">*</span></label>
             <input class="input" id="confirm_text" name="confirm_text" type="text" autocomplete="off" autocapitalize="characters" required>
           </div>
           <div class="form-actions"><button class="kds-btn kds-btn--danger" type="submit" data-confirm="Deactivate your account and sign out?">Deactivate my account</button></div>

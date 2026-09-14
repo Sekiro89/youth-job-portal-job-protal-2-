@@ -6,13 +6,17 @@ CI gate. Files: `scripts/smoke.js`, `scripts/shots.js`, `scripts/cdp.js` (shared
 
 ```bash
 cd /home/ubuntu/projects/canada-careers
-PW=$(cut -d= -f2 docs/.dbpw)
+PW=$(grep '^DB_PASSWORD=' docs/.dbpw | cut -d= -f2)
 export BASE_URL=http://localhost:3900
 export DATABASE_URL="postgres://canada_careers:$PW@127.0.0.1:5432/canada_careers"   # the DB *that instance* uses
 
-node scripts/smoke.js          # ~60 s  — HTTP flow test, ~215 PASS/FAIL checks (≈10 s of that is the Nominatim geocoder on a fresh DB)
-node scripts/shots.js --seed-extra   # ~8 min — 43 pages × 4 widths → shots/qa/*.png + shots/qa/REPORT.md
+node scripts/smoke.js          # ~90 s  — HTTP flow test, ~345 PASS/FAIL checks (≈10 s of that is the Nominatim geocoder on a fresh DB)
+node scripts/shots.js --seed-extra   # ~12 min — 60 pages × 4 widths → shots/qa/*.png + shots/qa/REPORT.md
 ```
+
+Round 3 (2026-09-14) QA instance: worktree `~/projects/canada-careers-ux`, `PORT=3938`, DB `ux_qa` — start it with the command in
+`docs/CHANGES-2026-09-14-ROUND3.md` (add `STRIPE_SECRET_KEY= MAIL_PROVIDER=none`); the worktree has no `.env`, so server and scripts both fall
+back to the same default `SESSION_SECRET` (that is what keeps `lib/settings` encryption in sync — do not set it on one side only).
 
 Against the QA sandbox: `BASE_URL=http://localhost:3909` + `DATABASE_URL=…/cc_qa` (start it with `NODE_ENV=development
 DATABASE_URL=… PORT=3909 PUBLIC_URL=http://localhost:3909 STRIPE_SECRET_KEY= MAIL_PROVIDER=none node server.js`; the empty
@@ -113,6 +117,41 @@ Client round 2 (PDF, 2026-09-10) added, in run order:
     delivered / logged; `POST …/access/admins` → `smoke-admin@example.com` (role admin) can log in and open `/admin`;
     `support_email` = two smoke addresses (used by step 9) and restored to the previous value at the end.
 
+Client round 3 (2026-09-14, `docs/CHANGES-2026-09-14-ROUND3.md`) added, in run order — every check is prefixed `R3` so a run can be filtered
+with `grep R3`:
+
+14. **Round-3 posting flow** (`round3Flow`, employer). One posting exercises every new rule: `POST /employer/jobs/new` with
+    `salary_min=abc` → 422, no row; with `salary_min=21.18 salary_max=25 salary_period=hour` → 302 + draft, `jobs.salary_min` = 21.18
+    (numeric(10,2)). If the decimal POST is rejected the flow **falls back** to whole dollars + an SQL update (printed) so the remaining
+    checks still run and the decimal FAIL stands alone. The draft's `public_id` must match `lib/jobs.PUBLIC_ID_RE`
+    (`/^[A-Z][0-9][A-Z][0-9][A-Z][0-9]$/`; fallback `lib/jobs.ensurePublicId`, printed). A draft edit with a new title changes the title
+    (not locked yet, `locked_at` NULL); the draft edit form must NOT say "Locked after publishing". Owner preview `GET /employer/jobs/:id`
+    shows "35 hours per week" and "Posting ID <pid>"; the edit form has the label **"Other platform link"**, no "Apply link" / "External
+    application link", and an `application_deadline` input. Publish → checkout → sandbox card → `status=active`, `locked_at` + `published_at`
+    set. **Locked edit**: POST edit with a new title + a different `location_ids[]` + a new description → 200/302, DB title and
+    `job_locations` (compared as `employer_location_id:street:postal` lists) unchanged, description changed; the edit form now says
+    "Locked after publishing", renders the title as static text and has a `published_at` input. **Public page**: "Posting ID <pid>",
+    "$21.18 – $25.00/hour", Apply link present; `/jobs?q=<pid>` and `/jobs?q=<pid lower-case>` list exactly that slug (`listedSlugs` =
+    distinct `href="/jobs/<slug>"`); `/jobs/id/<pid>` → 302 `/jobs/<slug>`; `/jobs/id/ZZ9ZZ9` → 404. **Dates**: the form refuses a past
+    date ("must be today or later", 422 asserted), so the closed state is reached the way it happens in production — save **today** through
+    the form (still open: Apply visible on the deadline day), then SQL moves `application_deadline` to yesterday → public page shows
+    "Applications closed" with no `/apply` link and is still 200 (visible until billing expiry); seeker `GET /apply` shows a closed state
+    (200 + "closed", or a redirect); seeker multipart `POST /apply` → 422/redirect and **no** `applications` row (a stray row is deleted).
+    Then the form sets `application_deadline` = +30 days and `published_at` = 2026-09-01 → both stored (the `date` column is read as
+    `::text` — pg parses a bare DATE at *server-local* midnight, which is the previous Toronto day on an IST server), Apply visible again,
+    "Posted" shows Sep 1, 2026, the "Applications close" row shows the deadline. Owner detail still 200. Cancel-now → 404.
+15. **Every job state renders** (`stateRenderStep`). Six rows are inserted with SQL under the employer profile (`[smoke] state <status>`
+    for draft, pending_payment, active, inactive, cancelled, expired) with varied shapes: active = 3 locations + operating name + 37.5 h +
+    $21.18–$25.00/hour + a deadline + `public_id`; pending_payment = 0 locations, no salary/hours; the rest 1 location; every row except
+    draft/pending has `published_at`/`locked_at`. For each: owner detail, edit form and applicants page → 200 (5xx prints the
+    ReferenceError/TypeError text); edit forms of locked rows say "Locked after publishing"; public page 200 only for `active` (404 otherwise);
+    the active page shows the operating name, hours, decimal salary and all 3 addresses. Then `/employer/jobs`, `/employer/dashboard`,
+    `/billing`, `/employer/applicants` → 200 with every status present, and the jobs list shows the active fixture's posting id.
+    The rows are deleted in a `finally`.
+16. **Layout hygiene** (`layoutHygieneStep`, UX standard §2): ~45 pages (all public pages, employer/consultant/seeker/admin dashboards and
+    forms, checkout, apply) each have **exactly one `<h1>`** and a `page-head` / `app-head` / `hero` class. Width/overflow at 390 is
+    shots.js's job (see the WIDE check below).
+
 **Side effects and cleanup.** Every row it creates is tagged `[smoke]` (job titles, application cover-letter text,
 contact subject) and the uploaded files are named `smoke-resume.pdf` / `smoke-cover.pdf`. At start it deletes its
 own leftovers from earlier runs (applications by marker or `smoke-%` file names, contact messages, jobs; set
@@ -147,6 +186,21 @@ Launches snap chromium headless with `--remote-debugging-port` and drives it ove
   exceptions all show up here.
 - Full-page PNG via `Page.captureScreenshot` (`captureBeyondViewport: true`, clipped to 8000 css px) →
   `shots/qa/<key>-<width>.png` (390 shots are 780 px wide because of DSF 2).
+
+Pages added for client round 3 (2026-09-14): `job-locked-edit` + `job-locked-detail` (`{lockedJob}` = an employer-owned job with
+`locked_at`/`published_at`; `--seed-extra` locks the employer's first active job), `job-closed` + `job-closed-apply` (`{closedslug}` = a live
+job whose `application_deadline` is before today Toronto; `--seed-extra` sets yesterday on the **last** live job so `{slug}` — the first —
+stays open; the seeker capture shows the closed apply state), `jobs-map-hidden` (`/jobs` with `localStorage cc:jobs-map=hide` written from the
+site origin before navigation — page entries take `storage: { key: value }`; the harness visits `/robots.txt`, sets the items, and clears
+localStorage again before the next page that has none), `jobs-search-id` (`/jobs?q={publicId}`), `employer-job-detail` / `employer-job-edit`
+(the `{employerJob}` draft), `employer-applicants`, `consultant-job-new`, `seeker-saved`, `seeker-notifications`, `company`
+(`/companies/{companySlug}`), `forgot`, `signup-consultant`, `admin-payments`, `admin-outbox`, `admin-integrations-locked` (the unlock page).
+`about` and `admin-integrations` (unlocked) were already in the list.
+
+**WIDE check (390 only).** Besides page-level overflow, every 390 capture lists *visible* elements that start on-screen (`left < innerWidth`)
+and run past the right edge, skipping anything with a scrolling/clipping ancestor (`overflow-x: auto|scroll|hidden|clip` — tables in
+`.table-wrap`, the portal tab strip) and hidden/zero-opacity elements. Off-screen drawers (`translateX(100%)`) start at `left >= innerWidth`
+and are not counted. A hit is a FAIL (`WIDE ×n` in the table, `left→right` per element under "Elements wider than the phone viewport").
 
 Pages added for client round 2 (2026-09-10): `job-detail-map` (`{geoslug}` = a live job with a geocoded
 `job_locations` row; `--seed-extra` sets manual city coordinates when the geocoder has not run), `jobs-map`
@@ -232,6 +286,15 @@ with one field changed is how the admin panel is tested without hard-coding its 
   stable fixture the posting flow selects).
 
 ## Run log
+
+- **2026-09-14 (client round 3 — screenshots + UX consistency)** — instance `:3938` / `ux_qa` (worktree `canada-careers-ux`, seven other
+  agents landing files concurrently; the instance was restarted before each run). Harness additions: `round3Flow`, `stateRenderStep`,
+  `layoutHygieneStep` in smoke.js (+~130 checks); 17 pages, `storage:` localStorage support and the 390 WIDE check in shots.js. Harness
+  bugs found while building: (1) pg returns a bare `DATE` as server-local midnight → `2026-10-14` read back as `2026-10-13` in Toronto
+  on this IST server — read date columns as `::text`; (2) the form legitimately refuses a past deadline, so "closed" is reached by saving
+  today then moving the date with SQL; (3) the ux_qa seed has no postal codes on `job_locations`, so the JSON-LD `postalCode` check now
+  only requires it for rows that have one; (4) the seeker apply fixture must skip closed postings once shots.js `--seed-extra` has closed one.
+  Results: see the report at the end of this entry (filled in at the final run).
 
 - **2026-09-10 (client round 2 — PDF)** — instance `:3909` / `cc_qa`, tree as of 01:05: smoke **215/215 PASS**
   (address book via portal route, select-mode posting with `employer_location_id`, inline add-new location + operating

@@ -1,14 +1,37 @@
+<%# Post / edit a job. Section cards: Basics · Work locations · Pay & hours · Requirements · Details · Dates · How to apply.
+    Locked fields (company, operating name, title, work locations — once published) render as static text + a hidden input carrying the
+    current value; the routes ignore those inputs when locked (docs/TEMPLATE-VARS-R3.md). Everything below reads the round-3 locals
+    defensively so the form renders whether or not the route has supplied them. %>
 <% const v = values; const err = (k) => errors[k] ? `<div class="error" id="err-${k}">${h.escapeHtml(errors[k])}</div>` : ''; const inv = (k) => errors[k] ? ` aria-invalid="true" aria-describedby="err-${k}"` : '';
    const isEdit = !!job; const canPublish = !job || ['draft','pending_payment'].includes(job.status); const isLive = job && job.status === 'active';
-   const locked = isEdit && ['active','pending_payment'].includes(job.status);
+   const isLocked = typeof locked !== 'undefined' ? !!locked : !!(job && (job.locked || job.locked_at || job.published_at));
+   const lockedList = typeof lockedFields !== 'undefined' && Array.isArray(lockedFields) ? lockedFields : (isLocked ? ['employer_profile_id', 'operating_name', 'title', 'locations'] : []);
+   const lockedF = (f) => isLocked && lockedList.includes(f);
+   const coLocked = typeof companyLocked !== 'undefined' ? !!companyLocked : (isEdit && ['active', 'pending_payment', 'inactive', 'expired', 'cancelled'].includes(job.status));
    const selPid = v.employer_profile_id ? String(v.employer_profile_id) : '';
+   const selProfile = profiles.find(p => String(p.id) === selPid) || null;
    const renderProfiles = isConsultant ? profiles : profiles.slice(0, 1);
    const chosenIds = (v.location_ids || []).map(String); const keptIds = (v.keep_job_locations || []).map(String);
    const legacy = typeof legacyLocs !== 'undefined' ? legacyLocs : [];
    const nl = v.new_loc || {};
    const newOpen = !!(nl.street_address || nl.city || nl.postal_code || nl.label || Object.keys(errors).some(k => k.startsWith('new_loc_')));
    const profileHref = isConsultant ? (selPid ? '/consultant/profiles/' + selPid + '/edit#locations' : '/consultant/profiles') : '/employer/profile#locations';
-   const perLabel = (n) => n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly'); %>
+   const perLabel = (n) => n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly');
+   const ymd = (d) => { if (!d) return ''; if (typeof d === 'string') return /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : ''; return h.formatDateInput(d); };
+   const todayYmd = typeof today !== 'undefined' && today ? today : h.formatDateInput(new Date());
+   const showPostedOn = typeof canEditPublishedAt !== 'undefined' ? !!canEditPublishedAt : !!(job && job.published_at);
+   const postedOnVal = typeof formPublishedAt !== 'undefined' ? formPublishedAt : ymd(v.published_at || (job && job.published_at));
+   const deadlineVal = typeof formDeadline !== 'undefined' ? formDeadline : ymd(v.application_deadline || (job && job.application_deadline));
+   // Locked display strings: prefer the route's lockedSummary, fall back to the job row.
+   const ls = (typeof lockedSummary !== 'undefined' && lockedSummary) ? lockedSummary : (job ? {
+     company: job.company_name || (selProfile && selProfile.company_name) || '',
+     operating_name: (job.operating_name && job.operating_name !== job.company_name) ? job.operating_name : '',
+     title: job.title || '',
+     locations: (job.locations || []).map(l => l.street_address ? h.fullAddress(l) : h.location(l)),
+   } : { company: '', operating_name: '', title: '', locations: [] });
+   const lockIcon = '<svg class="lock-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+   const lockedNote = 'Locked after publishing — contact support to change.';
+   const publicId = job && job.public_id ? job.public_id : ''; %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
@@ -17,7 +40,7 @@
         <p class="eyebrow"><%= isEdit ? 'Edit posting' : 'Post a job' %></p>
         <h1><%= isEdit ? job.title : 'Post a job' %></h1>
         <p class="app-head__context">
-          <% if (isEdit) { %><%- include('partials/status-badge', { job }) %><span><%= isLive ? 'Changes to a live posting are published immediately.' : 'Save as a draft for free; publish when you are ready.' %></span>
+          <% if (isEdit) { %><%- include('partials/status-badge', { job }) %><% if (publicId) { %><span class="posting-id">Posting ID <b><%= publicId %></b></span><% } %><span><%= isLive ? 'Changes to a live posting are published immediately.' : 'Save as a draft for free; publish when you are ready.' %></span>
           <% } else { %><span>Save as a draft for free. Publishing costs $<%= (PRICE/100).toFixed(2) %> + GST ($<%= (TOTAL/100).toFixed(2) %> per month), renews monthly, cancel any time.</span><% } %>
         </p>
       </div>
@@ -25,21 +48,48 @@
     </header>
 
     <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the <%= Object.keys(errors).length %> highlighted field<%= Object.keys(errors).length === 1 ? '' : 's' %> below.</div><% } %>
+    <% if (isLocked) { %><div class="flash flash--info locked-flash" role="status"><%- lockIcon %> <span>This posting has been published. Company, operating name, title and work locations are locked — <a href="/contact">contact support</a> to change them. Everything else stays editable.</span></div><% } %>
 
     <form class="form job-form" method="post" action="<%= isEdit ? base + '/jobs/' + job.id + '/edit' : base + '/jobs/new' %>" novalidate>
-      <section class="card form-section">
-        <div class="card__head"><h2><%= isConsultant ? 'Post as company' : 'Company' %></h2></div>
+      <%# ---------------------------------------------------------------- Basics %>
+      <section class="card form-section" aria-labelledby="sec-basics">
+        <div class="card__head"><h2 id="sec-basics">Basics</h2></div>
+
+        <%# Company %>
         <% if (isConsultant) { %>
+          <% if (lockedF('employer_profile_id') || coLocked) { %>
+          <div class="field">
+            <span class="field__label">Company</span>
+            <div class="locked-field"><%- lockIcon %><span><%= ls.company || (selProfile ? selProfile.company_name : '') %></span></div>
+            <div class="hint"><%= lockedF('employer_profile_id') ? lockedNote : 'The company cannot change once billing has started.' %></div>
+            <input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>">
+          </div>
+          <% } else { %>
+          <div class="field">
+            <label for="employer_profile_id">Which client is this posting for? <span class="req">*</span></label>
+            <select class="input" id="employer_profile_id" name="employer_profile_id" required<%- inv('employer_profile_id') %>>
+              <option value="" data-contact-email="">Choose a company…</option>
+              <% profiles.forEach(p => { %><option value="<%= p.id %>" data-contact-email="<%= p.contact_email || user.email %>" <%= selPid === String(p.id) ? 'selected' : '' %>><%= h.displayCompany(p) %><%= h.legalNameNote(p) ? ' (' + p.company_name + ')' : '' %><%= p.city ? ' — ' + h.location(p) : '' %></option><% }) %>
+            </select>
+            <div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div>
+            <%- err('employer_profile_id') %>
+          </div>
+          <% } %>
+        <% } else { %>
+          <input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>">
+          <% if (profiles[0]) { %><div class="field"><span class="field__label">Company</span><div class="locked-field locked-field--plain"><span><%= profiles[0].company_name %></span></div><div class="hint">Your postings are published under your company profile. <a href="/employer/profile">Edit company</a></div></div><% } %>
+          <%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company</a></div>' : '' %>
+        <% } %>
+
+        <%# Operating name %>
+        <% if (lockedF('operating_name')) { %>
         <div class="field">
-          <label for="employer_profile_id">Which client is this posting for? <span class="req">*</span></label>
-          <select class="input" id="employer_profile_id" name="employer_profile_id" required<%- inv('employer_profile_id') %><%= locked ? ' disabled' : '' %>>
-            <option value="" data-contact-email="">Choose a company…</option>
-            <% profiles.forEach(p => { %><option value="<%= p.id %>" data-contact-email="<%= p.contact_email || user.email %>" <%= selPid === String(p.id) ? 'selected' : '' %>><%= h.displayCompany(p) %><%= h.legalNameNote(p) ? ' (' + p.company_name + ')' : '' %><%= p.city ? ' — ' + h.location(p) : '' %></option><% }) %>
-          </select>
-          <% if (locked) { %><input type="hidden" name="employer_profile_id" value="<%= job.employer_profile_id %>"><div class="hint">The company cannot change once billing has started.</div><% } else { %><div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div><% } %>
-          <%- err('employer_profile_id') %>
+          <span class="field__label">Operating name for this posting</span>
+          <div class="locked-field"><%- lockIcon %><span><%= ls.operating_name || ('Legal name — ' + ls.company) %></span></div>
+          <div class="hint"><%= lockedNote %></div>
+          <% if (selPid) { %><input type="hidden" name="operating_name_choice_<%= selPid %>" value="<%= v.operating_name_choice || '__legal' %>"><% } %>
         </div>
-        <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company</a></div>' : '' %><% } %>
+        <% } else { %>
         <% renderProfiles.forEach(p => { const names = p.operating_names && p.operating_names.length ? p.operating_names : (p.operating_name ? [p.operating_name] : []); const isSel = selPid === String(p.id);
              const choice = isSel ? (v.operating_name_choice || '__legal') : (p.operating_name || '__legal'); const custom = choice !== '__legal' && choice !== '__new' && !names.includes(choice); %>
         <div class="field" data-profile="<%= p.id %>"<%= isConsultant && !isSel ? ' hidden' : '' %>>
@@ -59,15 +109,24 @@
           </div>
         </div>
         <% }) %>
-      </section>
+        <% } %>
 
-      <section class="card form-section">
-        <div class="card__head"><h2>Basics</h2></div>
+        <%# Title %>
+        <% if (lockedF('title')) { %>
+        <div class="field">
+          <span class="field__label">Job title</span>
+          <div class="locked-field"><%- lockIcon %><span><%= ls.title || v.title %></span></div>
+          <div class="hint"><%= lockedNote %></div>
+          <input type="hidden" name="title" value="<%= v.title %>">
+        </div>
+        <% } else { %>
         <div class="field">
           <label for="title">Job title <span class="req">*</span></label>
           <input class="input" id="title" name="title" value="<%= v.title %>" maxlength="120" required placeholder="e.g. Registered Nurse — Long-Term Care"<%- inv('title') %>>
           <%- err('title') %>
         </div>
+        <% } %>
+
         <div class="form-row form-row--3">
           <div class="field">
             <label for="category">Category <span class="req">*</span></label>
@@ -92,28 +151,20 @@
             <%- err('work_arrangement') %>
           </div>
         </div>
-        <div class="field">
-          <label for="description">Job description <span class="req">*</span></label>
-          <textarea class="input" id="description" name="description" rows="10" minlength="100" maxlength="12000" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
-          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> / 12,000 characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
-          <%- err('description') %>
-        </div>
-        <div class="field">
-          <label for="benefits">Benefits</label>
-          <textarea class="input" id="benefits" name="benefits" rows="4" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
-        </div>
-        <fieldset class="field fieldset">
-          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
-          <div class="checks checks--3 checks--aud">
-            <% C.AUDIENCES.forEach(([k, n]) => { %>
-              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
-            <% }) %>
-          </div>
-        </fieldset>
       </section>
 
+      <%# ---------------------------------------------------------------- Work locations %>
       <section class="card form-section" id="locations" aria-labelledby="locations-title">
-        <div class="card__head"><h2 id="locations-title">Work locations <span class="req">*</span></h2></div>
+        <div class="card__head"><h2 id="locations-title">Work locations<% if (!lockedF('locations')) { %> <span class="req">*</span><% } %></h2></div>
+        <% if (lockedF('locations')) { %>
+          <div class="locked-field locked-field--list"><%- lockIcon %>
+            <% if (ls.locations && ls.locations.length) { %><ul class="addr-list addr-list--plain"><% ls.locations.forEach(a => { %><li><%= a %></li><% }) %></ul>
+            <% } else { %><span><%= h.location(job) || 'No location on file' %></span><% } %>
+          </div>
+          <div class="hint"><%= lockedNote %></div>
+          <% chosenIds.forEach(id => { %><input type="hidden" name="location_ids" value="<%= id %>"><% }) %>
+          <% keptIds.forEach(id => { %><input type="hidden" name="keep_job_locations" value="<%= id %>"><% }) %>
+        <% } else { %>
         <p class="hint hint--lead">Tick every address where the person will work — each one is printed on the posting and shown on the map. Locations come from the company profile (<a href="<%= profileHref %>">manage locations</a>).</p>
         <%- errors.locations ? `<div class="error error--block" id="err-locations" role="alert">${h.escapeHtml(errors.locations)}</div>` : '' %>
         <% if (isConsultant) { %><p class="hint" data-profile-none<%= selPid ? ' hidden' : '' %>>Choose a company above to see its locations.</p><% } %>
@@ -146,19 +197,23 @@
           <%- include('partials/location-fields', { prefix: 'new_loc_', vals: nl, errs: errors, idp: 'new-loc-', showLabel: true }) %>
           <button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" data-nojs-hide id="loc-new-clear">Clear</button>
         </details>
+        <% } %>
       </section>
 
-      <section class="card form-section">
-        <div class="card__head"><h2>Pay &amp; hours</h2></div>
+      <%# ---------------------------------------------------------------- Pay & hours %>
+      <section class="card form-section" aria-labelledby="sec-pay">
+        <div class="card__head"><h2 id="sec-pay">Pay &amp; hours</h2></div>
         <div class="form-row form-row--3">
           <div class="field">
             <label for="salary_min">Pay from (CAD)</label>
-            <input class="input" id="salary_min" name="salary_min" value="<%= v.salary_min %>" inputmode="numeric" placeholder="e.g. 52000"<%- inv('salary_min') %>>
+            <input class="input" id="salary_min" name="salary_min" type="number" inputmode="decimal" step="0.01" min="0.01" max="9999999.99" value="<%= v.salary_min %>" placeholder="e.g. 21.18"<%- inv('salary_min') %>>
+            <div class="hint">e.g. 21.18 for hourly, 52000 for yearly</div>
             <%- err('salary_min') %>
           </div>
           <div class="field">
             <label for="salary_max">Pay to (CAD)</label>
-            <input class="input" id="salary_max" name="salary_max" value="<%= v.salary_max %>" inputmode="numeric" placeholder="e.g. 60000"<%- inv('salary_max') %>>
+            <input class="input" id="salary_max" name="salary_max" type="number" inputmode="decimal" step="0.01" min="0.01" max="9999999.99" value="<%= v.salary_max %>" placeholder="e.g. 24.50"<%- inv('salary_max') %>>
+            <div class="hint">Optional — leave empty for a single rate</div>
             <%- err('salary_max') %>
           </div>
           <div class="field">
@@ -166,7 +221,7 @@
             <select class="input" id="salary_period" name="salary_period">
               <% C.SALARY_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.salary_period || 'year') === k ? 'selected' : '' %>><%= perLabel(n) %></option><% }) %>
             </select>
-            <div class="hint">Shown as e.g. “$52,000 – $60,000/year” or “$22/hour”.</div>
+            <div class="hint">Shown as e.g. “$21.18 – $24.50/hour” or “$52,000/year”.</div>
           </div>
         </div>
         <div class="form-row form-row--3">
@@ -184,28 +239,16 @@
           </div>
           <div class="field">
             <label for="vacancies">Number of positions <span class="req">*</span></label>
-            <input class="input" id="vacancies" name="vacancies" type="number" min="1" max="999" value="<%= v.vacancies %>" required<%- inv('vacancies') %>>
+            <input class="input" id="vacancies" name="vacancies" type="number" inputmode="numeric" min="1" max="999" value="<%= v.vacancies %>" required<%- inv('vacancies') %>>
             <%- err('vacancies') %>
           </div>
         </div>
       </section>
 
-      <section class="card form-section">
-        <div class="card__head"><h2>Requirements</h2></div>
-        <div class="form-row form-row--3">
-          <div class="field">
-            <label for="experience_level">Experience</label>
-            <select class="input" id="experience_level" name="experience_level" data-select-toggles="experience_other_wrap" data-toggle-value="other"<%- inv('experience_level') %>>
-              <option value="">Any</option>
-              <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
-            </select>
-            <%- err('experience_level') %>
-            <div class="field field--sub" id="experience_other_wrap" data-nojs-visible>
-              <label for="experience_other">Other experience <span class="muted">(if “Other”)</span></label>
-              <input class="input" id="experience_other" name="experience_other" value="<%= v.experience_other || '' %>" maxlength="120" placeholder="e.g. 3 seasons of tree planting"<%- inv('experience_other') %>>
-              <%- err('experience_other') %>
-            </div>
-          </div>
+      <%# ---------------------------------------------------------------- Requirements %>
+      <section class="card form-section" aria-labelledby="sec-req">
+        <div class="card__head"><h2 id="sec-req">Requirements</h2></div>
+        <div class="form-row">
           <div class="field">
             <label for="education">Education</label>
             <select class="input" id="education" name="education" data-select-toggles="education_other_wrap" data-toggle-value="other"<%- inv('education') %>>
@@ -220,12 +263,46 @@
             </div>
           </div>
           <div class="field">
-            <label for="noc_code">NOC code <span class="muted">(optional)</span></label>
-            <input class="input" id="noc_code" name="noc_code" value="<%= v.noc_code %>" inputmode="numeric" maxlength="5" placeholder="e.g. 31301"<%- inv('noc_code') %>>
-            <div class="hint">2021 National Occupational Classification — helps LMIA and immigration-focused seekers.</div>
-            <%- err('noc_code') %>
+            <label for="experience_level">Experience</label>
+            <select class="input" id="experience_level" name="experience_level" data-select-toggles="experience_other_wrap" data-toggle-value="other"<%- inv('experience_level') %>>
+              <option value="">Any</option>
+              <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('experience_level') %>
+            <div class="field field--sub" id="experience_other_wrap" data-nojs-visible>
+              <label for="experience_other">Other experience <span class="muted">(if “Other”)</span></label>
+              <input class="input" id="experience_other" name="experience_other" value="<%= v.experience_other || '' %>" maxlength="120" placeholder="e.g. 3 seasons of tree planting"<%- inv('experience_other') %>>
+              <%- err('experience_other') %>
+            </div>
           </div>
         </div>
+        <div class="field">
+          <label for="requirements">Requirements <span class="muted">(licences, certifications, work authorization…)</span></label>
+          <textarea class="input" id="requirements" name="requirements" rows="5" maxlength="6000" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
+        </div>
+      </section>
+
+      <%# ---------------------------------------------------------------- Details %>
+      <section class="card form-section" aria-labelledby="sec-details">
+        <div class="card__head"><h2 id="sec-details">Details</h2></div>
+        <div class="field">
+          <label for="description">Job description <span class="req">*</span></label>
+          <textarea class="input" id="description" name="description" rows="10" minlength="100" maxlength="12000" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
+          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> / 12,000 characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
+          <%- err('description') %>
+        </div>
+        <div class="field">
+          <label for="benefits">Benefits</label>
+          <textarea class="input" id="benefits" name="benefits" rows="4" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
+        </div>
+        <fieldset class="field fieldset">
+          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
+          <div class="checks checks--3 checks--aud">
+            <% C.AUDIENCES.forEach(([k, n]) => { %>
+              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
+            <% }) %>
+          </div>
+        </fieldset>
         <fieldset class="field fieldset">
           <legend>Languages <span class="req">*</span></legend>
           <div class="checks checks--3">
@@ -240,38 +317,74 @@
           </div>
           <%- err('languages') %>
         </fieldset>
-        <div class="field">
-          <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
-          <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
-          <div class="hint">Used for matching job seekers to your posting.</div>
-        </div>
-        <div class="field">
-          <label for="requirements">Requirements</label>
-          <textarea class="input" id="requirements" name="requirements" rows="5" maxlength="6000" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
+        <div class="form-row form-row--skills">
+          <div class="field">
+            <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
+            <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
+            <div class="hint">Used for matching job seekers to your posting.</div>
+          </div>
+          <div class="field">
+            <label for="noc_code">NOC code <span class="muted">(optional)</span></label>
+            <input class="input" id="noc_code" name="noc_code" value="<%= v.noc_code %>" inputmode="numeric" maxlength="5" placeholder="e.g. 31301"<%- inv('noc_code') %>>
+            <div class="hint">2021 National Occupational Classification — helps LMIA and immigration-focused seekers.</div>
+            <%- err('noc_code') %>
+          </div>
         </div>
       </section>
 
-      <section class="card form-section">
-        <div class="card__head"><h2>How to apply</h2></div>
+      <%# ---------------------------------------------------------------- Dates %>
+      <section class="card form-section" aria-labelledby="sec-dates">
+        <div class="card__head"><h2 id="sec-dates">Dates</h2></div>
+        <div class="form-row">
+          <% if (showPostedOn) { %>
+          <div class="field">
+            <label for="published_at">Posted on</label>
+            <input class="input" id="published_at" name="published_at" type="date" value="<%= postedOnVal %>" max="<%= todayYmd %>"<%- inv('published_at') %>>
+            <div class="hint">The date shown as “Posted” on the public page. Cannot be in the future; billing dates do not change.</div>
+            <%- err('published_at') %>
+          </div>
+          <% } else { %>
+          <div class="field">
+            <span class="field__label">Posted on</span>
+            <div class="locked-field locked-field--plain"><span class="muted">Set automatically when the posting goes live</span></div>
+          </div>
+          <% } %>
+          <div class="field">
+            <label for="application_deadline">Applications close on <span class="muted">(optional)</span></label>
+            <input class="input" id="application_deadline" name="application_deadline" type="date" value="<%= deadlineVal %>"<%- inv('application_deadline') %>>
+            <div class="hint">After this day the posting shows “Applications closed” and hides Apply; it stays visible until the subscription ends. Leave empty to keep accepting applications.</div>
+            <%- err('application_deadline') %>
+          </div>
+        </div>
+      </section>
+
+      <%# ---------------------------------------------------------------- How to apply %>
+      <section class="card form-section" aria-labelledby="sec-apply">
+        <div class="card__head"><h2 id="sec-apply">How to apply</h2></div>
         <p class="hint hint--lead">Applicants always apply through Canada Careers (resume + cover sheet into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
         <div class="form-row">
           <div class="field">
-            <label for="apply_email">Application email (the employer’s inbox)</label>
+            <label for="apply_email">Application email <span class="muted">(the employer’s inbox)</span></label>
             <input class="input" id="apply_email" name="apply_email" type="email" value="<%= v.apply_email %>" maxlength="160" autocomplete="off" data-apply-default="<%= v.apply_email %>"<%- inv('apply_email') %>>
             <div class="hint">Applicants also land in your dashboard.</div>
             <%- err('apply_email') %>
           </div>
           <div class="field">
-            <label for="apply_url">External application link</label>
-            <input class="input" id="apply_url" name="apply_url" value="<%= v.apply_url %>" maxlength="300" placeholder="https://…"<%- inv('apply_url') %>>
+            <label for="apply_url">Other platform link</label>
+            <input class="input" id="apply_url" name="apply_url" type="url" inputmode="url" value="<%= v.apply_url %>" maxlength="300" placeholder="https://…"<%- inv('apply_url') %>>
+            <div class="hint">If you also accept applications on another job board or your own site.</div>
             <%- err('apply_url') %>
           </div>
         </div>
       </section>
 
       <div class="sticky-bar">
-        <button class="kds-btn kds-btn--ghost" type="submit" name="action" value="draft"><%= isEdit ? (isLive ? 'Save changes' : 'Save') : 'Save draft' %></button>
-        <% if (canPublish) { %><button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><span class="lbl-long"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %></span><span class="lbl-short"><%= isEdit && job.status === 'pending_payment' ? 'Pay now' : 'Publish' %></span> · $<%= (TOTAL/100).toFixed(2) %>/mo</button><% } %>
+        <% if (canPublish) { %>
+          <button class="kds-btn kds-btn--ghost" type="submit" name="action" value="draft"><%= isEdit ? 'Save' : 'Save draft' %></button>
+          <button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><span class="lbl-long"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %></span><span class="lbl-short"><%= isEdit && job.status === 'pending_payment' ? 'Pay now' : 'Publish' %></span> · $<%= (TOTAL/100).toFixed(2) %>/mo</button>
+        <% } else { %>
+          <button class="kds-btn kds-btn--accent" type="submit" name="action" value="draft">Save changes</button>
+        <% } %>
         <a class="kds-btn kds-btn--ghost sticky-bar__cancel" href="<%= isEdit ? base + '/jobs/' + job.id : base + '/jobs' %>">Cancel</a>
       </div>
     </form>

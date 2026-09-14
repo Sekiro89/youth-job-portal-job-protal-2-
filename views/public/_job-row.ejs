@@ -21,5 +21,6 @@
   <div class="jrow__side">
     <p class="jrow__salary"><%= h.formatSalary(job) %></p>
     <p class="jrow__meta"><span>Posted <%= h.timeAgo(job.published_at) %></span><span class="jrow__sep" aria-hidden="true">·</span><span><%= h.categoryName(job.category) %></span></p>
+    <% if (job.public_id) { %><p class="jrow__pid" title="Quote this ID when you contact an employer or our support team">Posting ID <span><%= job.public_id %></span></p><% } %>
   </div>
 </article>

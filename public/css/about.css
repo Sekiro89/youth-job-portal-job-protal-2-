@@ -2,10 +2,15 @@
    Skeleton: standard .page-head → one .section holding the facts strip (full width) + [240px sticky TOC | main column] at >=1024
    → .section--alt closing CTA band. Containers, header band, section paddings, cards and buttons are theme.css primitives. */
 
+/* ---------- header: three actions are too many for the right-hand column, so they sit under the lead (same as the landings) ---------- */
+@media (min-width: 768px) { .about-head .page-head__inner { grid-template-columns: minmax(0, 1fr); } }
+.about-head .page-head__actions { margin-top: 4px; }
+
 /* ---------- layout: facts strip spans both columns; TOC + main below it ---------- */
 .about-layout { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .about-toc { display: none; }
 .about-main { min-width: 0; display: grid; gap: 40px; align-content: start; }
+.about-main > * { min-width: 0; }
 @media (min-width: 768px) { .about-layout { gap: 40px; } .about-main { gap: 48px; } }
 @media (min-width: 1024px) {
   .about-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 48px 40px; }
@@ -41,9 +46,10 @@
 .about-quick dd { margin: 0; font-size: .9375rem; }
 
 /* ---------- audiences (1 → 2 → 5 columns) ---------- */
-.grid--5 { grid-template-columns: 1fr; }
-@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, 1fr); } }
+.grid--5 { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }   /* the About main column is ~700px at 1024: 3 across, 5 from 1280 */
+@media (min-width: 1280px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .about-aud { list-style: none; margin: 8px 0 28px; padding: 0; }
 .about-aud__card { position: relative; display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
 .about-aud__card--professionals { border-top-color: var(--cc-aud-professionals); }
@@ -59,7 +65,7 @@
 .about-aud__card h3 a { text-decoration: none; }
 .about-aud__card h3 a::after { content: ""; position: absolute; inset: 0; }
 .about-aud__card p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
-.about-aud__card .aud { justify-self: start; margin-top: 4px; white-space: nowrap; }
+.about-aud__card .aud { justify-self: start; margin-top: 4px; }
 
 /* ---------- how it works (two numbered lists in flat cards) ---------- */
 .about-steps h3 { margin: 0 0 12px; }

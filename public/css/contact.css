@@ -1,11 +1,17 @@
-/* Contact Us — page CSS (mobile first). Tokens come from theme.css. */
-.contact { display: grid; gap: 24px; grid-template-columns: 1fr; align-items: start; padding-top: 28px; padding-bottom: 48px; }
-.contact__form { padding: 20px; }
-.contact__h2 { font-size: 1.25rem; margin-bottom: 14px; }
+/* Canada Careers — Contact Us (mobile first; tokens from theme.css only).
+   Skeleton: standard .page-head → one .section holding .grid--2 (form card | help cards) → thanks page = .page-head + .container--narrow card.
+   Containers, header band, section paddings, cards and buttons are theme.css primitives — nothing is redefined here. */
+
+/* form card takes the wider column from 1024 (grid--2 is 1 column on phones, 2 equal columns from 640 — too tight for the form, so stay stacked until 1024) */
+.contact-grid { align-items: start; }
+@media (min-width: 640px) and (max-width: 1023px) { .contact-grid { grid-template-columns: 1fr; } }
+@media (min-width: 1024px) { .contact-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; } }
+.contact__h2 { margin-bottom: 16px; }
 .contact__message { min-height: 160px; }
 .contact__account { margin-bottom: 4px; }
 .contact__account span { font-size: .9rem; }
-.contact__side { display: grid; gap: 20px; align-content: start; }
+.contact-side { display: grid; gap: 20px; align-content: start; }
+.req { color: var(--cc-red); }   /* required marker — same rule as portal.css; promote to theme.css */
 
 /* honeypot: off-screen, not display:none (some bots skip hidden inputs) */
 .hp { position: absolute !important; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
@@ -15,26 +21,23 @@
 .contact-alert ul { margin: 0; padding-left: 20px; }
 .contact-alert a { color: inherit; }
 
+/* help cards: .card + an icon column */
 .help-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.help-card { display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--kds-border); border-radius: 14px; padding: 16px; }
+.help-card { display: flex; gap: 14px; align-items: flex-start; }
 .help-card--tech { border-color: var(--cc-teal); background: linear-gradient(180deg, var(--cc-teal-100), #fff); }
 .help-card__icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); font-size: 1.25rem; }
 .help-card--tech .help-card__icon { background: #fff; }
-.help-card h3 { margin-bottom: 4px; font-size: 1.0625rem; }
-.help-card p { margin: 0 0 8px; font-size: .9375rem; color: var(--kds-fg-muted); }
-.help-card__link { font-weight: 600; font-size: .9rem; display: inline-block; padding: 8px 0; }
-.contact__promise h3 { font-size: 1rem; }
+.help-card h3 { margin-bottom: 4px; }
+.help-card p { margin: 0 0 4px; font-size: .9375rem; color: var(--kds-fg-muted); }
+.help-card__link { font-weight: 600; font-size: .9rem; display: inline-flex; align-items: center; min-height: 44px; }
+.contact__promise h3 { margin-bottom: 6px; }
 .contact__promise p { font-size: .9375rem; }
-
+.contact__promise p:last-child { margin-bottom: 0; }
 @media (min-width: 640px) { .help-cards { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1024px) {
-  .contact { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; padding-top: 40px; }
-  .contact__form { padding: 28px; }
-  .help-cards { grid-template-columns: 1fr; }
-}
+@media (min-width: 1024px) { .help-cards { grid-template-columns: 1fr; } }
 
 /* thanks page */
-.contact-thanks__card { max-width: 640px; margin: 0 auto; text-align: center; padding: 36px 24px; }
+.contact-thanks { text-align: center; }
 .contact-thanks__check { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--cc-green-100); color: #2f5d11; display: grid; place-items: center; font-size: 2rem; font-weight: 800; }
 .contact-thanks__ref { color: var(--cc-red); font-family: var(--cc-font-display); }
 .contact-thanks .form-actions { justify-content: center; margin-top: 16px; }

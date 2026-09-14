@@ -1,13 +1,26 @@
+<%# Owner job detail: preview (how seekers see it) + facts, status/subscription, timeline, payments, applicants.
+    Round-3 locals (job.public_id, job.locked, job.hours_text, job.salary_text, job.application_deadline, job.applications_closed) are read
+    defensively — docs/TEMPLATE-VARS-R3.md. %>
 <% const isLivePublic = job.status === 'active' && job.expires_at && new Date(job.expires_at) > new Date();
+   const isLocked = typeof job.locked !== 'undefined' ? !!job.locked : !!(job.locked_at || job.published_at);
+   const publicId = job.public_id || '';
+   const hoursText = job.hours_text || h.formatHours(job);
+   const salaryText = job.salary_text || h.formatSalary(job);
+   const deadline = job.application_deadline || null;
+   const closed = typeof job.applications_closed !== 'undefined' ? !!job.applications_closed : !!(deadline && new Date(deadline) < new Date(new Date().toDateString()));
+   const locs = job.locations || [];
    const timeline = [
      { label: 'Created', at: job.created_at, done: true },
      { label: 'Published', at: job.published_at, done: !!job.published_at },
    ];
+   if (deadline) timeline.push({ label: closed ? 'Applications closed' : 'Applications close', at: deadline, done: closed, future: !closed, dateOnly: true });
    if (job.status === 'active') timeline.push({ label: (sub && sub.cancel_at_period_end) ? 'Ends' : 'Renews', at: job.expires_at, done: false, future: true });
    if (['expired','cancelled','inactive'].includes(job.status)) timeline.push({ label: job.status === 'inactive' ? 'Paused' : h.statusLabel(job.status), at: job.archived_at || job.cancelled_at || job.expires_at, done: true, bad: true });
    const subStatus = sub ? ({ pending: 'Awaiting payment', active: sub.cancel_at_period_end ? 'Cancels at period end' : 'Active — renews monthly', past_due: 'Payment failed', cancelled: 'Cancelled' })[sub.status] : 'No subscription yet';
    const subBadge = sub ? ({ pending: 'warning', active: sub.cancel_at_period_end ? 'warning' : 'positive', past_due: 'danger', cancelled: 'danger' })[sub.status] : '';
-   const price = (c) => '$' + (c/100).toFixed(2); %>
+   const price = (c) => '$' + (c/100).toFixed(2);
+   const lockIcon = '<svg class="lock-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+   const badgeJob = Object.assign({}, job, { cancel_at_period_end: sub && sub.cancel_at_period_end, current_period_end: sub && sub.current_period_end }); %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
@@ -16,8 +29,10 @@
         <div class="company-head"><p class="eyebrow"><%= h.displayCompany(job) %></p><% if (h.legalNameNote(job)) { %><span class="legal-note"><%= h.legalNameNote(job) %></span><% } %></div>
         <h1><%= job.title %></h1>
         <p class="app-head__context">
-          <%- include('partials/status-badge', { job: Object.assign({}, job, { cancel_at_period_end: sub && sub.cancel_at_period_end, current_period_end: sub && sub.current_period_end }) }) %>
-          <span class="small"><%= h.location(job) %><%= (job.locations || []).length > 1 ? ' +' + (job.locations.length - 1) + ' more' : '' %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
+          <%- include('partials/status-badge', { job: badgeJob }) %>
+          <% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %>
+          <% if (publicId) { %><span class="posting-id">Posting ID <b><%= publicId %></b></span><% } %>
+          <span class="small"><%= h.location(job) %><%= locs.length > 1 ? ' +' + (locs.length - 1) + ' more' : '' %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
           <% if (isLivePublic) { %><a class="small" href="/jobs/<%= job.slug %>" target="_blank" rel="noopener">View public posting ↗</a><% } %>
         </p>
       </div>
@@ -33,38 +48,45 @@
         <% if (sub && sub.status === 'active') { %>Your subscription is still active and <strong>keeps charging <%= price(sub.total_cents) %> on <%= h.formatDate(sub.current_period_end) %></strong> until you cancel it. <%= canReactivate ? 'Reactivate to make it live again at no extra cost.' : '' %><% } %>
       </div>
     <% } %>
+    <% if (closed) { %>
+      <div class="flash flash--info" role="status">Applications closed on <%= h.formatDate(deadline) %>. Job seekers can still see the posting<%= isLivePublic ? ' until ' + h.formatDate(job.expires_at) : '' %> but cannot apply. <a href="<%= base %>/jobs/<%= job.id %>/edit#application_deadline">Change the closing date</a></div>
+    <% } %>
 
     <div class="grid grid--job">
       <section class="card preview">
         <div class="card__head"><h2>Preview</h2><span class="small muted">How job seekers see it</span></div>
         <article class="job-card job-card--preview">
-          <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= (job.locations || []).length > 1 ? ' (+' + (job.locations.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
+          <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= locs.length > 1 ? ' (+' + (locs.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
           <h3 class="job-card__title"><%= job.title %></h3>
-          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (h.formatHours(job)) { %><span><%= h.formatHours(job) %></span><% } %><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
-          <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
-          <div class="job-card__foot"><span><%= job.published_at ? 'Posted ' + h.timeAgo(job.published_at) : 'Not published yet' %></span><span><%= h.categoryName(job.category) %></span></div>
+          <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (hoursText) { %><span><%= hoursText %></span><% } %><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= salaryText %></span></div>
+          <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %><% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %></div>
+          <div class="job-card__foot"><span><%= job.published_at ? 'Posted ' + h.formatDate(job.published_at) : 'Not published yet' %><% if (deadline) { %> · <%= closed ? 'Closed' : 'Closes' %> <%= h.formatDate(deadline) %><% } %></span><span><%= h.categoryName(job.category) %><% if (publicId) { %> · Posting ID <%= publicId %><% } %></span></div>
         </article>
         <dl class="facts">
-          <div><dt>Company</dt><dd><%= h.displayCompany(job) %><% if (h.legalNameNote(job)) { %> <span class="legal-note">· <%= h.legalNameNote(job) %></span><% } %></dd></div>
+          <% if (publicId) { %><div><dt>Posting ID</dt><dd><b class="posting-id__code"><%= publicId %></b> <span class="small muted">— job seekers can search this on Find Jobs</span></dd></div><% } %>
+          <div><dt>Company<% if (isLocked) { %> <span class="locked-tag" title="Locked after publishing"><%- lockIcon %></span><% } %></dt><dd><%= h.displayCompany(job) %><% if (h.legalNameNote(job)) { %> <span class="legal-note">· <%= h.legalNameNote(job) %></span><% } %></dd></div>
           <% if (job.industry) { %><div><dt>Industry</dt><dd><%= h.industryName(job.industry) %></dd></div><% } %>
-          <div><dt>Work location<%= (job.locations || []).length === 1 ? '' : 's' %></dt><dd>
-            <% if (job.locations && job.locations.length) { %><ul class="addr-list"><% job.locations.forEach(l => { %><li><%= l.street_address ? h.fullAddress(l) : h.location(l) %></li><% }) %></ul>
-            <% } else { %><%= h.location(job) %><% } %>
+          <div><dt>Work location<%= locs.length === 1 ? '' : 's' %><% if (isLocked) { %> <span class="locked-tag" title="Locked after publishing"><%- lockIcon %></span><% } %></dt><dd>
+            <% if (locs.length) { %><ul class="addr-list"><% locs.forEach(l => { %><li><%= l.street_address ? h.fullAddress(l) : h.location(l) %></li><% }) %></ul>
+            <% } else { %><%= h.location(job) || 'No location on file' %><% } %>
           </dd></div>
-          <div><dt>Pay</dt><dd><%= h.formatSalary(job) %></dd></div>
-          <% if (h.formatHours(job)) { %><div><dt>Hours</dt><dd><%= h.formatHours(job) %></dd></div><% } %>
+          <div><dt>Pay</dt><dd><%= salaryText %></dd></div>
+          <div><dt>Hours</dt><dd><%= hoursText || '—' %></dd></div>
           <% if (job.vacancies > 1) { %><div><dt>Positions</dt><dd><%= job.vacancies %></dd></div><% } %>
+          <div><dt>Posted on</dt><dd><%= job.published_at ? h.formatDate(job.published_at) : 'Not published yet' %></dd></div>
+          <div><dt>Applications close</dt><dd><% if (deadline) { %><%= h.formatDate(deadline) %><% if (closed) { %> <span class="badge badge--danger">Applications closed</span><% } %><% } else { %><span class="muted">No closing date — open until the posting ends</span><% } %></dd></div>
           <% if (job.languages && job.languages.length) { %><div><dt>Languages</dt><dd><%= job.languages.join(', ') %></dd></div><% } %>
           <% if (job.experience_level) { %><div><dt>Experience</dt><dd><%= h.experienceName(job.experience_level) %><%= job.experience_level === 'other' && job.experience_other ? ' — ' + job.experience_other : '' %></dd></div><% } %>
           <% if (job.education) { %><div><dt>Education</dt><dd><%= h.educationName(job.education) %><%= job.education === 'other' && job.education_other ? ' — ' + job.education_other : '' %></dd></div><% } %>
           <% if (job.noc_code) { %><div><dt>NOC</dt><dd><%= job.noc_code %></dd></div><% } %>
           <% if (job.skills && job.skills.length) { %><div><dt>Skills</dt><dd><%= job.skills.join(', ') %></dd></div><% } %>
-          <% if (job.apply_email) { %><div><dt>Apply email</dt><dd><%= job.apply_email %></dd></div><% } %>
-          <% if (job.apply_url) { %><div><dt>Apply link</dt><dd><a href="<%= job.apply_url %>" rel="noopener" target="_blank"><%= job.apply_url %></a></dd></div><% } %>
+          <% if (job.apply_email) { %><div><dt>Application email</dt><dd><%= job.apply_email %></dd></div><% } %>
+          <% if (job.apply_url) { %><div><dt>Other platform link</dt><dd><a href="<%= job.apply_url %>" rel="noopener" target="_blank"><%= job.apply_url %></a></dd></div><% } %>
         </dl>
+        <% if (isLocked) { %><p class="small muted locked-note"><%- lockIcon %><span>Company, operating name, title and work locations are locked after publishing — <a href="/contact">contact support</a> to change them.</span></p><% } %>
         <h3>Description</h3>
-        <div class="prose<%= job.description.length > 1500 ? ' prose--clamp' : '' %>" id="job-desc"><%- h.paragraphs(job.description) %></div>
-        <% if (job.description.length > 1500) { %><button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" data-expand="job-desc" aria-expanded="false" aria-controls="job-desc">Show full description</button><% } %>
+        <div class="prose<%= (job.description || '').length > 1500 ? ' prose--clamp' : '' %>" id="job-desc"><%- h.paragraphs(job.description) %></div>
+        <% if ((job.description || '').length > 1500) { %><button class="kds-btn kds-btn--ghost kds-btn--sm" type="button" data-expand="job-desc" aria-expanded="false" aria-controls="job-desc">Show full description</button><% } %>
         <% if (job.requirements) { %><h3>Requirements</h3><div class="prose"><%- h.paragraphs(job.requirements) %></div><% } %>
         <% if (job.benefits) { %><h3>Benefits</h3><div class="prose"><%- h.paragraphs(job.benefits) %></div><% } %>
       </section>
@@ -110,13 +132,13 @@
               <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/delete"><button class="kds-btn kds-btn--ghost kds-btn--danger-text" type="submit" data-confirm="Delete this draft permanently?">Delete draft</button></form>
             <% } %>
           </div>
-          <p class="small" style="margin: 12px 0 0"><a href="/billing">Billing &amp; receipts</a></p>
+          <p class="small card__foot-link"><a href="/billing">Billing &amp; receipts</a></p>
         </section>
 
         <section class="card">
           <div class="card__head"><h2>Timeline</h2></div>
           <ol class="timeline">
-            <% timeline.forEach(t => { %><li class="<%= t.done ? 'is-done' : '' %> <%= t.future ? 'is-future' : '' %> <%= t.bad ? 'is-bad' : '' %>"><span class="timeline__label"><%= t.label %></span><span class="timeline__at"><%= t.at ? h.formatDateTime(t.at) : '—' %></span></li><% }) %>
+            <% timeline.forEach(t => { %><li class="<%= t.done ? 'is-done' : '' %> <%= t.future ? 'is-future' : '' %> <%= t.bad ? 'is-bad' : '' %>"><span class="timeline__label"><%= t.label %></span><span class="timeline__at"><%= t.at ? (t.dateOnly ? h.formatDate(t.at) : h.formatDateTime(t.at)) : '—' %></span></li><% }) %>
           </ol>
         </section>
 
@@ -133,7 +155,7 @@
           <div class="card__head"><h2>Applicants</h2><a class="small" href="<%= base %>/jobs/<%= job.id %>/applicants">All (<%= job.applicants %>)</a></div>
           <% if (!recent.length) { %><p class="small muted">No applications yet.</p><% } else { %>
             <ul class="list-plain">
-              <% recent.forEach(a => { %><li class="list-row small"><span class="list-row__main"><strong><%= a.name %></strong><br><span class="muted"><%= h.timeAgo(a.created_at) %></span></span><span class="badge"><%= APP_STATUS_NAME[a.status] %></span></li><% }) %>
+              <% recent.forEach(a => { %><li class="list-row small"><span class="list-row__main"><strong><%= a.name %></strong><br><span class="muted"><%= h.timeAgo(a.created_at) %></span></span><span class="badge badge--<%= ({submitted:'',viewed:'teal',shortlisted:'positive',rejected:'danger',hired:'positive'})[a.status] || '' %>"><%= APP_STATUS_NAME[a.status] %></span></li><% }) %>
             </ul>
           <% } %>
         </section>

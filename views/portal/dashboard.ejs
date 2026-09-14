@@ -63,7 +63,7 @@
           <ul class="list-plain">
             <% recent.forEach(a => { %>
               <li class="list-row">
-                <div class="list-row__main"><strong><%= a.name %></strong><div class="small muted"><%= a.title %> · <%= h.timeAgo(a.created_at) %></div></div>
+                <div class="list-row__main"><strong><%= a.name %></strong><div class="small muted"><%= a.title %><% if (a.job_public_id) { %> · <%= a.job_public_id %><% } %> · <%= h.timeAgo(a.created_at) %></div></div>
                 <div class="cluster"><span class="badge badge--<%= ({submitted:'',viewed:'teal',shortlisted:'positive',rejected:'danger',hired:'positive'})[a.status] %>"><%= APP_STATUS_NAME[a.status] %></span><a class="small" href="<%= base %>/jobs/<%= a.job_id %>/applicants">Review</a></div>
               </li>
             <% }) %>
@@ -81,10 +81,10 @@
               <li class="list-row">
                 <div class="list-row__main">
                   <a href="<%= base %>/jobs/<%= job.id %>"><strong><%= job.title %></strong></a>
-                  <div class="small muted"><% if (isConsultant) { %><%= h.displayCompany(job) %> · <% } %><%= h.location(job) %><% if (h.formatHours(job)) { %> · <%= h.formatHours(job) %><% } %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
+                  <div class="small muted"><% if (job.public_id) { %><span class="posting-id__code"><%= job.public_id %></span> · <% } %><% if (isConsultant) { %><%= h.displayCompany(job) %> · <% } %><%= h.location(job) || 'No location' %><% if (h.formatHours(job)) { %> · <%= h.formatHours(job) %><% } %> · <%= job.applicants %> applicant<%= job.applicants === 1 ? '' : 's' %> · <%= job.views %> views</div>
                 </div>
                 <div class="list-row__side">
-                  <%- include('partials/status-badge', { job }) %>
+                  <span class="cluster cluster--tight"><%- include('partials/status-badge', { job }) %><% if (job.applications_closed) { %><span class="badge badge--danger">Applications closed</span><% } %></span>
                   <% if (job.status === 'active' && job.expires_at) { %><span class="small muted"><%= job.cancel_at_period_end ? 'Ends' : 'Renews' %> <%= h.formatDate(job.expires_at) %></span><% } else if (job.status === 'pending_payment') { %><a class="small" href="/billing/checkout/<%= job.id %>">Pay now</a><% } %>
                 </div>
               </li>

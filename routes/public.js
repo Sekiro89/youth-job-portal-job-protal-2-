@@ -7,6 +7,7 @@ const h = require('../lib/helpers');
 const C = require('../lib/constants');
 const { PUBLIC_WHERE } = require('../lib/jobs');
 const geo = require('../lib/geocode');
+const jd = require('../lib/job-dates');   // application_deadline (Toronto calendar day) + applications_closed
 
 const router = express.Router();
 const PAGE_SIZE = 20;
@@ -20,7 +21,7 @@ const GEO_MARKER_CAP = 200;
 // operating_name = the per-posting choice (jobs.operating_name) falling back to the profile default (client PDF 2026-09-10, decision 5).
 const JOB_COLS = `jobs.id, jobs.title, jobs.slug, jobs.category, jobs.job_type, jobs.work_arrangement, jobs.experience_level,
   jobs.city, jobs.province, jobs.salary_min, jobs.salary_max, jobs.salary_period, jobs.audiences, jobs.published_at, jobs.expires_at, jobs.source, jobs.source_url,
-  jobs.hours_amount, jobs.hours_period,
+  jobs.hours_amount, jobs.hours_period, jobs.public_id, jobs.application_deadline, jobs.locked_at,
   p.company_name, COALESCE(NULLIF(jobs.operating_name, ''), p.operating_name) AS operating_name, p.slug AS company_slug,
   (SELECT count(*) FROM job_locations l WHERE l.job_id = jobs.id)::int AS location_count`;
 const JOB_FROM = `FROM jobs JOIN employer_profiles p ON p.id = jobs.employer_profile_id`;
@@ -71,6 +72,7 @@ router.get('/', async (req, res, next) => {
       db.many(`SELECT city, count(*)::int AS n FROM jobs WHERE ${PUBLIC_WHERE} GROUP BY city ORDER BY n DESC, city LIMIT 40`),
       db.one(`SELECT count(*)::int AS jobs, count(DISTINCT employer_profile_id)::int AS companies FROM jobs WHERE ${PUBLIC_WHERE}`),
     ]);
+    jd.decorateJobs(latest);
     const catCount = Object.fromEntries(catRows.map(r => [r.category, r.n]));
     const provCount = Object.fromEntries(provRows.map(r => [r.province, r.n]));
     const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0 }))
@@ -333,6 +335,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
         p.city AS company_city, p.province AS company_province, p.company_size, p.description AS company_description
       ${JOB_FROM} WHERE jobs.slug = $1 AND ${PUBLIC_WHERE}`, [req.params.slug]);
     if (!job) return notFound(res, 'This job posting is no longer available. It may have closed, expired or been removed by the employer.');
+    jd.decorateJob(job);   // application_deadline @ Toronto noon, application_deadline_date, applications_closed, locked (docs/TEMPLATE-VARS-R3.md)
     db.query('UPDATE jobs SET views = views + 1 WHERE id = $1', [job.id]).catch(e => console.error('[views]', e.message));
 
     const [more, savedRow, locRows] = await Promise.all([
@@ -345,6 +348,12 @@ router.get('/jobs/:slug', async (req, res, next) => {
     // Similar = same category, same province first, excluding this job and anything already shown under "more from company".
     const similar = await db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE jobs.category = $1 AND jobs.id <> ALL($2::bigint[]) AND ${PUBLIC_WHERE} ORDER BY (jobs.province = $3) DESC, ${NEWEST} LIMIT 4`,
       [job.category, [job.id, ...more.map(j => j.id)], job.province]);
+    jd.decorateJobs(more); jd.decorateJobs(similar);
+    // "Posted" = owner-editable published_at; "Closes" = the application deadline when set (end of that day in Toronto), else billing expiry.
+    const postedAt = job.published_at || job.created_at;
+    const closesAt = job.application_deadline || job.expires_at;
+    const closesLabel = job.application_deadline ? 'Applications close' : 'Closes';
+    const validThrough = job.application_deadline_date ? jd.torontoEndOfDay(job.application_deadline_date) : new Date(job.expires_at);
 
     const url = `${res.locals.PUBLIC_URL}/jobs/${job.slug}`;
     const companyName = h.displayCompany(job);          // operating (trade) name first
@@ -376,11 +385,11 @@ router.get('/jobs/:slug', async (req, res, next) => {
       '@context': 'https://schema.org', '@type': 'JobPosting',
       title: job.title,
       description: h.paragraphs(job.description) + (job.requirements ? '<h3>Requirements</h3>' + h.paragraphs(job.requirements) : '') + (job.benefits ? '<h3>Benefits</h3>' + h.paragraphs(job.benefits) : ''),
-      datePosted: isoDate(job.published_at || job.created_at),
-      validThrough: new Date(job.expires_at).toISOString(),
+      datePosted: isoDate(postedAt),
+      validThrough: validThrough.toISOString(),
       employmentType: EMPLOYMENT_TYPE[job.job_type] || 'OTHER',
-      identifier: { '@type': 'PropertyValue', name: companyName, value: job.slug },
-      url, directApply: true,
+      identifier: { '@type': 'PropertyValue', name: companyName, value: job.public_id || job.slug },
+      url, directApply: !job.applications_closed,
       hiringOrganization: Object.assign({ '@type': 'Organization', name: companyName, legalName, url: `${res.locals.PUBLIC_URL}/companies/${job.company_slug}` }, job.company_website ? { sameAs: job.company_website } : {}),
       jobLocation: locations.map(placeFor),
       industry: industryText || h.categoryName(job.category),
@@ -412,6 +421,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
       extraCss: CSS, extraJs: JS, bodyClass: 'page-job has-applybar',
       jsonLd: [posting, breadcrumbs],
       job, more, similar, saved: !!savedRow, url, locations, companyName, legalName, educationText, experienceText, hoursText, industryText,
+      postedAt, closesAt, closesLabel, applyUrlLabel: 'Apply on other platform',
       mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
       // For the print footer: "Printed from jobs.khosha.tech/jobs/<slug> on <date>" (host without scheme).
       printHost: String(res.locals.PUBLIC_URL || '').replace(/^https?:\/\//, ''), printedOn: h.formatDate(new Date(), { month: 'long' }),
@@ -430,6 +440,7 @@ router.get('/companies/:slug', async (req, res, next) => {
       // The profile's address book (client PDF 2026-09-10, decision 4) — default first; archived rows stay private.
       db.many('SELECT id, label, street_address, unit, city, province, postal_code, is_default, lat, lng FROM employer_locations WHERE employer_profile_id = $1 AND NOT archived ORDER BY is_default DESC, id', [co.id]),
     ]);
+    jd.decorateJobs(jobs);
     const url = `${res.locals.PUBLIC_URL}/companies/${co.slug}`;
     const companyName = h.displayCompany(co);
     const industryText = co.industry ? h.industryName(co.industry) : '';

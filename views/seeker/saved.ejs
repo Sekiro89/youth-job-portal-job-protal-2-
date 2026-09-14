@@ -3,14 +3,12 @@
   <%- include('_nav') %>
   <div class="dash__main">
     <header class="app-head">
-      <div class="app-head__inner">
-        <div>
-          <p class="eyebrow">Job seeker</p>
-          <h1>Saved jobs</h1>
-          <p class="muted">Jobs you bookmarked to come back to.</p>
-        </div>
-        <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/jobs">Find jobs</a></div>
+      <div>
+        <p class="eyebrow">Job seeker</p>
+        <h1>Saved jobs</h1>
+        <p class="app-head__context">Jobs you bookmarked to come back to.</p>
       </div>
+      <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/jobs">Find jobs</a></div>
     </header>
 
     <section aria-labelledby="live-h">
@@ -25,12 +23,16 @@
     <% if (gone.length) { %>
       <section class="card card--flat gone-list" aria-labelledby="gone-h">
         <div class="card__head"><h2 id="gone-h" class="h3">No longer available</h2><span class="badge"><%= gone.length %></span></div>
-        <p class="small muted">These postings closed or were taken down, so you can no longer apply. Remove them to tidy your list.</p>
+        <p class="small muted gone-list__intro">These postings closed or were taken down, so you can no longer apply. Remove them to tidy your list.</p>
         <ul class="list-plain">
           <% gone.forEach(j => { %>
-            <li class="list-plain__item">
-              <div><span><strong><%= j.title %></strong> <span class="badge badge--warning">Closed</span></span><span class="small muted"><%= h.displayCompany(j) %> · <%= h.location(j) %> · <span class="nowrap">saved <%= h.formatDate(j.saved_at) %></span></span></div>
-              <form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Remove</button></form>
+            <li class="list-plain__item gone-item">
+              <div class="gone-item__main">
+                <div class="gone-item__title"><span><%= j.title %></span> <span class="badge badge--warning">Closed</span></div>
+                <span class="small muted"><%= h.displayCompany(j) %> · <%= h.location(j) %></span>
+                <span class="small muted"><% if (j.public_id) { %>Posting ID <%= j.public_id %> · <% } %>Saved <%= h.formatDate(j.saved_at) %></span>
+              </div>
+              <form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form gone-item__action"><button class="kds-btn kds-btn--ghost" type="submit">Remove</button></form>
             </li>
           <% }) %>
         </ul>
