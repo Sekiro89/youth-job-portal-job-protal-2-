@@ -1,9 +1,10 @@
-<section class="container container--narrow unlock">
+<header class="page-head"><div class="container page-head__inner"><div><p class="eyebrow">Admin</p><h1 class="visually-hidden">Integrations passcode</h1><p class="lead">Integrations is protected by a second passcode on top of your login.</p></div></div></header>
+<section class="section"><div class="container container--narrow unlock">
   <div class="card">
     <% if (!hasPasscode) { %>
       <div class="unlock__head">
         <p class="eyebrow">First-time setup</p>
-        <h1>Set the Integrations passcode</h1>
+        <h2>Set the Integrations passcode</h2>
         <p class="muted">Integrations holds your Stripe keys, email credentials and admin accounts, so it is protected by a second passcode on top of your login. Choose one now (at least <%= passcodeMin %> characters) and share it only with the people who should manage payments and email.</p>
       </div>
       <form method="post" action="/admin/integrations/unlock" class="form" autocomplete="off">
@@ -22,7 +23,7 @@
     <% } else { %>
       <div class="unlock__head">
         <p class="eyebrow">Locked</p>
-        <h1>Unlock Integrations</h1>
+        <h2>Unlock Integrations</h2>
         <p class="muted">This area holds payment keys, email credentials and admin accounts. Unlocking lasts 15 minutes of activity.</p>
       </div>
       <% if (lockedMs > 0) { %>
@@ -45,4 +46,4 @@
       <% } %>
     <% } %>
   </div>
-</section>
+</div></section>

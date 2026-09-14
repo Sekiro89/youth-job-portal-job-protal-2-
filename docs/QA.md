@@ -294,7 +294,18 @@ with one field changed is how the admin panel is tested without hard-coding its 
   on this IST server — read date columns as `::text`; (2) the form legitimately refuses a past deadline, so "closed" is reached by saving
   today then moving the date with SQL; (3) the ux_qa seed has no postal codes on `job_locations`, so the JSON-LD `postalCode` check now
   only requires it for rows that have one; (4) the seeker apply fixture must skip closed postings once shots.js `--seed-extra` has closed one.
-  Results: see the report at the end of this entry (filled in at the final run).
+  Final run 18:16–18:31 IST (tree quiet for 4 min, instance restarted): smoke **345/346** — the one FAIL is
+  `/admin/integrations/unlock` without a `page-head`/`app-head` band (admin agent had landed nothing yet; `views/admin` clean in git).
+  Everything else in round 3 passed: draft public id on create, `/jobs?q=<pid>` (both cases), `/jobs/id/<pid>` → slug, ZZ9ZZ9 → 404,
+  decimal salary stored + printed, locked edit (title/locations unchanged, description saved, form static + note), deadline open/closed
+  states on the public page and for the seeker (GET + POST), +30 days reopen, `published_at` edit, "Other platform link", preview hours,
+  six job states × (detail, edit, applicants, public), layout hygiene on 45 pages. Shots `--seed-extra`: **240/240** (60 pages × 4 widths),
+  no overflow, no WIDE elements at 390, console errors only the expected 404 on `not-found`. Eyeballed: `jobs` vs `jobs-map-hidden`
+  (map pane really gone), `job-locked-edit` (lock icons + static fields), `job-closed` (badge + "Applications closed" card, no Apply),
+  `employer-job-detail`. One visual bug seen by eye and not by the harness — the portal lock note's "contact support" link split into a
+  flex column at 390 (`.locked-note{display:flex}` with an inline `<a>`) — was fixed by the portal agent's 18:12 `portal.css` before the
+  final run (recaptured, correct). Earlier interim runs had "not landed" FAILs only (locked note, Posting ID on portal pages, decimal
+  validation, closed states) that disappeared as agents landed.
 
 - **2026-09-10 (client round 2 — PDF)** — instance `:3909` / `cc_qa`, tree as of 01:05: smoke **215/215 PASS**
   (address book via portal route, select-mode posting with `employer_location_id`, inline add-new location + operating
