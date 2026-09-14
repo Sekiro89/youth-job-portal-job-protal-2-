@@ -91,7 +91,8 @@ mount('/', './routes/billing');     // /billing/*
 mount('/', './routes/about');       // /about
 mount('/', './routes/contact');     // /contact
 mount('/', './routes/admin');       // /admin/*
-mount('/', './routes/public');      // / /jobs /jobs/:slug /sitemap.xml /robots.txt  (LAST)
+mount('/', './routes/jobs-search'); // /jobs list, /api/jobs/geo, /jobs/id/:publicId (must precede public)
+mount('/', './routes/public');      // / /jobs/:slug /sitemap.xml /robots.txt  (LAST)
 
 app.get('/healthz', async (req, res) => {
   try { await db.query('SELECT 1'); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
