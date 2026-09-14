@@ -1,0 +1,25 @@
+<%# One full-width result row on /jobs (UX standard §6). Styles: /css/jobs-search.css (.jrow). Marker clicks on the map
+    find the row by data-slug (public/js/jobs-search.js). %>
+<% const extra = (job.location_count || 1) - 1; const hours = h.formatHours(job); const km = job.distance_km == null ? '' : (job.distance_km < 1 ? '< 1 km' : `≈ ${Math.round(job.distance_km)} km`); const isRef = job.source === 'jobbank'; %>
+<article class="jrow<%= isRef ? ' jrow--ref' : '' %>" data-job-row data-job-id="<%= job.id %>" data-slug="<%= job.slug %>">
+  <div class="jrow__main">
+    <h3 class="jrow__title"><a href="/jobs/<%= job.slug %>"><%= job.title %></a></h3>
+    <p class="jrow__co">
+      <span class="jrow__company"><%= h.displayCompany(job) %></span>
+      <span class="jrow__sep" aria-hidden="true">·</span>
+      <span class="jrow__loc"><%= h.location(job) %><% if (extra > 0) { %> <span class="jrow__more">+<%= extra %> more</span><% } %></span>
+      <% if (km) { %><span class="jrow__dist" title="Distance to the nearest work location"><%= km %></span><% } %>
+    </p>
+    <ul class="jrow__chips" aria-label="Details">
+      <li><span class="badge"><%= h.jobTypeName(job.job_type) %></span></li>
+      <li><span class="badge"><%= h.workArrangementName(job.work_arrangement) %></span></li>
+      <% if (hours) { %><li><span class="badge"><%= hours %></span></li><% } %>
+      <% (job.audiences || []).forEach(a => { %><li><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span></li><% }) %>
+      <% if (isRef) { %><li><span class="badge badge--teal jrow__ref" title="Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers">Reference posting</span></li><% } %>
+    </ul>
+  </div>
+  <div class="jrow__side">
+    <p class="jrow__salary"><%= h.formatSalary(job) %></p>
+    <p class="jrow__meta"><span>Posted <%= h.timeAgo(job.published_at) %></span><span class="jrow__sep" aria-hidden="true">·</span><span><%= h.categoryName(job.category) %></span></p>
+  </div>
+</article>

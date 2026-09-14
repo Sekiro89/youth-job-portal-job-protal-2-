@@ -1,17 +1,21 @@
-<%# optional: audienceLabel ('employers' | 'consultants') for the heading %>
+<%#
+  FAQ band — expects: items (array of [question, answer]); optional: audienceLabel ('employers' | 'consultants' | 'job seekers') for the heading.
+%>
 <% const faqWho = typeof audienceLabel === 'string' && audienceLabel ? audienceLabel : 'employers'; %>
-<section class="landing-section landing-section--alt" id="faq">
-  <div class="container container--narrow">
-    <p class="eyebrow">FAQ</p>
-    <h2>Questions <%= faqWho %> ask us</h2>
+<section class="section" id="faq">
+  <div class="container container--prose">
+    <div class="section__head">
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions <%= faqWho %> ask us</h2>
+    </div>
     <div class="faq">
-      <% faq.forEach(([q, a], i) => { %>
-        <details class="faq__item" <%= i === 0 ? 'open' : '' %>>
-          <summary><%= q %></summary>
-          <p><%= a %></p>
+      <% items.forEach(([q, a], i) => { %>
+        <details class="card faq__item" <%= i === 0 ? 'open' : '' %>>
+          <summary><span><%= q %></span></summary>
+          <div class="faq__body"><p><%= a %></p></div>
         </details>
       <% }) %>
     </div>
-    <p class="muted">Something else? <a href="/contact">Contact us</a> — a real person (Veda) replies.</p>
+    <p class="muted faq__foot">Something else? <a href="/contact">Contact us</a> — our support team replies within one business day.</p>
   </div>
 </section>

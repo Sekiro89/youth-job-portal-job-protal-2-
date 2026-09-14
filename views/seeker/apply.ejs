@@ -1,8 +1,11 @@
-<% const company = h.displayCompany(job), legal = h.legalNameNote(job), locs = job.locations || [], primary = locs[0] || job; %>
-<div class="container apply-page">
-  <p class="small"><a href="/jobs/<%= job.slug %>">← Back to job</a></p>
-  <div class="apply-page__grid">
-    <aside class="card card--flat apply-job">
+<% const company = h.displayCompany(job), legal = h.legalNameNote(job), locs = job.locations || [], primary = locs[0] || job;
+   const edu = job.education === 'other' ? (job.education_other || h.educationName('other')) : h.educationName(job.education);
+   const exp = job.experience_level === 'other' ? (job.experience_other || h.experienceName('other')) : h.experienceName(job.experience_level);
+   const interstitial = gate === 'guest' || gate === 'role' || !!existing; %>
+<%
+/* Job summary card: sticky beside the form on desktop; below the interstitial card when there is no form. */
+function jobSummary() { %>
+    <aside class="card card--flat apply-job" aria-label="Job summary">
       <p class="eyebrow">You are applying to</p>
       <h2 class="h3"><%= job.title %></h2>
       <div class="apply-job__company"><strong><%= company %></strong><% if (legal) { %> <span class="small muted">(<%= legal %>)</span><% } %></div>
@@ -11,8 +14,6 @@
         <% if (locs.length > 1) { %><span class="small">· +<%= locs.length - 1 %> more location<%= locs.length > 2 ? 's' : '' %></span><% } %>
       </div>
       <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (h.formatHours(job)) { %><span class="job-card__hours"><%= h.formatHours(job) %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
-      <% const edu = job.education === 'other' ? (job.education_other || h.educationName('other')) : h.educationName(job.education);
-         const exp = job.experience_level === 'other' ? (job.experience_other || h.experienceName('other')) : h.experienceName(job.experience_level); %>
       <% if (job.education || job.experience_level) { %>
       <dl class="apply-job__reqs">
         <% if (job.education) { %><div><dt>Education</dt><dd><%= edu %></dd></div><% } %>
@@ -20,46 +21,80 @@
       </dl>
       <% } %>
       <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div>
+      <a class="small" href="/jobs/<%= job.slug %>">View the full posting</a>
     </aside>
-
-    <div class="apply-main">
+<% } %>
+<div class="container apply-page <%= interstitial ? 'container--narrow' : '' %>">
+  <header class="app-head">
+    <ol class="breadcrumb"><li><a href="/jobs">Find jobs</a></li><li><a href="/jobs/<%= job.slug %>"><%= job.title %></a></li><li>Apply</li></ol>
+    <% if (existing) { %>
+      <p class="eyebrow">Application sent</p>
+      <h1>You already applied for <%= job.title %></h1>
+      <p class="muted">Sent to <%= company %> on <%= h.formatDate(existing.created_at) %>. Employers see one application per person, so there is nothing more to send.</p>
+    <% } else { %>
+      <p class="eyebrow">Apply</p>
       <h1>Apply for <%= job.title %></h1>
-      <% if (gate === 'guest') { %>
-        <div class="card apply-gate" role="region" aria-labelledby="gate-h">
-          <p class="eyebrow">Free for job seekers</p>
-          <h2 id="gate-h" class="h3">Create a free job seeker profile to apply — takes one minute</h2>
-          <p class="muted">Upload your resume once and apply to <%= company %> and every other posting in one click. Already have a profile? Sign in and we bring you straight back here.</p>
-          <div class="apply-gate__actions">
-            <a class="kds-btn kds-btn--accent" href="/signup/seeker?next=<%= encodeURIComponent(returnTo) %>">Create my free profile</a>
-            <a class="kds-btn kds-btn--ghost" href="/login?role=seeker&next=<%= encodeURIComponent(returnTo) %>">Sign in</a>
-          </div>
-          <ul class="apply-gate__points">
-            <li>Always free — no fees, ever</li>
-            <li>Your resume goes only to <%= company %></li>
-            <li>Get alerts when similar jobs go live</li>
-          </ul>
+      <p class="muted"><%= gate ? 'Free for job seekers — your resume goes only to ' + company + '.' : 'Check your details, choose a resume and send. ' + company + ' gets your application by email.' %></p>
+    <% } %>
+  </header>
+
+  <% if (gate === 'guest') { %>
+    <div class="apply-narrow">
+      <div class="card apply-gate" role="region" aria-labelledby="gate-h">
+        <p class="eyebrow">Free for job seekers</p>
+        <h2 id="gate-h" class="h3">Create a free job seeker profile to apply — takes one minute</h2>
+        <p class="muted">Upload your resume once and apply to <%= company %> and every other posting in one click. Already have a profile? Sign in and we bring you straight back here.</p>
+        <div class="apply-gate__actions">
+          <a class="kds-btn kds-btn--accent" href="/signup/seeker?next=<%= encodeURIComponent(returnTo) %>">Create my free profile</a>
+          <a class="kds-btn kds-btn--ghost" href="/login?role=seeker&next=<%= encodeURIComponent(returnTo) %>">Sign in</a>
         </div>
-      <% } else if (gate === 'role') { %>
-        <div class="card apply-gate" role="region" aria-labelledby="gate-h">
-          <h2 id="gate-h" class="h3">Only job seeker accounts can apply</h2>
-          <p class="muted">You are signed in as <strong><%= user.email %></strong> (<%= user.role === 'consultant' ? 'third party consultant' : user.role %> account). Employer and consultant accounts post and manage jobs; they cannot send applications. To apply as a job seeker, sign out and create a separate free job seeker profile with another email address.</p>
-          <div class="apply-gate__actions">
-            <a class="kds-btn kds-btn--brand" href="/jobs/<%= job.slug %>">Back to the posting</a>
-            <a class="kds-btn kds-btn--ghost" href="<%= user.role === 'consultant' ? '/consultant/dashboard' : user.role === 'admin' ? '/admin' : '/employer/dashboard' %>">My dashboard</a>
-          </div>
+        <ul class="apply-gate__points">
+          <li>Always free — no fees, ever</li>
+          <li>Your resume goes only to <%= company %></li>
+          <li>Get alerts when similar jobs go live</li>
+        </ul>
+      </div>
+      <%- jobSummary() %>
+    </div>
+  <% } else if (gate === 'role') { %>
+    <div class="apply-narrow">
+      <div class="card apply-gate" role="region" aria-labelledby="gate-h">
+        <h2 id="gate-h" class="h3">Only job seeker accounts can apply</h2>
+        <p class="muted">You are signed in as <strong><%= user.email %></strong> (<%= user.role === 'consultant' ? 'third party consultant' : user.role %> account). Employer and consultant accounts post and manage jobs; they cannot send applications. To apply as a job seeker, sign out and create a separate free job seeker profile with another email address.</p>
+        <div class="apply-gate__actions">
+          <a class="kds-btn kds-btn--brand" href="/jobs/<%= job.slug %>">Back to the posting</a>
+          <a class="kds-btn kds-btn--ghost" href="<%= user.role === 'consultant' ? '/consultant/dashboard' : user.role === 'admin' ? '/admin' : '/employer/dashboard' %>">My dashboard</a>
         </div>
-      <% } else if (existing) { %>
-        <div class="card stack">
-          <p><strong>You applied on <%= h.formatDate(existing.created_at) %>.</strong> Status: <span class="badge"><%= existing.status.charAt(0).toUpperCase() + existing.status.slice(1) %></span></p>
-          <p class="muted">Resume sent: <%= existing.resume_name %><% if (existing.cover_letter_path) { %><br>Cover sheet: <a href="/jobseeker/applications/<%= existing.id %>/cover"><%= existing.cover_letter_name %></a><% } %></p>
-          <div class="cluster"><a class="kds-btn kds-btn--brand" href="/jobseeker/applications">My applications</a><a class="kds-btn kds-btn--ghost" href="/jobs">Find more jobs</a></div>
+      </div>
+      <%- jobSummary() %>
+    </div>
+  <% } else if (existing) { %>
+    <div class="apply-narrow">
+      <div class="card apply-gate" role="region" aria-labelledby="sent-h">
+        <div class="card__head"><h2 id="sent-h" class="h3">Your application</h2><span class="badge <%= ({submitted:'',viewed:'badge--teal',shortlisted:'badge--positive',rejected:'badge--danger',hired:'badge--positive'})[existing.status] || '' %>"><%= existing.status.charAt(0).toUpperCase() + existing.status.slice(1) %></span></div>
+        <dl class="sent-list apply-details">
+          <div><span class="sent-list__k">Applied</span> <span class="sent-list__v"><%= h.formatDate(existing.created_at) %></span></div>
+          <div><span class="sent-list__k">Resume</span> <span class="sent-list__v"><%= existing.resume_name %></span></div>
+          <div><span class="sent-list__k">Cover sheet</span> <span class="sent-list__v"><% if (existing.cover_letter_path) { %><a href="/jobseeker/applications/<%= existing.id %>/cover"><%= existing.cover_letter_name %></a><% } else if (existing.cover_letter) { %>typed note<% } else { %>none<% } %></span></div>
+        </dl>
+        <div class="apply-gate__actions">
+          <a class="kds-btn kds-btn--brand" href="/jobseeker/applications">My applications</a>
+          <a class="kds-btn kds-btn--ghost" href="/jobs">Find more jobs</a>
+          <% if (existing.status === 'submitted') { %><form method="post" action="/jobseeker/applications/<%= existing.id %>/withdraw" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Withdraw this application?">Withdraw</button></form><% } %>
         </div>
-      <% } else { %>
+        <% if (existing.status === 'submitted') { %><p class="small muted">You can withdraw until <%= company %> opens it.</p><% } %>
+      </div>
+      <%- jobSummary() %>
+    </div>
+  <% } else { %>
+  <div class="apply-page__grid">
+    <%- jobSummary() %>
+    <div class="apply-main">
         <form method="post" action="/jobs/<%= job.slug %>/apply" enctype="multipart/form-data" class="form apply-form" novalidate>
-          <div class="card stack">
-            <div class="split"><h2 class="h3">Your details</h2><a class="small" href="/account">Edit</a></div>
-            <p><strong><%= user.name %></strong><br><span class="muted"><%= user.email %></span><% if (profile.headline) { %><br><span class="muted"><%= profile.headline %></span><% } %></p>
-          </div>
+          <section class="card stack" aria-labelledby="details-h">
+            <div class="card__head"><h2 id="details-h" class="h3">Your details</h2><a class="small" href="/account">Edit</a></div>
+            <p style="margin:0"><strong><%= user.name %></strong><br><span class="muted"><%= user.email %></span><% if (profile.headline) { %><br><span class="muted"><%= profile.headline %></span><% } %></p>
+          </section>
 
           <fieldset class="card stack">
             <legend class="h3">Resume</legend>
@@ -71,13 +106,13 @@
                 <label class="check"><input type="radio" name="resume_choice" value="upload" <%= values.resume_choice === 'upload' ? 'checked' : '' %> data-resume-choice> <span>Upload a different resume for this job</span></label>
               <% } else { %>
                 <input type="hidden" name="resume_choice" value="upload">
-                <p class="muted">You have no resume on your profile yet — upload one now. Next time it will be attached automatically.</p>
+                <p class="muted" style="margin:0">You have no resume on your profile yet — upload one now. Next time it will be attached automatically.</p>
               <% } %>
-              <div class="field upload-box resume-upload" data-resume-upload <%= values.resume_choice === 'upload' ? '' : 'hidden' %>>
-                <label for="resume">Resume file</label>
+              <div class="field upload-box" data-resume-upload <%= values.resume_choice === 'upload' ? '' : 'hidden' %>>
+                <label for="resume">Resume file <span class="req">*</span></label>
                 <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                 <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB</span>
-                <label class="check"><input type="checkbox" name="save_to_profile" value="1" <%= values.save_to_profile ? 'checked' : '' %>> Save this resume to my profile for one-click applications</label>
+                <label class="check"><input type="checkbox" name="save_to_profile" value="1" <%= values.save_to_profile ? 'checked' : '' %>> <span>Save this resume to my profile for one-click applications</span></label>
               </div>
             </div>
           </fieldset>
@@ -100,12 +135,12 @@
             </div>
           </fieldset>
 
-          <div class="form-actions sticky-actions">
+          <div class="sticky-bar">
             <button class="kds-btn kds-btn--accent" type="submit">Send application</button>
             <span class="small muted">Your resume and cover sheet go only to <%= company %>.</span>
           </div>
         </form>
-      <% } %>
     </div>
   </div>
+  <% } %>
 </div>

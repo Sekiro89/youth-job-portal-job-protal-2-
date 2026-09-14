@@ -1,6 +1,38 @@
-<section class="container section-pad error-page">
-  <p class="eyebrow">Error <%= code %></p>
-  <h1><%= title %></h1>
-  <p class="lead"><%= message %></p>
-  <p><a class="kds-btn kds-btn--brand" href="/">Back to home</a> <a class="kds-btn kds-btn--ghost" href="/jobs">Browse jobs</a></p>
+<%# Rendered without public.css (server.js 404/500 handlers pass no extraCss) — theme.css primitives only. %>
+<header class="page-head">
+  <div class="container page-head__inner">
+    <div>
+      <p class="eyebrow">Error <%= code %></p>
+      <h1><%= title %></h1>
+      <p class="lead"><%= message %></p>
+    </div>
+    <div class="page-head__actions">
+      <a class="kds-btn kds-btn--accent" href="/jobs">Browse jobs</a>
+      <a class="kds-btn kds-btn--ghost" href="/">Back to home</a>
+    </div>
+  </div>
+</header>
+<section class="section" aria-labelledby="err-h">
+  <div class="container">
+    <div class="section__head">
+      <h2 id="err-h">Where would you like to go?</h2>
+    </div>
+    <div class="grid grid--3">
+      <article class="card">
+        <h3>Find jobs</h3>
+        <p class="muted">Search every open posting across Canada by category, province or the community you belong to.</p>
+        <a href="/jobs">Search jobs →</a>
+      </article>
+      <article class="card">
+        <h3>Post a job</h3>
+        <p class="muted">Employers post from $14.99 + GST per posting per month; third party consultants from $9.99 + GST.</p>
+        <a href="/employer">For employers →</a>
+      </article>
+      <article class="card">
+        <h3>Get help</h3>
+        <p class="muted">If a link brought you here, tell our support team and we will fix it.</p>
+        <a href="/contact">Contact us →</a>
+      </article>
+    </div>
+  </div>
 </section>

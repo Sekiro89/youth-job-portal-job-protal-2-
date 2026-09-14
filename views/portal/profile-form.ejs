@@ -3,7 +3,7 @@
    const isNew = mode === 'consultant-new' || mode === 'employer-create';
    const action = mode === 'consultant-new' ? '/consultant/profiles/new' + (thenPost ? '?then=post' : '') : mode === 'consultant-edit' ? '/consultant/profiles/' + profile.id + '/edit' : '/employer/profile';
    const locBase = mode === 'consultant-edit' ? '/consultant/profiles/' + profile.id + '/locations' : '/employer/profile/locations';
-   const heading = mode === 'consultant-new' ? 'Add a company' : mode === 'consultant-edit' ? 'Edit company' : 'Company profile';
+   const heading = mode === 'consultant-new' ? 'Add a company' : mode === 'consultant-edit' ? (h.displayCompany(profile) || 'Edit company') : 'Company';
    const names = (v.operating_names && v.operating_names.length ? v.operating_names : (v.operating_name ? [v.operating_name] : [])).slice();
    while (names.length < 3) names.push('');
    const legacyIndustry = v.industry && !C.INDUSTRY_NAME[v.industry] ? v.industry : '';
@@ -13,20 +13,20 @@
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
-    <div class="split">
+    <header class="app-head">
       <div>
-        <p class="eyebrow"><%= isConsultant ? 'Client companies' : 'Your company' %></p>
+        <p class="eyebrow"><%= isConsultant ? (mode === 'consultant-new' ? 'Companies' : 'Edit company') : 'Your company' %></p>
         <h1><%= heading %></h1>
-        <p class="muted"><%= isConsultant ? 'Postings are published under this company’s name, and job seekers see this page as the employer.' : 'This is what job seekers see as the employer on every posting you publish.' %><% if (profile.slug && !profile.archived) { %> <a href="/companies/<%= profile.slug %>" target="_blank" rel="noopener">Public company page ↗</a><% } %></p>
+        <p class="app-head__context"><span><%= isConsultant ? 'Postings are published under this company’s name, and job seekers see this page as the employer.' : 'This is what job seekers see as the employer on every posting you publish.' %></span><% if (profile.slug && !profile.archived) { %><a class="small" href="/companies/<%= profile.slug %>" target="_blank" rel="noopener">Public company page ↗</a><% } %></p>
       </div>
-      <% if (isConsultant) { %><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">← Companies</a><% } %>
-    </div>
+      <% if (isConsultant) { %><div class="app-head__actions"><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">All companies</a></div><% } %>
+    </header>
 
     <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the highlighted fields.</div><% } %>
 
     <form class="form" method="post" action="<%= action %>" enctype="multipart/form-data" novalidate>
       <section class="card form-section">
-        <h2 class="form-section__title">Company</h2>
+        <div class="card__head"><h2>Company</h2></div>
         <div class="field">
           <label for="company_name">Legal company name <span class="req">*</span></label>
           <input class="input" id="company_name" name="company_name" value="<%= v.company_name || '' %>" maxlength="120" required autocomplete="organization" placeholder="e.g. 1234567 Ontario Inc."<%- inv('company_name') %>>
@@ -99,15 +99,15 @@
 
       <% if (isNew) { %>
       <section class="card form-section" id="locations">
-        <h2 class="form-section__title">Main location</h2>
-        <p class="small muted">The address where people work. It becomes the default work location on new postings; you can add more locations after saving.</p>
+        <div class="card__head"><h2>Main location</h2></div>
+        <p class="hint hint--lead">The address where people work. It becomes the default work location on new postings; you can add more locations after saving.</p>
         <%- include('partials/location-fields', { prefix: 'loc_', vals: { label: v.loc_label, street_address: v.loc_street_address, unit: v.loc_unit, city: v.loc_city, province: v.loc_province, postal_code: v.loc_postal_code }, errs: errors, idp: 'p-loc-', showLabel: true }) %>
       </section>
       <% } %>
 
       <section class="card form-section">
-        <h2 class="form-section__title">Hiring contact</h2>
-        <p class="small muted">Used for billing receipts and if we need to reach someone about a posting. Not shown publicly. The contact email is the default application inbox on new postings.</p>
+        <div class="card__head"><h2>Hiring contact</h2></div>
+        <p class="hint hint--lead">Used for billing receipts and if we need to reach someone about a posting. Not shown publicly. The contact email is the default application inbox on new postings.</p>
         <div class="form-row form-row--3">
           <div class="field">
             <label for="contact_name">Contact name</label>
@@ -125,20 +125,20 @@
         </div>
       </section>
 
-      <div class="form-actions">
-        <button class="kds-btn kds-btn--brand" type="submit"><%= mode === 'consultant-new' ? 'Add company' : 'Save profile' %></button>
-        <% if (isConsultant) { %><a class="kds-btn kds-btn--ghost" href="/consultant/profiles">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="/employer/dashboard">Cancel</a><% } %>
+      <div class="sticky-bar">
+        <button class="kds-btn kds-btn--accent" type="submit"><%= mode === 'consultant-new' ? 'Add company' : 'Save company' %></button>
+        <a class="kds-btn kds-btn--ghost sticky-bar__cancel" href="<%= isConsultant ? '/consultant/profiles' : '/employer/dashboard' %>">Cancel</a>
       </div>
     </form>
 
     <% if (!isNew) { %>
     <section class="card form-section" id="locations" aria-labelledby="locations-title">
-      <div class="split">
+      <div class="card__head">
         <div>
-          <h2 class="form-section__title form-section__title--bare" id="locations-title">Locations</h2>
-          <p class="small muted">Every address where people work. When you post a job you tick one or more of these; the default is pre-selected. Changes here save on their own.</p>
+          <h2 id="locations-title">Locations</h2>
+          <p class="hint">Every address where people work. When you post a job you tick one or more of these; the default is pre-selected. Changes here save on their own.</p>
         </div>
-        <% if (!locOpen) { %><a class="kds-btn kds-btn--accent kds-btn--sm" href="#loc-editor" data-loc-open>+ Add location</a><% } %>
+        <% if (!locOpen) { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="#loc-editor" data-loc-open>+ Add location</a><% } %>
       </div>
       <% if (!locs.length) { %>
         <div class="empty empty--sm">No locations yet. Add the first one below — it becomes the default work location on new postings.</div>
@@ -166,7 +166,7 @@
         <% if (Object.keys(L.errors || {}).length) { %><div class="error error--block" role="alert">Complete the address — street, city, province and postal code.</div><% } %>
         <%- include('partials/location-fields', { prefix: 'loc_', vals: L.values || {}, errs: L.errors || {}, idp: 'loc-', showLabel: true }) %>
         <% if (!L.editId && locs.length) { %><label class="check check--inline"><input type="checkbox" name="make_default" value="1"> Make this the default location</label><% } %>
-        <div class="cluster">
+        <div class="form-actions">
           <button class="kds-btn kds-btn--brand" type="submit"><%= L.editId ? 'Save location' : 'Add location' %></button>
           <% if (L.editId || locs.length) { %><a class="kds-btn kds-btn--ghost" href="<%= action %>#locations" data-loc-cancel>Cancel</a><% } %>
         </div>

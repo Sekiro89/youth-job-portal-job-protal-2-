@@ -2,9 +2,9 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <p><a href="/admin/messages" class="small">← All messages</a></p>
-    <div class="split">
+    <header class="app-head">
       <div>
+        <a href="/admin/messages" class="back">← All messages</a>
         <p class="eyebrow">Ticket #<%= m.id %></p>
         <h1 class="msg-title"><%= m.subject %></h1>
         <div class="cluster">
@@ -14,60 +14,18 @@
           <% if (m.resolved_at) { %><span class="muted small">· Resolved <%= h.formatDateTime(m.resolved_at) %></span><% } %>
         </div>
       </div>
-      <form method="post" action="/admin/messages/<%= m.id %>" class="status-form">
-        <input type="hidden" name="action" value="status">
-        <label for="status" class="visually-hidden">Status</label>
-        <select class="input" id="status" name="status">
-          <% contactStatuses.forEach(st => { %><option value="<%= st %>" <%= m.status === st ? 'selected' : '' %>><%= st.replace('_',' ') %></option><% }) %>
-        </select>
-        <button class="kds-btn kds-btn--brand" type="submit">Update status</button>
-      </form>
-    </div>
+    </header>
 
     <div class="msg-grid">
+      <%# ---------------- left: the message, who sent it, private notes ---------------- %>
       <div class="stack">
         <article class="card">
-          <h2 class="h3 card__title">Message</h2>
+          <div class="card__head"><h2 class="h3">Message</h2><span class="small muted">from <%= m.name %></span></div>
           <div class="msg-body"><%- h.paragraphs(m.message) %></div>
         </article>
 
         <article class="card">
-          <h2 class="h3 card__title">Reply by email</h2>
-          <p class="muted small">Goes to <strong><%= m.email %></strong> from the site's sender address (signed <%= supportName %><% if (supportEmails.length) { %>, Reply-To <%= supportEmails[0] %><% } %>) with the original message quoted. Sending marks the ticket <em>in progress</em>.</p>
-          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
-            <input type="hidden" name="action" value="reply">
-            <div class="field">
-              <label for="subject">Subject</label>
-              <input class="input" id="subject" name="subject" type="text" value="<%= reply.subject %>" required maxlength="200">
-            </div>
-            <div class="field">
-              <label for="body">Reply</label>
-              <textarea class="input" id="body" name="body" rows="8" required placeholder="Hi <%= m.name.split(' ')[0] %>,&#10;&#10;Thanks for reporting this…"><%= reply.body %></textarea>
-              <span class="hint">Blank lines start new paragraphs. Your signature (<%= supportName %>, Technical support) is added automatically.</span>
-            </div>
-            <div class="form-actions">
-              <button class="kds-btn kds-btn--brand" type="submit">Send reply</button>
-              <label class="check check--inline"><input type="checkbox" name="resolve" value="1"> <span>Also mark as resolved</span></label>
-            </div>
-          </form>
-        </article>
-
-        <article class="card">
-          <h2 class="h3 card__title">Internal notes</h2>
-          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
-            <input type="hidden" name="action" value="notes">
-            <div class="field">
-              <label for="admin_notes" class="visually-hidden">Admin notes</label>
-              <textarea class="input" id="admin_notes" name="admin_notes" rows="6" placeholder="What you found, what you did, what to check next. Only admins see this."><%= m.admin_notes || '' %></textarea>
-            </div>
-            <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Save notes</button></div>
-          </form>
-        </article>
-      </div>
-
-      <aside class="stack">
-        <div class="card">
-          <h2 class="h3 card__title">Reporter</h2>
+          <div class="card__head"><h2 class="h3">Reporter</h2></div>
           <dl class="dl">
             <dt>Name</dt><dd><%= m.name %></dd>
             <dt>Email</dt><dd><a href="mailto:<%= m.email %>?subject=<%= encodeURIComponent(reply.subject) %>"><%= m.email %></a></dd>
@@ -83,28 +41,71 @@
             <dt>IP</dt><dd><code><%= m.ip || '—' %></code></dd>
             <dt>Device</dt><dd class="small muted ua"><%= m.user_agent || '—' %></dd>
           </dl>
-        </div>
+        </article>
 
-        <div class="card">
-          <h2 class="h3 card__title">Emails on this ticket</h2>
-          <% if (!emails.length) { %><p class="muted small">None recorded yet.</p><% } else { %>
+        <article class="card">
+          <div class="card__head"><h2 class="h3">Internal notes</h2><span class="small muted">Only admins see these</span></div>
+          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
+            <input type="hidden" name="action" value="notes">
+            <div class="field">
+              <label for="admin_notes" class="visually-hidden">Admin notes</label>
+              <textarea class="input" id="admin_notes" name="admin_notes" rows="5" placeholder="What you found, what you did, what to check next."><%= m.admin_notes || '' %></textarea>
+            </div>
+            <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Save notes</button></div>
+          </form>
+        </article>
+      </div>
+
+      <%# ---------------- right: status + reply, then the email trail ---------------- %>
+      <aside class="stack">
+        <article class="card">
+          <div class="card__head"><h2 class="h3">Status &amp; reply</h2></div>
+          <form method="post" action="/admin/messages/<%= m.id %>" class="status-form">
+            <input type="hidden" name="action" value="status">
+            <label for="status" class="visually-hidden">Status</label>
+            <select class="input" id="status" name="status">
+              <% contactStatuses.forEach(st => { %><option value="<%= st %>" <%= m.status === st ? 'selected' : '' %>><%= st.replace('_',' ') %></option><% }) %>
+            </select>
+            <button class="kds-btn kds-btn--ghost" type="submit">Update status</button>
+          </form>
+          <hr style="border:0;border-top:1px solid var(--kds-border);margin:16px 0">
+          <p class="card__intro">Reply goes to <strong><%= m.email %></strong> from the site's sender address (signed <%= supportName %><% if (supportEmails.length) { %>, Reply-To <%= supportEmails[0] %><% } %>) with the original message quoted. Sending marks the ticket <em>in progress</em>.</p>
+          <form method="post" action="/admin/messages/<%= m.id %>" class="form">
+            <input type="hidden" name="action" value="reply">
+            <div class="field">
+              <label for="subject">Subject</label>
+              <input class="input" id="subject" name="subject" type="text" value="<%= reply.subject %>" required maxlength="200">
+            </div>
+            <div class="field">
+              <label for="body">Reply</label>
+              <textarea class="input" id="body" name="body" rows="8" required placeholder="Hi <%= m.name.split(' ')[0] %>,&#10;&#10;Thanks for reporting this…"><%= reply.body %></textarea>
+              <span class="hint">Blank lines start new paragraphs. Your signature (<%= supportName %>, Technical support) is added automatically.</span>
+            </div>
+            <label class="check check--inline"><input type="checkbox" name="resolve" value="1"> <span>Also mark as resolved</span></label>
+            <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Send reply</button></div>
+          </form>
+        </article>
+
+        <article class="card">
+          <div class="card__head"><h2 class="h3">Emails on this ticket</h2><a class="small" href="/admin/outbox?q=<%= encodeURIComponent(m.email) %>">Outbox →</a></div>
+          <% if (!emails.length) { %><p class="muted small" style="margin:0">None recorded yet.</p><% } else { %>
           <ul class="list-rows">
             <% emails.forEach(e => { %>
               <li class="list-row"><a href="/admin/outbox/<%= e.id %>" class="list-row__title small"><%= e.subject %></a><div class="list-row__meta"><span class="badge badge--<%= ({sent:'positive',failed:'danger',logged:'teal',queued:'warning'})[e.status] || '' %>"><%= e.status %></span><span class="muted small"><%= h.timeAgo(e.created_at) %></span></div></li>
             <% }) %>
           </ul>
           <% } %>
-        </div>
+        </article>
 
         <% if (others.length) { %>
-        <div class="card">
-          <h2 class="h3 card__title">Other tickets from <%= m.email %></h2>
+        <article class="card">
+          <div class="card__head"><h2 class="h3">Other tickets from this sender</h2></div>
           <ul class="list-rows">
             <% others.forEach(o => { %>
               <li class="list-row"><a href="/admin/messages/<%= o.id %>" class="list-row__title small">#<%= o.id %> <%= o.subject %></a><div class="list-row__meta"><span class="badge badge--<%= badge[o.status] %>"><%= o.status.replace('_',' ') %></span><span class="muted small"><%= h.timeAgo(o.created_at) %></span></div></li>
             <% }) %>
           </ul>
-        </div>
+        </article>
         <% } %>
       </aside>
     </div>

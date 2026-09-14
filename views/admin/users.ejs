@@ -2,7 +2,13 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div><p class="eyebrow">Admin</p><h1>Users</h1><p class="muted">Deactivating a user signs them out everywhere and blocks sign-in; their data is kept.</p></div>
+    <header class="app-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Users</h1>
+        <p class="lead">Deactivating a user signs them out everywhere and blocks sign-in; their data is kept.</p>
+      </div>
+    </header>
 
     <div class="filter-tabs" aria-label="Filter by role">
       <a href="/admin/users<%= qs({ role: '' }) %>" class="<%= !role ? 'is-active' : '' %>">All <span class="count"><%= counts.all %></span></a>
@@ -17,7 +23,7 @@
       <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/users<%= qs({ q: '' }) %>">Clear</a><% } %>
     </form>
 
-    <% if (!rows.length) { %><div class="empty">No users match.</div><% } else { %>
+    <% if (!rows.length) { %><div class="empty"><p>No users match.</p><a class="kds-btn kds-btn--ghost" href="/admin/users">Show all users</a></div><% } else { %>
     <div class="card card--table">
       <div class="table-wrap"><table class="table table--stack table--stack-lg">
         <thead><tr><th>User</th><th>Role</th><th>Created</th><th>Last login</th><th>Profiles</th><th>Jobs</th><th>Applications</th><th>Actions</th></tr></thead>

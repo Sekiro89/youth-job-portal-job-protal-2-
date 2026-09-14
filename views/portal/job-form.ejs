@@ -7,25 +7,28 @@
    const legacy = typeof legacyLocs !== 'undefined' ? legacyLocs : [];
    const nl = v.new_loc || {};
    const newOpen = !!(nl.street_address || nl.city || nl.postal_code || nl.label || Object.keys(errors).some(k => k.startsWith('new_loc_')));
-   const profileHref = isConsultant ? (selPid ? '/consultant/profiles/' + selPid + '/edit#locations' : '/consultant/profiles') : '/employer/profile#locations'; %>
+   const profileHref = isConsultant ? (selPid ? '/consultant/profiles/' + selPid + '/edit#locations' : '/consultant/profiles') : '/employer/profile#locations';
+   const perLabel = (n) => n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly'); %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
-    <div class="split">
+    <header class="app-head">
       <div>
-        <p class="eyebrow"><%= isEdit ? 'Edit posting' : 'New posting' %></p>
+        <p class="eyebrow"><%= isEdit ? 'Edit posting' : 'Post a job' %></p>
         <h1><%= isEdit ? job.title : 'Post a job' %></h1>
-        <% if (isEdit) { %><p class="muted"><%- include('partials/status-badge', { job }) %> <% if (isLive) { %>Changes to a live posting are published immediately.<% } %></p>
-        <% } else { %><p class="muted">Save as a draft for free. Publishing costs $<%= (PRICE/100).toFixed(2) %> + GST (<strong>$<%= (TOTAL/100).toFixed(2) %>/month</strong>), renews monthly, cancel any time.</p><% } %>
+        <p class="app-head__context">
+          <% if (isEdit) { %><%- include('partials/status-badge', { job }) %><span><%= isLive ? 'Changes to a live posting are published immediately.' : 'Save as a draft for free; publish when you are ready.' %></span>
+          <% } else { %><span>Save as a draft for free. Publishing costs $<%= (PRICE/100).toFixed(2) %> + GST ($<%= (TOTAL/100).toFixed(2) %> per month), renews monthly, cancel any time.</span><% } %>
+        </p>
       </div>
-      <% if (isEdit) { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Back to posting</a><% } %>
-    </div>
+      <% if (isEdit) { %><div class="app-head__actions"><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Back to posting</a></div><% } %>
+    </header>
 
     <% if (Object.keys(errors).length) { %><div class="flash flash--error" role="alert">Please fix the <%= Object.keys(errors).length %> highlighted field<%= Object.keys(errors).length === 1 ? '' : 's' %> below.</div><% } %>
 
     <form class="form job-form" method="post" action="<%= isEdit ? base + '/jobs/' + job.id + '/edit' : base + '/jobs/new' %>" novalidate>
       <section class="card form-section">
-        <h2 class="form-section__title"><%= isConsultant ? 'Post as company' : 'Company' %></h2>
+        <div class="card__head"><h2><%= isConsultant ? 'Post as company' : 'Company' %></h2></div>
         <% if (isConsultant) { %>
         <div class="field">
           <label for="employer_profile_id">Which client is this posting for? <span class="req">*</span></label>
@@ -36,7 +39,7 @@
           <% if (locked) { %><input type="hidden" name="employer_profile_id" value="<%= job.employer_profile_id %>"><div class="hint">The company cannot change once billing has started.</div><% } else { %><div class="hint">Not listed? <a href="/consultant/profiles/new?then=post">Add a company</a>.</div><% } %>
           <%- err('employer_profile_id') %>
         </div>
-        <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company profile</a></div>' : '' %><% } %>
+        <% } else { %><input type="hidden" name="employer_profile_id" value="<%= v.employer_profile_id %>"><%- errors.employer_profile_id ? '<div class="flash flash--error">' + h.escapeHtml(errors.employer_profile_id) + ' <a href="/employer/profile">Company</a></div>' : '' %><% } %>
         <% renderProfiles.forEach(p => { const names = p.operating_names && p.operating_names.length ? p.operating_names : (p.operating_name ? [p.operating_name] : []); const isSel = selPid === String(p.id);
              const choice = isSel ? (v.operating_name_choice || '__legal') : (p.operating_name || '__legal'); const custom = choice !== '__legal' && choice !== '__new' && !names.includes(choice); %>
         <div class="field" data-profile="<%= p.id %>"<%= isConsultant && !isSel ? ' hidden' : '' %>>
@@ -59,7 +62,7 @@
       </section>
 
       <section class="card form-section">
-        <h2 class="form-section__title">The role</h2>
+        <div class="card__head"><h2>Basics</h2></div>
         <div class="field">
           <label for="title">Job title <span class="req">*</span></label>
           <input class="input" id="title" name="title" value="<%= v.title %>" maxlength="120" required placeholder="e.g. Registered Nurse — Long-Term Care"<%- inv('title') %>>
@@ -89,44 +92,28 @@
             <%- err('work_arrangement') %>
           </div>
         </div>
-        <div class="form-row form-row--3">
-          <div class="field">
-            <label for="experience_level">Experience</label>
-            <select class="input" id="experience_level" name="experience_level" data-select-toggles="experience_other_wrap" data-toggle-value="other"<%- inv('experience_level') %>>
-              <option value="">Any</option>
-              <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
-            </select>
-            <%- err('experience_level') %>
-            <div class="field field--sub" id="experience_other_wrap" data-nojs-visible>
-              <label for="experience_other">Other experience <span class="muted">(if “Other”)</span></label>
-              <input class="input" id="experience_other" name="experience_other" value="<%= v.experience_other || '' %>" maxlength="120" placeholder="e.g. 3 seasons of tree planting"<%- inv('experience_other') %>>
-              <%- err('experience_other') %>
-            </div>
-          </div>
-          <div class="field">
-            <label for="education">Education</label>
-            <select class="input" id="education" name="education" data-select-toggles="education_other_wrap" data-toggle-value="other"<%- inv('education') %>>
-              <option value="">Not specified</option>
-              <% C.EDUCATION_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.education === k ? 'selected' : '' %>><%= n %></option><% }) %>
-            </select>
-            <%- err('education') %>
-            <div class="field field--sub" id="education_other_wrap" data-nojs-visible>
-              <label for="education_other">Other education <span class="muted">(if “Other”)</span></label>
-              <input class="input" id="education_other" name="education_other" value="<%= v.education_other || '' %>" maxlength="160" placeholder="e.g. Red Seal welding ticket"<%- inv('education_other') %>>
-              <%- err('education_other') %>
-            </div>
-          </div>
-          <div class="field">
-            <label for="noc_code">NOC code <span class="muted">(optional)</span></label>
-            <input class="input" id="noc_code" name="noc_code" value="<%= v.noc_code %>" inputmode="numeric" maxlength="5" placeholder="e.g. 31301"<%- inv('noc_code') %>>
-            <div class="hint">2021 National Occupational Classification — helps LMIA and immigration-focused seekers.</div>
-            <%- err('noc_code') %>
-          </div>
+        <div class="field">
+          <label for="description">Job description <span class="req">*</span></label>
+          <textarea class="input" id="description" name="description" rows="10" minlength="100" maxlength="12000" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
+          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> / 12,000 characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
+          <%- err('description') %>
         </div>
+        <div class="field">
+          <label for="benefits">Benefits</label>
+          <textarea class="input" id="benefits" name="benefits" rows="4" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
+        </div>
+        <fieldset class="field fieldset">
+          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
+          <div class="checks checks--3 checks--aud">
+            <% C.AUDIENCES.forEach(([k, n]) => { %>
+              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
+            <% }) %>
+          </div>
+        </fieldset>
       </section>
 
       <section class="card form-section" id="locations" aria-labelledby="locations-title">
-        <h2 class="form-section__title" id="locations-title">Work location(s) <span class="req">*</span></h2>
+        <div class="card__head"><h2 id="locations-title">Work locations <span class="req">*</span></h2></div>
         <p class="hint hint--lead">Tick every address where the person will work — each one is printed on the posting and shown on the map. Locations come from the company profile (<a href="<%= profileHref %>">manage locations</a>).</p>
         <%- errors.locations ? `<div class="error error--block" id="err-locations" role="alert">${h.escapeHtml(errors.locations)}</div>` : '' %>
         <% if (isConsultant) { %><p class="hint" data-profile-none<%= selPid ? ' hidden' : '' %>>Choose a company above to see its locations.</p><% } %>
@@ -162,7 +149,7 @@
       </section>
 
       <section class="card form-section">
-        <h2 class="form-section__title">Pay &amp; hours</h2>
+        <div class="card__head"><h2>Pay &amp; hours</h2></div>
         <div class="form-row form-row--3">
           <div class="field">
             <label for="salary_min">Pay from (CAD)</label>
@@ -177,21 +164,21 @@
           <div class="field">
             <label for="salary_period">Pay period</label>
             <select class="input" id="salary_period" name="salary_period">
-              <% C.SALARY_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.salary_period || 'year') === k ? 'selected' : '' %>><%= n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly') %></option><% }) %>
+              <% C.SALARY_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.salary_period || 'year') === k ? 'selected' : '' %>><%= perLabel(n) %></option><% }) %>
             </select>
             <div class="hint">Shown as e.g. “$52,000 – $60,000/year” or “$22/hour”.</div>
           </div>
         </div>
         <div class="form-row form-row--3">
           <div class="field">
-            <label for="hours_amount">Number of hours worked <span class="muted">(optional)</span></label>
+            <label for="hours_amount">Hours worked <span class="muted">(optional)</span></label>
             <input class="input" id="hours_amount" name="hours_amount" type="number" inputmode="decimal" min="0.5" max="168" step="0.5" value="<%= v.hours_amount %>" placeholder="e.g. 35"<%- inv('hours_amount') %>>
             <%- err('hours_amount') %>
           </div>
           <div class="field">
             <label for="hours_period">Hours frequency</label>
             <select class="input" id="hours_period" name="hours_period">
-              <% C.HOURS_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.hours_period || 'week') === k ? 'selected' : '' %>><%= n.replace(/^per /, 'Per ').replace(/^bi-weekly$/, 'Bi-weekly') %></option><% }) %>
+              <% C.HOURS_PERIODS.forEach(([k, n]) => { %><option value="<%= k %>" <%= (v.hours_period || 'week') === k ? 'selected' : '' %>><%= perLabel(n) %></option><% }) %>
             </select>
             <div class="hint">Shown as e.g. “35 hours per week”.</div>
           </div>
@@ -201,10 +188,43 @@
             <%- err('vacancies') %>
           </div>
         </div>
-        <div class="field">
-          <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
-          <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
-          <div class="hint">Used for matching job seekers to your posting.</div>
+      </section>
+
+      <section class="card form-section">
+        <div class="card__head"><h2>Requirements</h2></div>
+        <div class="form-row form-row--3">
+          <div class="field">
+            <label for="experience_level">Experience</label>
+            <select class="input" id="experience_level" name="experience_level" data-select-toggles="experience_other_wrap" data-toggle-value="other"<%- inv('experience_level') %>>
+              <option value="">Any</option>
+              <% C.EXPERIENCE_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.experience_level === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('experience_level') %>
+            <div class="field field--sub" id="experience_other_wrap" data-nojs-visible>
+              <label for="experience_other">Other experience <span class="muted">(if “Other”)</span></label>
+              <input class="input" id="experience_other" name="experience_other" value="<%= v.experience_other || '' %>" maxlength="120" placeholder="e.g. 3 seasons of tree planting"<%- inv('experience_other') %>>
+              <%- err('experience_other') %>
+            </div>
+          </div>
+          <div class="field">
+            <label for="education">Education</label>
+            <select class="input" id="education" name="education" data-select-toggles="education_other_wrap" data-toggle-value="other"<%- inv('education') %>>
+              <option value="">Not specified</option>
+              <% C.EDUCATION_LEVELS.forEach(([k, n]) => { %><option value="<%= k %>" <%= v.education === k ? 'selected' : '' %>><%= n %></option><% }) %>
+            </select>
+            <%- err('education') %>
+            <div class="field field--sub" id="education_other_wrap" data-nojs-visible>
+              <label for="education_other">Other education <span class="muted">(if “Other”)</span></label>
+              <input class="input" id="education_other" name="education_other" value="<%= v.education_other || '' %>" maxlength="160" placeholder="e.g. Red Seal welding ticket"<%- inv('education_other') %>>
+              <%- err('education_other') %>
+            </div>
+          </div>
+          <div class="field">
+            <label for="noc_code">NOC code <span class="muted">(optional)</span></label>
+            <input class="input" id="noc_code" name="noc_code" value="<%= v.noc_code %>" inputmode="numeric" maxlength="5" placeholder="e.g. 31301"<%- inv('noc_code') %>>
+            <div class="hint">2021 National Occupational Classification — helps LMIA and immigration-focused seekers.</div>
+            <%- err('noc_code') %>
+          </div>
         </div>
         <fieldset class="field fieldset">
           <legend>Languages <span class="req">*</span></legend>
@@ -220,39 +240,20 @@
           </div>
           <%- err('languages') %>
         </fieldset>
-        <fieldset class="field fieldset">
-          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
-          <div class="checks checks--3 checks--aud">
-            <% C.AUDIENCES.forEach(([k, n]) => { %>
-              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
-            <% }) %>
-          </div>
-        </fieldset>
-      </section>
-
-      <section class="card form-section">
-        <h2 class="form-section__title">Description</h2>
         <div class="field">
-          <label for="description">Job description <span class="req">*</span></label>
-          <textarea class="input" id="description" name="description" rows="10" minlength="100" maxlength="12000" required data-counter="desc-count" placeholder="What the person will do, the team, the shifts, why it is a great place to work…"<%- inv('description') %>><%= v.description %></textarea>
-          <div class="hint"><span id="desc-count"><%= (v.description || '').length %></span> / 12,000 characters · minimum 100. Blank lines start new paragraphs; lines starting with “-” read as bullet points.</div>
-          <%- err('description') %>
+          <label for="skills">Key skills <span class="muted">(comma-separated)</span></label>
+          <input class="input" id="skills" name="skills" value="<%= v.skills %>" maxlength="600" placeholder="e.g. Forklift licence, Customer service, Excel">
+          <div class="hint">Used for matching job seekers to your posting.</div>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="requirements">Requirements</label>
-            <textarea class="input" id="requirements" name="requirements" rows="6" maxlength="6000" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
-          </div>
-          <div class="field">
-            <label for="benefits">Benefits</label>
-            <textarea class="input" id="benefits" name="benefits" rows="6" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
-          </div>
+        <div class="field">
+          <label for="requirements">Requirements</label>
+          <textarea class="input" id="requirements" name="requirements" rows="5" maxlength="6000" placeholder="Licences, certifications, work authorization, experience…"><%= v.requirements %></textarea>
         </div>
       </section>
 
       <section class="card form-section">
-        <h2 class="form-section__title">How to apply</h2>
-        <p class="muted small">Applicants always apply through Canada Careers (resume + cover sheet into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
+        <div class="card__head"><h2>How to apply</h2></div>
+        <p class="hint hint--lead">Applicants always apply through Canada Careers (resume + cover sheet into your dashboard). Add an email or link if you also want applications routed elsewhere.</p>
         <div class="form-row">
           <div class="field">
             <label for="apply_email">Application email (the employer’s inbox)</label>
@@ -268,10 +269,10 @@
         </div>
       </section>
 
-      <div class="form-actions form-actions--sticky">
+      <div class="sticky-bar">
         <button class="kds-btn kds-btn--ghost" type="submit" name="action" value="draft"><%= isEdit ? (isLive ? 'Save changes' : 'Save') : 'Save draft' %></button>
         <% if (canPublish) { %><button class="kds-btn kds-btn--accent" type="submit" name="action" value="publish"><span class="lbl-long"><%= isEdit && job.status === 'pending_payment' ? 'Save & pay now' : 'Save & continue to payment' %></span><span class="lbl-short"><%= isEdit && job.status === 'pending_payment' ? 'Pay now' : 'Publish' %></span> · $<%= (TOTAL/100).toFixed(2) %>/mo</button><% } %>
-        <% if (isEdit) { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>">Cancel</a><% } else { %><a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">Cancel</a><% } %>
+        <a class="kds-btn kds-btn--ghost sticky-bar__cancel" href="<%= isEdit ? base + '/jobs/' + job.id : base + '/jobs' %>">Cancel</a>
       </div>
     </form>
   </div>

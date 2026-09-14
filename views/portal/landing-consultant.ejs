@@ -1,76 +1,91 @@
+<% extraCss.push('/css/landing.css') %>
 <%
 // Pricing copy is computed from lib/constants (the contract source), never from route locals: employers $14.99, consultants $9.99, + 5% GST.
 const _gst = (c) => Math.round(c * C.PRICING.gst_rate), _d = (c) => '$' + (c / 100).toFixed(2);
 const EMP = C.priceCentsFor('employer'), CON = C.priceCentsFor('consultant');
 const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON), TOTAL_CON = _d(CON + _gst(CON));
 %>
-<section class="landing-hero landing-hero--consultant">
-  <div class="container landing-hero__inner">
+<header class="page-head landing-hero">
+  <div class="container page-head__inner">
     <div>
-      <p class="eyebrow">For third party consultants</p>
-      <h1>Post for every client from one login.</h1>
+      <p class="eyebrow">For Third Party Consultants</p>
+      <h1>Post for every client from one login</h1>
       <p class="lead">Recruiters, staffing agencies, HR and immigration consultants: add unlimited employer profiles, post on behalf of any of them, and keep one invoice list across all your clients. <%= PRICE_CON %> per posting per month + GST (<%= TOTAL_CON %>).</p>
-      <div class="cluster landing-hero__cta">
-        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/signup/consultant">Create a consultant account</a>
-        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/login?role=consultant">Consultant sign in</a>
+      <div class="page-head__actions landing-hero__cta">
+        <a class="kds-btn kds-btn--accent" href="/signup/consultant">Create consultant account</a>
+        <a class="kds-btn kds-btn--ghost" href="/login?role=consultant">Consultant sign in</a>
       </div>
-      <p class="small muted">Consultant rate <%= PRICE_CON %> + GST · no per-client fees · no minimums · cancel any posting any time</p>
+      <p class="small muted landing-hero__note">Consultant rate <%= PRICE_CON %> + GST · no per-client fees · no minimums · cancel any posting any time</p>
     </div>
     <div class="landing-hero__art" aria-hidden="true">
-      <div class="mock-card mock-card--stack">
-        <div class="mock-card__row"><span class="logo-md logo-md--placeholder">P</span><div><div class="mock-card__title">Prairie Health Group</div><div class="mock-card__sub">2 active · 46 applicants</div></div></div>
-        <div class="mock-card__row"><span class="logo-md logo-md--placeholder logo-md--teal">M</span><div><div class="mock-card__title">Maple Byte Software</div><div class="mock-card__sub">3 active · 29 applicants</div></div></div>
-        <div class="mock-card__row mock-card__row--add">+ Add a company</div>
+      <div class="card mock mock--stack">
+        <div class="mock__row"><span class="mock__logo">P</span><div><div class="mock__title">Prairie Health Group</div><div class="mock__sub">2 active · 46 applicants</div></div></div>
+        <div class="mock__row"><span class="mock__logo mock__logo--teal">M</span><div><div class="mock__title">Maple Byte Software</div><div class="mock__sub">3 active · 29 applicants</div></div></div>
+        <div class="mock__row mock__row--add">+ Add a company</div>
       </div>
     </div>
   </div>
-</section>
+</header>
 
-<section class="landing-section">
+<section class="section" id="agencies">
   <div class="container">
-    <p class="eyebrow">Built for agencies</p>
-    <h2>One account, all your clients</h2>
+    <div class="section__head">
+      <p class="eyebrow">Built for agencies</p>
+      <h2>One account, all your clients</h2>
+    </div>
     <div class="grid grid--3">
-      <div class="card"><h3>Unlimited employer profiles</h3><p class="muted">Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></div>
-      <div class="card"><h3>Post on behalf of any client</h3><p class="muted">The posting form asks “Post as company”. Switch between clients with one click on every jobs list and dashboard.</p></div>
-      <div class="card"><h3>One invoice list across clients</h3><p class="muted">Billing shows every subscription and numbered GST receipt in one place, grouped by company, and every receipt downloads as a PDF from your login — pass-through invoicing takes minutes.</p></div>
+      <div class="card feature"><h3>Unlimited employer profiles</h3><p>Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></div>
+      <div class="card feature"><h3>Post on behalf of any client</h3><p>The posting form asks “Post as company”. Switch between clients with one click on every jobs list and dashboard.</p></div>
+      <div class="card feature"><h3>One invoice list across clients</h3><p>Billing shows every subscription and numbered GST receipt in one place, grouped by company, and every receipt downloads as a PDF from your login — pass-through invoicing takes minutes.</p></div>
     </div>
   </div>
 </section>
 
-<%- include('partials/landing-audiences') %>
+<%- include('partials/landing-audiences', { mode: 'post' }) %>
 
-<section class="landing-section">
+<section class="section" id="how-it-works">
   <div class="container">
-    <p class="eyebrow">How it works</p>
-    <h2>Three steps per client</h2>
-    <ol class="steps">
-      <li class="step"><span class="step__n">1</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
-      <li class="step"><span class="step__n">2</span><h3>Post as the client</h3><p>Pick the company, write the posting with its full work address (several addresses on one posting are fine), tag the audiences it suits, save a draft or publish straight away.</p></li>
-      <li class="step"><span class="step__n">3</span><h3>Pay <%= PRICE_CON %> + GST per posting</h3><p>Each posting renews monthly for <%= TOTAL_CON %> until you cancel it — the checkout price is locked in for that posting. Applicants for all clients land in one dashboard with a per-company breakdown.</p></li>
+    <div class="section__head">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps per client</h2>
+    </div>
+    <ol class="grid grid--3 steps">
+      <li class="card step"><span class="step__n">1</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
+      <li class="card step"><span class="step__n">2</span><h3>Post as the client</h3><p>Pick the company, write the posting with its full work address (several addresses on one posting are fine), tag the audiences it suits, save a draft or publish straight away.</p></li>
+      <li class="card step"><span class="step__n">3</span><h3>Pay <%= PRICE_CON %> + GST per posting</h3><p>Each posting renews monthly for <%= TOTAL_CON %> until you cancel it — the checkout price is locked in for that posting. Applicants for all clients land in one dashboard with a per-company breakdown.</p></li>
     </ol>
   </div>
 </section>
 
-
-<section class="landing-section">
+<section class="section section--alt" id="posting">
   <div class="container">
-    <p class="eyebrow">What every posting needs</p>
-    <h2>Job Bank-style postings job seekers can trust</h2>
+    <div class="section__head">
+      <p class="eyebrow">What every posting needs</p>
+      <h2>Job Bank-style postings job seekers can trust</h2>
+    </div>
     <div class="grid grid--3">
-      <div class="card"><h3>A full work address</h3><p class="muted">Every posting carries at least one complete work location — street address, city, province and postal code. If the job is offered at several sites, add more than one address to the same posting; seekers see each one listed in full.</p></div>
-      <div class="card"><h3>The client’s operating name</h3><p class="muted">Each client profile carries the name job seekers know the business by (e.g. “Flying Pig”) alongside its legal name. The operating name is shown first on every posting and company page — your agency’s name never appears.</p></div>
-      <div class="card"><h3>Clear pay and requirements</h3><p class="muted">Salary with its period (per hour, day, week, bi-weekly, month or year), education and experience picked from standard lists, an industry category and an optional NOC code — printable on one clean sheet.</p></div>
+      <div class="card feature"><h3>A full work address</h3><p>Every posting carries at least one complete work location — street address, city, province and postal code. If the job is offered at several sites, add more than one address to the same posting; seekers see each one listed in full.</p></div>
+      <div class="card feature"><h3>The client’s operating name</h3><p>Each client profile carries the name job seekers know the business by (e.g. “Flying Pig”) alongside its legal name. The operating name is shown first on every posting and company page — your agency’s name never appears.</p></div>
+      <div class="card feature"><h3>Clear pay and requirements</h3><p>Salary with its period (per hour, day, week, bi-weekly, month or year), education and experience picked from standard lists, an industry category and an optional NOC code — printable on one clean sheet.</p></div>
     </div>
   </div>
 </section>
 
 <%- include('partials/landing-pricing', { signupHref: '/signup/consultant', audienceLabel: 'consultant', priceCents: CON, otherLabel: 'Employers posting for their own company', otherCents: EMP }) %>
 
-<section class="landing-section">
+<%- include('partials/landing-faq', { items: faq, audienceLabel: 'consultants' }) %>
+
+<section class="section section--alt">
   <div class="container">
-    <p class="cluster landing-cta-row"><a class="kds-btn kds-btn--brand" href="/signup/consultant">Create a consultant account</a> <span class="muted">Hiring for your own company only? <a href="/employer">Use the employer account</a> — <%= PRICE_EMP %> + GST per posting.</span></p>
+    <div class="cta-band">
+      <div>
+        <h2>Ready to post for your clients?</h2>
+        <p class="muted">Create your consultant account and add your first client in minutes. Hiring for your own company only? <a href="/employer">Use the Employer account</a> — <%= PRICE_EMP %> + GST per posting.</p>
+      </div>
+      <div class="cta-band__actions">
+        <a class="kds-btn kds-btn--brand" href="/signup/consultant">Create consultant account</a>
+        <a class="kds-btn kds-btn--ghost" href="/contact">Talk to us</a>
+      </div>
+    </div>
   </div>
 </section>
-
-<%- include('partials/landing-faq', { audienceLabel: 'consultants' }) %>

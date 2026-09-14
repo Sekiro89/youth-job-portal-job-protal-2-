@@ -1,48 +1,48 @@
-<section class="container dash">
-  <%- include('_nav') %>
-  <div class="dash__main">
-    <div><p class="eyebrow">Admin</p><h1>Integrations</h1></div>
-
-    <div class="card unlock">
-      <% if (!hasPasscode) { %>
+<section class="container container--narrow unlock">
+  <div class="card">
+    <% if (!hasPasscode) { %>
+      <div class="unlock__head">
         <p class="eyebrow">First-time setup</p>
-        <h2 class="h3">Set the Integrations passcode</h2>
-        <p class="muted">No passcode exists yet. Integrations holds your Stripe keys, email credentials and admin accounts, so it is protected by a second passcode on top of your login. Choose one now (at least <%= passcodeMin %> characters) and share it only with the people who should manage payments and email.</p>
-        <form method="post" action="/admin/integrations/unlock" class="form" autocomplete="off">
-          <input type="hidden" name="action" value="set">
-          <input type="hidden" name="next" value="<%= next %>">
-          <div class="field">
-            <label for="passcode">New passcode</label>
-            <input class="input" id="passcode" name="passcode" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password" autofocus>
-          </div>
-          <div class="field">
-            <label for="passcode2">Repeat the passcode</label>
-            <input class="input" id="passcode2" name="passcode2" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password">
-          </div>
-          <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Set passcode and open Integrations</button></div>
-        </form>
-      <% } else { %>
+        <h1>Set the Integrations passcode</h1>
+        <p class="muted">Integrations holds your Stripe keys, email credentials and admin accounts, so it is protected by a second passcode on top of your login. Choose one now (at least <%= passcodeMin %> characters) and share it only with the people who should manage payments and email.</p>
+      </div>
+      <form method="post" action="/admin/integrations/unlock" class="form" autocomplete="off">
+        <input type="hidden" name="action" value="set">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="field">
+          <label for="passcode">New passcode</label>
+          <input class="input" id="passcode" name="passcode" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password" autofocus>
+        </div>
+        <div class="field">
+          <label for="passcode2">Repeat the passcode</label>
+          <input class="input" id="passcode2" name="passcode2" type="password" required minlength="<%= passcodeMin %>" autocomplete="new-password">
+        </div>
+        <div class="form-actions"><button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Set passcode and open Integrations</button></div>
+      </form>
+    <% } else { %>
+      <div class="unlock__head">
         <p class="eyebrow">Locked</p>
-        <h2 class="h3">Enter the Integrations passcode</h2>
+        <h1>Unlock Integrations</h1>
         <p class="muted">This area holds payment keys, email credentials and admin accounts. Unlocking lasts 15 minutes of activity.</p>
-        <% if (lockedMs > 0) { %>
-          <div class="flash flash--error" role="alert">Too many wrong passcodes. Try again in <%= Math.ceil(lockedMs / 60000) %> minute<%= Math.ceil(lockedMs / 60000) === 1 ? '' : 's' %>.</div>
-        <% } else { %>
-        <form method="post" action="/admin/integrations/unlock" class="form" autocomplete="off">
-          <input type="hidden" name="action" value="unlock">
-          <input type="hidden" name="next" value="<%= next %>">
-          <div class="field">
-            <label for="passcode">Passcode</label>
-            <input class="input" id="passcode" name="passcode" type="password" required autocomplete="current-password" autofocus>
-          </div>
-          <div class="form-actions">
-            <button class="kds-btn kds-btn--brand" type="submit">Unlock</button>
-            <a class="kds-btn kds-btn--ghost" href="/admin">Back to overview</a>
-          </div>
-        </form>
-        <p class="muted small">Forgotten it? Another admin can change it under Access &amp; admins, or the server owner can set <code>ADMIN_PASSCODE</code> in <code>.env</code> and remove the saved one (see <code>docs/ADMIN.md</code>).</p>
-        <% } %>
+      </div>
+      <% if (lockedMs > 0) { %>
+        <div class="flash flash--error" role="alert">Too many wrong passcodes. Try again in <%= Math.ceil(lockedMs / 60000) %> minute<%= Math.ceil(lockedMs / 60000) === 1 ? '' : 's' %>.</div>
+        <div class="form-actions"><a class="kds-btn kds-btn--ghost" href="/admin">Back to overview</a></div>
+      <% } else { %>
+      <form method="post" action="/admin/integrations/unlock" class="form" autocomplete="off">
+        <input type="hidden" name="action" value="unlock">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="field">
+          <label for="passcode">Passcode</label>
+          <input class="input" id="passcode" name="passcode" type="password" required autocomplete="current-password" autofocus>
+        </div>
+        <div class="form-actions">
+          <button class="kds-btn kds-btn--brand" type="submit">Unlock</button>
+          <a class="kds-btn kds-btn--ghost" href="/admin">Back to overview</a>
+        </div>
+      </form>
+      <p class="unlock__foot muted">Forgotten it? Another admin can change it under Access &amp; admins, or the server owner can set <code>ADMIN_PASSCODE</code> in <code>.env</code> and remove the saved one (see <code>docs/ADMIN.md</code>).</p>
       <% } %>
-    </div>
+    <% } %>
   </div>
 </section>

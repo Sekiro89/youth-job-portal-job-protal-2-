@@ -1,34 +1,15 @@
-/* Canada Careers — About Us page. Mobile first. Brand tokens only (see theme.css). */
+/* Canada Careers — About Us. Mobile first; tokens from theme.css only.
+   Skeleton: standard .page-head → one .section holding the facts strip (full width) + [240px sticky TOC | main column] at >=1024
+   → .section--alt closing CTA band. Containers, header band, section paddings, cards and buttons are theme.css primitives. */
 
-/* ---------- hero ---------- */
-.about-hero { background: linear-gradient(180deg, var(--cc-navy-50) 0%, #fff 100%); border-bottom: 1px solid var(--kds-border); padding: 24px 0 28px; }
-.about-hero__inner { max-width: 860px; }
-.about-crumbs ol { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; font-size: .8125rem; color: var(--kds-fg-muted); }
-.about-crumbs li + li::before { content: "›"; margin-right: 6px; color: var(--kds-fg-faint); }
-.about-crumbs a { text-decoration: none; color: var(--kds-fg-muted); }
-.about-hero h1 { max-width: 20ch; }
-.about-hero__lead { max-width: 62ch; }
-.about-hero__lead strong { color: var(--cc-navy); }
-.about-hero__cta { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 0; }
-.about-hero__cta .kds-btn { flex: 1 1 100%; justify-content: center; text-decoration: none; }
-.about-facts { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
-.about-facts li { background: #fff; border: 1px solid var(--kds-border); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; }
-.about-facts strong { font: 800 1.125rem/1.15 var(--cc-font-display); color: var(--cc-navy); }
-.about-facts span { font-size: .8125rem; color: var(--kds-fg-muted); }
-@media (min-width: 640px) {
-  .about-hero__cta .kds-btn { flex: 0 0 auto; }
-  .about-facts { grid-template-columns: repeat(3, 1fr); }
-}
-@media (min-width: 768px) { .about-hero { padding: 40px 0 44px; } }
-@media (min-width: 1024px) { .about-facts { grid-template-columns: repeat(6, 1fr); } .about-hero { padding: 56px 0; } .about-hero__inner { max-width: none; } }
-
-/* ---------- layout: sticky TOC + main column ---------- */
-.about-layout { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); padding-top: 24px; padding-bottom: 24px; }
+/* ---------- layout: facts strip spans both columns; TOC + main below it ---------- */
+.about-layout { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .about-toc { display: none; }
 .about-main { min-width: 0; display: grid; gap: 40px; align-content: start; }
-@media (min-width: 768px) { .about-layout { padding-top: 32px; } .about-main { gap: 56px; } }
+@media (min-width: 768px) { .about-layout { gap: 40px; } .about-main { gap: 48px; } }
 @media (min-width: 1024px) {
-  .about-layout { grid-template-columns: 200px minmax(0, 1fr); gap: 48px; padding-top: 48px; }
+  .about-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 48px 40px; }
+  .about-facts { grid-column: 1 / -1; }
   .about-toc { display: block; position: sticky; top: calc(var(--cc-header-h) + 24px); align-self: start; }
   .about-toc__title { font: 700 .75rem/1 var(--cc-font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--kds-fg-muted); margin: 0 0 12px; }
   .about-toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; border-left: 2px solid var(--kds-border); }
@@ -36,91 +17,83 @@
   .about-toc ol a:hover, .about-toc ol a:focus-visible { color: var(--cc-navy); border-left-color: var(--cc-red); background: var(--cc-navy-50); }
   .about-toc__cta { margin-top: 20px; text-decoration: none; }
 }
-@media (min-width: 1200px) { .about-layout { grid-template-columns: 220px minmax(0, 1fr); gap: 64px; } }
+@media (min-width: 1200px) { .about-layout { gap: 56px 64px; } }
 
-/* ---------- prose + sections ---------- */
+/* ---------- facts strip: 2 → 4 → 7 small cards ---------- */
+.about-facts { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.about-facts li { display: grid; gap: 2px; padding: 14px 16px; }
+.about-facts li:last-child { grid-column: 1 / -1; }
+.about-facts strong { font: 800 1.125rem/1.15 var(--cc-font-display); color: var(--cc-navy); }
+.about-facts span { font-size: .8125rem; color: var(--kds-fg-muted); }
+@media (min-width: 768px) { .about-facts { grid-template-columns: repeat(4, 1fr); } .about-facts li:last-child { grid-column: span 2; } }
+@media (min-width: 1200px) { .about-facts { grid-template-columns: repeat(7, 1fr); } .about-facts li:last-child { grid-column: auto; } }
+
+/* ---------- sections + prose ---------- */
 .about-section { scroll-margin-top: calc(var(--cc-header-h) + 16px); }
-.about-section h2 { margin-bottom: .6em; }
-.about-section h3 { margin-top: 1.4em; }
-.prose { max-width: 72ch; }
-.prose p { font-size: 1.0625rem; line-height: 1.65; }
+.about-section > h2 { margin-top: 0; }
 .prose strong { color: var(--cc-navy); }
 .prose a { font-weight: 500; }
 
 /* ---------- quick answers (AEO) ---------- */
-.about-quick { background: var(--cc-surface); border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 20px; }
-.about-quick h2 { font-size: 1.25rem; }
-.about-quick__list { margin: 0; display: grid; gap: 14px; }
-.about-quick__item { background: #fff; border-radius: 12px; padding: 14px 16px; border-left: 4px solid var(--cc-red); }
+.about-quick { margin: 0; }
+.about-quick__item { border-left: 4px solid var(--cc-red); }
 .about-quick dt { font: 700 .9375rem/1.3 var(--cc-font-display); color: var(--cc-navy); margin-bottom: 6px; }
-.about-quick dd { margin: 0; font-size: .9375rem; line-height: 1.55; color: var(--kds-fg); }
-@media (min-width: 640px) { .about-quick { padding: 24px; } .about-quick__list { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1200px) { .about-quick__list { grid-template-columns: repeat(3, 1fr); } }
+.about-quick dd { margin: 0; font-size: .9375rem; }
 
 /* ---------- audiences (1 → 2 → 5 columns) ---------- */
-.about-aud { list-style: none; margin: 8px 0 28px; padding: 0; display: grid; gap: 14px; grid-template-columns: 1fr; }
-.about-aud__card { position: relative; display: grid; gap: 8px; align-content: start; background: #fff; border: 1px solid var(--kds-border); border-top: 4px solid var(--cc-navy); border-radius: 14px; padding: 18px 16px 16px; }
+.grid--5 { grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, 1fr); } }
+.about-aud { list-style: none; margin: 8px 0 28px; padding: 0; }
+.about-aud__card { position: relative; display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
 .about-aud__card--professionals { border-top-color: var(--cc-aud-professionals); }
 .about-aud__card--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
 .about-aud__card--indigenous { border-top-color: var(--cc-aud-indigenous); }
 .about-aud__card--refugees { border-top-color: var(--cc-aud-refugees); }
 .about-aud__card--youth { border-top-color: var(--cc-aud-youth); }
-.about-aud__icon { width: 48px; height: 48px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
+.about-aud__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
 .about-aud__card--indigenous .about-aud__icon { background: var(--cc-orange-100); }
 .about-aud__card--new_immigrants .about-aud__icon, .about-aud__card--refugees .about-aud__icon { background: var(--cc-teal-100); }
 .about-aud__card--youth .about-aud__icon { background: var(--cc-green-100); }
-.about-aud__card h3 { margin: 0; font-size: 1.0625rem; }
+.about-aud__card h3 { margin: 0; }
 .about-aud__card h3 a { text-decoration: none; }
 .about-aud__card h3 a::after { content: ""; position: absolute; inset: 0; }
-.about-aud__card p { margin: 0; font-size: .9rem; line-height: 1.5; color: var(--kds-fg-muted); }
+.about-aud__card p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
 .about-aud__card .aud { justify-self: start; margin-top: 4px; white-space: nowrap; }
-@media (min-width: 640px) { .about-aud { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) {
-  .about-aud { grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .about-aud__card { padding: 14px 12px 12px; }
-  .about-aud__card h3 { font-size: .95rem; }
-  .about-aud__card p { font-size: .8125rem; }
-  .about-aud__icon { width: 40px; height: 40px; padding: 7px; }
-}
-@media (min-width: 1200px) { .about-aud { gap: 14px; } .about-aud__card { padding: 18px 16px 16px; } .about-aud__card h3 { font-size: 1rem; } .about-aud__card p { font-size: .875rem; } }
 
-/* ---------- how it works ---------- */
-.about-steps { display: grid; gap: 20px; grid-template-columns: 1fr; }
-.about-steps__col { background: var(--cc-surface); border-radius: var(--kds-radius-lg); padding: 20px; }
-.about-steps__col h3 { margin: 0 0 12px; font-size: 1.05rem; }
+/* ---------- how it works (two numbered lists in flat cards) ---------- */
+.about-steps h3 { margin: 0 0 12px; }
 .about-steps__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
-.about-steps__list li { position: relative; padding-left: 44px; line-height: 1.55; counter-increment: step; }
+.about-steps__list li { position: relative; padding-left: 44px; counter-increment: step; }
 .about-steps__list li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy); color: #fff; font: 700 .9rem/1 var(--cc-font-display); }
 .about-steps__list strong { color: var(--cc-navy); }
-@media (min-width: 768px) { .about-steps { grid-template-columns: 1fr 1fr; } }
 
 /* ---------- commitment ---------- */
-.about-commit { display: grid; gap: 14px; grid-template-columns: 1fr; }
-.about-commit__item { border: 1px solid var(--kds-border); border-radius: 14px; padding: 18px; background: #fff; }
-.about-commit__item h3 { margin: 0 0 6px; font-size: 1.05rem; padding-left: 14px; border-left: 3px solid var(--cc-red); }
-.about-commit__item p { margin: 0; font-size: .95rem; line-height: 1.55; color: var(--kds-fg-muted); }
-@media (min-width: 640px) { .about-commit { grid-template-columns: 1fr 1fr; } }
-.about-cite { margin-top: 24px; padding: 16px 18px; border-left: 4px solid var(--cc-teal); background: var(--cc-teal-100); border-radius: 0 12px 12px 0; max-width: 72ch; }
+.about-commit h3 { margin: 0 0 6px; padding-left: 14px; border-left: 3px solid var(--cc-red); }
+.about-commit p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
+.about-cite { margin-top: 20px; padding: 16px 18px; border-left: 4px solid var(--cc-teal); background: var(--cc-teal-100); border-radius: 0 12px 12px 0; max-width: 72ch; }
 .about-cite h3 { margin: 0 0 6px; font-size: .9375rem; }
-.about-cite p { margin: 0; font-size: .9rem; line-height: 1.55; }
+.about-cite p { margin: 0; font-size: .9rem; }
 .about-cite q { font-style: italic; }
 
-/* ---------- FAQ (native details) ---------- */
-.about-faq__list { display: grid; gap: 10px; max-width: 80ch; }
-.about-faq__item { border: 1px solid var(--kds-border); border-radius: 12px; background: #fff; }
-.about-faq__item[open] { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow-1, 0 1px 2px rgba(0,0,0,.04)); }
-.about-faq__item summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 12px 16px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
-.about-faq__item summary::-webkit-details-marker { display: none; }
-.about-faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); transition: transform .15s; }
-.about-faq__item[open] summary::after { content: "–"; background: var(--cc-navy); color: #fff; }
-.about-faq__item summary:hover { color: var(--cc-red); }
-.about-faq__body { padding: 0 16px 16px; }
-.about-faq__body p { margin: 0 0 .5em; line-height: 1.6; }
-.about-faq__more { font-size: .9375rem; font-weight: 500; }
+/* ---------- FAQ: native <details> styled as cards (same look as the landings) ---------- */
+.faq { display: grid; gap: 10px; max-width: 80ch; }
+.faq__item { padding: 0; }
+.faq__item summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 20px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); }
+.faq__item[open] { border-color: var(--cc-line-strong); }
+.faq__item[open] summary::after { content: "–"; background: var(--cc-navy); color: #fff; }
+.faq__item summary:hover { color: var(--cc-red); }
+.faq__body { padding: 0 20px 16px; }
+.faq__body p { margin: 0 0 .5em; }
+.faq__more { font-size: .9375rem; font-weight: 500; }
 
-/* ---------- closing CTA ---------- */
-.about-close { text-align: center; background: var(--cc-navy-50); border-radius: var(--kds-radius-lg); padding: 32px 20px; }
-.about-close h2 { max-width: 22ch; margin-left: auto; margin-right: auto; }
-.about-close .lead { max-width: 56ch; margin: 0 auto; }
-.about-close .about-hero__cta { justify-content: center; }
-@media (min-width: 768px) { .about-close { padding: 48px 32px; } }
+/* ---------- closing CTA band (inside .section--alt) ---------- */
+.cta-band { display: grid; gap: 16px; align-items: center; }
+.cta-band h2, .cta-band p { margin: 0; }
+.cta-band p { margin-top: 6px; max-width: 60ch; }
+.cta-band__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.cta-band__actions .kds-btn { flex: 1 1 auto; }
+@media (min-width: 640px) { .cta-band__actions .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 768px) { .cta-band { grid-template-columns: minmax(0, 1fr) auto; gap: 32px; } }

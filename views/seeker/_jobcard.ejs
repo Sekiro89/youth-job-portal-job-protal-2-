@@ -8,11 +8,11 @@
   <div class="job-card__foot"><span>Posted <%= h.timeAgo(job.published_at) %></span><span><%= h.categoryName(job.category) %></span></div>
   <% if (typeof actions === 'undefined' || actions) { %>
   <div class="job-card__actions">
-    <% if (job.applied) { %><span class="badge badge--positive">Applied</span><% } else { %><a class="kds-btn kds-btn--brand kds-btn--sm" href="/jobs/<%= job.slug %>/apply">Apply</a><% } %>
+    <% if (job.applied) { %><span class="badge badge--positive">Applied</span><% } else { %><a class="kds-btn kds-btn--brand" href="/jobs/<%= job.slug %>/apply">Apply</a><% } %>
     <% if (job.saved) { %>
-      <form method="post" action="/jobs/<%= job.slug %>/unsave" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Unsave</button></form>
+      <form method="post" action="/jobs/<%= job.slug %>/unsave" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Unsave</button></form>
     <% } else { %>
-      <form method="post" action="/jobs/<%= job.slug %>/save" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Save</button></form>
+      <form method="post" action="/jobs/<%= job.slug %>/save" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Save</button></form>
     <% } %>
     <% if (typeof job.score === 'number' && job.score > 0) { %><span class="match-score" title="<%= job.audience_hit ? 'This employer is hiring for people like you' : 'Match score' %>"><%= job.score >= 4 ? 'Strong match' : 'Match' %><%= job.audience_hit ? ' · hiring for you' : '' %></span><% } %>
   </div>

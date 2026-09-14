@@ -1,10 +1,16 @@
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split">
-      <div><h1>Notifications</h1><p class="muted"><%= unreadCount ? `${unreadCount} unread` : 'You are all caught up.' %></p></div>
-      <% if (unreadCount) { %><form method="post" action="/jobseeker/notifications/read" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Mark all as read</button></form><% } %>
-    </div>
+    <header class="app-head">
+      <div class="app-head__inner">
+        <div>
+          <p class="eyebrow">Job seeker</p>
+          <h1>Notifications</h1>
+          <p class="muted"><%= unreadCount ? `${unreadCount} unread` : 'You are all caught up.' %></p>
+        </div>
+        <% if (unreadCount) { %><div class="app-head__actions"><form method="post" action="/jobseeker/notifications/read" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Mark all as read</button></form></div><% } %>
+      </div>
+    </header>
     <% if (notifications.length) { %>
       <ul class="list-plain card notif-list">
         <% notifications.forEach(n => { %>
@@ -17,7 +23,7 @@
                 <div class="small muted"><%= h.formatDateTime(n.created_at) %><% if (!n.read_at) { %> · <strong>Unread</strong><% } %></div>
               </div>
             </div>
-            <% if (!n.read_at) { %><form method="post" action="/jobseeker/notifications/read" class="inline-form"><input type="hidden" name="id" value="<%= n.id %>"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Mark read</button></form><% } %>
+            <% if (!n.read_at) { %><form method="post" action="/jobseeker/notifications/read" class="inline-form notif__action"><input type="hidden" name="id" value="<%= n.id %>"><button class="kds-btn kds-btn--ghost" type="submit">Mark read</button></form><% } %>
           </li>
         <% }) %>
       </ul>

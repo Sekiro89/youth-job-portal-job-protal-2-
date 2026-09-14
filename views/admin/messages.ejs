@@ -2,11 +2,15 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split">
-      <div><p class="eyebrow">Support inbox</p><h1>Messages</h1><p class="muted">Every Contact Us submission lands here<% if (supportEmails.length) { %> and is emailed to <%= supportEmail %><% } else { %>. <strong>No recipient is set</strong> — nobody is emailed (<a href="/admin/integrations#support">fix in Integrations</a>)<% } %>.</p></div>
-    </div>
+    <header class="app-head">
+      <div>
+        <p class="eyebrow">Support inbox</p>
+        <h1>Messages</h1>
+        <p class="lead">Every Contact Us submission lands here<% if (supportEmails.length) { %> and is emailed to <%= supportEmail %><% } else { %>. <strong>No recipient is set</strong> — nobody is emailed (<a href="/admin/integrations#support">fix in Integrations</a>)<% } %>.</p>
+      </div>
+    </header>
 
-    <div class="filter-tabs" role="tablist" aria-label="Filter by status">
+    <div class="filter-tabs" aria-label="Filter by status">
       <% [['all','All'],['new','New'],['in_progress','In progress'],['resolved','Resolved']].forEach(([k,l]) => { %>
         <a href="/admin/messages<%= qs({ status: k === 'all' ? '' : k }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= l %> <span class="count"><%= counts[k] %></span></a>
       <% }) %>
@@ -26,7 +30,7 @@
     </form>
 
     <% if (!rows.length) { %>
-      <div class="empty">No messages match.</div>
+      <div class="empty"><p>No messages match.</p><a class="kds-btn kds-btn--ghost" href="/admin/messages">Show all messages</a></div>
     <% } else { %>
     <div class="card card--table">
       <div class="table-wrap"><table class="table table--stack">

@@ -2,15 +2,18 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div>
-      <p class="eyebrow">Admin</p><h1>Mail outbox</h1>
-      <p class="muted">Every email the site produces is recorded here, sent from <code><%= mailFrom %></code>.
-      <% if (mailConfigured) { %>Provider: <strong><%= mailProvider === 'smtp' ? 'SMTP' : 'Resend' %></strong> — <em>sent</em> means handed to the provider; <em>failed</em> shows the provider's error.<% } else { %><strong>No email provider is configured</strong> (<a href="/admin/integrations#email">set one up</a>), so nothing is actually delivered — emails are <em>logged</em> here and you can open each one to read it.<% } %></p>
-    </div>
+    <header class="app-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Mail outbox</h1>
+        <p class="lead">Every email the site produces is recorded here, sent from <code><%= mailFrom %></code>.
+        <% if (mailConfigured) { %>Provider: <strong><%= mailProvider === 'smtp' ? 'SMTP' : 'Resend' %></strong> — <em>sent</em> means handed to the provider; <em>failed</em> shows the provider's error.<% } else { %><strong>No email provider is configured</strong> (<a href="/admin/integrations#email">set one up</a>), so nothing is delivered — emails are <em>logged</em> here and you can open each one to read it.<% } %></p>
+      </div>
+    </header>
 
     <div class="filter-tabs" aria-label="Filter by status">
       <a href="/admin/outbox<%= qs({ status: '', page: '' }) %>" class="<%= !status ? 'is-active' : '' %>">All <span class="count"><%= counts.all %></span></a>
-      <% ['logged','sent','queued','failed'].forEach(k => { %><a href="/admin/outbox<%= qs({ status: k, page: '' }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= k %> <span class="count"><%= counts[k] || 0 %></span></a><% }) %>
+      <% [['logged','Logged'],['sent','Sent'],['queued','Queued'],['failed','Failed']].forEach(([k, l]) => { %><a href="/admin/outbox<%= qs({ status: k, page: '' }) %>" class="<%= status === k ? 'is-active' : '' %>"><%= l %> <span class="count"><%= counts[k] || 0 %></span></a><% }) %>
     </div>
 
     <form method="get" action="/admin/outbox" class="filter-bar">
@@ -21,7 +24,7 @@
       <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/outbox<%= qs({ q: '', page: '' }) %>">Clear</a><% } %>
     </form>
 
-    <% if (!rows.length) { %><div class="empty">No emails match.</div><% } else { %>
+    <% if (!rows.length) { %><div class="empty"><p>No emails match.</p><a class="kds-btn kds-btn--ghost" href="/admin/outbox">Show all emails</a></div><% } else { %>
     <div class="card card--table">
       <div class="table-wrap"><table class="table table--stack">
         <thead><tr><th>#</th><th>To</th><th>Subject</th><th>Status</th><th>Created</th></tr></thead>
@@ -30,7 +33,7 @@
             <tr>
               <td data-label="Email"><a href="/admin/outbox/<%= e.id %>">#<%= e.id %></a></td>
               <td data-label="To"><%= e.to_email %></td>
-              <td data-label="Subject"><a href="/admin/outbox/<%= e.id %>" class="row-title"><%= e.subject %></a><% if (e.error) { %><br><span class="small" style="color:var(--kds-danger)"><%= e.error %></span><% } %></td>
+              <td data-label="Subject"><a href="/admin/outbox/<%= e.id %>" class="row-title"><%= e.subject %></a><% if (e.error) { %><br><span class="small text-danger"><%= e.error %></span><% } %></td>
               <td data-label="Status"><span class="badge badge--<%= badge[e.status] || '' %>"><%= e.status %></span></td>
               <td data-label="Created"><span title="<%= h.formatDateTime(e.created_at) %>"><%= h.timeAgo(e.created_at) %></span></td>
             </tr>
@@ -38,13 +41,7 @@
         </tbody>
       </table></div>
     </div>
-    <% if (pages > 1) { %>
-      <nav class="cluster pager" aria-label="Pages">
-        <% if (pageNo > 1) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/admin/outbox<%= qs({ page: pageNo - 1 }) %>">← Newer</a><% } %>
-        <span class="muted small">Page <%= pageNo %> of <%= pages %> · <%= total %> emails</span>
-        <% if (pageNo < pages) { %><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/admin/outbox<%= qs({ page: pageNo + 1 }) %>">Older →</a><% } %>
-      </nav>
-    <% } %>
+    <%- include('_pager', { pg: { pageNo, pages, total }, unit: 'emails', qs: (o) => qs({ page: '', ...o }) }) %>
     <% } %>
   </div>
 </section>

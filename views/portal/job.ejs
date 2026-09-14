@@ -6,52 +6,37 @@
    if (job.status === 'active') timeline.push({ label: (sub && sub.cancel_at_period_end) ? 'Ends' : 'Renews', at: job.expires_at, done: false, future: true });
    if (['expired','cancelled','inactive'].includes(job.status)) timeline.push({ label: job.status === 'inactive' ? 'Paused' : h.statusLabel(job.status), at: job.archived_at || job.cancelled_at || job.expires_at, done: true, bad: true });
    const subStatus = sub ? ({ pending: 'Awaiting payment', active: sub.cancel_at_period_end ? 'Cancels at period end' : 'Active — renews monthly', past_due: 'Payment failed', cancelled: 'Cancelled' })[sub.status] : 'No subscription yet';
-   const subBadge = sub ? ({ pending: 'warning', active: sub.cancel_at_period_end ? 'warning' : 'positive', past_due: 'danger', cancelled: 'danger' })[sub.status] : ''; %>
+   const subBadge = sub ? ({ pending: 'warning', active: sub.cancel_at_period_end ? 'warning' : 'positive', past_due: 'danger', cancelled: 'danger' })[sub.status] : '';
+   const price = (c) => '$' + (c/100).toFixed(2); %>
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
-    <div class="split">
+    <header class="app-head">
       <div>
         <div class="company-head"><p class="eyebrow"><%= h.displayCompany(job) %></p><% if (h.legalNameNote(job)) { %><span class="legal-note"><%= h.legalNameNote(job) %></span><% } %></div>
         <h1><%= job.title %></h1>
-        <p class="cluster">
+        <p class="app-head__context">
           <%- include('partials/status-badge', { job: Object.assign({}, job, { cancel_at_period_end: sub && sub.cancel_at_period_end, current_period_end: sub && sub.current_period_end }) }) %>
-          <span class="muted small"><%= h.location(job) %><%= (job.locations || []).length > 1 ? ' +' + (job.locations.length - 1) + ' more' : '' %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
+          <span class="small"><%= h.location(job) %><%= (job.locations || []).length > 1 ? ' +' + (job.locations.length - 1) + ' more' : '' %> · <%= h.jobTypeName(job.job_type) %> · <%= job.views %> views</span>
           <% if (isLivePublic) { %><a class="small" href="/jobs/<%= job.slug %>" target="_blank" rel="noopener">View public posting ↗</a><% } %>
         </p>
       </div>
-      <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">← All jobs</a>
-    </div>
-
-    <div class="action-bar card card--flat">
-      <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>/edit">Edit</a>
-      <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>/applicants">Applicants (<%= job.applicants %>)</a>
-      <% if (['draft','pending_payment'].includes(job.status)) { %>
-        <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/publish"><button class="kds-btn kds-btn--accent" type="submit"><%= job.status === 'draft' ? 'Publish · $' + (TOTAL/100).toFixed(2) + '/mo' : 'Pay now · $' + (TOTAL/100).toFixed(2) %></button></form>
-      <% } %>
-      <% if (job.status === 'active') { %>
-        <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/pause"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Pause this posting? It will be hidden from job seekers immediately. Your subscription keeps renewing until you cancel it.">Pause</button></form>
-      <% } %>
-      <% if (canReactivate) { %>
-        <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/reactivate"><button class="kds-btn kds-btn--brand" type="submit">Reactivate</button></form>
-      <% } %>
-      <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/duplicate"><button class="kds-btn kds-btn--ghost" type="submit">Duplicate</button></form>
-      <% if (canDelete) { %>
-        <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/delete"><button class="kds-btn kds-btn--ghost kds-btn--danger-text" type="submit" data-confirm="Delete this draft permanently?">Delete draft</button></form>
-      <% } %>
-    </div>
+      <div class="app-head__actions">
+        <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs">All jobs</a>
+        <a class="kds-btn kds-btn--brand" href="<%= base %>/jobs/<%= job.id %>/edit">Edit posting</a>
+      </div>
+    </header>
 
     <% if (job.status === 'inactive') { %>
       <div class="flash flash--info" role="status">
         This posting is paused and hidden from job seekers.
-        <% if (sub && sub.status === 'active') { %>Your subscription is still active and <strong>keeps charging $<%= (sub.total_cents/100).toFixed(2) %> on <%= h.formatDate(sub.current_period_end) %></strong> until you cancel it. <%= canReactivate ? 'Reactivate to make it live again at no extra cost.' : '' %><% } %>
+        <% if (sub && sub.status === 'active') { %>Your subscription is still active and <strong>keeps charging <%= price(sub.total_cents) %> on <%= h.formatDate(sub.current_period_end) %></strong> until you cancel it. <%= canReactivate ? 'Reactivate to make it live again at no extra cost.' : '' %><% } %>
       </div>
     <% } %>
 
     <div class="grid grid--job">
       <section class="card preview">
-        <h2 class="card__title">Preview</h2>
-        <p class="small muted">This is how job seekers see the posting.</p>
+        <div class="card__head"><h2>Preview</h2><span class="small muted">How job seekers see it</span></div>
         <article class="job-card job-card--preview">
           <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= (job.locations || []).length > 1 ? ' (+' + (job.locations.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
           <h3 class="job-card__title"><%= job.title %></h3>
@@ -85,33 +70,51 @@
       </section>
 
       <aside class="stack">
-        <section class="card">
-          <h2 class="card__title">Subscription</h2>
+        <section class="card" aria-labelledby="status-title">
+          <div class="card__head"><h2 id="status-title">Status &amp; subscription</h2></div>
           <p><span class="badge badge--<%= subBadge %>"><%= subStatus %></span></p>
           <dl class="facts facts--tight">
-            <div><dt>Price</dt><dd>$<%= ((sub ? sub.price_cents : PRICE)/100).toFixed(2) %> + GST = <strong>$<%= ((sub ? sub.total_cents : TOTAL)/100).toFixed(2) %>/month</strong></dd></div>
+            <div><dt>Price</dt><dd><%= price(sub ? sub.price_cents : PRICE) %> + GST = <strong><%= price(sub ? sub.total_cents : TOTAL) %>/month</strong></dd></div>
             <% if (sub && sub.current_period_start) { %><div><dt>Current period</dt><dd><%= h.formatDate(sub.current_period_start) %> → <%= h.formatDate(sub.current_period_end) %></dd></div><% } %>
             <% if (sub && sub.status === 'active') { %><div><dt><%= sub.cancel_at_period_end ? 'Ends' : 'Next charge' %></dt><dd><%= h.formatDate(sub.current_period_end) %></dd></div><% } %>
             <% if (sub && sub.cancelled_at) { %><div><dt>Cancelled</dt><dd><%= h.formatDate(sub.cancelled_at) %></dd></div><% } %>
             <% if (sub) { %><div><dt>Provider</dt><dd><%= sub.provider === 'stripe' ? 'Card (Stripe)' : 'Sandbox' %></dd></div><% } %>
           </dl>
-          <% if (sub && sub.status === 'active' && !sub.cancel_at_period_end) { %>
-            <div class="stack">
-              <form method="post" action="/billing/cancel/<%= job.id %>"><button class="kds-btn kds-btn--ghost kds-btn--block" type="submit" data-confirm="Cancel the subscription? The posting stays live until <%= h.formatDate(sub.current_period_end) %>, then it is archived. No further charges.">Cancel subscription at period end</button></form>
-              <form method="post" action="/billing/cancel/<%= job.id %>?now=1"><button class="kds-btn kds-btn--ghost kds-btn--block kds-btn--danger-text" type="submit" data-confirm="Cancel this posting NOW? It is removed from the site immediately and cannot be un-cancelled. No refund for the remaining days.">Cancel posting immediately</button></form>
-            </div>
-          <% } else if (sub && sub.status === 'active' && sub.cancel_at_period_end) { %>
-            <form method="post" action="/billing/resume/<%= job.id %>"><button class="kds-btn kds-btn--brand kds-btn--block" type="submit">Keep subscription (undo cancel)</button></form>
-          <% } else if (['draft','pending_payment'].includes(job.status)) { %>
+          <% if (['draft','pending_payment'].includes(job.status)) { %>
             <p class="small muted">No charge until you publish. Publishing starts a monthly subscription you can cancel any time.</p>
           <% } else if (['expired','cancelled'].includes(job.status)) { %>
             <p class="small muted">This subscription has ended. Duplicate the posting to publish it again with a new subscription.</p>
           <% } %>
-          <p class="small"><a href="/billing">Billing &amp; receipts</a></p>
+          <div class="job-actions">
+            <% if (['draft','pending_payment'].includes(job.status)) { %>
+              <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/publish"><button class="kds-btn kds-btn--accent" type="submit"><%= job.status === 'draft' ? 'Publish · ' + price(TOTAL) + '/mo' : 'Pay now · ' + price(TOTAL) %></button></form>
+            <% } %>
+            <% if (canReactivate) { %>
+              <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/reactivate"><button class="kds-btn kds-btn--accent" type="submit">Reactivate posting</button></form>
+            <% } %>
+            <% if (sub && sub.status === 'active' && sub.cancel_at_period_end) { %>
+              <form class="inline-form" method="post" action="/billing/resume/<%= job.id %>"><button class="kds-btn kds-btn--brand" type="submit">Keep subscription (undo cancel)</button></form>
+            <% } %>
+            <div class="job-actions__row">
+              <a class="kds-btn kds-btn--ghost" href="<%= base %>/jobs/<%= job.id %>/applicants">Applicants (<%= job.applicants %>)</a>
+              <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/duplicate"><button class="kds-btn kds-btn--ghost" type="submit">Duplicate</button></form>
+            </div>
+            <% if (job.status === 'active') { %>
+              <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/pause"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Pause this posting? It will be hidden from job seekers immediately. Your subscription keeps renewing until you cancel it.">Pause posting</button></form>
+            <% } %>
+            <% if (sub && sub.status === 'active' && !sub.cancel_at_period_end) { %>
+              <form class="inline-form" method="post" action="/billing/cancel/<%= job.id %>"><button class="kds-btn kds-btn--ghost" type="submit" data-confirm="Cancel the subscription? The posting stays live until <%= h.formatDate(sub.current_period_end) %>, then it is archived. No further charges.">Cancel at period end</button></form>
+              <form class="inline-form" method="post" action="/billing/cancel/<%= job.id %>?now=1"><button class="kds-btn kds-btn--ghost kds-btn--danger-text" type="submit" data-confirm="Cancel this posting NOW? It is removed from the site immediately and cannot be un-cancelled. No refund for the remaining days.">Cancel now</button></form>
+            <% } %>
+            <% if (canDelete) { %>
+              <form class="inline-form" method="post" action="<%= base %>/jobs/<%= job.id %>/delete"><button class="kds-btn kds-btn--ghost kds-btn--danger-text" type="submit" data-confirm="Delete this draft permanently?">Delete draft</button></form>
+            <% } %>
+          </div>
+          <p class="small" style="margin: 12px 0 0"><a href="/billing">Billing &amp; receipts</a></p>
         </section>
 
         <section class="card">
-          <h2 class="card__title">Timeline</h2>
+          <div class="card__head"><h2>Timeline</h2></div>
           <ol class="timeline">
             <% timeline.forEach(t => { %><li class="<%= t.done ? 'is-done' : '' %> <%= t.future ? 'is-future' : '' %> <%= t.bad ? 'is-bad' : '' %>"><span class="timeline__label"><%= t.label %></span><span class="timeline__at"><%= t.at ? h.formatDateTime(t.at) : '—' %></span></li><% }) %>
           </ol>
@@ -119,18 +122,18 @@
 
         <% if (payments.length) { %>
         <section class="card">
-          <h2 class="card__title">Payments</h2>
+          <div class="card__head"><h2>Payments</h2></div>
           <ul class="list-plain">
-            <% payments.forEach(p => { %><li class="split small"><span><%= h.formatDate(p.paid_at) %> · <%= p.receipt_number || '' %></span><span><strong>$<%= (p.total_cents/100).toFixed(2) %></strong> <a href="/billing/receipt/<%= p.id %>">Receipt</a></span></li><% }) %>
+            <% payments.forEach(p => { %><li class="list-row small"><span class="list-row__main"><%= h.formatDate(p.paid_at) %> · <%= p.receipt_number || '' %></span><span><strong><%= price(p.total_cents) %></strong> <a href="/billing/receipt/<%= p.id %>">Receipt</a></span></li><% }) %>
           </ul>
         </section>
         <% } %>
 
         <section class="card">
-          <div class="split"><h2 class="card__title">Applicants</h2><a class="small" href="<%= base %>/jobs/<%= job.id %>/applicants">All (<%= job.applicants %>)</a></div>
+          <div class="card__head"><h2>Applicants</h2><a class="small" href="<%= base %>/jobs/<%= job.id %>/applicants">All (<%= job.applicants %>)</a></div>
           <% if (!recent.length) { %><p class="small muted">No applications yet.</p><% } else { %>
             <ul class="list-plain">
-              <% recent.forEach(a => { %><li class="split small"><span><strong><%= a.name %></strong><br><span class="muted"><%= h.timeAgo(a.created_at) %></span></span><span class="badge"><%= APP_STATUS_NAME[a.status] %></span></li><% }) %>
+              <% recent.forEach(a => { %><li class="list-row small"><span class="list-row__main"><strong><%= a.name %></strong><br><span class="muted"><%= h.timeAgo(a.created_at) %></span></span><span class="badge"><%= APP_STATUS_NAME[a.status] %></span></li><% }) %>
             </ul>
           <% } %>
         </section>

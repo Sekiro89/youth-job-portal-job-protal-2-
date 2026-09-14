@@ -2,7 +2,13 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div><p class="eyebrow">Admin</p><h1>Jobs</h1><p class="muted">Every posting on the site, including archived ones. Only <strong>Active</strong> jobs whose paid period has not ended are visible to the public.</p></div>
+    <header class="app-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Jobs</h1>
+        <p class="lead">Every posting on the site, including archived ones. Only <strong>Active</strong> jobs whose paid period has not ended are visible to the public.</p>
+      </div>
+    </header>
 
     <div class="filter-tabs" aria-label="Filter by status">
       <% [['all','All'],['active','Active'],['pending_payment','Awaiting payment'],['draft','Draft'],['archived','Archived'],['expired','Expired'],['cancelled','Cancelled'],['inactive','Inactive']].forEach(([k,l]) => { %>
@@ -18,7 +24,7 @@
       <% if (q) { %><a class="kds-btn kds-btn--ghost" href="/admin/jobs<%= qs({ q: '' }) %>">Clear</a><% } %>
     </form>
 
-    <% if (!rows.length) { %><div class="empty">No jobs match.</div><% } else { %>
+    <% if (!rows.length) { %><div class="empty"><p>No jobs match.</p><a class="kds-btn kds-btn--ghost" href="/admin/jobs">Show all jobs</a></div><% } else { %>
     <div class="card card--table">
       <div class="table-wrap"><table class="table table--stack table--stack-lg">
         <thead><tr><th>Job</th><th>Company / owner</th><th>Status</th><th>Published</th><th>Expires</th><th>Views</th><th>Applicants</th><th>Actions</th></tr></thead>

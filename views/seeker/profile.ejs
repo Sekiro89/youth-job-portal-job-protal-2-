@@ -2,11 +2,20 @@
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split"><div><h1>My profile</h1><p class="muted">Your profile powers your job matches and alerts. Employers only see it when you apply.</p></div><span class="badge <%= meter.percent === 100 ? 'badge--positive' : 'badge--warning' %>"><%= meter.percent %>% complete</span></div>
+    <header class="app-head">
+      <div class="app-head__inner">
+        <div>
+          <p class="eyebrow">Job seeker</p>
+          <h1>My profile</h1>
+          <p class="muted">Your profile powers your job matches and alerts. Employers only see it when you apply.</p>
+        </div>
+        <div class="app-head__actions"><span class="badge <%= meter.percent === 100 ? 'badge--positive' : 'badge--warning' %>"><%= meter.percent %>% complete</span></div>
+      </div>
+    </header>
 
     <form method="post" action="/jobseeker/profile" enctype="multipart/form-data" class="form profile-form" novalidate>
       <section class="card stack" aria-labelledby="about-h">
-        <h2 id="about-h" class="h3">About you</h2>
+        <div class="card__head"><h2 id="about-h" class="h3">About you</h2></div>
         <div class="field" id="f-headline">
           <label for="headline">Headline</label>
           <input class="input" id="headline" name="headline" maxlength="120" value="<%= profile.headline || '' %>" placeholder="e.g. Registered Nurse (IEN) — 6 years experience">
@@ -30,29 +39,8 @@
         </fieldset>
       </section>
 
-      <section class="card stack" id="f-resume" aria-labelledby="resume-h">
-        <h2 id="resume-h" class="h3">Resume</h2>
-        <% if (profile.resume_path) { %>
-          <div class="resume-box">
-            <div class="resume-box__icon" aria-hidden="true">📄</div>
-            <div class="resume-box__meta"><strong><%= profile.resume_name %></strong><span class="small muted">Uploaded <%= h.formatDate(profile.resume_uploaded_at) %></span></div>
-            <div class="cluster"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/resume">Download</a><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" form="remove-resume" data-confirm="Remove your resume? You will need to upload one before applying.">Remove resume</button></div>
-          </div>
-          <p class="small muted">Upload a new file below to replace it.</p>
-        <% } else { %>
-          <p class="muted">No resume on file yet. You need one to apply.</p>
-        <% } %>
-        <div class="field">
-          <label for="resume"><%= profile.resume_path ? 'Replace resume' : 'Upload resume' %></label>
-          <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-          <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB</span>
-          <% if (errors.resume) { %><span class="error"><%= errors.resume %></span><% } %>
-        </div>
-      </section>
-
       <section class="card stack" aria-labelledby="want-h">
-        <h2 id="want-h" class="h3">What you are looking for</h2>
-        <p class="small muted">These choices are your job-alert criteria too.</p>
+        <div class="card__head"><h2 id="want-h" class="h3">What you are looking for</h2><span class="small muted">Also your job-alert criteria</span></div>
         <fieldset class="field" id="f-categories">
           <legend>Job categories</legend>
           <div class="checks checks--3"><% C.CATEGORIES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="categories" value="<%= k %>" <%= checked(profile.categories, k) %>> <%= n %></label><% }) %></div>
@@ -67,11 +55,6 @@
             <div class="checks"><% C.WORK_ARRANGEMENTS.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="work_arrangements" value="<%= k %>" <%= checked(profile.work_arrangements, k) %>> <%= n %></label><% }) %></div>
           </fieldset>
         </div>
-        <fieldset class="field" id="f-provinces">
-          <legend>Provinces and territories where you will work</legend>
-          <span class="hint">Leave all unchecked to match jobs anywhere in Canada. Remote jobs always match.</span>
-          <div class="checks checks--3"><% C.PROVINCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="provinces" value="<%= k %>" <%= checked(profile.provinces, k) %>> <%= n %></label><% }) %></div>
-        </fieldset>
         <div class="form-row">
           <div class="field" id="f-keywords">
             <label for="keywords">Keywords</label>
@@ -86,8 +69,36 @@
         </div>
       </section>
 
-      <div class="form-actions sticky-actions">
-        <button class="kds-btn kds-btn--brand" type="submit">Save profile</button>
+      <section class="card stack" id="f-provinces" aria-labelledby="where-h">
+        <div class="card__head"><h2 id="where-h" class="h3">Where you will work</h2></div>
+        <fieldset class="field">
+          <legend>Provinces and territories</legend>
+          <span class="hint">Leave all unchecked to match jobs anywhere in Canada. Remote jobs always match.</span>
+          <div class="checks checks--3"><% C.PROVINCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="provinces" value="<%= k %>" <%= checked(profile.provinces, k) %>> <%= n %></label><% }) %></div>
+        </fieldset>
+      </section>
+
+      <section class="card stack" id="f-resume" aria-labelledby="resume-h">
+        <div class="card__head"><h2 id="resume-h" class="h3">Resume</h2><% if (profile.resume_path) { %><span class="badge badge--positive">On file</span><% } else { %><span class="badge badge--warning">Needed to apply</span><% } %></div>
+        <% if (profile.resume_path) { %>
+          <div class="resume-box">
+            <div class="resume-box__icon" aria-hidden="true">📄</div>
+            <div class="resume-box__meta"><strong><%= profile.resume_name %></strong><span class="small muted">Uploaded <%= h.formatDate(profile.resume_uploaded_at) %></span></div>
+            <div class="cluster"><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/resume">Download</a><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit" form="remove-resume" data-confirm="Remove your resume? You will need to upload one before applying.">Remove</button></div>
+          </div>
+        <% } else { %>
+          <p class="muted" style="margin:0">No resume on file yet. You need one to apply.</p>
+        <% } %>
+        <div class="field">
+          <label for="resume"><%= profile.resume_path ? 'Replace resume' : 'Upload resume' %></label>
+          <input class="input input--file" type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+          <span class="hint">PDF, DOC or DOCX · up to <%= Math.round(C.RESUME_MAX_BYTES / 1024 / 1024) %> MB<%= profile.resume_path ? ' · replaces the file above' : '' %></span>
+          <% if (errors.resume) { %><span class="error"><%= errors.resume %></span><% } %>
+        </div>
+      </section>
+
+      <div class="sticky-bar">
+        <button class="kds-btn kds-btn--accent" type="submit">Save profile</button>
         <a class="kds-btn kds-btn--ghost" href="/jobseeker/dashboard">Cancel</a>
       </div>
     </form>

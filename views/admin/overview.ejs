@@ -1,27 +1,16 @@
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split">
-      <div><p class="eyebrow">Admin</p><h1>Overview</h1><p class="muted">Welcome back, <%= user.name %>. <% if (!mailConfigured) { %>No email provider is configured — every email is recorded in the <a href="/admin/outbox">mail outbox</a> instead of being sent. Set one up under <a href="/admin/integrations#email">Integrations</a>.<% } %></p></div>
-      <a class="kds-btn kds-btn--brand" href="/admin/messages?status=new">Open new messages<% if (counts.new_messages) { %> (<%= counts.new_messages %>)<% } %></a>
-    </div>
-
-    <div class="card setup-card <%= status.supportEmails.length ? '' : 'setup-card--warn' %>">
-      <div class="split">
-        <div>
-          <h2 class="card__title h3">Contact Us recipients</h2>
-          <% if (status.supportEmails.length) { %>
-            <p class="small">Every Contact Us message is emailed to <% status.supportEmails.forEach((e, i) => { %><strong><%= e %></strong><%= i < status.supportEmails.length - 1 ? ', ' : '' %><% }) %> (Reply-To = the visitor) and lands in <a href="/admin/messages">Messages</a>.</p>
-          <% } else { %>
-            <p class="small"><strong>No recipient is set.</strong> Contact Us messages are stored in <a href="/admin/messages">Messages</a> but nobody is emailed about them. Add an address under Integrations → Contact Us routing.</p>
-          <% } %>
-          <p class="small muted">Payments: <strong><%= status.modeLabel %></strong> · Email: <strong><%= { none: 'none', smtp: 'SMTP', resend: 'Resend' }[status.mailProvider] || status.mailProvider %></strong> · Maps: <strong><%= status.mapsProvider === 'google' ? 'Google' : 'OpenStreetMap' %></strong> · Job Bank import: <strong><%= status.jobbank ? 'on' : 'off' %></strong></p>
-        </div>
-        <a class="kds-btn kds-btn--ghost" href="/admin/integrations">Open Integrations</a>
+    <header class="app-head app-head--actions">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Overview</h1>
+        <p class="lead">Welcome back, <%= user.name %>.<% if (!mailConfigured) { %> No email provider is set up — every email is recorded in the <a href="/admin/outbox">mail outbox</a> instead of being sent.<% } %></p>
       </div>
-    </div>
+      <div class="app-head__actions"><a class="kds-btn kds-btn--brand" href="/admin/messages?status=new">Open new messages<% if (counts.new_messages) { %> (<%= counts.new_messages %>)<% } %></a></div>
+    </header>
 
-    <div class="stats stats--admin">
+    <div class="stats">
       <a class="stat <%= counts.new_messages ? 'stat--alert' : '' %>" href="/admin/messages?status=new"><div class="stat__value"><%= counts.new_messages %></div><div class="stat__label">New messages</div></a>
       <a class="stat" href="/admin/messages?status=in_progress"><div class="stat__value"><%= counts.open_messages %></div><div class="stat__label">In progress</div></a>
       <a class="stat" href="/admin/jobs?status=active"><div class="stat__value"><%= counts.active_jobs %></div><div class="stat__label">Active jobs</div></a>
@@ -32,19 +21,29 @@
       <a class="stat <%= counts.failed_mail ? 'stat--alert' : '' %>" href="/admin/outbox?status=failed"><div class="stat__value"><%= counts.failed_mail %></div><div class="stat__label">Failed emails</div></a>
     </div>
 
-    <div class="card">
-      <h2 class="card__title h3">Users by role</h2>
+    <section class="card <%= status.supportEmails.length ? '' : 'card--warn' %>">
+      <div class="card__head"><h2 class="h3">Contact Us recipients</h2><a class="small" href="/admin/integrations#support">Change →</a></div>
+      <% if (status.supportEmails.length) { %>
+        <p>Every Contact Us message is emailed to <% status.supportEmails.forEach((e, i) => { %><strong><%= e %></strong><%= i < status.supportEmails.length - 1 ? ', ' : '' %><% }) %> (Reply-To = the visitor) and lands in <a href="/admin/messages">Messages</a>.</p>
+      <% } else { %>
+        <p><strong>No recipient is set.</strong> Contact Us messages are stored in <a href="/admin/messages">Messages</a> but nobody is emailed about them. Add an address under Integrations → Contact Us routing.</p>
+      <% } %>
+      <p class="small muted" style="margin:0">Payments: <strong><%= status.mode === 'live' ? 'Stripe live' : status.mode === 'test' ? 'Stripe test' : 'Sandbox' %></strong> · Email: <strong><%= { none: 'none', smtp: 'SMTP', resend: 'Resend' }[status.mailProvider] || status.mailProvider %></strong> · Maps: <strong><%= status.mapsProvider === 'google' ? 'Google' : 'OpenStreetMap' %></strong> · Job Bank import: <strong><%= status.jobbank ? 'on' : 'off' %></strong> · <a href="/admin/integrations">Open Integrations</a></p>
+    </section>
+
+    <section class="card">
+      <div class="card__head"><h2 class="h3">Users by role</h2><a class="small" href="/admin/users">All users →</a></div>
       <ul class="cluster role-chips">
         <li><a href="/admin/users?role=employer" class="badge">Employers <strong><%= usersByRole.employer %></strong></a></li>
         <li><a href="/admin/users?role=consultant" class="badge">Third Party Consultants <strong><%= usersByRole.consultant %></strong></a></li>
         <li><a href="/admin/users?role=seeker" class="badge badge--teal">Job seekers <strong><%= usersByRole.seeker %></strong></a></li>
         <li><a href="/admin/users?role=admin" class="badge badge--warning">Admins <strong><%= usersByRole.admin %></strong></a></li>
       </ul>
-    </div>
+    </section>
 
     <div class="grid grid--2 grid--admin">
-      <div class="card">
-        <div class="split"><h2 class="card__title h3">Latest messages</h2><a href="/admin/messages" class="small">All messages →</a></div>
+      <section class="card">
+        <div class="card__head"><h2 class="h3">Latest messages</h2><a href="/admin/messages" class="small">All messages →</a></div>
         <% if (!messages.length) { %><p class="empty">No messages yet.</p><% } else { %>
         <ul class="list-rows">
           <% messages.forEach(m => { %>
@@ -55,9 +54,10 @@
           <% }) %>
         </ul>
         <% } %>
-      </div>
-      <div class="card">
-        <div class="split"><h2 class="card__title h3">Latest jobs</h2><a href="/admin/jobs" class="small">All jobs →</a></div>
+      </section>
+      <section class="card">
+        <div class="card__head"><h2 class="h3">Latest jobs</h2><a href="/admin/jobs" class="small">All jobs →</a></div>
+        <% if (!latestJobs.length) { %><p class="empty">No jobs yet.</p><% } else { %>
         <ul class="list-rows">
           <% latestJobs.forEach(j => { %>
             <li class="list-row">
@@ -66,7 +66,8 @@
             </li>
           <% }) %>
         </ul>
-      </div>
+        <% } %>
+      </section>
     </div>
   </div>
 </section>

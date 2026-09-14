@@ -10,10 +10,10 @@ const blurbs = {
 <section class="about-section" id="who-we-serve" aria-labelledby="serve-h">
   <h2 id="serve-h">Who we serve: five audiences, one inclusive job bank</h2>
   <p class="prose">The five figures in the Canada Careers logo stand for the five audiences the job bank is built around. Employers tag each posting with the audiences it welcomes, and job seekers can filter jobs the same way.</p>
-  <ul class="about-aud">
+  <ul class="grid grid--5 about-aud">
     <% C.AUDIENCES.forEach(([key, name, icon]) => { %>
-      <li class="about-aud__card about-aud__card--<%= key %>">
-        <img class="about-aud__icon" src="/img/audience/<%= icon %>.svg" alt="" width="48" height="48" loading="lazy">
+      <li class="card about-aud__card about-aud__card--<%= key %>">
+        <img class="about-aud__icon" src="/img/audience/<%= icon %>.svg" alt="" width="44" height="44" loading="lazy">
         <h3><a href="/jobs?audience=<%= key %>"><%= name %></a></h3>
         <p><%= blurbs[key] %></p>
         <span class="aud aud--<%= key %>"><%= name %></span>

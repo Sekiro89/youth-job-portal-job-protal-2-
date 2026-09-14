@@ -1,0 +1,185 @@
+/* Canada Careers — /jobs (Find Jobs) page. UX standard §6 (docs/UX-STANDARDS.md, 2026-09-10). Tokens only, mobile first.
+   Loaded AFTER public.css + maps.css. Every class here is prefixed jsearch / jrow / jchip / jpager / jseg / jview so the
+   legacy .jobs-layout / .filters / .results rules in public.css + maps.css no longer apply to this page.
+
+   Breakpoints: <768 phone (filters = full-screen drawer, List | Map switch) · 768–1023 tablet (bar + popover, map toggle
+   above the list) · ≥1024 desktop (bar + popover, sticky map beside a single results column, "Hide map" toggle).
+   <html> carries .jobs-map-on / .jobs-map-off (localStorage, set before first paint by an inline script in jobs.ejs). */
+
+/* ---------- page skeleton ---------- */
+.jsearch { padding-bottom: 48px; }
+.jsearch__top { display: grid; gap: 14px; padding-top: 16px; }
+.jsearch__total { margin: 0; }
+.jsearch__total strong { color: var(--cc-navy); }
+
+/* ---------- filter bar (the form) ---------- */
+.jsearch__form { position: relative; display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.jsearch__form .field { gap: 6px; }
+.jsearch__kw { position: relative; min-width: 0; }
+.jsearch__kw-input { padding-right: 48px; }
+.jsearch__kw-go { position: absolute; right: 3px; top: 3px; bottom: 3px; width: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); display: grid; place-items: center; cursor: pointer; }
+.jsearch__kw-go:hover { background: var(--cc-navy-50); }
+.jsearch__open { gap: 8px; white-space: nowrap; padding-left: 14px; padding-right: 14px; }
+.jsearch__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--cc-red); color: #fff; font-size: .75rem; font-weight: 700; line-height: 1; }
+.jsearch__go { display: none; }                          /* phone: the magnifier inside the keyword field submits */
+.jsearch__near-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.jsearch__near-me { gap: 6px; white-space: nowrap; padding-left: 12px; padding-right: 12px; }
+.jsearch__near-status { margin: 0; }
+.jsearch__near-status:empty { display: none; }
+.jsearch__near-status .is-error { color: var(--kds-danger); font-weight: 500; }
+.jsearch__fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.jsearch__fieldset legend { font-weight: 600; font-size: .9rem; color: var(--cc-ink); padding: 0; margin-bottom: 6px; }
+.jsearch__more-btn { display: none; }                    /* phone: the "more" fields are simply part of the drawer */
+.jsearch__more-grid { display: grid; gap: 16px; }
+.jsearch__more-foot { display: none; }
+.jsearch__chev { transition: transform .15s; }
+
+/* phone drawer = the panel, full screen, above the sticky header (z 500) */
+.jsearch__panel { display: none; }
+.js .jsearch__panel.is-open { display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 700; background: #fff; }
+html:not(.js) .jsearch__panel { display: grid; grid-column: 1 / -1; gap: 14px; }   /* no JS: every field inline, form still submits */
+html:not(.js) .jsearch__open, html:not(.js) .jsearch__panel-head, html:not(.js) .jsearch__panel-foot { display: none; }
+html:not(.js) .jsearch__panel-body { display: grid; gap: 14px; }
+.jsearch__panel-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--kds-border); }
+.jsearch__panel-head h2 { margin: 0; font-size: 1.15rem; }
+.jsearch__close { width: 44px; height: 44px; border: 1px solid var(--kds-border); border-radius: 10px; background: #fff; display: grid; place-items: center; cursor: pointer; color: var(--cc-navy); }
+.jsearch__panel-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; display: grid; gap: 16px; align-content: start; }
+.jsearch__panel-foot { flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--kds-border); background: rgba(255,255,255,.97); }
+html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
+
+/* segmented radio group (work arrangement) */
+.jseg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.jseg__opt { position: relative; }
+.jseg__opt input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.jseg__opt span { display: grid; place-items: center; min-height: 44px; padding: 6px 8px; border: 1px solid var(--kds-border); border-radius: 10px; font-size: .9rem; font-weight: 500; background: #fff; text-align: center; }
+.jseg__opt input:checked + span { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
+.jseg__opt input:focus-visible + span { outline: 2px solid var(--kds-focus-ring); outline-offset: 2px; }
+@media (min-width: 480px) { .jseg { grid-template-columns: repeat(4, 1fr); } }
+
+/* ---------- toolbar: chips · view switch / map toggle · sort ---------- */
+.jsearch__toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.jchips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; min-width: 0; }
+.jchip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy-700); font-size: .8125rem; font-weight: 600; text-decoration: none; }
+.jchip:hover { background: var(--cc-red-100); color: var(--cc-red-700); }
+.jchip__x { font-size: 1.1rem; line-height: 1; }
+.jchip--clear { background: transparent; border: 1px solid var(--kds-border); color: var(--kds-fg-muted); }
+.jsearch__hint { margin: 0; flex: 1 1 100%; }
+.jsearch__tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 1 1 100%; flex-wrap: wrap; }
+.jview { display: inline-flex; border: 1px solid var(--kds-border); border-radius: 10px; overflow: hidden; background: #fff; }
+.jview button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 0; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); cursor: pointer; }
+.jview button[aria-pressed="true"] { background: var(--cc-navy); color: #fff; }
+.jview button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
+.jsearch__map-toggle { display: none; gap: 6px; white-space: nowrap; }
+.jsearch__sort { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.jsearch__sort .input { width: auto; min-width: 150px; }
+html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !important; }
+
+/* ---------- results + map ---------- */
+.jsearch__body { padding-top: 16px; display: grid; gap: 16px; align-items: start; }
+.jsearch__results { min-width: 0; }
+.jsearch__list { display: grid; gap: 10px; }
+.jsearch__map { min-width: 0; display: none; }
+.jsearch__canvas { height: 320px; }
+.jsearch__map-note { margin: 6px 0 0; }
+/* phone Map mode (?view=map): list hidden, map fills the viewport under the header and stays put while the page scrolls */
+@media (max-width: 767px) {
+  .js .jsearch.is-map .jsearch__map { display: block; position: sticky; top: var(--cc-header-h); }
+  .js .jsearch.is-map .jsearch__canvas { height: calc(100dvh - var(--cc-header-h)); min-height: 360px; border-radius: 0; margin: 0 -16px; width: auto; }
+  .js .jsearch.is-map .jsearch__results, .js .jsearch.is-map .jsearch__map-note { display: none; }
+}
+
+/* result row */
+.jrow { position: relative; display: grid; gap: 10px; background: #fff; border: 1px solid var(--kds-border); border-radius: 14px; padding: 16px; transition: border-color .15s, box-shadow .15s; }
+.jrow:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow-2); }
+.jrow.is-active { border-color: var(--cc-navy); box-shadow: 0 0 0 3px var(--cc-navy-100); }
+.jrow--ref { border-left: 4px solid var(--cc-teal); }
+.jrow__main { min-width: 0; display: grid; gap: 6px; }
+.jrow__title { margin: 0; font: 700 1.0625rem/1.3 var(--cc-font-display); }
+.jrow__title a { color: var(--cc-navy); text-decoration: none; }
+.jrow__title a::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }   /* whole row is the link target */
+.jrow__title a:hover { color: var(--cc-red); }
+.jrow__co { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
+.jrow__company { color: var(--cc-ink); font-weight: 500; }
+.jrow__sep { color: var(--kds-fg-faint); }
+.jrow__more { font-size: .8125rem; white-space: nowrap; }
+.jrow__dist { color: var(--cc-navy); font-weight: 700; font-size: .875rem; white-space: nowrap; }
+.jrow__chips { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.jrow__chips .badge { background: var(--cc-surface); color: var(--kds-fg-muted); border: 1px solid var(--kds-border); font-weight: 500; }
+.jrow__chips .jrow__ref { background: var(--cc-teal-100); color: #16606a; border-color: transparent; font-weight: 600; }
+.jrow__side { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+.jrow__salary { margin: 0; font-weight: 700; color: var(--cc-ink); }
+.jrow__meta { margin: 0; font-size: .8125rem; color: var(--kds-fg-faint); display: flex; flex-wrap: wrap; gap: 2px 6px; }
+@media (min-width: 640px) {
+  .jrow { grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 20px; }
+  .jrow__side { flex-direction: column; align-items: flex-end; text-align: right; gap: 6px; max-width: 240px; }
+  .jrow__meta { justify-content: flex-end; }
+}
+
+/* pagination + empty state */
+.jpager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.jpager__pages { display: flex; gap: 4px; }
+.jpager__num { display: inline-grid; place-items: center; min-width: 44px; height: 44px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+.jpager__num.is-current { background: var(--cc-navy); color: #fff; }
+.jpager [aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.jsearch__empty h3 { margin-bottom: 6px; }
+.jsearch__empty p { max-width: 48ch; margin: 0 auto 16px; }
+
+/* ---------- tablet and up: bar mode ---------- */
+@media (min-width: 768px) {
+  .jsearch__top { padding-top: 24px; gap: 16px; }
+  .jsearch__open, .jsearch__kw-go { display: none; }
+  .jsearch__kw-input { padding-right: 12px; }
+  .jsearch__go { display: inline-flex; }
+  /* the panel dissolves: its fields become grid items of the bar */
+  .js .jsearch__panel, .js .jsearch__panel.is-open, .jsearch__panel, .jsearch__panel-body { display: contents; }
+  .jsearch__panel-head, .jsearch__panel-foot { display: none !important; }
+  .jsearch__form { grid-template-columns: repeat(6, minmax(0, 1fr)) auto; grid-template-areas: "kw kw kw near near near go" "radius radius cat cat prov prov more"; }
+  .jsearch__kw { grid-area: kw; }
+  .jsearch__near { grid-area: near; }
+  .jsearch__radius { grid-area: radius; }
+  .jsearch__cat { grid-area: cat; }
+  .jsearch__prov { grid-area: prov; }
+  .jsearch__go { grid-area: go; }
+  .jsearch__more-btn { grid-area: more; display: inline-flex; gap: 8px; white-space: nowrap; justify-self: stretch; }
+  .jsearch__more-btn[aria-expanded="true"] { background: var(--cc-navy-50); border-color: var(--cc-navy); }
+  .jsearch__more-btn[aria-expanded="true"] .jsearch__chev { transform: rotate(180deg); }
+  .jsearch__near-status { grid-column: 1 / -1; }
+  /* "More filters" popover, anchored to the bar's right edge */
+  .jsearch__more { display: none; position: absolute; right: 0; top: calc(100% + 8px); z-index: 650; width: min(640px, 100%); background: #fff; border: 1px solid var(--kds-border); border-radius: 16px; box-shadow: 0 16px 48px rgba(22, 28, 38, .16); padding: 20px; }
+  .jsearch__more.is-open { display: block; }
+  html:not(.js) .jsearch__more { display: block; position: static; box-shadow: none; grid-column: 1 / -1; width: auto; }
+  .jsearch__more-grid { grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .jsearch__community { grid-column: 1 / -1; }
+  .jsearch__more-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--kds-border); }
+  /* toolbar */
+  .jchips, .jsearch__hint { flex: 1 1 260px; }
+  .jchip { min-height: 36px; padding: 4px 12px; }
+  .jsearch__tools { flex: 0 0 auto; margin-left: auto; justify-content: flex-end; }
+  .jview { display: none; }
+  .jsearch__map-toggle { display: inline-flex; }
+  /* map above the list, off by default on tablets (toggle) */
+  .jsearch__body { padding-top: 20px; gap: 20px; }
+  .jsearch__map { order: -1; }
+  .js.jobs-map-on .jsearch__map { display: block; }
+  .jsearch__canvas { height: 400px; }
+}
+
+/* ---------- desktop: single results column + sticky map ---------- */
+@media (min-width: 1024px) {
+  .jsearch__form { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.45fr) minmax(0, .8fr) minmax(0, 1fr) minmax(0, 1fr) auto auto; grid-template-areas: "kw near radius cat prov more go"; }
+  .jsearch__more-btn { justify-self: auto; }
+  .jsearch__body { grid-template-columns: minmax(0, 1fr) minmax(360px, 42%); gap: 24px; padding-top: 24px; }
+  .jsearch__map { order: 0; display: block; position: sticky; top: calc(var(--cc-header-h) + 16px); }
+  .js.jobs-map-off .jsearch__map { display: none; }
+  .jsearch__canvas { height: calc(100vh - var(--cc-header-h) - 60px); min-height: 420px; max-height: 820px; }
+  /* map hidden: one centred column, 760px max */
+  .js.jobs-map-off .jsearch__body { grid-template-columns: minmax(0, 760px); justify-content: center; }
+  html:not(.js) .jsearch__body { grid-template-columns: minmax(0, 760px); justify-content: center; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .jsearch__near-me span { display: none; }               /* icon-only "Near me" keeps the place field usable */
+  .jsearch__near-me { width: 44px; padding: 0; justify-content: center; }
+}
+
+/* ---------- print ---------- */
+@media print { .jsearch__form, .jsearch__toolbar, .jsearch__map, .jpager { display: none !important; } .jsearch__body { display: block; } }

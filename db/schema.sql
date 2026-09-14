@@ -384,3 +384,26 @@ CREATE TABLE IF NOT EXISTS geocode_cache (
   provider    text, place_id text, raw jsonb,
   created_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- ---------------------------------------------------------------- client feedback round 3 (2026-09-14) — additive
+-- Public posting id shown to seekers/employers, pattern X1X1X1 (letter-digit ×3, no ambiguous chars).
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS public_id text;
+CREATE UNIQUE INDEX IF NOT EXISTS jobs_public_id_uid ON jobs(public_id) WHERE public_id IS NOT NULL;
+-- Application deadline chosen by the owner ("Closes"); billing expiry (expires_at) is separate and unchanged.
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS application_deadline date;
+-- Hourly wages need cents ($21.18/hour): salary columns become numeric.
+ALTER TABLE jobs ALTER COLUMN salary_min TYPE numeric(10,2) USING salary_min::numeric;
+ALTER TABLE jobs ALTER COLUMN salary_max TYPE numeric(10,2) USING salary_max::numeric;
+-- Locked once published: company, operating name, title and work locations cannot change (lib/jobs.js isLocked = published_at IS NOT NULL).
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS locked_at timestamptz;
+UPDATE jobs SET locked_at = published_at WHERE locked_at IS NULL AND published_at IS NOT NULL;
+-- Backfill public ids (letter-digit ×3 from md5 of the id; collisions are re-rolled by lib/jobs.ensurePublicId at runtime)
+UPDATE jobs SET public_id = (
+  SELECT substr('ABCDEFGHJKLMNPQRSTUVWXYZ', (('x' || substr(h, 1, 2))::bit(8)::int % 24) + 1, 1)
+      || substr('23456789', (('x' || substr(h, 3, 2))::bit(8)::int % 8) + 1, 1)
+      || substr('ABCDEFGHJKLMNPQRSTUVWXYZ', (('x' || substr(h, 5, 2))::bit(8)::int % 24) + 1, 1)
+      || substr('23456789', (('x' || substr(h, 7, 2))::bit(8)::int % 8) + 1, 1)
+      || substr('ABCDEFGHJKLMNPQRSTUVWXYZ', (('x' || substr(h, 9, 2))::bit(8)::int % 24) + 1, 1)
+      || substr('23456789', (('x' || substr(h, 11, 2))::bit(8)::int % 8) + 1, 1)
+  FROM (SELECT md5('cc-public-id:' || jobs.id::text) AS h) s
+) WHERE public_id IS NULL;

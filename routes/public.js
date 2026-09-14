@@ -249,17 +249,20 @@ router.get('/jobs', async (req, res, next) => {
 
     const heading = headingFor(f);
     const canonicalUrl = res.locals.PUBLIC_URL + jobsUrl(f, { page: f.page, view: 'list' });
+    // Which "More filters" (drawer) fields are active — drives the count badge on the "More filters" / "Filters" buttons.
+    const moreActive = ['city', 'job_type', 'work_arrangement'].filter(k => f[k]).length + f.audience.length + (f.salary_min ? 1 : 0);
     res.render('public/jobs', {
       title: heading + (f.page > 1 ? ` — page ${f.page}` : ''),
       metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Canada Careers. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
       canonical: canonicalUrl,
-      extraCss: CSS, extraJs: JS, bodyClass: 'page-jobs',
+      // UX standard §6 (2026-09-10): this page's own layout/JS live in jobs-search.css/js (after public.css + maps.css so they win).
+      extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS.concat('/js/jobs-search.js'), bodyClass: 'page-jobs',
       noindex: chips.length > 2 || f.page > 1 || !!point, // keep the index to broad, useful landing combinations (never proximity searches)
       jsonLd: [{
         '@context': 'https://schema.org', '@type': 'ItemList', name: heading, numberOfItems: total,
         itemListElement: rows.map((j, i) => ({ '@type': 'ListItem', position: (f.page - 1) * PAGE_SIZE + i + 1, name: j.title, url: `${res.locals.PUBLIC_URL}/jobs/${j.slug}` })),
       }],
-      f, jobs: rows, total, pages, chips, heading, jobsUrl, PAGE_SIZE, point, fmtKm, RADII,
+      f, jobs: rows, total, pages, chips, heading, jobsUrl, PAGE_SIZE, point, fmtKm, RADII, moreActive,
       // The map pane fetches its markers from /api/jobs/geo with the same filters (page-independent, capped).
       geoUrl: '/api/jobs/geo' + jobsUrl(f, { page: 1, view: 'list' }).replace(/^\/jobs/, ''),
       mapConfig: await geo.publicMapConfig(),
@@ -270,11 +273,19 @@ router.get('/jobs', async (req, res, next) => {
 
 // ------------------------------------------------------------------ JSON: markers for the search map (same filters as /jobs)
 // One marker per geocoded work location of every PUBLIC posting matching the filters, nearest/newest first, capped at 200.
+// `total` = number of matching postings (same count as the /jobs heading); `?count_only=1` returns just { total, point,
+// near_unresolved } so the filters drawer can label its "Show N results" button live without pulling markers.
 router.get('/api/jobs/geo', async (req, res, next) => {
   try {
     const f = parseFilters(req.query);
     const point = await resolvePoint(f);
     const { W, params, dist } = buildWhere(f, point);
+    const pointOut = point ? { lat: point.lat, lng: point.lng, label: point.label, radius_km: f.radius_km } : null;
+    const countRow = await db.one(`SELECT count(*)::int AS n ${JOB_FROM} WHERE ${W}`, params);
+    if (str(req.query.count_only) === '1') {
+      res.set('Cache-Control', 'private, max-age=60');
+      return res.json({ point: pointOut, near_unresolved: !!f.near_unresolved, total: countRow.n });
+    }
     const rows = await db.many(`SELECT jobs.id, jobs.title, jobs.slug, jobs.salary_min, jobs.salary_max, jobs.salary_period, jobs.published_at, jobs.source,
         COALESCE(NULLIF(jobs.operating_name, ''), p.operating_name) AS operating_name, p.company_name,
         l.id AS location_id, l.street_address, l.unit, l.city, l.province, l.postal_code, l.lat, l.lng, ${dist ? dist : 'NULL::double precision'} AS distance_km
@@ -287,7 +298,7 @@ router.get('/api/jobs/geo', async (req, res, next) => {
       reference: r.source === 'jobbank',
     }));
     res.set('Cache-Control', 'private, max-age=60');
-    res.json({ point: point ? { lat: point.lat, lng: point.lng, label: point.label, radius_km: f.radius_km } : null, near_unresolved: !!f.near_unresolved, count: markers.length, capped, markers });
+    res.json({ point: pointOut, near_unresolved: !!f.near_unresolved, total: countRow.n, count: markers.length, capped, markers });
   } catch (e) { next(e); }
 });
 

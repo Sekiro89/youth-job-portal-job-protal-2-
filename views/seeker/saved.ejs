@@ -1,18 +1,38 @@
+<% const live = jobs.filter(j => j.is_public), gone = jobs.filter(j => !j.is_public); %>
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div class="split"><div><h1>Saved jobs</h1><p class="muted">Jobs you bookmarked to come back to.</p></div><a class="kds-btn kds-btn--brand" href="/jobs">Find jobs</a></div>
-    <% const live = jobs.filter(j => j.is_public), gone = jobs.filter(j => !j.is_public); %>
-    <% if (live.length) { %>
-      <div class="grid grid--2"><% live.forEach(job => { job.saved = true; %><%- include('_jobcard', { job }) %><% }) %></div>
-    <% } else { %>
-      <div class="empty"><p><strong>No saved jobs.</strong></p><p>Tap "Save" on any job to keep it here.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs</a></div>
-    <% } %>
+    <header class="app-head">
+      <div class="app-head__inner">
+        <div>
+          <p class="eyebrow">Job seeker</p>
+          <h1>Saved jobs</h1>
+          <p class="muted">Jobs you bookmarked to come back to.</p>
+        </div>
+        <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/jobs">Find jobs</a></div>
+      </div>
+    </header>
+
+    <section aria-labelledby="live-h">
+      <div class="card__head"><h2 id="live-h" class="h3"><%= live.length %> saved job<%= live.length === 1 ? '' : 's' %></h2><% if (live.length) { %><span class="small muted">Still open — apply from here</span><% } %></div>
+      <% if (live.length) { %>
+        <div class="grid grid--2"><% live.forEach(job => { job.saved = true; %><%- include('_jobcard', { job }) %><% }) %></div>
+      <% } else { %>
+        <div class="empty"><p><strong>No saved jobs.</strong></p><p>Tap “Save” on any job to keep it here.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse jobs</a></div>
+      <% } %>
+    </section>
+
     <% if (gone.length) { %>
-      <section class="card card--flat">
-        <h2 class="h3">No longer available</h2>
+      <section class="card card--flat gone-list" aria-labelledby="gone-h">
+        <div class="card__head"><h2 id="gone-h" class="h3">No longer available</h2><span class="badge"><%= gone.length %></span></div>
+        <p class="small muted">These postings closed or were taken down, so you can no longer apply. Remove them to tidy your list.</p>
         <ul class="list-plain">
-          <% gone.forEach(j => { %><li class="list-plain__item"><div><%= j.title %><div class="small muted"><%= h.displayCompany(j) %> · <span class="nowrap">saved <%= h.formatDate(j.saved_at) %></span></div></div><form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Remove</button></form></li><% }) %>
+          <% gone.forEach(j => { %>
+            <li class="list-plain__item">
+              <div><span><strong><%= j.title %></strong> <span class="badge badge--warning">Closed</span></span><span class="small muted"><%= h.displayCompany(j) %> · <%= h.location(j) %> · <span class="nowrap">saved <%= h.formatDate(j.saved_at) %></span></span></div>
+              <form method="post" action="/jobseeker/saved/<%= j.id %>/remove" class="inline-form"><button class="kds-btn kds-btn--ghost" type="submit">Remove</button></form>
+            </li>
+          <% }) %>
         </ul>
       </section>
     <% } %>

@@ -8,14 +8,17 @@
   body.has-applybar { padding-bottom: 0 !important; }
 
   /* chrome that has no place on paper */
-  .site-header, .site-footer, .skip-link, .flash, .crumbs, .applybar, .related, .share,
+  .site-header, .site-footer, .skip-link, .flash, .breadcrumb, .applybar, .related, .share,
   .apply-card__save, .apply-card__primary, .apply-card__print, .apply-card > a.kds-btn, .apply-card__note,
-  .job-head__aud, .job-attribution .kds-btn, .job-about-co a, .locations__note { display: none !important; }
+  .job-head__aud, .job-attribution__link, .job-about-co a, .locations__note { display: none !important; }
   .print-only { display: block !important; }
 
   /* single column, no cards */
   .container { max-width: none; padding: 0; margin: 0; }
   .page-head { background: none !important; border: 0; padding: 0 0 8pt; margin: 0; }
+  .page-head__inner { display: block; }
+  .section { padding: 0 !important; }
+  .job-main .card { border: 0; padding: 0; background: none !important; box-shadow: none; border-radius: 0; }
   .job-head__title { font-size: 20pt; margin: 0 0 4pt; }
   .job-head__company { font-size: 12pt; margin: 0 0 2pt; }
   .job-head__company a { font-weight: 700; }
@@ -27,7 +30,7 @@
   .job-head__salary { font-weight: 700; }
   .print-dates { margin: 0; font-size: 10pt; color: #333; }
 
-  .job-layout { display: block !important; padding: 0 !important; }
+  .job-layout { display: block !important; padding-top: 0 !important; padding-bottom: 0 !important; }
   .job-main { display: block; }
   .job-section { margin: 0 0 10pt; }
   .job-section h2 { font-size: 12.5pt; margin: 10pt 0 4pt; padding-bottom: 2pt; border-bottom: 1px solid #000; break-after: avoid; }
@@ -40,7 +43,9 @@
   .tags { gap: 4pt; }
   .tag { border: 1px solid #777; background: none; padding: 1pt 6pt; font-size: 9.5pt; }
   .job-about-co { background: none !important; padding: 0; border-radius: 0; }
-  .job-attribution { border: 1px solid #000; padding: 6pt 8pt; margin-bottom: 8pt; box-shadow: none; }
+  .job-attribution { border: 1px solid #000 !important; border-radius: 0; padding: 6pt 8pt !important; margin-bottom: 8pt; box-shadow: none; }
+  .job-attribution .eyebrow { color: #000 !important; }
+  .job-attribution__meta { color: #000 !important; }
   .print-apply { border: 1px solid #000; padding: 6pt 8pt; break-inside: avoid; }
   .print-apply h2 { border: 0; margin-top: 0; }
   .print-apply p { margin: 0; overflow-wrap: anywhere; }

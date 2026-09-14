@@ -1,10 +1,10 @@
-<section class="hero">
+<section class="hero section">
   <div class="container hero__inner">
     <div class="hero__copy">
       <p class="eyebrow">Canada’s inclusive job bank</p>
       <h1 class="hero__title">Jobs for every Canadian. <span class="hero__title-accent">Opportunities for all.</span></h1>
       <p class="lead hero__lead">Search <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> employer<%= totals.companies === 1 ? '' : 's' %> across Canada — built for professionals, new immigrants, Indigenous peoples, refugees and youth.</p>
-      <form class="hero__search" method="get" action="/jobs" role="search" aria-label="Search jobs">
+      <form class="card hero__search" method="get" action="/jobs" role="search" aria-label="Search jobs">
         <div class="field hero__field">
           <label for="hero-q">What</label>
           <input class="input" id="hero-q" name="q" type="search" placeholder="Job title, skill or company" autocomplete="off">
@@ -13,7 +13,7 @@
           <label for="hero-loc">Where</label>
           <select class="input" id="hero-loc" name="loc">
             <option value="">All of Canada</option>
-            <optgroup label="Provinces & territories">
+            <optgroup label="Provinces &amp; territories">
               <% provinces.forEach(p => { %><option value="prov:<%= p.key %>"><%= p.name %></option><% }) %>
             </optgroup>
             <% if (cities.length) { %><optgroup label="Cities with open jobs">
@@ -27,7 +27,7 @@
         <span class="muted">Popular:</span>
         <a href="/jobs?work_arrangement=remote">Remote</a>
         <a href="/jobs?category=healthcare">Healthcare</a>
-        <a href="/jobs?category=it_software">IT &amp; Software</a>
+        <a href="/jobs?category=it_software">IT &amp; software</a>
         <a href="/jobs?category=transport_logistics">Trucking</a>
         <a href="/jobs?job_type=part_time">Part-time</a>
       </p>
@@ -38,14 +38,16 @@
   </div>
 </section>
 
-<section class="section-pad pillars" aria-labelledby="pillars-h">
+<section class="section" aria-labelledby="pillars-h">
   <div class="container">
-    <p class="eyebrow">Who we serve</p>
-    <h2 id="pillars-h">Five doors into the Canadian workforce</h2>
+    <div class="section__head">
+      <p class="eyebrow">Who we serve</p>
+      <h2 id="pillars-h">Five doors into the Canadian workforce</h2>
+    </div>
     <ul class="pillar-grid">
       <% C.AUDIENCES.forEach(([k, name, icon]) => { %>
         <li>
-          <a class="pillar pillar--<%= k %>" href="/jobs?audience=<%= k %>">
+          <a class="card pillar pillar--<%= k %>" href="/jobs?audience=<%= k %>">
             <span class="pillar__icon" aria-hidden="true"><img src="/img/audience/<%= icon %>.svg" alt="" width="32" height="32" data-fallback=""></span>
             <span class="pillar__name"><%= name %></span>
             <span class="pillar__desc"><%= AUDIENCE_BLURB[k] %></span>
@@ -57,9 +59,9 @@
   </div>
 </section>
 
-<section class="section-pad latest" aria-labelledby="latest-h">
+<section class="section section--alt" aria-labelledby="latest-h">
   <div class="container">
-    <div class="split section-head">
+    <div class="section__head section__head--split">
       <div><p class="eyebrow">Fresh today</p><h2 id="latest-h">Latest jobs</h2></div>
       <a class="kds-btn kds-btn--ghost" href="/jobs">View all <%= totals.jobs %> jobs</a>
     </div>
@@ -73,66 +75,77 @@
   </div>
 </section>
 
-<section class="section-pad browse" aria-labelledby="cat-h">
+<section class="section" aria-labelledby="browse-h">
   <div class="container">
-    <p class="eyebrow">Explore</p>
-    <h2 id="cat-h">Browse by category</h2>
-    <ul class="cat-grid">
-      <% categories.forEach(c => { %>
-        <li><a class="cat <%= c.n ? '' : 'cat--empty' %>" href="/jobs?category=<%= c.key %>"><span class="cat__name"><%= c.name %></span><span class="cat__count" aria-label="<%= c.n %> jobs"><%= c.n %></span></a></li>
-      <% }) %>
-    </ul>
-
-    <h2 id="prov-h" class="browse__sub">Browse by province</h2>
-    <ul class="prov-list" aria-labelledby="prov-h">
-      <% provinces.forEach(p => { %>
-        <li><a class="prov <%= p.n ? '' : 'prov--empty' %>" href="/jobs?province=<%= p.key %>"><%= p.name %> <span class="prov__count"><%= p.n %></span></a></li>
-      <% }) %>
-    </ul>
+    <div class="section__head">
+      <p class="eyebrow">Explore</p>
+      <h2 id="browse-h">Browse jobs</h2>
+      <p class="lead">Every open posting, grouped by the work you do and where you want to do it.</p>
+    </div>
+    <div class="browse-group">
+      <h3 id="cat-h">By category</h3>
+      <ul class="tile-grid" aria-labelledby="cat-h">
+        <% categories.forEach(c => { %>
+          <li><a class="tile <%= c.n ? '' : 'tile--empty' %>" href="/jobs?category=<%= c.key %>"><span><%= c.name %></span><span class="tile__count" aria-label="<%= c.n %> jobs"><%= c.n %></span></a></li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="browse-group">
+      <h3 id="prov-h">By province or territory</h3>
+      <ul class="tile-grid" aria-labelledby="prov-h">
+        <% provinces.forEach(p => { %>
+          <li><a class="tile <%= p.n ? '' : 'tile--empty' %>" href="/jobs?province=<%= p.key %>"><span><%= p.name %></span><span class="tile__count" aria-label="<%= p.n %> jobs"><%= p.n %></span></a></li>
+        <% }) %>
+      </ul>
+    </div>
   </div>
 </section>
 
-<section class="section-pad ctas" aria-labelledby="cta-h">
+<section class="section section--alt" aria-labelledby="cta-h">
   <div class="container">
-    <p class="eyebrow">Get started</p>
-    <h2 id="cta-h">One platform, three ways in</h2>
-    <div class="grid grid--3">
-      <article class="cta-card cta-card--employer">
+    <div class="section__head">
+      <p class="eyebrow">Get started</p>
+      <h2 id="cta-h">One platform, three ways in</h2>
+    </div>
+    <div class="cta-grid">
+      <article class="card cta-card cta-card--employer">
         <h3>For employers</h3>
-        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('employer') / 100).toFixed(2) %></strong><span>/month + GST per posting</span></p>
+        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('employer') / 100).toFixed(2) %> + GST</strong><span>per posting per month</span></p>
         <p>Reach candidates from every community in Canada. Post in minutes, manage applicants in one place and cancel any time.</p>
         <ul class="ticks"><li>Unlimited applicants</li><li>Renews monthly, no contracts</li><li>Receipts for every charge</li></ul>
         <a class="kds-btn kds-btn--brand kds-btn--block" href="/employer">Post a job</a>
       </article>
-      <article class="cta-card cta-card--consultant">
-        <h3>For consultants</h3>
-        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('consultant') / 100).toFixed(2) %></strong><span>/month + GST per posting</span></p>
-        <p>Recruiters and third-party consultants manage many client companies from one account, each with its own public profile.</p>
+      <article class="card cta-card cta-card--consultant">
+        <h3>For third party consultants</h3>
+        <p class="cta-card__price"><strong>$<%= (C.priceCentsFor('consultant') / 100).toFixed(2) %> + GST</strong><span>per posting per month</span></p>
+        <p>Recruiters and third party consultants manage many client companies from one account, each with its own public profile.</p>
         <ul class="ticks"><li>Multiple company profiles</li><li>One dashboard, one invoice trail</li><li>Duplicate postings in a click</li></ul>
         <a class="kds-btn kds-btn--brand kds-btn--block" href="/consultant">Manage clients</a>
       </article>
-      <article class="cta-card cta-card--seeker">
+      <article class="card cta-card cta-card--seeker">
         <h3>For job seekers</h3>
         <p class="cta-card__price"><strong>Free</strong><span>always</span></p>
         <p>Create a profile, upload your resume once and apply in one click. Get matched to new postings that fit you.</p>
         <ul class="ticks"><li>Job alerts by email</li><li>Save jobs for later</li><li>Track every application</li></ul>
-        <a class="kds-btn kds-btn--accent kds-btn--block" href="/jobseeker">Create your profile</a>
+        <a class="kds-btn kds-btn--brand kds-btn--block" href="/jobseeker">Create your profile</a>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section-pad how" aria-labelledby="how-h">
+<section class="section section--brand" aria-labelledby="how-h">
   <div class="container">
-    <p class="eyebrow">How it works</p>
-    <h2 id="how-h">From search to start date</h2>
+    <div class="section__head">
+      <p class="eyebrow">How it works</p>
+      <h2 id="how-h">From search to start date</h2>
+    </div>
     <ol class="steps">
       <li class="step"><span class="step__num">1</span><h3>Search</h3><p>Filter by category, province, city, salary, work arrangement and the community you belong to.</p></li>
       <li class="step"><span class="step__num">2</span><h3>Apply</h3><p>Apply with your saved resume in one click, or go straight to the employer’s own site.</p></li>
       <li class="step"><span class="step__num">3</span><h3>Get hired</h3><p>Employers review applications in their dashboard and update you at every step.</p></li>
     </ol>
     <ul class="trust">
-      <li><strong>Made in Canada</strong><span>Prices in CAD, GST included on every receipt.</span></li>
+      <li><strong>Made in Canada</strong><span>Prices in CAD, GST shown on every receipt.</span></li>
       <li><strong>Privacy first</strong><span>PIPEDA-aware handling of resumes and personal data.</span></li>
       <li><strong>Built for inclusion</strong><span>Every posting tags the communities it welcomes.</span></li>
       <li><strong>Free for job seekers</strong><span>No fees, ever, to search or apply.</span></li>

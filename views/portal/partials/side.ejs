@@ -1,12 +1,15 @@
-<% const sideLinks = [
-  ['dashboard', base + '/dashboard', 'Dashboard'],
-  ['jobs', base + '/jobs', 'Jobs'],
-  ['post', base + '/jobs/new', 'Post a job'],
-  ['applicants', base + '/applicants', 'Applicants'],
-  ['company', isConsultant ? '/consultant/profiles' : '/employer/profile', isConsultant ? 'Companies' : 'Company'],
+<%# Portal side nav (tab strip on phones). Works without portal locals (billing pages): base + role come from the user when missing. %>
+<% const _isC = (typeof isConsultant !== 'undefined') ? !!isConsultant : !!(typeof user !== 'undefined' && user && user.role === 'consultant');
+   const _base = (typeof base !== 'undefined' && base) ? base : (_isC ? '/consultant' : '/employer');
+   const sideLinks = [
+  ['dashboard', _base + '/dashboard', 'Dashboard'],
+  ['jobs', _base + '/jobs', 'Jobs'],
+  ['post', _base + '/jobs/new', 'Post a job'],
+  ['applicants', _base + '/applicants', 'Applicants'],
+  ['company', _isC ? '/consultant/profiles' : '/employer/profile', _isC ? 'Companies' : 'Company'],
   ['billing', '/billing', 'Billing'],
   ['account', '/account', 'Account'],
 ]; const current = (typeof nav === 'undefined') ? '' : nav; %>
-<nav class="dash__side" aria-label="Employer portal">
+<nav class="dash__side" aria-label="<%= _isC ? 'Consultant' : 'Employer' %> portal">
   <% sideLinks.forEach(([k, href, label]) => { %><a href="<%= href %>" class="<%= current === k ? 'is-active' : '' %>"<%- current === k ? ' aria-current="page"' : '' %>><%= label %></a><% }) %>
 </nav>

@@ -1,8 +1,8 @@
-<section class="about-section about-quick" id="quick-answers" aria-labelledby="quick-h">
+<section class="about-section" id="quick-answers" aria-labelledby="quick-h">
   <h2 id="quick-h">Quick answers</h2>
-  <dl class="about-quick__list">
+  <dl class="grid grid--3 about-quick">
     <% quick.forEach(({ q, a }) => { %>
-      <div class="about-quick__item">
+      <div class="card about-quick__item">
         <dt><%= q %></dt>
         <dd><%= a %></dd>
       </div>

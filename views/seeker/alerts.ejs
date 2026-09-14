@@ -1,10 +1,18 @@
 <div class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <div><h1>Job alerts</h1><p class="muted">When a new posting matches your profile you always get an in-app notification. Choose whether we also email you.</p></div>
+    <header class="app-head">
+      <div class="app-head__inner">
+        <div>
+          <p class="eyebrow">Job seeker</p>
+          <h1>Job alerts</h1>
+          <p class="muted">When a new posting matches your profile you always get an in-app notification. Choose whether we also email you.</p>
+        </div>
+      </div>
+    </header>
     <form method="post" action="/jobseeker/alerts" class="form" id="alerts">
-      <section class="card stack">
-        <h2 class="h3">Email alerts</h2>
+      <section class="card stack" aria-labelledby="email-h">
+        <div class="card__head"><h2 id="email-h" class="h3">Email alerts</h2><span class="badge <%= profile.notify_email ? 'badge--positive' : '' %>"><%= profile.notify_email ? 'On' : 'Off' %></span></div>
         <label class="check switch-row"><input type="checkbox" name="notify_email" value="1" <%= profile.notify_email ? 'checked' : '' %> role="switch" aria-checked="<%= profile.notify_email ? 'true' : 'false' %>" data-switch> <span><strong>Email me when a job matches my profile</strong><br><span class="small muted">Sent to <%= user.email %></span></span></label>
         <fieldset class="field">
           <legend>How often</legend>
@@ -13,19 +21,21 @@
             <label class="check"><input type="radio" name="notify_frequency" value="daily" <%= profile.notify_frequency === 'daily' ? 'checked' : '' %>> <span><strong>Daily digest</strong><br><span class="small muted">One email a day listing every new match</span></span></label>
           </div>
         </fieldset>
-        <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save alert settings</button></div>
+        <div class="form-actions"><button class="kds-btn kds-btn--accent" type="submit">Save alert settings</button></div>
       </section>
     </form>
     <section class="card stack" aria-labelledby="crit-h">
-      <div class="split"><h2 id="crit-h" class="h3">Your alert criteria</h2><a class="kds-btn kds-btn--ghost kds-btn--sm" href="/jobseeker/profile#f-categories">Edit in profile</a></div>
+      <div class="card__head"><h2 id="crit-h" class="h3">Your alert criteria</h2><a class="kds-btn kds-btn--ghost" href="/jobseeker/profile#f-categories">Edit in profile</a></div>
       <p class="small muted">A job matches when it is in one of your categories, mentions one of your keywords (as a whole word — “RN” will not match “learn”), or lists one of your skills — and is in a province you will work in (or is remote). Matches are ranked: category counts most, then keywords, skills, province and whether the employer is hiring for the audience you identified with. Instant alerts go out the moment a posting is paid and live; the daily digest is one email a day covering the previous 24 hours, and is only sent when there is something new.</p>
       <dl class="crit">
-        <div><dt>Categories</dt><dd><% if (profile.categories.length) { %><div class="cluster"><% profile.categories.forEach(c => { %><span class="badge"><%= h.categoryName(c) %></span><% }) %></div><% } else { %><span class="muted">None chosen</span><% } %></dd></div>
-        <div><dt>Provinces</dt><dd><% if (profile.provinces.length) { %><div class="cluster"><% profile.provinces.forEach(p => { %><span class="badge badge--teal"><%= h.provinceName(p) %></span><% }) %></div><% } else { %><span class="muted">Anywhere in Canada</span><% } %></dd></div>
-        <div><dt>Keywords</dt><dd><% if (profile.keywords.length) { %><div class="cluster"><% profile.keywords.forEach(k => { %><span class="badge badge--warning"><%= k %></span><% }) %></div><% } else { %><span class="muted">None yet</span><% } %></dd></div>
-        <div><dt>Skills</dt><dd><% if (profile.skills.length) { %><div class="cluster"><% profile.skills.forEach(k => { %><span class="badge badge--positive"><%= k %></span><% }) %></div><% } else { %><span class="muted">None yet</span><% } %></dd></div>
+        <div><dt>Categories</dt><dd><%= (profile.categories || []).length ? profile.categories.map(h.categoryName).join(', ') : 'Any' %></dd></div>
+        <div><dt>Keywords</dt><dd><%= (profile.keywords || []).length ? profile.keywords.join(', ') : 'None' %></dd></div>
+        <div><dt>Skills</dt><dd><%= (profile.skills || []).length ? profile.skills.join(', ') : 'None' %></dd></div>
+        <div><dt>Provinces</dt><dd><%= (profile.provinces || []).length ? profile.provinces.map(h.provinceName).join(', ') : 'Anywhere in Canada' %></dd></div>
+        <div><dt>Job types</dt><dd><%= (profile.job_types || []).length ? profile.job_types.map(h.jobTypeName).join(', ') : 'Any' %></dd></div>
+        <div><dt>Arrangement</dt><dd><%= (profile.work_arrangements || []).length ? profile.work_arrangements.map(h.workArrangementName).join(', ') : 'Any' %></dd></div>
+        <div><dt>I am a…</dt><dd><%= (profile.audiences || []).length ? profile.audiences.map(h.audienceName).join(', ') : 'Not set' %></dd></div>
       </dl>
-      <% if (!profile.categories.length && !profile.keywords.length && !profile.skills.length) { %><p class="error">You have no criteria yet, so no jobs can match. <a href="/jobseeker/profile#f-categories">Add categories, keywords or skills</a>.</p><% } %>
     </section>
   </div>
 </div>

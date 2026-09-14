@@ -8,5 +8,5 @@
     <span>Posted <%= h.timeAgo(job.published_at) %></span>
     <span><%= h.categoryName(job.category) %></span>
   </div>
-  <% if (job.source === 'jobbank') { %><p class="job-card__ref small">Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers</p><% } %>
+  <% if (job.source === 'jobbank') { %><p class="job-card__ref">Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers</p><% } %>
 </article>

@@ -1,8 +1,15 @@
+<% const gst = Number(pricing.gst_rate || 0); const emp = Number(pricing.employer_price_cents || 0); const con = Number(pricing.consultant_price_cents || 0); const withTax = (c) => Math.round(c * (1 + gst)); const gstPct = (gst * 100).toFixed(gst * 100 % 1 ? 1 : 0); %>
 <section class="container dash">
   <%- include('_nav') %>
   <div class="dash__main">
-    <% const gst = Number(pricing.gst_rate || 0); const emp = Number(pricing.employer_price_cents || 0); const con = Number(pricing.consultant_price_cents || 0); const withTax = (c) => Math.round(c * (1 + gst)); %>
-    <div><p class="eyebrow">Admin</p><h1>Payments</h1><p class="muted">Every charge for a job posting (employers <%= h.money(emp) %> + <%= (gst * 100).toFixed(gst * 100 % 1 ? 1 : 0) %>% GST = <%= h.money(withTax(emp)) %>, consultants <%= h.money(con) %> + GST = <%= h.money(withTax(con)) %> CAD per posting per month). Mode: <strong><%= status.modeLabel %></strong> — change prices, GST and Stripe keys under <a href="/admin/integrations#pricing">Integrations</a>. Receipts open in a printable page.</p></div>
+    <header class="app-head app-head--actions">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Payments</h1>
+        <p class="lead">Every charge for a job posting. Employers <%= h.money(emp) %> + <%= gstPct %>% GST, consultants <%= h.money(con) %> + GST, per posting per month. Mode: <strong><%= status.mode === 'live' ? 'Stripe live' : status.mode === 'test' ? 'Stripe test' : 'Sandbox' %></strong>.</p>
+      </div>
+      <div class="app-head__actions"><a class="kds-btn kds-btn--ghost" href="/admin/integrations#pricing">Prices &amp; Stripe</a></div>
+    </header>
 
     <div class="stats">
       <div class="stat"><div class="stat__value"><%= h.money(totals.total) %></div><div class="stat__label">Collected, all time (<%= totals.n %> payments)</div></div>
@@ -11,8 +18,8 @@
       <div class="stat"><div class="stat__value"><%= months.length ? h.money(months[0].total) : h.money(0) %></div><div class="stat__label"><%= months.length ? months[0].month : 'This month' %></div></div>
     </div>
 
-    <div class="card card--table">
-      <h2 class="h3 card__title">Totals by month</h2>
+    <section class="card card--table">
+      <div class="card__head"><h2 class="h3">Totals by month</h2></div>
       <% if (!months.length) { %><p class="muted">No payments yet.</p><% } else { %>
       <div class="table-wrap"><table class="table table--stack table--stack-lg">
         <thead><tr><th>Month</th><th>Paid</th><th>Subtotal</th><th>GST</th><th>Total</th><th>Refunded</th><th>Failed</th></tr></thead>
@@ -23,10 +30,10 @@
         </tbody>
       </table></div>
       <% } %>
-    </div>
+    </section>
 
-    <div class="card card--table">
-      <h2 class="h3 card__title">All payments</h2>
+    <section class="card card--table">
+      <div class="card__head"><h2 class="h3">All payments</h2><span class="small muted">Receipts open in a printable page</span></div>
       <% if (!rows.length) { %><p class="muted">No payments yet.</p><% } else { %>
       <div class="table-wrap"><table class="table table--stack table--stack-lg">
         <thead><tr><th>Receipt</th><th>Paid</th><th>Job</th><th>Payer</th><th>Period</th><th>Total</th><th>Status</th></tr></thead>
@@ -45,6 +52,6 @@
         </tbody>
       </table></div>
       <% } %>
-    </div>
+    </section>
   </div>
 </section>

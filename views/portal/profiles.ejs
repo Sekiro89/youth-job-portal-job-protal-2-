@@ -2,10 +2,14 @@
 <div class="container dash">
   <%- include('partials/side') %>
   <div class="dash__main">
-    <div class="split">
-      <div><p class="eyebrow">Client companies</p><h1>Companies</h1><p class="muted">Add as many employer profiles as you need. Every posting is published under one of them.</p></div>
-      <a class="kds-btn kds-btn--accent" href="/consultant/profiles/new">+ Add a company</a>
-    </div>
+    <header class="app-head">
+      <div>
+        <p class="eyebrow">Client companies</p>
+        <h1>Companies</h1>
+        <p class="app-head__context"><span>Add as many employer profiles as you need. Every posting is published under one of them.</span></p>
+      </div>
+      <div class="app-head__actions"><a class="kds-btn kds-btn--accent" href="/consultant/profiles/new">Add a company</a></div>
+    </header>
 
     <% if (!live.length) { %>
       <div class="empty">No companies yet. <a href="/consultant/profiles/new">Add your first client company</a> to start posting.</div>
@@ -16,7 +20,7 @@
           <div class="company-card__head">
             <% if (p.logo_path) { %><img class="logo-md" src="/consultant/logos/<%= p.id %>" alt=""><% } else { %><div class="logo-md logo-md--placeholder" aria-hidden="true"><%= (h.displayCompany(p) || '?').trim()[0].toUpperCase() %></div><% } %>
             <div>
-              <h2 class="card__title"><%= h.displayCompany(p) %></h2>
+              <h2><%= h.displayCompany(p) %></h2>
               <% if (h.legalNameNote(p)) { %><div class="small muted"><%= h.legalNameNote(p) %></div><% } %>
               <div class="small muted"><%= [p.industry && h.industryName(p.industry), p.street_address ? h.fullAddress(p) : h.location(p)].filter(Boolean).join(' · ') || 'No location set' %></div>
               <% if ((p.operating_names || []).length > 1) { %><div class="small muted">Also operates as <%= p.operating_names.slice(1).join(', ') %></div><% } %>
@@ -45,7 +49,7 @@
       <summary><strong>Archived companies (<%= archived.length %>)</strong></summary>
       <ul class="list-plain">
         <% archived.forEach(p => { %>
-          <li class="split"><span><%= h.displayCompany(p) %> <span class="small muted">· <%= p.total_jobs %> job<%= p.total_jobs === 1 ? '' : 's' %> all time</span></span>
+          <li class="list-row"><span class="list-row__main"><%= h.displayCompany(p) %> <span class="small muted">· <%= p.total_jobs %> job<%= p.total_jobs === 1 ? '' : 's' %> all time</span></span>
             <form class="inline-form" method="post" action="/consultant/profiles/<%= p.id %>/unarchive"><button class="kds-btn kds-btn--ghost kds-btn--sm" type="submit">Restore</button></form></li>
         <% }) %>
       </ul>

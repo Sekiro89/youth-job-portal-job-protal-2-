@@ -1,13 +1,13 @@
-<section class="about-section about-faq" id="faq" aria-labelledby="faq-h">
+<section class="about-section" id="faq" aria-labelledby="faq-h">
   <h2 id="faq-h">Frequently asked questions</h2>
   <p class="prose">Straight answers about pricing, GST, cancellation, consultants, resumes, alerts, accessibility and privacy. Still unsure? <a href="/contact">Contact us</a>.</p>
-  <div class="about-faq__list">
+  <div class="faq">
     <% faq.forEach(({ q, a, more }, i) => { %>
-      <details class="about-faq__item" id="faq-<%= i + 1 %>">
+      <details class="card faq__item" id="faq-<%= i + 1 %>">
         <summary><span><%= q %></span></summary>
-        <div class="about-faq__body">
+        <div class="faq__body">
           <p><%= a %></p>
-          <% if (more) { %><p class="about-faq__more"><a href="<%= more.href %>"><%= more.label %> →</a></p><% } %>
+          <% if (more) { %><p class="faq__more"><a href="<%= more.href %>"><%= more.label %> →</a></p><% } %>
         </div>
       </details>
     <% }) %>

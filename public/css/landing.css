@@ -1,0 +1,110 @@
+/* Canada Careers — the three public landings (/employer, /consultant, /jobseeker). Mobile first; tokens from theme.css only.
+   Skeleton (identical on all three): .page-head hero (+ illustration card at >=1024) → .section features (3 cards)
+   → .section--alt audiences (5-grid) → .section how it works (3 steps) → .section--alt what every posting needs (3 cards)
+   → .section pricing card → .section FAQ (details cards) → .section--alt closing CTA band.
+   Containers, bands, section paddings, card and button styles all come from theme.css — nothing is redefined here. */
+
+/* ---------- hero: the standard .page-head with an illustration card on desktop ---------- */
+.landing-hero .lead { max-width: 60ch; }
+.landing-hero h1 { max-width: 18ch; }
+.landing-hero__note { margin: 12px 0 0; }
+.landing-hero__cta .kds-btn { flex: 1 1 auto; }
+.landing-hero__art { display: none; }
+@media (min-width: 640px) { .landing-hero__cta .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 768px) { .landing-hero .page-head__inner { grid-template-columns: 1fr; } }
+@media (min-width: 1024px) {
+  .landing-hero .page-head__inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 48px; }
+  .landing-hero__art { display: flex; justify-content: center; }
+}
+
+/* illustration cards (decorative, aria-hidden) */
+.mock { width: 100%; max-width: 380px; display: grid; gap: 10px; box-shadow: var(--kds-shadow-2); transform: rotate(-1.5deg); }
+.mock--stack { transform: rotate(1.5deg); }
+.mock__bar { display: flex; gap: 5px; }
+.mock__bar span { width: 9px; height: 9px; border-radius: 50%; background: var(--cc-line-strong); }
+.mock__bar span:first-child { background: var(--cc-red); } .mock__bar span:nth-child(2) { background: var(--cc-orange); } .mock__bar span:nth-child(3) { background: var(--cc-green); }
+.mock__title { font: 700 1.05rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
+.mock__sub { color: var(--kds-fg-muted); font-size: .875rem; }
+.mock__foot { display: flex; justify-content: space-between; align-items: center; font-size: .8125rem; color: var(--kds-fg-muted); padding-top: 6px; border-top: 1px solid var(--kds-border); }
+.mock__row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--kds-border); }
+.mock__row--add { justify-content: center; border: 1px dashed var(--cc-line-strong); border-radius: 10px; color: var(--cc-navy); font-weight: 600; padding: 12px; }
+.mock__logo { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; font: 800 1.25rem var(--cc-font-display); color: #fff; background: var(--cc-navy); flex: none; }
+.mock__logo--teal { background: var(--cc-teal); }
+.mock__avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--cc-teal); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
+.mock__line { height: 8px; width: 90px; border-radius: 4px; background: var(--cc-navy-100); margin: 4px 0; }
+.mock__line--w { width: 140px; background: var(--cc-navy); opacity: .5; }
+.mock__meter { height: 8px; border-radius: 999px; background: var(--cc-navy-100); overflow: hidden; }
+.mock__meter span { display: block; height: 100%; background: linear-gradient(90deg, var(--cc-teal), var(--cc-green)); }
+.mock__job { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--kds-border); border-radius: 10px; font-size: .85rem; }
+.mock__job strong { color: var(--cc-navy); }
+.mock__job span { color: var(--kds-fg-muted); font-size: .8rem; }
+.mock__job em { font-style: normal; font-size: .7rem; font-weight: 700; color: var(--cc-green); text-transform: uppercase; letter-spacing: .06em; }
+.mock__btn { text-align: center; background: var(--cc-red); color: #fff; font-weight: 700; padding: 12px; border-radius: 10px; font-size: .9rem; }
+
+/* ---------- five-column audience grid (1 → 2 → 5) ---------- */
+.grid--5 { grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, 1fr); } }
+.aud-card { display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
+.aud-card--professionals { border-top-color: var(--cc-aud-professionals); }
+.aud-card--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
+.aud-card--indigenous { border-top-color: var(--cc-aud-indigenous); }
+.aud-card--refugees { border-top-color: var(--cc-aud-refugees); }
+.aud-card--youth { border-top-color: var(--cc-aud-youth); }
+.aud-card__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
+.aud-card--indigenous .aud-card__icon { background: var(--cc-orange-100); }
+.aud-card--new_immigrants .aud-card__icon, .aud-card--refugees .aud-card__icon { background: var(--cc-teal-100); }
+.aud-card--youth .aud-card__icon { background: var(--cc-green-100); }
+.aud-card h3 { margin: 0; }
+.aud-card p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
+.aud-card a { font-weight: 600; font-size: .9rem; text-decoration: none; margin-top: auto; }
+.aud-card .aud { justify-self: start; }
+
+/* ---------- feature cards + numbered steps ---------- */
+.feature { display: grid; gap: 8px; align-content: start; }
+.feature p { margin: 0; color: var(--kds-fg-muted); }
+.feature__icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font: 800 1rem var(--cc-font-display); color: #fff; background: var(--cc-navy); margin-bottom: 4px; }
+.feature__icon--red { background: var(--cc-red); } .feature__icon--teal { background: var(--cc-teal); }
+.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; gap: 6px; align-content: start; }
+.step h3 { margin: 4px 0 0; }
+.step p { margin: 0; color: var(--kds-fg-muted); }
+.step__n { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--cc-red); color: #fff; font: 800 1rem var(--cc-font-display); }
+
+/* ---------- pricing: one card (the accent button) + a plain aside ---------- */
+.pricing { display: grid; gap: 24px; align-items: start; }
+@media (min-width: 1024px) { .pricing { grid-template-columns: minmax(300px, 440px) minmax(0, 1fr); gap: 40px; } }
+.pricing__card { display: grid; gap: 12px; border-color: var(--cc-navy); }
+.pricing__card .eyebrow { margin-bottom: 0; }
+.pricing__amount { font: 800 3rem/1 var(--cc-font-display); color: var(--cc-navy); display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.pricing__currency { font-size: 1.5rem; align-self: flex-start; margin-top: .3em; }
+.pricing__per { font-size: 1rem; font-weight: 600; color: var(--kds-fg-muted); }
+.pricing__total { margin: 0; }
+.pricing__list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.pricing__list li { padding-left: 26px; position: relative; font-size: .9375rem; }
+.pricing__list li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--cc-green); font-weight: 800; }
+.pricing__note { margin: 0; text-align: center; }
+.pricing__aside h3 { margin-top: 0; }
+
+/* ---------- FAQ: native <details> styled as cards ---------- */
+.faq { display: grid; gap: 10px; }
+.faq__item { padding: 0; }
+.faq__item summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 20px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); }
+.faq__item[open] { border-color: var(--cc-line-strong); }
+.faq__item[open] summary::after { content: "–"; background: var(--cc-navy); color: #fff; }
+.faq__item summary:hover { color: var(--cc-red); }
+.faq__body { padding: 0 20px 16px; color: var(--kds-fg-muted); }
+.faq__body p { margin: 0 0 .5em; }
+.faq__body p:last-child { margin-bottom: 0; }
+.faq__foot { margin: 20px 0 0; }
+
+/* ---------- closing CTA band (inside .section--alt) ---------- */
+.cta-band { display: grid; gap: 16px; align-items: center; }
+.cta-band h2, .cta-band p { margin: 0; }
+.cta-band p { margin-top: 6px; max-width: 60ch; }
+.cta-band__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.cta-band__actions .kds-btn { flex: 1 1 auto; }
+@media (min-width: 640px) { .cta-band__actions .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 768px) { .cta-band { grid-template-columns: minmax(0, 1fr) auto; gap: 32px; } }
