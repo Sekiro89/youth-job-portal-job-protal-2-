@@ -6,7 +6,7 @@
 //
 //   node scripts/stripe-setup.js                    # test connection, create/verify the 4 Prices, show webhook status
 //   node scripts/stripe-setup.js --create-webhook   # also create the webhook endpoint (secret saved to settings, printed once)
-//   node scripts/stripe-setup.js --url https://jobs.khosha.tech   # override the public URL for the webhook address
+//   node scripts/stripe-setup.js --url https://canadacareers.jobs   # override the public URL for the webhook address
 //   node scripts/stripe-setup.js --status           # read-only: connection + catalog status, change nothing
 //
 // What setupCatalog() creates (found again by lookup_key / metadata on later runs, so nothing is duplicated) — one pair per payer role:

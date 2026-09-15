@@ -41,7 +41,7 @@ Crawl-delay: 5
 No paths are disallowed; the site asks for **5 seconds between requests**. The importer honours that by default
 (`JOBBANK_DELAY_MS`, minimum 1000 — never go below the brief's 1 req/s), serialises every request through one
 throttle, retries 429/5xx/network errors 3× with growing backoff, sends
-`User-Agent: CanadaCareersBot/1.0 (+https://jobs.khosha.tech/about)` and caches every response on disk so re-runs and
+`User-Agent: CanadaCareersBot/1.0 (+https://canadacareers.jobs/about)` and caches every response on disk so re-runs and
 dry-runs cost nothing (feeds 6 h, detail pages 7 days for import / 20 h for the sync re-check).
 
 ## Attribution approach — and why

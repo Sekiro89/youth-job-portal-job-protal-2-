@@ -434,7 +434,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
       job, more, similar, saved: !!savedRow, url, locations, companyName, legalName, educationText, experienceText, hoursText, industryText,
       postedAt, closesAt, closesLabel, applyUrlLabel: 'Apply on other platform',
       mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
-      // For the print footer: "Printed from jobs.khosha.tech/jobs/<slug> on <date>" (host without scheme).
+      // For the print footer: "Printed from canadacareers.jobs/jobs/<slug> on <date>" (host without scheme).
       printHost: String(res.locals.PUBLIC_URL || '').replace(/^https?:\/\//, ''), printedOn: h.formatDate(new Date(), { month: 'long' }),
     });
   } catch (e) { next(e); }

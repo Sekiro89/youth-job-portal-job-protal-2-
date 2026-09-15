@@ -21,7 +21,7 @@ changes them at **/admin/integrations → Maps** with no restart (settings cache
 
 The Google key is sent to the browser (`window.CC_MAPS.googleKey`) and used server-side for Geocoding: create it as a
 **browser key restricted by HTTP referrer** (see §2). Server calls send `key=` as well, so Google must allow the server
-too — either leave "Application restrictions" at *Websites* and add both `jobs.khosha.tech/*` and `*.khosha.tech/*`, or
+too — either leave "Application restrictions" at *Websites* and add both `canadacareers.jobs/*` and `*.khosha.tech/*`, or
 (cleaner) create a second, IP-restricted key and paste it into `GOOGLE_MAPS_API_KEY` in `.env` while the browser key goes
 in the admin panel (DB wins for the browser; env is used only when the DB value is empty — so for two keys, ask the
 orchestrator to split the setting; today one key serves both).
@@ -33,7 +33,7 @@ orchestrator to split the setting; today one key serves both).
 2. **APIs & Services → Library**, enable: **Maps JavaScript API**, **Places API (New)** (and the legacy **Places API** for
    older projects), **Geocoding API**.
 3. **Credentials → Create credentials → API key**. Under *Application restrictions* choose **Websites** and add
-   `https://jobs.khosha.tech/*` (plus any staging host). Under *API restrictions* select only the three APIs above.
+   `https://canadacareers.jobs/*` (plus any staging host). Under *API restrictions* select only the three APIs above.
 4. Paste the key into **/admin/integrations → Maps → Google Maps API key** and leave *Map provider* on `auto`.
 5. Open any job page: the map should now be Google. Check the browser console for `RefererNotAllowedMapError` /
    `ApiNotActivatedMapError` if it silently falls back to OpenStreetMap.
@@ -47,7 +47,7 @@ sessions. Our caching means each distinct address is geocoded **once ever**; the
 
 - <https://operations.osmfoundation.org/policies/nominatim/>: max **1 request per second**, a valid **User-Agent**,
   no bulk geocoding, cache results. `lib/geocode.js` serialises every Nominatim call through one module-level queue with
-  a 1.1 s gap, sends `User-Agent: CanadaCareersBot/1.0 (+https://jobs.khosha.tech/about)` and writes every answer
+  a 1.1 s gap, sends `User-Agent: CanadaCareersBot/1.0 (+https://canadacareers.jobs/about)` and writes every answer
   (including "no result", retried after 7 days) into `geocode_cache`. Suggestions are cached for 30 days.
 - The browser never calls Nominatim: autocomplete goes through `/api/geocode/suggest` (same queue + cache, 2+ chars,
   max 5 results, 40 requests/minute per IP → 429).
