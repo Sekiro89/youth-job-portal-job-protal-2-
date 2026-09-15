@@ -908,7 +908,8 @@ async function main() {
   else report(false, 'operating name fixture', 'no live job whose operating name differs from company_name (seed expects Northern Lights Freight)');
   if (db.jobbank) await step('jobbank reference', async () => {
     const r = await request(BASE, `/jobs/${db.jobbank.slug}`, { jar: guest });
-    report(r.status === 200 && /Reference posting/i.test(r.text), 'Job Bank row shows "Reference posting" attribution', describe(r));
+    report(r.status === 200 && !/job ?bank|reference posting/i.test(r.text.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '')), 'imported row never names its origin (no "Job Bank"/"Reference posting" text)', describe(r));
+    report(r.text.includes(`/jobs/${db.jobbank.slug}/go`) && !/jobbank\.gc\.ca/i.test(r.text), 'imported row applies via /jobs/:slug/go and page source has no jobbank.gc.ca address', r.text.includes('jobbank.gc.ca') ? 'jobbank.gc.ca present' : '');
     report(!r.text.includes(`/jobs/${db.jobbank.slug}/apply`), 'Job Bank row has no internal apply route', r.text.includes(`/jobs/${db.jobbank.slug}/apply`) ? 'found /apply link' : '');
   });
   else report(true, 'jobbank reference rows', 'none in this DB — skipped');
