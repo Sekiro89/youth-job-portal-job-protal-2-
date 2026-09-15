@@ -297,7 +297,6 @@ router.get('/api/jobs/geo', async (req, res, next) => {
     const markers = rows.slice(0, GEO_MARKER_CAP).map(r => ({
       id: r.id, location_id: r.location_id, slug: r.slug, url: `/jobs/${r.slug}`, title: r.title, company: h.displayCompany(r),
       address: h.fullAddress(r), lat: r.lat, lng: r.lng, salary: h.formatSalary(r), distance_km: r.distance_km == null ? null : Math.round(r.distance_km * 10) / 10,
-      reference: r.source === 'jobbank',
     }));
     res.set('Cache-Control', 'private, max-age=60');
     res.json({ point: pointOut, near_unresolved: !!f.near_unresolved, total: countRow.n, count: markers.length, capped, markers });
@@ -327,6 +326,18 @@ router.get('/api/geocode/suggest', async (req, res, next) => {
 
 // ------------------------------------------------------------------ job detail
 const EMPLOYMENT_TYPE = { full_time: 'FULL_TIME', part_time: 'PART_TIME', contract: 'CONTRACTOR', temporary: 'TEMPORARY', seasonal: 'TEMPORARY', internship: 'INTERN', apprenticeship: 'OTHER' };
+
+// External application hand-off: keeps third-party destinations (imported postings) off the page source; never indexed.
+router.get('/jobs/:slug/go', async (req, res, next) => {
+  try {
+    const job = await db.one(`SELECT jobs.id, jobs.apply_url, jobs.source_url FROM jobs WHERE jobs.slug = $1 AND ${PUBLIC_WHERE}`, [req.params.slug]);
+    const target = job && (job.apply_url || job.source_url);
+    if (!target || !/^https?:\/\//i.test(target)) return res.status(404).render('error', { title: 'Page not found', code: 404, message: 'That posting does not exist.', noindex: true });
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    res.set('Referrer-Policy', 'no-referrer');
+    return res.redirect(302, target);
+  } catch (e) { next(e); }
+});
 
 router.get('/jobs/:slug', async (req, res, next) => {
   try {
@@ -485,7 +496,7 @@ router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send([
     'User-agent: *', 'Allow: /',
     'Disallow: /admin', 'Disallow: /employer/', 'Disallow: /consultant/', 'Disallow: /jobseeker/',
-    'Disallow: /billing', 'Disallow: /login', 'Disallow: /signup', 'Disallow: /forgot', 'Disallow: /reset/', 'Disallow: /account',
+    'Disallow: /billing', 'Disallow: /jobs/*/go', 'Disallow: /login', 'Disallow: /signup', 'Disallow: /forgot', 'Disallow: /reset/', 'Disallow: /account',
     '', `Sitemap: ${res.locals.PUBLIC_URL}/sitemap.xml`, '',
   ].join('\n'));
 });

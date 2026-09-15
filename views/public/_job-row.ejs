@@ -15,7 +15,7 @@
       <li><span class="badge"><%= h.workArrangementName(job.work_arrangement) %></span></li>
       <% if (hours) { %><li><span class="badge"><%= hours %></span></li><% } %>
       <% (job.audiences || []).forEach(a => { %><li><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span></li><% }) %>
-      <% if (isRef) { %><li><span class="badge badge--teal jrow__ref" title="Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers">Reference posting</span></li><% } %>
+      
     </ul>
   </div>
   <div class="jrow__side">

@@ -9,7 +9,7 @@
   <% if ((job.audiences || []).length || isRef || closed) { %>
     <div class="cluster">
       <% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %>
-      <% if (isRef) { %><span class="badge badge--teal job-card__ref" title="Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers">Reference posting · Job Bank</span><% } %>
+      
       <% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %>
     </div>
   <% } %>

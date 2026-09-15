@@ -6,9 +6,8 @@
   const legalNote = h.legalNameNote(job); // "Operated by <legal name>" when the operating (trade) name differs
   const extraLoc = locations.length - 1;
   const mailto = job.apply_email ? `mailto:${job.apply_email}?subject=${encodeURIComponent('Application: ' + job.title)}` : '';
-  // Imported (Job Bank) postings are reference-only: applications happen on jobbank.gc.ca.
+  // Imported postings carry no on-site application: the only CTA is the employer's external link (never named as a source).
   const imported = job.source === 'jobbank' && !!job.source_url;
-  const REF_TEXT = 'Reference posting from Job Bank (Government of Canada) — not posted on Canada Careers';
   // Application deadline (DATE column). Calendar day = server-local getters on a Date, or the first 10 chars of a string.
   const ymd = (v) => !v ? '' : (v instanceof Date ? `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}` : String(v).slice(0, 10));
   const todayYmd = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
@@ -33,7 +32,7 @@
       const off = (new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', timeZoneName: 'longOffset' }).formatToParts(new Date(deadlineYmd + 'T12:00:00Z')).find(p => p.type === 'timeZoneName') || {}).value || 'GMT-05:00';
       o.validThrough = `${deadlineYmd}T23:59:59${off.replace('GMT', '') || '-05:00'}`;
     } else if (job.expires_at) o.validThrough = new Date(job.expires_at).toISOString();
-    if (imported) { o.directApply = false; o.url = job.source_url; }
+    if (imported) { o.directApply = false; }
     else if (closed) o.directApply = false;
   });
 %>
@@ -49,9 +48,8 @@
         <span><span class="job-head__dot" aria-hidden="true">· </span><%= h.location(job) %><% if (extraLoc > 0) { %> <span class="job-head__more">+<%= extraLoc %> more location<%= extraLoc > 1 ? 's' : '' %></span><% } %><%= remote ? ' (remote across Canada)' : '' %></span>
       </p>
       <% if (legalNote) { %><p class="job-head__legal small muted"><%= legalNote %></p><% } %>
-      <% if (imported || closed) { %>
+      <% if (closed) { %>
         <div class="cluster job-head__badges">
-          <% if (imported) { %><span class="badge badge--teal badge--ref">Reference posting · Job Bank (Government of Canada)</span><% } %>
           <% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %>
         </div>
       <% } %>
@@ -71,13 +69,7 @@
 <div class="section">
 <div class="container job-layout">
   <article class="job-main">
-    <% if (imported) { %>
-      <aside class="card job-attribution" aria-labelledby="attribution-h">
-        <h2 id="attribution-h" class="eyebrow">Reference posting</h2>
-        <p><%= REF_TEXT %>. It is republished here for reference with attribution; applications are made on Job Bank, not on Canada Careers.</p>
-        <p class="job-attribution__meta">Job Bank posting #<%= job.source_id %> · <a class="job-attribution__link" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">View the original on jobbank.gc.ca ↗</a></p>
-      </aside>
-    <% } else if (closed) { %>
+    <% if (closed) { %>
       <aside class="card closed-notice" role="status" aria-labelledby="closed-h">
         <h2 id="closed-h" class="eyebrow">Applications closed</h2>
         <p>This posting stopped accepting applications on <strong><%= closes %></strong>. It stays listed for reference until <%= expiry %>.</p>
@@ -144,7 +136,7 @@
     <section class="job-section print-only print-apply">
       <h2>How to apply</h2>
       <% if (imported) { %>
-        <p>This is a reference posting. Apply on Job Bank (Government of Canada): <%= job.source_url %></p>
+        <p>Apply on the employer's platform: <%= printHost %>/jobs/<%= job.slug %>/go</p>
       <% } else if (closed) { %>
         <p>Applications closed on <%= closes %>. The posting remains listed at <%= printHost %>/jobs/<%= job.slug %> until <%= expiry %>.</p>
       <% } else { %>
@@ -156,8 +148,8 @@
   <aside class="job-side">
     <div class="card apply-card">
       <% if (imported) { %>
-        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Apply on Job Bank ↗</a>
-        <p class="small muted apply-card__note">Opens the original posting on jobbank.gc.ca (Government of Canada).</p>
+        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a>
+        <p class="small muted apply-card__note">Opens the employer's application page in a new tab.</p>
       <% } else if (closed) { %>
         <div class="apply-card__closed" role="status">
           <strong>Applications closed</strong>
@@ -195,7 +187,6 @@
         <% } %>
         <% if (industryText) { %><div><dt>Industry</dt><dd><%= industryText %></dd></div><% } %>
         <% if (job.noc_code) { %><div><dt>NOC</dt><dd><%= job.noc_code %></dd></div><% } %>
-        <% if (imported) { %><div><dt>Source</dt><dd><a href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Job Bank #<%= job.source_id %></a></dd></div><% } %>
       </dl>
       <div class="share" aria-label="Share this job">
         <span class="small muted">Share</span>
@@ -205,7 +196,7 @@
         <a class="share__btn" href="mailto:?subject=<%= encodeURIComponent(job.title + ' at ' + companyName) %>&body=<%= encodeURIComponent('I thought you might be interested in this job on Canada Careers: ' + url) %>" aria-label="Share by email"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
         <span class="share__status small" role="status" aria-live="polite"></span>
       </div>
-      <p class="small muted apply-card__note"><% if (pid) { %>Quote <strong>Posting ID <%= pid %></strong> when you contact the employer or our support team. <% } %><% if (imported) { %><%= REF_TEXT %> · <% } %><a href="/contact?category=posting">Report this posting</a></p>
+      <p class="small muted apply-card__note"><% if (pid) { %>Quote <strong>Posting ID <%= pid %></strong> when you contact the employer or our support team. <% } %><a href="/contact?category=posting">Report this posting</a></p>
     </div>
   </aside>
   <p class="print-only print-foot">Printed from <%= printHost %>/jobs/<%= job.slug %> on <%= printedOn %></p>
@@ -235,6 +226,6 @@
   <div class="applybar__inner">
     <div class="applybar__text"><strong><%= h.formatSalary(job) %></strong><span class="small muted"><%= closed ? 'Applications closed' : closesLbl + ' ' + closes %></span></div>
     <form method="post" action="/jobs/<%= job.slug %>/<%= saved ? 'unsave' : 'save' %>" class="inline-form"><button class="kds-btn kds-btn--ghost applybar__save" type="submit" aria-label="<%= saved ? 'Unsave job' : 'Save job' %>"><svg width="20" height="20" viewBox="0 0 24 24" fill="<%= saved ? 'currentColor' : 'none' %>" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></form>
-    <% if (imported) { %><a class="kds-btn kds-btn--accent applybar__apply" href="<%= job.source_url %>" target="_blank" rel="nofollow noopener">Apply on Job Bank ↗</a><% } else if (closed) { %><span class="badge badge--danger applybar__closed">Closed</span><% } else { %><a class="kds-btn kds-btn--accent applybar__apply" href="/jobs/<%= job.slug %>/apply">Apply now</a><% } %>
+    <% if (imported) { %><a class="kds-btn kds-btn--accent applybar__apply" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a><% } else if (closed) { %><span class="badge badge--danger applybar__closed">Closed</span><% } else { %><a class="kds-btn kds-btn--accent applybar__apply" href="/jobs/<%= job.slug %>/apply">Apply now</a><% } %>
   </div>
 </div>

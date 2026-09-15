@@ -267,7 +267,6 @@ router.get('/api/jobs/geo', async (req, res, next) => {
     const markers = rows.slice(0, GEO_MARKER_CAP).map(r => ({
       id: r.id, public_id: r.public_id, location_id: r.location_id, slug: r.slug, url: `/jobs/${r.slug}`, title: r.title, company: h.displayCompany(r),
       address: h.fullAddress(r), lat: r.lat, lng: r.lng, salary: h.formatSalary(r), distance_km: r.distance_km == null ? null : Math.round(r.distance_km * 10) / 10,
-      reference: r.source === 'jobbank',
     }));
     res.set('Cache-Control', 'private, max-age=60');
     res.json({ point: pointOut, near_unresolved: !!f.near_unresolved, total: countRow.n, count: markers.length, capped, markers });
