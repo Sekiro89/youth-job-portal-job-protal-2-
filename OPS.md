@@ -2,7 +2,7 @@
 
 > Job bank portal for a Canadian client: employers and third-party consultants post jobs ($9.99 + GST per posting per month, recurring until cancelled); job seekers upload a resume, apply online and get alerts matched to their profile; Contact Us goes to Veda (technical support). Five audiences from the logo: Professionals, New Immigrants, Indigenous, Refugees, Youth.
 
-**Status:** built, awaiting DNS for jobs.khosha.tech  ·  **Last updated:** 2026-09-09 by Claude (Fable 5.1)
+**Status:** LIVE at https://canadacareers.jobs (sandbox payments until Stripe keys)  ·  **Last updated:** 2026-09-15 by Claude (Fable 5.1)
 
 ---
 
@@ -10,7 +10,7 @@
 | | |
 |---|---|
 | **LLM used to develop** | Claude Fable 5.1 (Claude Code) — orchestrator + 9 parallel agents (public, auth, portal, seeker, billing, about, contact/admin, brand, QA). Build contract: `docs/CONTRACT.md` |
-| Source repo | local git only (`~/projects/canada-careers`) — no GitHub remote yet |
+| Source repo | private **github.com/ankitjm/canada-careers** (branch `main` = what runs; `~/projects/canada-careers` is a plain clone, deploy = `git pull && sudo systemctl restart canada-careers`) |
 | Language / stack | Node 24 · Express 4 · EJS + express-ejs-layouts · pg · express-session (pg store) · multer · nodemailer · stripe · vendored KDS tokens (`public/kds/`) |
 | Code owner (person) | Ankit (ankitjm@gmail.com); client-side support: Veda |
 | Runs as OS user | ubuntu |
@@ -44,9 +44,9 @@
 ## 5. Routing / network
 | | |
 |---|---|
-| Public domain | jobs.khosha.tech (A record → 187.127.180.28 — **pending** as of 2026-09-09) |
+| Public domain(s) | **canadacareers.jobs** (A record → 187.127.180.28, live 2026-09-15); `www.canadacareers.jobs` and the old `jobs.khosha.tech` 301 to it |
 | TLS | Caddy automatic Let's Encrypt |
-| Reverse proxy config | `/etc/caddy/Caddyfile` block `jobs.khosha.tech` → `127.0.0.1:3900`; `/data/* /docs/* /.env* /.git/*` blocked at Caddy |
+| Reverse proxy config | `/etc/caddy/Caddyfile` block `canadacareers.jobs` → `127.0.0.1:3900`; `/data/* /docs/* /.env* /.git/*` blocked at Caddy |
 | Reload Caddy | `sudo caddy reload --config /etc/caddy/Caddyfile` (systemctl reload is broken on this box) |
 
 ## 6. Environment / secrets
@@ -63,7 +63,7 @@
 - Deploy a change: edit → `node -c` / run `BASE_URL=http://localhost:3900 node scripts/smoke.js` → `sudo systemctl restart canada-careers` → `curl localhost:3900/healthz`.
 - Run renewals/expiry by hand: `sudo systemctl start canada-careers-renewals.service; tail renewals.log`.
 - Screenshots at 390/768/1024/1440: `node scripts/shots.js` (see `docs/QA.md`).
-- Go live with real payments: set the three `STRIPE_*` keys, register webhook `https://jobs.khosha.tech/billing/webhook` (events in `docs/BILLING.md`), restart.
+- Go live with real payments: set the three `STRIPE_*` keys, register webhook `https://canadacareers.jobs/billing/webhook` (events in `docs/BILLING.md`), restart.
 - Go live with email: set `SMTP_URL` (e.g. Resend/SES SMTP URL) and `MAIL_FROM`, restart; check `/admin/outbox` statuses.
 
 ## 9. Dependencies / gotchas
