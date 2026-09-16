@@ -76,15 +76,15 @@ async function welcome(user, role) {
   const first = escapeHtml(user.name.split(' ')[0]);
   const PUBLIC_URL = await publicUrl();
   const bodies = {
-    employer: [`<p>Hi ${first}, your employer account is ready.</p><p>Post your first job in minutes — every posting is <strong>${PRICE.employer}</strong>, reaches professionals, new immigrants, Indigenous peoples, refugees and youth across Canada, and you can cancel any time.</p>`, { href: `${PUBLIC_URL}/employer/jobs/new`, label: 'Post a job' }],
+    employer: [`<p>Hi ${first}, your employer account is ready.</p><p>Post your first job in minutes — every posting is <strong>${PRICE.employer}</strong>, reaches young talent across Canada at every career stage, and you can cancel any time.</p>`, { href: `${PUBLIC_URL}/employer/jobs/new`, label: 'Post a job' }],
     consultant: [`<p>Hi ${first}, your Third Party Consultant account is ready.</p><p>Add the employers you represent as company profiles, then post and manage jobs for each of them under this one login — ${PRICE.consultant}.</p>`, { href: `${PUBLIC_URL}/consultant/profiles/new`, label: 'Add your first employer' }],
-    seeker: [`<p>Hi ${first}, welcome to Canada Careers.</p><p>Upload your resume, set your job preferences and we will email you when new postings match. Applying takes one click.</p>`, { href: `${PUBLIC_URL}/jobseeker/profile`, label: 'Complete your profile' }],
+    seeker: [`<p>Hi ${first}, welcome to Youth Futures Canada.</p><p>Upload your resume, set your job preferences and we will email you when new postings match. Applying takes one click.</p>`, { href: `${PUBLIC_URL}/jobseeker/profile`, label: 'Complete your profile' }],
   };
   const [html, cta] = bodies[role];
   await mail.send({
-    to: user.email, subject: 'Welcome to Canada Careers',
-    html: mail.layout('Welcome to Canada Careers', html, cta),
-    text: `Hi ${user.name}, welcome to Canada Careers. Get started: ${cta.href}`,
+    to: user.email, subject: 'Welcome to Youth Futures Canada',
+    html: mail.layout('Welcome to Youth Futures Canada', html, cta),
+    text: `Hi ${user.name}, welcome to Youth Futures Canada. Get started: ${cta.href}`,
   });
 }
 
@@ -92,14 +92,14 @@ async function welcome(user, role) {
 router.get('/signup', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
   rememberNext(req);
-  res.render('auth/signup', page({ title: 'Create your account', metaDescription: 'Join Canada Careers as an employer ($14.99 per posting per month + GST), third party consultant ($9.99 + GST) or job seeker — applying is always free.' }));
+  res.render('auth/signup', page({ title: 'Create your account', metaDescription: 'Join Youth Futures Canada as an employer ($14.99 per posting per month + GST), third party consultant ($9.99 + GST) or job seeker — applying is always free.' }));
 });
 
 const signupPage = { employer: 'auth/signup-employer', consultant: 'auth/signup-consultant', seeker: 'auth/signup-seeker' };
 const signupMeta = {
-  employer: { title: 'Sign up as an employer', metaDescription: 'Create a Canada Careers employer account and post jobs for your company for $14.99 per posting per month + GST.' },
-  consultant: { title: 'Sign up as a third party consultant', metaDescription: 'Create a Canada Careers consultant account to manage job postings for many employers under one login.' },
-  seeker: { title: 'Sign up as a job seeker', metaDescription: 'Create a free Canada Careers job seeker account. Upload your resume, apply online and get job alerts by email.' },
+  employer: { title: 'Sign up as an employer', metaDescription: 'Create a Youth Futures Canada employer account and post jobs for your company for $14.99 per posting per month + GST.' },
+  consultant: { title: 'Sign up as a third party consultant', metaDescription: 'Create a Youth Futures Canada consultant account to manage job postings for many employers under one login.' },
+  seeker: { title: 'Sign up as a job seeker', metaDescription: 'Create a free Youth Futures Canada job seeker account. Upload your resume, apply online and get job alerts by email.' },
 };
 /** The employer form carries the address-autocomplete widget (public/js/maps.js, maps agent) on top of the auth script. */
 const employerPage = (extra) => page({ ...extra, extraJs: ['/js/auth.js', '/js/maps.js'] });
@@ -190,7 +190,7 @@ router.post('/signup/seeker', wrap(async (req, res) => {
 }));
 
 // ---------------------------------------------------------------- login / logout
-const loginMeta = { title: 'Sign in', metaDescription: 'Sign in to your Canada Careers account to post jobs, manage employer profiles, or apply to jobs and manage your alerts.' };
+const loginMeta = { title: 'Sign in', metaDescription: 'Sign in to your Youth Futures Canada account to post jobs, manage employer profiles, or apply to jobs and manage your alerts.' };
 router.get('/login', (req, res) => {
   if (req.user) return res.redirect(auth.homeFor(req.user));
   rememberNext(req);
@@ -231,7 +231,7 @@ router.post('/logout', (req, res, next) => {
 });
 
 // ---------------------------------------------------------------- forgot / reset
-const forgotMeta = { title: 'Reset your password', metaDescription: 'Request a password reset link for your Canada Careers account.', noindex: true };
+const forgotMeta = { title: 'Reset your password', metaDescription: 'Request a password reset link for your Youth Futures Canada account.', noindex: true };
 router.get('/forgot', (req, res) => res.render('auth/forgot', page({ ...forgotMeta, values: { email: '' }, errors: {}, sent: false })));
 router.post('/forgot', wrap(async (req, res) => {
   const email = s(req.body.email).toLowerCase();
@@ -242,16 +242,16 @@ router.post('/forgot', wrap(async (req, res) => {
     await db.query("UPDATE users SET reset_token=$2, reset_expires=now() + interval '1 hour', updated_at=now() WHERE id=$1", [user.id, token]);
     const link = `${await publicUrl()}/reset/${token}`;
     await mail.send({
-      to: user.email, subject: 'Reset your Canada Careers password',
+      to: user.email, subject: 'Reset your Youth Futures Canada password',
       html: mail.layout('Reset your password', `<p>Hi ${escapeHtml(user.name.split(' ')[0])}, we received a request to reset the password for <strong>${escapeHtml(user.email)}</strong>.</p><p>This link works for <strong>1 hour</strong>. If you did not ask for this, you can ignore this email — your password will not change.</p>`, { href: link, label: 'Choose a new password' }),
-      text: `Reset your Canada Careers password (valid 1 hour): ${link}`,
+      text: `Reset your Youth Futures Canada password (valid 1 hour): ${link}`,
     });
     await auth.audit(user.id, 'password_reset_requested', 'user', user.id);
   }
   res.render('auth/forgot', page({ ...forgotMeta, values: { email }, errors: {}, sent: true }));
 }));
 
-const resetMeta = { title: 'Choose a new password', metaDescription: 'Set a new password for your Canada Careers account.', noindex: true };
+const resetMeta = { title: 'Choose a new password', metaDescription: 'Set a new password for your Youth Futures Canada account.', noindex: true };
 async function resetUser(token) {
   if (!/^[a-f0-9]{64}$/.test(token)) return null;
   return db.one('SELECT id,email,name FROM users WHERE reset_token=$1 AND reset_expires > now() AND is_active', [token]);
@@ -277,7 +277,7 @@ router.post('/reset/:token', wrap(async (req, res) => {
 }));
 
 // ---------------------------------------------------------------- account
-const accountMeta = { title: 'My account', metaDescription: 'Manage your Canada Careers account details and password.', noindex: true };
+const accountMeta = { title: 'My account', metaDescription: 'Manage your Youth Futures Canada account details and password.', noindex: true };
 function renderAccount(req, res, extra) {
   return res.render('auth/account', page({ ...accountMeta, roleLabel: ROLE_LABEL[req.user.role] || req.user.role, isAdmin: req.user.role === 'admin', values: { name: req.user.name, phone: req.user.phone || '' }, errors: {}, pwErrors: {}, ...extra }));
 }

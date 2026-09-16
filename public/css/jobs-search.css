@@ -149,7 +149,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
   .jsearch__more.is-open { display: block; }
   html:not(.js) .jsearch__more { display: block; position: static; box-shadow: none; grid-column: 1 / -1; width: auto; }
   .jsearch__more-grid { grid-template-columns: 1fr 1fr; gap: 16px 20px; }
-  .jsearch__community { grid-column: 1 / -1; }
+  .jsearch__fullwidth { grid-column: 1 / -1; }
   .jsearch__more-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--kds-border); }
   /* toolbar */
   .jchips, .jsearch__hint { flex: 1 1 260px; }

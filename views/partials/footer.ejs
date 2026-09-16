@@ -1,21 +1,18 @@
 <footer class="site-footer">
   <div class="container site-footer__grid">
     <div class="site-footer__brand">
-      <img src="/img/logo.svg" alt="Canada Careers" width="180" height="50">
-      <p>Jobs for every Canadian. Opportunities for all.</p>
+      <img src="/img/logo-mark.png" alt="Youth Futures Canada" width="64" height="64">
+      <p>Our dreams. Our skills. Our future. Our Canada. Real Canadian job opportunities for young talent, wherever you're starting from.</p>
       <% if (typeof site !== 'undefined' && (site.contact_phone || site.contact_address)) { %><p class="small muted"><% if (site.contact_address) { %><%= site.contact_address %><br><% } %><% if (site.contact_phone) { %><a href="tel:<%= site.contact_phone.replace(/[^+0-9]/g,'') %>"><%= site.contact_phone %></a><% } %></p><% } %>
-      <ul class="audience-strip" aria-label="Who we serve">
-        <% C.AUDIENCES.forEach(([k, name, icon]) => { %><li class="aud aud--<%= k %>"><%= name %></li><% }) %>
-      </ul>
     </div>
     <nav aria-label="Employers"><h3>Employers</h3>
       <ul><li><a href="/employer">Post a job</a></li><li><a href="/employer#pricing">Pricing — $14.99/month + GST per posting</a></li><li><a href="/consultant">Third Party Consultant — $9.99/month + GST</a></li></ul></nav>
     <nav aria-label="Job seekers"><h3>Job seekers</h3>
       <ul><li><a href="/jobs">Browse all jobs</a></li><li><a href="/jobseeker">Create your profile</a></li><li><a href="/jobseeker#alerts">Job alerts</a></li></ul></nav>
-    <nav aria-label="Company"><h3>Canada Careers</h3>
+    <nav aria-label="Company"><h3>Youth Futures Canada</h3>
       <ul><li><a href="/about">About us</a></li><li><a href="/contact">Contact us</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></nav>
   </div>
   <div class="container site-footer__legal">
-    <p>© <%= new Date().getFullYear() %> <%= (typeof site !== 'undefined' && site.site_name) || 'Canada Careers' %>. All prices in Canadian dollars; GST applies.</p>
+    <p>© <%= new Date().getFullYear() %> <%= (typeof site !== 'undefined' && site.site_name) || 'Youth Futures Canada' %>. All prices in Canadian dollars; GST applies.</p>
   </div>
 </footer>

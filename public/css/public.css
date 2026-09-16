@@ -45,71 +45,154 @@
 .tags { list-style: none; padding: 0; margin: 0; }
 .tag { padding: 6px 12px; border-radius: 999px; background: var(--cc-navy-50); border: 1px solid var(--cc-navy-100); font-size: .875rem; font-weight: 500; }
 
-/* ---------- home: hero (the only page without a .page-head; same .section rhythm) ---------- */
-.hero { background: linear-gradient(180deg, var(--cc-navy-50) 0%, #fff 100%); border-bottom: 1px solid var(--kds-border); overflow: hidden; }
-.hero__inner { display: grid; gap: 24px; align-items: center; }
+/* ======================================================================
+   HOME — Youth Futures Canada (2026-09-16 relaunch). Only views/public/home.ejs
+   uses the classes below; everything else on this page reuses shared primitives
+   (.job-card, .jobs-grid, .section, .card, .kds-btn) from theme.css.
+   ====================================================================== */
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--cc-navy-50) 0%, #fff 55%); padding: 40px 0 0; }
+.hero::before { content: ""; position: absolute; inset: -20% -10% auto auto; width: 60%; padding-bottom: 60%; border-radius: 50%; background: radial-gradient(circle, var(--cc-red-100), transparent 70%); opacity: .7; pointer-events: none; }
+.hero__inner { position: relative; display: grid; gap: 32px; align-items: center; padding-bottom: 24px; }
 .hero__copy { min-width: 0; }
-.hero__title { margin-bottom: 12px; }
+.hero__title { margin-bottom: 14px; max-width: 14ch; }
 .hero__title-accent { color: var(--cc-red); display: block; }
-.hero__lead { margin-bottom: 20px; }
+.hero__lead { margin-bottom: 22px; max-width: 56ch; }
 .hero__lead strong { color: var(--cc-navy); }
-.hero__search { display: grid; gap: 12px; }
-.hero__field label { font-size: .8125rem; }
-.hero__submit { width: 100%; }
-.hero__popular { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px 12px; }
-.hero__popular a { text-decoration: none; font-weight: 600; color: var(--cc-navy); border-bottom: 1px solid var(--cc-line-strong); }
-.hero__popular a:hover { color: var(--cc-red); border-color: var(--cc-red); }
-.hero__art { position: relative; border-radius: 20px; min-height: 180px; display: grid; place-items: center; }
-.hero__art img { display: block; width: 100%; max-width: 560px; height: auto; }
-.hero__art--fallback { background: radial-gradient(ellipse at 30% 30%, var(--cc-teal-100), transparent 60%), radial-gradient(ellipse at 75% 70%, var(--cc-orange-100), transparent 55%), linear-gradient(135deg, var(--cc-navy-100), var(--cc-green-100)); min-height: 220px; }
-.hero__art--fallback::after { content: ""; width: 96px; height: 96px; background: var(--cc-red); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l1.6 4.3 3.4-1.1-1 3.9 3.8.6-2.6 2.6 2.3 2.7-3.9.2.4 3.9-3.3-2-1 3.9-1-3.9-3.3 2 .4-3.9-3.9-.2 2.3-2.7L3 9.7l3.8-.6-1-3.9 3.4 1.1z'/%3E%3C/svg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l1.6 4.3 3.4-1.1-1 3.9 3.8.6-2.6 2.6 2.3 2.7-3.9.2.4 3.9-3.3-2-1 3.9-1-3.9-3.3 2 .4-3.9-3.9-.2 2.3-2.7L3 9.7l3.8-.6-1-3.9 3.4 1.1z'/%3E%3C/svg%3E") center/contain no-repeat; opacity: .9; }
+.hero__cta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.hero__cta .kds-btn { flex: 1 1 auto; }
+.hero__stats { list-style: none; margin: 0; padding: 18px 0 0; border-top: 1px solid var(--cc-line); display: flex; flex-wrap: wrap; gap: 20px 28px; }
+.hero__stats li { display: flex; flex-direction: column; gap: 2px; }
+.hero__stats strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.hero__stats span { font-size: .8125rem; color: var(--kds-fg-muted); }
+.hero__art { position: relative; display: none; }
+.hero__art-img {
+  display: block; width: 100%; height: auto;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 72% 78% at 50% 50%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 72% 78% at 50% 50%, #000 58%, transparent 100%);
+}
+@media (min-width: 640px) { .hero__cta .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 1024px) {
+  .hero { padding-top: 56px; }
+  .hero__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 32px; padding-bottom: 44px; }
+  .hero__title { max-width: 12ch; }
+  .hero__art { display: block; margin-right: -32px; }
+}
+@media (min-width: 1280px) {
+  .hero__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .hero__art { margin-right: -64px; }
+}
+
+/* ---------- search band: elevated card that bridges hero → content ---------- */
+.search-band { position: relative; z-index: 5; margin-top: 0; padding-top: 8px; padding-bottom: 8px; }
+.search-card { box-shadow: var(--kds-shadow-3); border-color: var(--cc-line); padding: 20px; }
+.search-card__head { font-size: 1.0625rem; margin-bottom: 14px; }
+.search-form { display: grid; gap: 12px; }
+.search-form__field label { font-size: .8125rem; }
+.search-form__submit { width: 100%; min-height: 48px; }
+.search-card__popular { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--cc-line); display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.search-card__popular a { text-decoration: none; font-weight: 600; color: var(--cc-navy); border-bottom: 1px solid var(--cc-line-strong); }
+.search-card__popular a:hover { color: var(--cc-red); border-color: var(--cc-red); }
 @media (min-width: 640px) {
-  .hero__search { grid-template-columns: 1fr 1fr; align-items: end; }
-  .hero__submit { grid-column: 1 / -1; }
+  .search-form { grid-template-columns: 1fr 1fr; align-items: end; }
+  .search-form__submit { grid-column: 1 / -1; }
 }
 @media (min-width: 1024px) {
-  .hero__inner { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px; }
-  .hero__search { grid-template-columns: 1.4fr 1fr auto; }
-  .hero__submit { grid-column: auto; width: auto; min-width: 150px; }
-  .hero__art { min-height: 320px; }
+  .search-band { padding-top: 16px; }
+  .search-form { grid-template-columns: 1.4fr 1fr auto; }
+  .search-form__submit { grid-column: auto; width: auto; min-width: 160px; }
 }
 
-/* ---------- home: audience pillars (cards) ---------- */
-.pillar-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: 1fr; }
-.pillar { display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "icon name" "icon desc" "icon cta"; column-gap: 14px; row-gap: 2px; text-decoration: none; color: var(--cc-ink); min-height: 96px; border-top: 4px solid var(--pillar-c, var(--cc-navy)); transition: border-color .15s, box-shadow .15s; }
-.pillar:hover { box-shadow: var(--kds-shadow-2); border-color: var(--pillar-c); color: var(--cc-ink); }
-.pillar--professionals { --pillar-c: var(--cc-aud-professionals); }
-.pillar--new_immigrants { --pillar-c: var(--cc-aud-new_immigrants); }
-.pillar--indigenous { --pillar-c: var(--cc-aud-indigenous); }
-.pillar--refugees { --pillar-c: var(--cc-red); }
-.pillar--youth { --pillar-c: var(--cc-aud-youth); }
-.pillar__icon { grid-area: icon; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--pillar-c) 14%, #fff); color: var(--pillar-c); }
-.pillar__icon img { width: 32px; height: 32px; }
-.pillar__icon:empty::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--pillar-c); }
-.pillar__name { grid-area: name; font: 700 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
-.pillar__desc { grid-area: desc; font-size: .875rem; color: var(--kds-fg-muted); }
-.pillar__cta { grid-area: cta; font-size: .8125rem; font-weight: 600; color: var(--pillar-c); margin-top: 6px; }
-@media (min-width: 640px) and (max-width: 1023px) { .pillar-grid { grid-template-columns: repeat(2, 1fr); } .pillar-grid li:last-child { grid-column: 1 / -1; } }
-@media (min-width: 1024px) {
-  .pillar-grid { grid-template-columns: repeat(5, 1fr); }
-  .pillar { grid-template-columns: 1fr; grid-template-areas: "icon" "name" "desc" "cta"; row-gap: 6px; }
-  .pillar__icon { margin-bottom: 6px; }
+/* ---------- career pathways ---------- */
+.pathway-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.pathway-card { position: relative; display: grid; gap: 8px; align-content: start; text-decoration: none; color: var(--cc-ink); background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 24px 22px; overflow: hidden; transition: transform .18s var(--kds-ease-standard), box-shadow .18s var(--kds-ease-standard), border-color .18s; }
+.pathway-card::before { content: ""; position: absolute; right: -18px; top: -18px; width: 90px; height: 90px; border-radius: 50%; background: var(--path-c, var(--cc-navy)); opacity: .08; }
+.pathway-card:hover { transform: translateY(-4px); box-shadow: var(--kds-shadow-3); border-color: var(--path-c, var(--cc-navy)); color: var(--cc-ink); }
+.pathway-card--a { --path-c: var(--cc-navy); } .pathway-card--b { --path-c: var(--cc-red); } .pathway-card--c { --path-c: var(--cc-teal); }
+.pathway-card--d { --path-c: var(--cc-orange); } .pathway-card--e { --path-c: var(--cc-spark); }
+.pathway-card__num { font: 800 1.5rem/1 var(--cc-font-display); color: var(--path-c, var(--cc-navy)); opacity: .55; }
+.pathway-card h3 { margin: 0; }
+.pathway-card p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+.pathway-card__meta { display: inline-flex; align-self: start; margin-top: 4px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--path-c, var(--cc-navy)) 12%, #fff); color: var(--path-c, var(--cc-navy)); font-size: .75rem; font-weight: 700; }
+.pathway-card__cta { font-size: .8125rem; font-weight: 600; color: var(--path-c, var(--cc-navy)); margin-top: 8px; }
+@media (min-width: 768px) { .pathway-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1280px) { .pathway-grid--5 { grid-template-columns: repeat(5, 1fr); } }
+
+/* ---------- career categories: a plain, compact tile — deliberately NOT the pathway-card look above,
+   so "browse by stage" and "browse by industry" read as two different things, not the same card twice ---------- */
+.category-tile-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
+.category-tile { display: flex; align-items: center; flex-wrap: wrap; column-gap: 14px; row-gap: 4px; padding: 16px 20px; background: #fff; border: 1px solid var(--kds-border); border-left: 4px solid var(--tile-c, var(--cc-navy)); border-radius: var(--kds-radius-md); text-decoration: none; color: var(--cc-ink); transition: border-color .15s, background .15s; }
+.category-tile:hover { background: var(--cc-navy-50); color: var(--cc-ink); }
+.category-tile--a { --tile-c: var(--cc-navy); } .category-tile--b { --tile-c: var(--cc-red); } .category-tile--c { --tile-c: var(--cc-teal); }
+.category-tile--d { --tile-c: var(--cc-orange); } .category-tile--e { --tile-c: var(--cc-spark); }
+.category-tile h3 { margin: 0; font-size: 1rem; flex: 1 1 auto; min-width: 12ch; }
+.category-tile__meta { font-size: .8125rem; color: var(--kds-fg-muted); }
+.category-tile__cta { font-size: .8125rem; font-weight: 600; color: var(--tile-c, var(--cc-navy)); margin-left: auto; }
+@media (min-width: 768px) { .category-tile-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1280px) { .category-tile-grid { grid-template-columns: repeat(1, 1fr); } .category-tile__cta { flex: none; } }
+
+/* ---------- job categories: chip cloud, not another grid of boxes ---------- */
+.category-cloud { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.category-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); transition: border-color .15s, background .15s, color .15s; }
+.category-chip:hover { border-color: var(--cc-navy); background: var(--cc-navy); color: #fff; }
+.category-chip:hover .category-chip__n { background: #fff; color: var(--cc-navy); }
+.category-chip__n { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy); font-size: .6875rem; font-weight: 700; }
+.category-chip--empty { color: var(--kds-fg-muted); }
+.category-chip--empty .category-chip__n { background: var(--cc-surface); color: var(--kds-fg-faint); }
+
+/* ---------- Canada as a career destination ---------- */
+.destination { display: grid; gap: 32px; }
+.destination__copy .lead { max-width: 52ch; }
+.destination__facts { list-style: none; margin: 20px 0 0; padding: 20px 0 0; border-top: 1px solid var(--cc-line-strong); display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.destination__facts strong { display: block; font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.destination__facts span { font-size: .75rem; color: var(--kds-fg-muted); }
+.destination__provinces { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: 1fr; }
+.destination__provinces a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-ink); }
+.destination__provinces a:hover { border-color: var(--cc-red); color: var(--cc-ink); }
+.destination__count { flex: none; min-width: 26px; height: 26px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 999px; background: var(--cc-navy); color: #fff; font-size: .6875rem; font-weight: 700; }
+.destination__prov--empty .destination__count { background: var(--cc-navy-100); color: var(--kds-fg-muted); }
+@media (min-width: 480px) { .destination__provinces { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .destination { grid-template-columns: minmax(0, 5fr) minmax(0, 5fr); align-items: start; gap: 48px; } }
+
+/* ---------- opportunities for every stage: a connected journey, not identical boxes ---------- */
+.journey { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; grid-template-columns: 1fr; counter-reset: journey; }
+.journey__step { position: relative; padding-left: 56px; }
+.journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; bottom: -20px; width: 2px; background: var(--cc-line-strong); }
+.journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
+.journey__step:nth-child(2) .journey__num { background: var(--cc-red); }
+.journey__step:nth-child(3) .journey__num { background: var(--cc-teal); }
+.journey__step:nth-child(4) .journey__num { background: var(--cc-orange); }
+.journey__step:nth-child(5) .journey__num { background: var(--cc-green); }
+.journey__step:nth-child(6) .journey__num { background: var(--cc-spark); color: var(--cc-ink); }
+.journey__step h3 { margin: 6px 0 4px; }
+.journey__step p { margin: 0; color: var(--kds-fg-muted); max-width: 48ch; }
+@media (min-width: 640px) { .journey { grid-template-columns: repeat(2, 1fr); gap: 24px 20px; } }
+@media (min-width: 1024px) { .journey { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1440px) {
+  .journey--6 { grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .journey--6 .journey__step { padding-left: 0; padding-top: 56px; }
+  .journey--6 .journey__num { left: 0; }
+  .journey--6 .journey__step:not(:last-child)::after { left: 40px; right: -8px; top: 19px; bottom: auto; width: auto; height: 2px; }
 }
 
-/* ---------- home: browse tiles (category + province share one tile) ---------- */
-.browse-group + .browse-group { margin-top: 32px; }
-.browse-group h3 { margin-bottom: 12px; }
-.tile-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: 1fr; }
-.tile { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 52px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; color: var(--cc-navy); font-size: .9375rem; }
-.tile:hover { border-color: var(--cc-navy); color: var(--cc-navy); }
-.tile__count { flex: none; min-width: 28px; height: 28px; padding: 0 8px; display: inline-grid; place-items: center; border-radius: 999px; background: var(--cc-navy); color: #fff; font-size: .75rem; font-weight: 700; }
-.tile--empty { color: var(--kds-fg-muted); font-weight: 500; }
-.tile--empty .tile__count { background: var(--cc-navy-100); color: var(--kds-fg-muted); }
-@media (min-width: 360px) { .tile-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 768px) { .tile-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1024px) { .tile-grid { grid-template-columns: repeat(4, 1fr); } }
+/* ---------- get ready: lightweight resource links ---------- */
+.resource-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+.resource-card { display: block; padding: 20px; background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-md); text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s; }
+.resource-card:hover { border-color: var(--cc-navy); box-shadow: var(--kds-shadow-2); color: var(--cc-ink); }
+.resource-card h3 { margin: 0 0 6px; font-size: 1.0625rem; }
+.resource-card p { margin: 0; color: var(--kds-fg-muted); font-size: .9rem; }
+@media (min-width: 640px) { .resource-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .resource-grid { grid-template-columns: repeat(4, 1fr); } }
 
-/* ---------- home: three CTA cards ---------- */
+/* ---------- full Job Bank CTA: category chips inside a bordered highlight panel ---------- */
+.jobbank-cta__box { border: 1px solid var(--cc-navy-100); border-radius: var(--kds-radius-lg); background: linear-gradient(180deg, var(--cc-navy-50), #fff); padding: 28px; }
+.jobbank-cta .section__head--split { align-items: start; margin-bottom: 20px; }
+.jobbank-cta .kds-btn { flex: none; }
+@media (min-width: 768px) { .jobbank-cta__box { padding: 36px 40px; } }
+
+/* ---------- three-way CTA (employer / consultant / job seeker) ---------- */
 .cta-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
 .cta-card { display: flex; flex-direction: column; gap: 10px; border-top: 5px solid var(--cta-c, var(--cc-navy)); }
 .cta-card--employer { --cta-c: var(--cc-navy); }
@@ -127,21 +210,20 @@
 .cta-card .kds-btn { margin-top: auto; }
 @media (min-width: 768px) { .cta-grid { grid-template-columns: repeat(3, 1fr); } }
 
-/* ---------- home: how it works (navy band; same .section rhythm) ---------- */
-.section--brand { background: var(--cc-navy); color: #fff; }
-.section--brand .eyebrow { color: var(--cc-orange); }
-.section--brand h2, .section--brand h3 { color: #fff; }
-.steps { list-style: none; margin: 0 0 32px; padding: 0; display: grid; gap: 16px; }
-.step { position: relative; padding: 18px 18px 18px 64px; border-radius: var(--kds-radius-lg); background: color-mix(in srgb, #fff 8%, transparent); border: 1px solid color-mix(in srgb, #fff 16%, transparent); }
-.step h3 { margin-bottom: 4px; }
-.step p { margin: 0; color: color-mix(in srgb, #fff 78%, transparent); font-size: .9375rem; }
-.step__num { position: absolute; left: 16px; top: 18px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-red); color: #fff; font: 800 1rem/1 var(--cc-font-display); }
-.trust { list-style: none; margin: 0; padding: 20px 0 0; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); display: grid; gap: 14px; grid-template-columns: 1fr; }
-.trust li { display: grid; gap: 2px; font-size: .9rem; }
-.trust strong { color: var(--cc-orange); font-family: var(--cc-font-display); }
-.trust span { color: color-mix(in srgb, #fff 75%, transparent); }
-@media (min-width: 640px) { .trust { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .steps { grid-template-columns: repeat(3, 1fr); } .trust { grid-template-columns: repeat(4, 1fr); } }
+/* ---------- final CTA band ---------- */
+.final-cta { background: var(--cc-navy); background-image: radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--cc-red) 55%, transparent), transparent 45%); color: #fff; text-align: left; }
+.final-cta .eyebrow { color: var(--cc-spark); }
+.final-cta h2 { color: #fff; max-width: 16ch; }
+.final-cta .lead { color: color-mix(in srgb, #fff 82%, transparent); max-width: 48ch; }
+.final-cta__inner { display: grid; gap: 20px; }
+.final-cta__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.final-cta__actions .kds-btn { flex: 1 1 auto; }
+.final-cta__actions .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
+.final-cta__actions .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); }
+.final-cta__employer { margin: 28px auto 0; color: color-mix(in srgb, #fff 75%, transparent); }
+.final-cta__employer a { color: #fff; }
+@media (min-width: 640px) { .final-cta__actions .kds-btn { flex: 0 0 auto; } }
+@media (min-width: 1024px) { .final-cta__inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 40px; } }
 
 /* ---------- job detail: header band content ---------- */
 .job-head__title { margin-bottom: 8px; }

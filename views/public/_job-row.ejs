@@ -14,8 +14,6 @@
       <li><span class="badge"><%= h.jobTypeName(job.job_type) %></span></li>
       <li><span class="badge"><%= h.workArrangementName(job.work_arrangement) %></span></li>
       <% if (hours) { %><li><span class="badge"><%= hours %></span></li><% } %>
-      <% (job.audiences || []).forEach(a => { %><li><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span></li><% }) %>
-      
     </ul>
   </div>
   <div class="jrow__side">

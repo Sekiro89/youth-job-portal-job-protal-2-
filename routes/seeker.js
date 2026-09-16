@@ -181,16 +181,16 @@ if (process.env.NODE_ENV !== 'production') {
 router.get('/jobseeker', (req, res) => {
   if (req.user && req.user.role === 'seeker') return res.redirect('/jobseeker/dashboard');
   const faqs = [
-    ['Is Canada Careers free for job seekers?', 'Yes. Creating a profile, uploading your resume, applying to jobs and receiving job alerts are all free, and always will be. Employers pay a small monthly fee to post.'],
+    ['Is Youth Futures Canada free for job seekers?', 'Yes. Creating a profile, uploading your resume, applying to jobs and receiving job alerts are all free, and always will be. Employers pay a small monthly fee to post.'],
     ['Do I need a resume to apply?', 'You need one resume on file. Upload it once (PDF, DOC or DOCX, up to 5 MB) and every application uses it automatically — or attach a different one for a specific job.'],
     ['How do job alerts work?', 'Your alerts are built from your profile: the job categories you choose, the provinces you will work in, your keywords and your skills. When a matching job goes live you get an in-app notification and, if you like, an email — instantly or as a daily digest.'],
-    ['Can I apply if I am new to Canada or do not have Canadian experience?', 'Absolutely. Employers on Canada Careers tag each posting with the audiences they are hiring for — new immigrants, refugees, Indigenous peoples, youth and professionals. Tell us who you are in your profile and postings from employers hiring for you rank higher in your matches.'],
+    ['Can I apply if I am new to Canada or do not have Canadian experience?', 'Yes. Youth Futures Canada is built for young people at every career stage, including those exploring Canadian opportunities for the first time. Filter jobs by career stage — from internships and graduate roles to early-career and skilled positions — to find postings that match where you are.'],
     ['Who can see my resume?', 'Only the employer or consultant behind a job you applied to, and only the copy you sent them. Your resume is never publicly listed, never searchable, and is served only to signed-in owners of that posting.'],
     ['Can I withdraw an application?', 'Yes. While an application is still marked "Submitted" you can withdraw it from your Applications page.'],
   ];
   res.render('seeker/landing', {
     title: 'Job Seekers — free profile, one-click apply, job alerts',
-    metaDescription: 'Create a free Canada Careers profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills. For professionals, new immigrants, Indigenous peoples, refugees and youth.',
+    metaDescription: 'Create a free Youth Futures Canada profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills — internships, graduate roles, entry-level jobs and skilled careers.',
     extraCss: ['/css/seeker.css'], extraJs: ['/js/seeker.js'], noindex: false, faqs,
     jsonLd: [{
       '@context': 'https://schema.org', '@type': 'FAQPage',

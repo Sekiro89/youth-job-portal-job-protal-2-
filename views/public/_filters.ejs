@@ -52,7 +52,7 @@
         <label class="visually-hidden" for="f-category">Category</label>
         <select class="input" id="f-category" name="category">
           <option value="">All categories</option>
-          <% C.CATEGORIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= f.category === k ? 'selected' : '' %>><%= n %></option><% }) %>
+          <% C.CATEGORIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= f.category.includes(k) ? 'selected' : '' %>><%= n %></option><% }) %>
         </select>
       </div>
 
@@ -96,11 +96,12 @@
               <% salaryOptions.forEach(s => { %><option value="<%= s %>" <%= f.salary_min === s ? 'selected' : '' %>>$<%= s.toLocaleString('en-CA') %>+</option><% }) %>
             </select>
           </div>
-          <fieldset class="field jsearch__fieldset jsearch__community">
-            <legend>Community</legend>
+          <fieldset class="field jsearch__fieldset jsearch__fullwidth">
+            <legend>Career stage</legend>
             <div class="checks">
-              <% C.AUDIENCES.forEach(([k, n]) => { %>
-                <label class="check"><input type="checkbox" name="audience" value="<%= k %>" <%= f.audience.includes(k) ? 'checked' : '' %>><span class="aud aud--<%= k %>"><%= n %></span></label>
+              <label class="check"><input type="radio" name="stage" value="" <%= f.stage ? '' : 'checked' %>><span>Any stage</span></label>
+              <% C.CAREER_STAGES.forEach(([k, n]) => { %>
+                <label class="check"><input type="radio" name="stage" value="<%= k %>" <%= f.stage === k ? 'checked' : '' %>><span><%= n %></span></label>
               <% }) %>
             </div>
           </fieldset>

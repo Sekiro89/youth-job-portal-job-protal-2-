@@ -33,6 +33,11 @@ const JOB_FROM = `FROM jobs JOIN employer_profiles p ON p.id = jobs.employer_pro
 // so salary sort/filter can compare postings that quote different periods. Unknown/legacy periods count as yearly.
 const ANNUAL = `((CASE jobs.salary_period ${Object.entries(C.SALARY_PERIOD_TO_YEAR).map(([k, n]) => `WHEN '${k}' THEN ${n}`).join(' ')} ELSE 1 END) * COALESCE(jobs.salary_max, jobs.salary_min))`;
 const NEWEST = `jobs.published_at DESC NULLS LAST, jobs.id DESC`;
+// Default-order relevance bias: student/intern-co-op/graduate/early-career postings rank ahead of skilled/senior
+// ones when no explicit sort or filter is chosen, so the Job Bank's first page(s) read as built for young talent —
+// without hiding or excluding anything. A skilled-career posting is still fully reachable via search, the "Skilled
+// Careers" stage filter, sorting by salary, or a direct link; it just isn't first in the unfiltered default list.
+const TARGET_RANK = `(CASE WHEN ${['student', 'intern_coop', 'graduate', 'early_career'].map(k => `(${C.CAREER_STAGE_SQL[k]})`).join(' OR ')} THEN 0 ELSE 1 END)`;
 // Haversine (km) between a query point ($lat,$lng param indexes) and a job_locations row `l`. Wrapped in least(1, …) so
 // floating-point drift can never push acos out of its domain. A bounding-box prefilter keeps the partial (lat, lng) index useful.
 const distSql = (li, gi) => `(6371 * acos(least(1.0, cos(radians($${li})) * cos(radians(l.lat)) * cos(radians(l.lng) - radians($${gi})) + sin(radians($${li})) * sin(radians(l.lat)))))`;
@@ -51,15 +56,20 @@ function notFound(res, message) {
 
 // ------------------------------------------------------------------ filters (shared by /jobs and /api/jobs/geo)
 function parseFilters(query) {
-  const cat = str(query.category), prov = str(query.province).toUpperCase(), jt = str(query.job_type), wa = str(query.work_arrangement);
+  const prov = str(query.province).toUpperCase(), jt = str(query.job_type), wa = str(query.work_arrangement);
   return {
     q: str(query.q),
-    category: C.CATEGORY_NAME[cat] ? cat : '',
+    // Repeatable, like audience: a single ?category=x still works (one-element array); career-path
+    // cards on the homepage can link several related categories at once (?category=a&category=b).
+    category: [...new Set([].concat(query.category || []).map(c => String(c)).filter(c => C.CATEGORY_NAME[c]))],
     province: C.PROVINCE_NAME[prov] ? prov : '',
     city: str(query.city, 80),
     job_type: C.JOB_TYPE_NAME[jt] ? jt : '',
     work_arrangement: C.WORK_ARRANGEMENT_NAME[wa] ? wa : '',
     audience: [...new Set([].concat(query.audience || []).map(a => String(a)).filter(a => C.AUDIENCE_NAME[a]))],
+    // Career stage (Students / Internships & Co-ops / Graduates / Early Career / Skilled Careers) — built from
+    // real experience_level/job_type values (lib/constants.js CAREER_STAGE_SQL), not a fabricated classification.
+    stage: C.CAREER_STAGE_SQL[str(query.stage)] ? str(query.stage) : '',
     salary_min: Math.max(0, Math.min(1000000, parseInt(str(query.salary_min), 10) || 0)),
     sort: ['salary', 'distance'].includes(str(query.sort)) ? str(query.sort) : 'newest',
     page: Math.max(1, Math.min(500, parseInt(str(query.page), 10) || 1)),
@@ -76,7 +86,8 @@ function coord(v, max) { const n = Number(str(v, 24)); return Number.isFinite(n)
 function jobsUrl(f, overrides = {}) {
   const o = Object.assign({}, f, { page: 1 }, overrides);
   const p = new URLSearchParams();
-  ['q', 'category', 'province', 'city', 'job_type', 'work_arrangement'].forEach(k => { if (o[k]) p.set(k, o[k]); });
+  ['q', 'province', 'city', 'job_type', 'work_arrangement', 'stage'].forEach(k => { if (o[k]) p.set(k, o[k]); });
+  (o.category || []).forEach(c => p.append('category', c));
   (o.audience || []).forEach(a => p.append('audience', a));
   if (o.salary_min) p.set('salary_min', o.salary_min);
   if (o.near) p.set('near', o.near);
@@ -129,13 +140,14 @@ function buildWhere(f, point) {
       OR jobs.title ILIKE $${b} OR p.company_name ILIKE $${b} OR p.operating_name ILIKE $${b} OR jobs.operating_name ILIKE $${b} OR EXISTS (SELECT 1 FROM unnest(jobs.skills) s WHERE s ILIKE $${b})
       OR jobs.city ILIKE $${b} OR EXISTS (SELECT 1 FROM job_locations l WHERE l.job_id = jobs.id AND l.city ILIKE $${b}))`);
   }
-  if (f.category) { params.push(f.category); where.push(`jobs.category = $${params.length}`); }
+  if (f.category.length) { params.push(f.category); where.push(`jobs.category = ANY($${params.length}::text[])`); }
   if (f.province) { params.push(f.province); where.push(`jobs.province = $${params.length}`); }
   // City filter: a posting with several work locations is found by any of them (jobs.city is the primary one and is kept in sync).
   if (f.city) { params.push('%' + f.city.replace(/[%_\\]/g, '\\$&') + '%'); where.push(`(jobs.city ILIKE $${params.length} OR EXISTS (SELECT 1 FROM job_locations l WHERE l.job_id = jobs.id AND l.city ILIKE $${params.length}))`); }
   if (f.job_type) { params.push(f.job_type); where.push(`jobs.job_type = $${params.length}`); }
   if (f.work_arrangement) { params.push(f.work_arrangement); where.push(`jobs.work_arrangement = $${params.length}`); }
   if (f.audience.length) { params.push(f.audience); where.push(`jobs.audiences && $${params.length}::text[]`); }
+  if (f.stage) where.push(`(${C.CAREER_STAGE_SQL[f.stage]})`);
   if (f.salary_min) { params.push(f.salary_min); where.push(`${ANNUAL} >= $${params.length}`); }
   let distance = 'NULL::double precision', dist = null, box = null;
   if (point) {
@@ -159,7 +171,8 @@ function headingFor(f) {
     const bits = [];
     if (f.work_arrangement) bits.push(h.workArrangementName(f.work_arrangement));
     if (f.job_type) bits.push(h.jobTypeName(f.job_type).toLowerCase());
-    if (f.category) bits.push(h.categoryName(f.category));
+    if (f.category.length) bits.push(f.category.map(h.categoryName).join(' & '));
+    if (f.stage) bits.push(C.CAREER_STAGE_NAME[f.stage]);
     what = bits.length ? bits.join(' ') + ' jobs' : 'All jobs';
   }
   let s = `${what} in ${place}`;
@@ -184,7 +197,7 @@ router.get('/jobs', async (req, res, next) => {
     const [point] = await Promise.all([resolvePoint(f), resolvePublicId(f)]);
     const { W, params, distance } = buildWhere(f, point);
     // With a search point the default order is nearest-first; "Highest salary" still wins when chosen.
-    const order = f.sort === 'salary' ? `${ANNUAL} DESC NULLS LAST, ${NEWEST}` : point ? `distance_km ASC NULLS LAST, ${NEWEST}` : NEWEST;
+    const order = f.sort === 'salary' ? `${ANNUAL} DESC NULLS LAST, ${NEWEST}` : point ? `distance_km ASC NULLS LAST, ${NEWEST}` : `${TARGET_RANK} ASC, ${NEWEST}`;
 
     const [countRow, rows] = await Promise.all([
       db.one(`SELECT count(*)::int AS n ${JOB_FROM} WHERE ${W}`, params),
@@ -200,10 +213,11 @@ router.get('/jobs', async (req, res, next) => {
     else if (f.near_unresolved) chips.push({ label: `Near “${f.near}” (not found)`, href: jobsUrl(f, { near: '' }) });
     if (f.public_id) chips.push({ label: `Posting ID ${f.public_id}`, href: jobsUrl(f, { q: '' }) });
     else if (f.q) chips.push({ label: `“${f.q}”`, href: jobsUrl(f, { q: '' }) });
-    if (f.category) chips.push({ label: h.categoryName(f.category), href: jobsUrl(f, { category: '' }) });
+    f.category.forEach(c => chips.push({ label: h.categoryName(c), href: jobsUrl(f, { category: f.category.filter(x => x !== c) }) }));
     if (f.province) chips.push({ label: h.provinceName(f.province), href: jobsUrl(f, { province: '' }) });
     if (f.city) chips.push({ label: f.city, href: jobsUrl(f, { city: '' }) });
     if (f.job_type) chips.push({ label: h.jobTypeName(f.job_type), href: jobsUrl(f, { job_type: '' }) });
+    if (f.stage) chips.push({ label: C.CAREER_STAGE_NAME[f.stage], href: jobsUrl(f, { stage: '' }) });
     if (f.work_arrangement) chips.push({ label: h.workArrangementName(f.work_arrangement), href: jobsUrl(f, { work_arrangement: '' }) });
     f.audience.forEach(a => chips.push({ label: h.audienceName(a), href: jobsUrl(f, { audience: f.audience.filter(x => x !== a) }) }));
     if (f.salary_min) chips.push({ label: `$${f.salary_min.toLocaleString('en-CA')}+ / year`, href: jobsUrl(f, { salary_min: 0 }) });
@@ -211,10 +225,10 @@ router.get('/jobs', async (req, res, next) => {
     const heading = headingFor(f);
     const canonicalUrl = res.locals.PUBLIC_URL + jobsUrl(f, { page: f.page, view: 'list' });
     // Which "More filters" (drawer) fields are active — drives the count badge on the "More filters" / "Filters" buttons.
-    const moreActive = ['city', 'job_type', 'work_arrangement'].filter(k => f[k]).length + f.audience.length + (f.salary_min ? 1 : 0);
+    const moreActive = ['city', 'job_type', 'work_arrangement', 'stage'].filter(k => f[k]).length + (f.salary_min ? 1 : 0);
     res.render('public/jobs', {
       title: heading + (f.page > 1 ? ` — page ${f.page}` : ''),
-      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Canada Careers. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
+      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Futures Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
       canonical: canonicalUrl,
       // UX standard §6 (2026-09-10): this page's own layout/JS live in jobs-search.css/js (after public.css + maps.css so they win).
       extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS.concat('/js/jobs-search.js'), bodyClass: 'page-jobs',

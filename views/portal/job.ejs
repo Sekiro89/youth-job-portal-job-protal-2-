@@ -59,7 +59,7 @@
           <div class="company-cell"><% if (job.logo_path) { %><img class="logo-sm" src="/logos/<%= job.employer_profile_id %>" alt=""><% } %><div><div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><%= locs.length > 1 ? ' (+' + (locs.length - 1) + ' more)' : '' %></div><% if (h.legalNameNote(job)) { %><div class="legal-note"><%= h.legalNameNote(job) %></div><% } %></div></div>
           <h3 class="job-card__title"><%= job.title %></h3>
           <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (hoursText) { %><span><%= hoursText %></span><% } %><% if (job.experience_level) { %><span><%= job.experience_level === 'other' && job.experience_other ? job.experience_other : h.experienceName(job.experience_level) %></span><% } %><span class="job-card__salary"><%= salaryText %></span></div>
-          <div class="cluster"><% (job.audiences || []).forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %><% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %></div>
+          <% if (closed) { %><div class="cluster"><span class="badge badge--danger">Applications closed</span></div><% } %>
           <div class="job-card__foot"><span><%= job.published_at ? 'Posted ' + h.formatDate(job.published_at) : 'Not published yet' %><% if (deadline) { %> · <%= closed ? 'Closed' : 'Closes' %> <%= h.formatDate(deadline) %><% } %></span><span><%= h.categoryName(job.category) %><% if (publicId) { %> · Posting ID <%= publicId %><% } %></span></div>
         </article>
         <dl class="facts">

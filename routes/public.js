@@ -54,40 +54,66 @@ function notFound(res, message) {
   return res.status(404).render('error', { title: 'Page not found', code: 404, message, noindex: true });
 }
 
-const AUDIENCE_BLURB = {
-  professionals: 'Skilled and licensed roles across every industry.',
-  new_immigrants: 'Employers who value international experience and credentials.',
-  indigenous: 'Partners committed to First Nations, Inuit and Métis hiring.',
-  refugees: 'Welcoming workplaces with support for newcomers.',
-  youth: 'First jobs, co-ops, internships and apprenticeships.',
-};
+// Broad career-path clusters for the homepage's "Explore Career Paths" section — every C.CATEGORIES key appears
+// exactly once. This groups real categories for storytelling; it never restricts what /jobs (the Job Bank) shows.
+const CAREER_PATHS = [
+  { key: 'technology', name: 'Technology', categories: ['it_software'] },
+  { key: 'business', name: 'Business & Professional', categories: ['accounting_finance', 'administration', 'human_resources', 'marketing_sales', 'customer_service', 'legal'] },
+  { key: 'healthcare', name: 'Healthcare', categories: ['healthcare'] },
+  { key: 'engineering', name: 'Engineering & Skilled Trades', categories: ['engineering', 'construction_trades', 'manufacturing'] },
+  { key: 'other', name: 'More Opportunities', categories: ['agriculture', 'education', 'hospitality', 'retail', 'science_research', 'social_services', 'transport_logistics', 'warehouse_general_labour', 'other'] },
+];
+
+// Career-stage bucket, from the existing experience_level/job_type fields (current Job Bank vocabulary + legacy
+// strings on older rows — lib/constants.js EXPERIENCE_LEGACY). Used only to weight the homepage's "Featured
+// Opportunities" mix toward young talent — never to hide postings: the Job Bank (/jobs) always shows every stage.
+const STAGE_SQL = `(CASE
+  WHEN jobs.experience_level IN ('3_5_years', '5_plus', 'senior', 'manager', 'executive') THEN 'skilled'
+  ELSE 'targeted'
+END)`;
 
 // ------------------------------------------------------------------ home
 router.get('/', async (req, res, next) => {
   try {
-    const [latest, catRows, provRows, cityRows, totals] = await Promise.all([
-      db.many(`SELECT ${JOB_COLS} ${JOB_FROM} WHERE ${PUBLIC_WHERE} ORDER BY ${NEWEST} LIMIT 8`),
+    const [featured, catRows, provRows, cityRows, totals, stageRow] = await Promise.all([
+      // Featured mix is weighted toward the core young-talent audience — up to 7 of 8 slots go to
+      // student/intern/graduate/early-career postings, newest first, with room for at most one skilled/senior
+      // example so the homepage still shows the full journey without reading as a general job board. Real data only.
+      db.many(`WITH staged AS (
+          SELECT ${JOB_COLS}, ${STAGE_SQL} AS stage ${JOB_FROM} WHERE ${PUBLIC_WHERE}
+        ),
+        targeted AS (SELECT * FROM staged WHERE stage = 'targeted' ORDER BY published_at DESC NULLS LAST, id DESC LIMIT 7),
+        skilled AS (SELECT * FROM staged WHERE stage = 'skilled' ORDER BY published_at DESC NULLS LAST, id DESC LIMIT 1),
+        combined AS (SELECT * FROM targeted UNION ALL SELECT * FROM skilled)
+        SELECT * FROM combined
+        ORDER BY (CASE WHEN stage = 'skilled' THEN 1 ELSE 0 END), published_at DESC NULLS LAST, id DESC LIMIT 8`),
       db.many(`SELECT category, count(*)::int AS n FROM jobs WHERE ${PUBLIC_WHERE} GROUP BY category`),
       db.many(`SELECT province, count(*)::int AS n FROM jobs WHERE ${PUBLIC_WHERE} GROUP BY province`),
       db.many(`SELECT city, count(*)::int AS n FROM jobs WHERE ${PUBLIC_WHERE} GROUP BY city ORDER BY n DESC, city LIMIT 40`),
       db.one(`SELECT count(*)::int AS jobs, count(DISTINCT employer_profile_id)::int AS companies FROM jobs WHERE ${PUBLIC_WHERE}`),
+      // Real counts for the "Explore Your Path" career-stage cards — same CAREER_STAGE_SQL the Job Bank's own
+      // ?stage= filter uses (lib/constants.js), so a card's count always matches what clicking through shows.
+      db.one(`SELECT ${C.CAREER_STAGES.map(([k]) => `count(*) FILTER (WHERE ${C.CAREER_STAGE_SQL[k]})::int AS ${k}`).join(', ')} FROM jobs WHERE ${PUBLIC_WHERE}`),
     ]);
-    jd.decorateJobs(latest);
+    jd.decorateJobs(featured);
     const catCount = Object.fromEntries(catRows.map(r => [r.category, r.n]));
     const provCount = Object.fromEntries(provRows.map(r => [r.province, r.n]));
     const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0 }))
       .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
     const provinces = C.PROVINCES.map(([key, name]) => ({ key, name, n: provCount[key] || 0 }));
     const cities = cityRows.map(r => r.city).sort((a, b) => a.localeCompare(b));
+    const provincesWithJobs = provinces.filter(p => p.n > 0).length;
+    const careerPaths = CAREER_PATHS.map(p => ({ ...p, n: p.categories.reduce((sum, c) => sum + (catCount[c] || 0), 0) }));
+    const careerStages = C.CAREER_STAGES.map(([key, name]) => ({ key, name, n: stageRow[key] || 0 }));
 
     res.render('public/home', {
-      title: 'Find jobs across Canada',
-      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Canada Careers connects professionals, new immigrants, Indigenous peoples, refugees and youth with opportunities in every province. Post a job from $${(C.PRICING.consultant_price_cents / 100).toFixed(2)}/month + GST.`,
+      title: 'Canadian jobs for young talent, from anywhere',
+      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Youth Futures Canada helps students, graduates, young professionals and skilled workers around the world find real Canadian career opportunities. Post a job from $${(C.PRICING.consultant_price_cents / 100).toFixed(2)}/month + GST.`,
       extraCss: CSS, extraJs: JS, bodyClass: 'page-home',
       jsonLd: [
         {
-          '@context': 'https://schema.org', '@type': 'WebSite', name: 'Canada Careers', url: res.locals.PUBLIC_URL + '/',
-          description: 'Canadian job bank for professionals, new immigrants, Indigenous peoples, refugees and youth.',
+          '@context': 'https://schema.org', '@type': 'WebSite', name: 'Youth Futures Canada', url: res.locals.PUBLIC_URL + '/',
+          description: 'Canadian job bank connecting young talent everywhere — students, graduates, young professionals and skilled workers — with real Canadian employers.',
           inLanguage: 'en-CA',
           potentialAction: {
             '@type': 'SearchAction',
@@ -96,12 +122,12 @@ router.get('/', async (req, res, next) => {
           },
         },
         {
-          '@context': 'https://schema.org', '@type': 'Organization', name: 'Canada Careers', url: res.locals.PUBLIC_URL + '/',
-          logo: res.locals.PUBLIC_URL + '/img/logo.svg', slogan: 'Jobs for every Canadian. Opportunities for all.',
+          '@context': 'https://schema.org', '@type': 'Organization', name: 'Youth Futures Canada', url: res.locals.PUBLIC_URL + '/',
+          logo: res.locals.PUBLIC_URL + '/img/icon-512.png', slogan: 'Our dreams. Our skills. Our future. Our Canada.',
           areaServed: { '@type': 'Country', name: 'Canada' },
         },
       ],
-      latest, categories, provinces, cities, totals, AUDIENCE_BLURB,
+      featured, categories, provinces, cities, totals, careerPaths, careerStages, provincesWithJobs,
     });
   } catch (e) { next(e); }
 });
@@ -255,7 +281,7 @@ router.get('/jobs', async (req, res, next) => {
     const moreActive = ['city', 'job_type', 'work_arrangement'].filter(k => f[k]).length + f.audience.length + (f.salary_min ? 1 : 0);
     res.render('public/jobs', {
       title: heading + (f.page > 1 ? ` — page ${f.page}` : ''),
-      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Canada Careers. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
+      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Futures Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
       canonical: canonicalUrl,
       // UX standard §6 (2026-09-10): this page's own layout/JS live in jobs-search.css/js (after public.css + maps.css so they win).
       extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS.concat('/js/jobs-search.js'), bodyClass: 'page-jobs',
@@ -465,7 +491,7 @@ router.get('/companies/:slug', async (req, res, next) => {
       mapMarkers.length ? { location: coLocations.filter(l => l.lat != null).map(l => ({ '@type': 'Place', name: l.label || undefined, address: { '@type': 'PostalAddress', streetAddress: l.street_address, addressLocality: l.city, addressRegion: l.province, postalCode: l.postal_code, addressCountry: 'CA' }, geo: { '@type': 'GeoCoordinates', latitude: l.lat, longitude: l.lng } })) } : {});
     res.render('public/company', {
       title: `${companyName} — jobs and company profile`,
-      metaDescription: `${companyName}${industryText ? ' (' + industryText + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Canada Careers. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
+      metaDescription: `${companyName}${industryText ? ' (' + industryText + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Youth Futures Canada. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
       extraCss: CSS, extraJs: JS, bodyClass: 'page-company',
       jsonLd: [org],
       co, jobs, url, companyName, address, industryText, coLocations, mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
@@ -504,12 +530,12 @@ router.get('/robots.txt', (req, res) => {
 // ------------------------------------------------------------------ legal
 router.get('/privacy', (req, res) => res.render('public/privacy', {
   title: 'Privacy policy',
-  metaDescription: 'How Canada Careers collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
+  metaDescription: 'How Youth Futures Canada collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
   extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 router.get('/terms', (req, res) => res.render('public/terms', {
   title: 'Terms of use',
-  metaDescription: 'The terms that govern use of Canada Careers, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
+  metaDescription: 'The terms that govern use of Youth Futures Canada, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
   extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 

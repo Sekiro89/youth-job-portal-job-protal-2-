@@ -1,22 +1,24 @@
-/* Canada Careers — brand theme over KDS tokens. LIGHT theme only. Mobile first.
-   Palette is lifted from the Canada Careers logo:
-   navy (wordmark) · maple red · leaf green · sun orange · lake teal.                 */
+/* Youth Futures Canada — brand theme over KDS tokens. LIGHT theme only. Mobile first.
+   Palette is drawn from the Youth Futures Canada crest: deep navy skyline + maple red,
+   with a single energetic "spark" gold reserved for the rising-star / opportunity moments.
+   Reworked 2026-09-16 for the Youth Futures Canada relaunch (was Canada Careers navy/red/green/orange/teal). */
 :root, [data-kds-theme="light"] {
-  --cc-navy: #1F3A5F;  --cc-navy-700: #16304F; --cc-navy-100: #E4EBF4; --cc-navy-50: #F1F5FA;
-  --cc-red: #D42E2E;   --cc-red-700: #B32222;  --cc-red-100: #FBE5E5;
-  --cc-green: #7FB542; --cc-green-100: #EAF4DE;
-  --cc-orange: #F4A62A;--cc-orange-100: #FDF0DA;
-  --cc-teal: #35A8B0;  --cc-teal-100: #DFF3F4;
-  --cc-ink: #1B2B3F;   --cc-ink-muted: #5A6B7E; --cc-ink-faint: #8593A6;
-  --cc-line: #E1E7EF;  --cc-line-strong: #C9D3E0;
-  --cc-bg: #FFFFFF;    --cc-surface: #F6F8FB;
+  --cc-navy: #0F2444;  --cc-navy-700: #0A1830; --cc-navy-100: #E5EAF3; --cc-navy-50: #F3F6FB;
+  --cc-red: #DA2A2E;   --cc-red-700: #AE1E22;  --cc-red-100: #FCE7E7;
+  --cc-spark: #F5B700; --cc-spark-100: #FDF3D9;   /* the logo's rising star — opportunity accent, used sparingly */
+  --cc-green: #2E9E5B; --cc-green-100: #E4F5EA;
+  --cc-orange: #E8792E;--cc-orange-100: #FCEADD;
+  --cc-teal: #1E8A9A;  --cc-teal-100: #E1F2F4;
+  --cc-ink: #16223A;   --cc-ink-muted: #5B6B84; --cc-ink-faint: #8996AC;
+  --cc-line: #E2E7F0;  --cc-line-strong: #C7D0DF;
+  --cc-bg: #FFFFFF;    --cc-surface: #F5F7FB;
 
   /* audience colours (logo icon strip) */
   --cc-aud-professionals: var(--cc-navy);
   --cc-aud-new_immigrants: var(--cc-teal);
   --cc-aud-indigenous: var(--cc-orange);
   --cc-aud-refugees: var(--cc-teal);
-  --cc-aud-youth: var(--cc-green);
+  --cc-aud-youth: var(--cc-spark);
 
   /* KDS token overrides — every component inherits the brand from here */
   --kds-bg: var(--cc-bg);
@@ -31,17 +33,23 @@
   --kds-brand-fg: #ffffff;
   --kds-accent: var(--cc-red);
   --kds-accent-fg: #ffffff;
-  --kds-positive: #3E8E2E;
-  --kds-warning: #C97A00;
+  --kds-positive: #2E9E5B;
+  --kds-warning: #B3760A;
   --kds-danger: var(--cc-red);
   --kds-info: var(--cc-teal);
   --kds-focus-ring: color-mix(in srgb, var(--cc-teal) 60%, transparent);
   --kds-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --cc-font-display: "Montserrat", "Inter", system-ui, sans-serif;
+  --cc-font-display: "Poppins", "Inter", system-ui, sans-serif;
   --kds-radius-md: 10px;
   --kds-radius-lg: 16px;
-  --cc-header-h: 64px;
+  --cc-header-h: 68px;
   --cc-container: 1200px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fade-up { animation: cc-fade-up .6s var(--kds-ease-enter, ease) both; }
+  .fade-up--1 { animation-delay: .05s; } .fade-up--2 { animation-delay: .14s; } .fade-up--3 { animation-delay: .22s; } .fade-up--4 { animation-delay: .3s; }
+  @keyframes cc-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 }
 
 /* ---------- base ---------- */
@@ -75,7 +83,11 @@ a:hover { color: var(--cc-red); }
 /* ---------- header / nav (mobile first) ---------- */
 .site-header { position: sticky; top: 0; z-index: var(--kds-z-sticky, 500); background: #fff; border-bottom: 1px solid var(--kds-border); }
 .site-header__inner { display: flex; align-items: center; justify-content: space-between; min-height: var(--cc-header-h); gap: 12px; flex-wrap: wrap; }
-.site-logo img { display: block; height: 44px; width: auto; }
+.site-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; min-height: 44px; }
+.site-logo img { display: block; height: 40px; width: auto; flex: none; }
+.site-logo__word { font-family: var(--cc-font-display); line-height: 1.05; }
+.site-logo__word b { display: block; font-size: .9375rem; font-weight: 800; color: var(--cc-navy); letter-spacing: -0.01em; }
+.site-logo__word span { display: block; font-size: .625rem; font-weight: 700; color: var(--cc-red); letter-spacing: .16em; text-transform: uppercase; }
 .nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: 8px; background: #fff; cursor: pointer; }
 .nav-toggle span { display: block; height: 2px; background: var(--cc-navy); border-radius: 2px; transition: transform .2s, opacity .2s; }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }

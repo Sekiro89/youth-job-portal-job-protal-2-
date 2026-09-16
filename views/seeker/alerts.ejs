@@ -34,7 +34,7 @@
         <div><dt>Provinces</dt><dd><%= (profile.provinces || []).length ? profile.provinces.map(h.provinceName).join(', ') : 'Anywhere in Canada' %></dd></div>
         <div><dt>Job types</dt><dd><%= (profile.job_types || []).length ? profile.job_types.map(h.jobTypeName).join(', ') : 'Any' %></dd></div>
         <div><dt>Arrangement</dt><dd><%= (profile.work_arrangements || []).length ? profile.work_arrangements.map(h.workArrangementName).join(', ') : 'Any' %></dd></div>
-        <div><dt>I am a…</dt><dd><%= (profile.audiences || []).length ? profile.audiences.map(h.audienceName).join(', ') : 'Not set' %></dd></div>
+        <div><dt>Communities</dt><dd><%= (profile.audiences || []).length ? profile.audiences.map(h.audienceName).join(', ') : 'Not set' %></dd></div>
       </dl>
     </section>
   </div>

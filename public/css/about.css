@@ -52,15 +52,11 @@
 @media (min-width: 1280px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .about-aud { list-style: none; margin: 8px 0 28px; padding: 0; }
 .about-aud__card { position: relative; display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
-.about-aud__card--professionals { border-top-color: var(--cc-aud-professionals); }
-.about-aud__card--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
-.about-aud__card--indigenous { border-top-color: var(--cc-aud-indigenous); }
-.about-aud__card--refugees { border-top-color: var(--cc-aud-refugees); }
-.about-aud__card--youth { border-top-color: var(--cc-aud-youth); }
-.about-aud__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
-.about-aud__card--indigenous .about-aud__icon { background: var(--cc-orange-100); }
-.about-aud__card--new_immigrants .about-aud__icon, .about-aud__card--refugees .about-aud__icon { background: var(--cc-teal-100); }
-.about-aud__card--youth .about-aud__icon { background: var(--cc-green-100); }
+.about-aud__card--student { border-top-color: var(--cc-navy); }
+.about-aud__card--intern_coop { border-top-color: var(--cc-red); }
+.about-aud__card--graduate { border-top-color: var(--cc-teal); }
+.about-aud__card--early_career { border-top-color: var(--cc-orange); }
+.about-aud__card--skilled { border-top-color: var(--cc-spark); }
 .about-aud__card h3 { margin: 0; }
 .about-aud__card h3 a { text-decoration: none; }
 .about-aud__card h3 a::after { content: ""; position: absolute; inset: 0; }

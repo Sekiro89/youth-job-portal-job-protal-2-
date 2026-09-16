@@ -1,30 +1,28 @@
 <%
 const blurbs = {
-  professionals: 'Experienced people in healthcare, engineering, IT, finance, trades, education and more, looking for the next step in a Canadian career.',
-  new_immigrants: 'Newcomers and permanent residents finding their first Canadian job while their credentials and experience are recognised.',
-  indigenous: 'First Nations, Inuit and Métis job seekers, with employers committed to Indigenous employment opportunities across Canada.',
-  refugees: 'People who arrived as refugees and are rebuilding a working life, matched with employers who welcome them.',
-  youth: 'Students, graduates and young workers looking for internships, co-op placements, apprenticeships and first full-time jobs.',
+  student: 'Part-time and student-friendly work that fits around your studies.',
+  intern_coop: 'Internships and co-op placements that turn what you\'re learning into real experience.',
+  graduate: 'A first full-time role after finishing your studies.',
+  early_career: 'Entry-level and junior roles to build your track record.',
+  skilled: 'Technical, trade and experienced roles for young professionals with real skills behind them.',
 };
 %>
 <section class="about-section" id="who-we-serve" aria-labelledby="serve-h">
-  <h2 id="serve-h">Who we serve: five audiences, one inclusive job bank</h2>
-  <p class="prose">The five figures in the Canada Careers logo stand for the five audiences the job bank is built around. Employers tag each posting with the audiences it welcomes, and job seekers can filter jobs the same way.</p>
+  <h2 id="serve-h">Explore your path: five stages, one Job Bank</h2>
+  <p class="prose">Youth Futures Canada serves young people — not one kind of job. A student, a graduate, and a skilled professional with several years of experience are all part of the same audience; they're just at different points in the same journey.</p>
   <ul class="grid grid--5 about-aud">
-    <% C.AUDIENCES.forEach(([key, name, icon]) => { %>
+    <% C.CAREER_STAGES.forEach(([key, name]) => { %>
       <li class="card about-aud__card about-aud__card--<%= key %>">
-        <img class="about-aud__icon" src="/img/audience/<%= icon %>.svg" alt="" width="44" height="44" loading="lazy">
-        <h3><a href="/jobs?audience=<%= key %>"><%= name %></a></h3>
+        <h3><a href="/jobs?stage=<%= key %>"><%= name %></a></h3>
         <p><%= blurbs[key] %></p>
-        <span class="aud aud--<%= key %>"><%= name %></span>
       </li>
     <% }) %>
   </ul>
   <div class="prose">
-    <h3>Jobs in Canada for new immigrants, Indigenous peoples, refugees and youth</h3>
-    <p>Being welcomed is not the same as being found. That is why audience tags are searchable: a newcomer in Montreal can look for <a href="/jobs?audience=new_immigrants">jobs for new immigrants</a>, an Indigenous graduate can browse <a href="/jobs?audience=indigenous">Indigenous employment opportunities</a>, a family that arrived as refugees can find <a href="/jobs?audience=refugees">refugee-friendly jobs in Canada</a>, and a student can filter for <a href="/jobs?audience=youth">youth jobs</a> and <a href="/jobs?job_type=internship">internships and co-op placements</a>. Experienced candidates can go straight to <a href="/jobs?audience=professionals">professional roles</a> in <a href="/jobs?category=healthcare">healthcare and nursing</a>, <a href="/jobs?category=it_software">IT and software</a>, <a href="/jobs?category=engineering">engineering</a>, <a href="/jobs?category=construction_trades">construction and skilled trades</a>, <a href="/jobs?category=transport_logistics">transportation and logistics</a> and <a href="/jobs?category=accounting_finance">accounting and finance</a>.</p>
+    <h3>Real postings for every stage in Canada</h3>
+    <p>A student can search for <a href="/jobs?stage=student">part-time student jobs</a>, someone finishing school can browse <a href="/jobs?stage=intern_coop">internships and co-ops</a> or <a href="/jobs?stage=graduate">graduate roles</a>, and an early-career candidate can filter for <a href="/jobs?stage=early_career">entry-level and junior opportunities</a>. Young professionals who already have real experience — a trade, a technical skill, a few years in the field — can go straight to <a href="/jobs?stage=skilled">skilled career opportunities</a> in <a href="/jobs?category=healthcare">healthcare and nursing</a>, <a href="/jobs?category=it_software">IT and software</a>, <a href="/jobs?category=engineering">engineering</a>, <a href="/jobs?category=construction_trades">construction and skilled trades</a>, <a href="/jobs?category=transport_logistics">transportation and logistics</a> and <a href="/jobs?category=accounting_finance">accounting and finance</a>. Every posting can also be tagged for the communities it explicitly welcomes — including new immigrants, Indigenous peoples and refugees — so that signal is searchable too.</p>
     <h3>Every province and territory, every major city</h3>
-    <p>Canada Careers lists jobs in all 13 provinces and territories — from <a href="/jobs?province=ON">Ontario</a>, <a href="/jobs?province=BC">British Columbia</a>, <a href="/jobs?province=AB">Alberta</a> and <a href="/jobs?province=QC">Quebec</a> to <a href="/jobs?province=MB">Manitoba</a>, <a href="/jobs?province=SK">Saskatchewan</a>, <a href="/jobs?province=NS">Nova Scotia</a>, <a href="/jobs?province=NB">New Brunswick</a>, <a href="/jobs?province=NL">Newfoundland and Labrador</a>, <a href="/jobs?province=PE">Prince Edward Island</a>, <a href="/jobs?province=YT">Yukon</a>, the <a href="/jobs?province=NT">Northwest Territories</a> and <a href="/jobs?province=NU">Nunavut</a>. Popular city searches include
+    <p>Youth Futures Canada lists jobs in all 13 provinces and territories — from <a href="/jobs?province=ON">Ontario</a>, <a href="/jobs?province=BC">British Columbia</a>, <a href="/jobs?province=AB">Alberta</a> and <a href="/jobs?province=QC">Quebec</a> to <a href="/jobs?province=MB">Manitoba</a>, <a href="/jobs?province=SK">Saskatchewan</a>, <a href="/jobs?province=NS">Nova Scotia</a>, <a href="/jobs?province=NB">New Brunswick</a>, <a href="/jobs?province=NL">Newfoundland and Labrador</a>, <a href="/jobs?province=PE">Prince Edward Island</a>, <a href="/jobs?province=YT">Yukon</a>, the <a href="/jobs?province=NT">Northwest Territories</a> and <a href="/jobs?province=NU">Nunavut</a>. Popular city searches include
       <% cities.forEach(([city, prov], i) => { %><a href="/jobs?province=<%= prov %>&city=<%= encodeURIComponent(city) %>">jobs in <%= city %></a><%= i < cities.length - 2 ? ', ' : (i === cities.length - 2 ? ' and ' : '.') %><% }) %></p>
   </div>
 </section>

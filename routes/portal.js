@@ -88,8 +88,8 @@ const landingFaq = {
     ['How much does it cost to post a job?', `Each posting is $${$(EP.PRICE)} per month plus 5% GST — $${$(EP.TOTAL)} CAD in total. It renews automatically every month until you cancel. There are no setup fees and no contracts.`],
     ['Can I cancel at any time?', 'Yes. Cancel from your dashboard with one click. Your posting stays live until the end of the paid month and is then archived. You can also cancel immediately.'],
     ['How long does approval take?', 'There is no approval queue. Your posting goes live the moment your payment is confirmed — usually within a few seconds.'],
-    ['Who will see my posting?', 'Everyone who searches Canada Careers, plus every job seeker whose saved profile matches your posting gets an instant email alert. Postings are indexed by Google for Jobs.'],
-    ['How do I receive applications?', 'Applicants apply on Canada Careers with their resume and cover letter. You review, shortlist and download resumes from your dashboard; applicants are notified of every status change. You can also add an external apply link or email.'],
+    ['Who will see my posting?', 'Everyone who searches Youth Futures Canada, plus every job seeker whose saved profile matches your posting gets an instant email alert. Postings are indexed by Google for Jobs.'],
+    ['How do I receive applications?', 'Applicants apply on Youth Futures Canada with their resume and cover letter. You review, shortlist and download resumes from your dashboard; applicants are notified of every status change. You can also add an external apply link or email.'],
     ['Do I get a receipt?', 'Every charge produces a GST receipt with your company name and a unique receipt number, available any time under Billing.'],
   ],
   consultant: [
@@ -107,7 +107,7 @@ router.get('/employer', (req, res) => {
   if (req.user && ['employer', 'consultant'].includes(req.user.role)) return res.redirect(baseFor(req.user) + '/dashboard');
   res.render('portal/landing-employer', {
     title: `Post a Job in Canada for $${$(EP.PRICE)}/month — Employers`,
-    metaDescription: `Post a job on Canada Careers for $${$(EP.PRICE)} + GST per month. Reach professionals, new immigrants, Indigenous peoples, refugees and youth across Canada. No contracts, cancel any time.`,
+    metaDescription: `Post a job on Youth Futures Canada for $${$(EP.PRICE)} + GST per month. Reach young talent across Canada — students, graduates, early-career and skilled young professionals. No contracts, cancel any time.`,
     extraCss: ['/css/portal.css'], extraJs: ['/js/portal.js'], bodyClass: 'portal-landing',
     faq: landingFaq.employer, jsonLd: [faqJsonLd(landingFaq.employer)], ...EP,
   });

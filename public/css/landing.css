@@ -49,15 +49,11 @@
 @media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .landing-aud { display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
-.landing-aud--professionals { border-top-color: var(--cc-aud-professionals); }
-.landing-aud--new_immigrants { border-top-color: var(--cc-aud-new_immigrants); }
-.landing-aud--indigenous { border-top-color: var(--cc-aud-indigenous); }
-.landing-aud--refugees { border-top-color: var(--cc-aud-refugees); }
-.landing-aud--youth { border-top-color: var(--cc-aud-youth); }
-.landing-aud__icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); padding: 8px; object-fit: contain; }
-.landing-aud--indigenous .landing-aud__icon { background: var(--cc-orange-100); }
-.landing-aud--new_immigrants .landing-aud__icon, .landing-aud--refugees .landing-aud__icon { background: var(--cc-teal-100); }
-.landing-aud--youth .landing-aud__icon { background: var(--cc-green-100); }
+.landing-aud--student { border-top-color: var(--cc-navy); }
+.landing-aud--intern_coop { border-top-color: var(--cc-red); }
+.landing-aud--graduate { border-top-color: var(--cc-teal); }
+.landing-aud--early_career { border-top-color: var(--cc-orange); }
+.landing-aud--skilled { border-top-color: var(--cc-spark); }
 .landing-aud h3 { margin: 0; }
 .landing-aud p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
 .landing-aud a { font-weight: 600; font-size: .9rem; text-decoration: none; margin-top: auto; display: inline-flex; align-items: center; min-height: 44px; }

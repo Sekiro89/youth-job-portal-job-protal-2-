@@ -6,7 +6,6 @@
   <div class="job-card__company"><%= h.displayCompany(job) %> · <%= h.location(job) %><% if (jcMore > 0) { %> <span class="job-card__more-loc">+<%= jcMore %> more location<%= jcMore > 1 ? 's' : '' %></span><% } %></div>
   <% if (jcLegal) { %><div class="small muted job-card__legal"><%= jcLegal %></div><% } %>
   <div class="job-card__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (jcHours) { %><span class="job-card__hours"><%= jcHours %></span><% } %><span class="job-card__salary"><%= h.formatSalary(job) %></span></div>
-  <% if ((job.audiences || []).length) { %><div class="cluster"><% job.audiences.forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div><% } %>
   <div class="job-card__foot">
     <span>Posted <%= h.timeAgo(job.published_at) %><% if (job.public_id) { %> · Posting ID <%= job.public_id %><% } %></span>
     <span><%= h.categoryName(job.category) %></span>

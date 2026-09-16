@@ -1,27 +1,27 @@
 <%#
-  Audiences band — the same on all three landings. optional: mode ('post' = employer/consultant copy, 'seek' = job seeker copy).
+  Career-stage band — the same on all three landings. optional: mode ('post' = employer/consultant copy, 'seek' = job seeker copy).
+  Replaces the earlier "five audiences" positioning: Youth Futures Canada's audience is young people, at any
+  career stage (student, intern, graduate, early-career, skilled) — not five separate community segments.
 %>
 <% const audMode = typeof mode === 'string' && mode === 'seek' ? 'seek' : 'post';
-   const audBlurbs = audMode === 'seek'
-     ? { professionals: 'Senior roles, trades and licensed careers across every province — with salary ranges shown up front.', new_immigrants: 'Employers who welcome international credentials and first Canadian roles.', indigenous: 'Postings from employers committed to Indigenous hiring, on and off reserve.', refugees: 'Entry-friendly jobs with paid training and support settling into work.', youth: 'Co-ops, internships, apprenticeships and first jobs that grow with you.' }
-     : { professionals: 'Experienced Canadians and internationally-trained professionals looking for their next role.', new_immigrants: 'Newcomers with credentials, work permits and PR who are ready to start now.', indigenous: 'First Nations, Inuit and Métis job seekers across every province and territory.', refugees: 'Resettled refugees and protected persons legally entitled to work in Canada.', youth: 'Students, co-op candidates and recent graduates entering the workforce.' };
-   const audFor = { professionals: 'professionals', new_immigrants: 'new immigrants', indigenous: 'Indigenous peoples', refugees: 'refugees', youth: 'youth' }; %>
-<section class="section section--alt" id="audiences">
+   const STAGE_COPY = audMode === 'seek'
+     ? { student: 'Part-time and student-friendly work that fits around your studies.', intern_coop: 'Internships and co-ops that turn what you\'re learning into real experience.', graduate: 'Your first full-time role after finishing your studies.', early_career: 'Entry-level and junior roles to build your track record.', skilled: 'Technical, trade and experienced roles that match the skills you\'ve already built.' }
+     : { student: 'Reach students looking for part-time and flexible work.', intern_coop: 'Bring in interns and co-op candidates for real, hands-on work.', graduate: 'Hire new graduates ready to start their career with you.', early_career: 'Fill entry-level and junior roles with candidates ready to grow.', skilled: 'Reach skilled young professionals with real, relevant experience.' }; %>
+<section class="section section--alt" id="stages">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow"><%= audMode === 'seek' ? 'Jobs for every Canadian' : 'Reach' %></p>
-      <h2><%= audMode === 'seek' ? 'Five audiences, one job bank' : 'Five audiences. One posting.' %></h2>
+      <p class="eyebrow"><%= audMode === 'seek' ? 'Wherever you\'re starting from' : 'Every career stage' %></p>
+      <h2><%= audMode === 'seek' ? 'Different starting points. One future.' : 'Young talent, at every stage' %></h2>
       <p class="lead"><%= audMode === 'seek'
-        ? 'Every figure in the Canada Careers logo stands for someone we built this for. Employers tag who they are hiring for; tell us who you are and those postings rank higher in your matches.'
-        : 'Canada Careers is built for the people other job boards overlook — the five groups on our logo. Tag your posting and it is surfaced to the job seekers who match.' %></p>
+        ? 'Youth Futures Canada supports the full journey — not just your first job, but every move after it.'
+        : 'Youth Futures Canada connects you with young talent from their first job to years of real experience.' %></p>
     </div>
     <div class="grid grid--5">
-      <% C.AUDIENCES.forEach(([k, n, icon]) => { %>
+      <% C.CAREER_STAGES.forEach(([k, n]) => { %>
         <div class="card landing-aud landing-aud--<%= k %>">
-          <img class="landing-aud__icon" src="/img/audience/<%= icon %>.svg" alt="" width="44" height="44" loading="lazy">
           <h3><%= n %></h3>
-          <p><%= audBlurbs[k] %></p>
-          <% if (audMode === 'seek') { %><a href="/jobs?audience=<%= k %>">See jobs for <%= audFor[k] %> →</a><% } else { %><span class="aud aud--<%= k %>"><%= n %></span><% } %>
+          <p><%= STAGE_COPY[k] %></p>
+          <% if (audMode === 'seek') { %><a href="/jobs?stage=<%= k %>">See <%= n.toLowerCase() %> roles →</a><% } %>
         </div>
       <% }) %>
     </div>

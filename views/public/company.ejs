@@ -35,7 +35,7 @@
         <% if (co.company_size) { %><div><dt>Size</dt><dd><%= co.company_size %> employees</dd></div><% } %>
         <% if (address) { %><div><dt>Address</dt><dd><%= address %><%= co.country && co.country !== 'Canada' ? ', ' + co.country : '' %></dd></div><% } %>
         <% if (co.website) { %><div><dt>Website</dt><dd><a href="<%= co.website %>" target="_blank" rel="noopener nofollow"><%= co.website.replace(/^https?:\/\//, '') %></a></dd></div><% } %>
-        <div><dt>On Canada Careers since</dt><dd><%= h.formatDate(co.created_at, { day: undefined }) %></dd></div>
+        <div><dt>On Youth Futures Canada since</dt><dd><%= h.formatDate(co.created_at, { day: undefined }) %></dd></div>
       </dl>
     </section>
 

@@ -28,7 +28,7 @@ const supportList = (v) => [...new Set(String(v || '').split(/[,;\s]+/).map(x =>
 async function ctx() {
   const v = await settings.getMany(['support_email', 'support_name', 'site_name', 'public_url']);
   const publicUrl = (v.public_url || process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3900}`).replace(/\/$/, '');
-  return { recipients: supportList(v.support_email), supportName: v.support_name || 'Support', siteName: v.site_name || 'Canada Careers', publicUrl };
+  return { recipients: supportList(v.support_email), supportName: v.support_name || 'Support', siteName: v.site_name || 'Youth Futures Canada', publicUrl };
 }
 
 const META = (c) => ({

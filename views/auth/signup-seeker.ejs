@@ -26,18 +26,6 @@
           </div>
         </div>
 
-        <fieldset class="field auth-fieldset">
-          <legend>I identify as <span class="muted small">(optional — helps us match you with employers who welcome you)</span></legend>
-          <div class="checks checks--3">
-            <% const chosen = values.audiences || []; C.AUDIENCES.forEach(([k, n]) => { %>
-            <label class="check" for="aud-<%= k %>">
-              <input type="checkbox" id="aud-<%= k %>" name="audiences" value="<%= k %>" <%= chosen.includes(k) ? 'checked' : '' %>>
-              <span><span class="aud aud--<%= k %>"><%= n %></span></span>
-            </label>
-            <% }) %>
-          </div>
-        </fieldset>
-
         <label class="check" for="notify_email">
           <input type="checkbox" id="notify_email" name="notify_email" value="1" <%= values.notify_email ? 'checked' : '' %>>
           <span>Email me when new jobs match my profile. You can change this any time.</span>

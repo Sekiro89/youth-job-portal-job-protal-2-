@@ -49,7 +49,6 @@ function jobSummary() { %>
         <% if (job.experience_level) { %><div><dt>Experience</dt><dd><%= exp %></dd></div><% } %>
         <% if (deadlineText) { %><div><dt><%= closed ? 'Closed' : 'Closes' %></dt><dd><%= deadlineText %></dd></div><% } %>
       </dl>
-      <% if ((job.audiences || []).length) { %><div class="cluster"><% job.audiences.forEach(a => { %><span class="aud aud--<%= a %>"><%= h.audienceName(a) %></span><% }) %></div><% } %>
       <div class="apply-job__foot">
         <a href="/jobs/<%= job.slug %>">View the full posting</a>
         <% if (job.public_id) { %><span class="small muted">Posting ID <%= job.public_id %></span><% } %>
