@@ -9,10 +9,12 @@
 @media (min-width: 1024px) { .jobs-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1280px) { .jobs-grid { grid-template-columns: repeat(4, 1fr); } }
 .jobs-stack { display: grid; gap: 12px; }                       /* one column of cards beside a sidebar (company page) */
-.section__head--split { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 20px; max-width: none; }
+.section__head--split { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px 32px; max-width: none; margin-bottom: 32px; }
 .section__head--split > div { min-width: 0; }
-.section__head--split h2 { margin-bottom: 0; }
-.section__head--split .eyebrow { margin-bottom: 6px; }
+.section__head--split h2 { margin-bottom: 10px; }
+.section__head--split .eyebrow { margin-bottom: 8px; }
+.section__head--split .lead { margin-bottom: 4px; }
+@media (min-width: 768px) { .section__head--split { margin-bottom: 40px; } }
 .h3 { font-size: 1.15rem; }                                     /* an h2 inside a 340px sidebar card uses the h3 step of the scale */
 
 .job-card { display: grid; gap: 8px; align-content: start; background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 20px; transition: box-shadow .15s, border-color .15s; }
