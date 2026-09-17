@@ -472,12 +472,6 @@ body.has-applybar { padding-bottom: 84px; }
 .co-jobs .empty { display: grid; gap: 8px; justify-items: center; }
 @media (min-width: 768px) { .co-stack { gap: 28px; } }
 
-/* ---------- legal (privacy, terms): prose container + "on this page" card ---------- */
-.legal__toc { margin-bottom: 28px; font-size: .9rem; }
-.legal__toc ol { margin: 8px 0 0; padding-left: 1.25em; display: grid; gap: 6px 24px; grid-template-columns: 1fr; }
-.legal__toc a { text-decoration: none; }
-@media (min-width: 640px) { .legal__toc ol { grid-template-columns: 1fr 1fr; } }
-
 /* ---------- print (the printable sheet itself is /css/print.css, media="print") ---------- */
 .print-only { display: none !important; }
 @media print { .applybar, .share, .apply-card__save, .related { display: none !important; } body.has-applybar { padding-bottom: 0; } }

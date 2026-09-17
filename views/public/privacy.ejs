@@ -1,58 +1,96 @@
-<header class="page-head">
-  <div class="container page-head__inner">
-    <div>
-      <p class="eyebrow">Legal</p>
-      <h1>Privacy policy</h1>
-      <p class="lead">How we collect, use and protect your personal information. Last updated <%= h.formatDate(updated) %>.</p>
-    </div>
+<header class="legal-hero">
+  <div class="container">
+    <p class="eyebrow">Legal</p>
+    <h1>Privacy policy</h1>
+    <p class="lead">How we collect, use and protect your personal information.</p>
+    <p class="legal-hero__updated">Last updated <%= h.formatDate(updated) %></p>
   </div>
 </header>
-<div class="section">
-  <div class="container container--prose">
-    <nav class="card card--flat legal__toc" aria-label="On this page">
-      <strong>On this page</strong>
+
+<div class="legal-doc">
+  <div class="container legal-doc__grid">
+    <nav class="legal-index" aria-label="Sections">
+      <p class="legal-index__label">Privacy</p>
       <ol>
-        <li><a href="#collect">What we collect</a></li><li><a href="#use">How we use it</a></li><li><a href="#share">Who we share it with</a></li>
-        <li><a href="#keep">Storage and retention</a></li><li><a href="#rights">Your rights</a></li><li><a href="#cookies">Cookies</a></li><li><a href="#contact">Contact</a></li>
+        <li><a href="#collect" data-legal-link>01 What we collect</a></li>
+        <li><a href="#use" data-legal-link>02 How we use it</a></li>
+        <li><a href="#share" data-legal-link>03 Who we share it with</a></li>
+        <li><a href="#keep" data-legal-link>04 Storage and retention</a></li>
+        <li><a href="#rights" data-legal-link>05 Your rights</a></li>
+        <li><a href="#cookies" data-legal-link>06 Cookies</a></li>
+        <li><a href="#contact" data-legal-link>07 Contact</a></li>
       </ol>
     </nav>
-    <article class="prose legal__body">
-      <p class="lead">Youth Futures Canada (“we”, “us”) is a Canadian job bank. We collect personal information only to run the service, and we handle it in line with the <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA) and applicable provincial privacy laws.</p>
 
-      <h2 id="collect">1. What we collect</h2>
-      <ul>
-        <li><strong>Job seekers:</strong> name, email, phone, city and province, work preferences, skills, the communities you choose to identify with (optional), your resume and any cover letters you submit.</li>
-        <li><strong>Employers and consultants:</strong> name, email, phone, company details, job postings, and billing records (we never store full card numbers — payments are processed by Stripe).</li>
-        <li><strong>Everyone:</strong> messages you send us, and basic technical data such as IP address, browser type and pages viewed, used for security and to keep the site working.</li>
-      </ul>
-      <p>Identifying with a community (for example New Immigrants or Indigenous) is always optional. It is used only to match you with postings that welcome that community and is never shown publicly.</p>
+    <div class="legal-content">
+      <select class="input legal-jump" aria-label="Jump to section" data-legal-jump>
+        <option value="">Jump to section…</option>
+        <option value="#collect">01 What we collect</option>
+        <option value="#use">02 How we use it</option>
+        <option value="#share">03 Who we share it with</option>
+        <option value="#keep">04 Storage and retention</option>
+        <option value="#rights">05 Your rights</option>
+        <option value="#cookies">06 Cookies</option>
+        <option value="#contact">07 Contact</option>
+      </select>
 
-      <h2 id="use">2. How we use it</h2>
-      <ul>
-        <li>To run your account, publish postings, deliver applications to employers and send job alerts you ask for.</li>
-        <li>To bill subscriptions ($14.99 + GST per posting per month for employers, $9.99 + GST per posting per month for third party consultants), issue receipts and meet tax obligations.</li>
-        <li>To answer support requests, prevent abuse and improve the service.</li>
-      </ul>
-      <p>We do not sell personal information and we do not use it for advertising.</p>
+      <p class="legal-content__intro">Youth Futures Canada (“we”, “us”) is a Canadian job bank. We collect personal information only to run the service, and we handle it in line with the <em>Personal Information Protection and Electronic Documents Act</em> (PIPEDA) and applicable provincial privacy laws.</p>
 
-      <h2 id="share">3. Who we share it with</h2>
-      <ul>
-        <li><strong>Employers you apply to</strong> receive your application, resume and profile details you have chosen to share. Once shared, the employer is responsible for its own handling of that information.</li>
-        <li><strong>Service providers</strong> that host our servers, deliver email and process payments, bound by contract to protect your data.</li>
-        <li><strong>Authorities</strong> when required by Canadian law or a valid legal order.</li>
-      </ul>
+      <section class="legal-section" id="collect">
+        <p class="legal-section__num">01</p>
+        <h2>What we collect</h2>
+        <ul>
+          <li><strong>Job seekers:</strong> name, email, phone, city and province, work preferences, skills, the communities you choose to identify with (optional), your resume and any cover letters you submit.</li>
+          <li><strong>Employers and consultants:</strong> name, email, phone, company details, job postings, and billing records (we never store full card numbers — payments are processed by Stripe).</li>
+          <li><strong>Everyone:</strong> messages you send us, and basic technical data such as IP address, browser type and pages viewed, used for security and to keep the site working.</li>
+        </ul>
+        <p>Identifying with a community (for example New Immigrants or Indigenous) is always optional. It is used only to match you with postings that welcome that community and is never shown publicly.</p>
+      </section>
 
-      <h2 id="keep">4. Storage and retention</h2>
-      <p>Data is stored on servers in Canada where possible. Resumes are kept while your account is active and removed within 90 days of account deletion. Billing records are retained for seven years as required by the Canada Revenue Agency. Expired or cancelled job postings are removed from public view immediately and retained in the employer’s private archive.</p>
+      <section class="legal-section" id="use">
+        <p class="legal-section__num">02</p>
+        <h2>How we use it</h2>
+        <ul>
+          <li>To run your account, publish postings, deliver applications to employers and send job alerts you ask for.</li>
+          <li>To bill subscriptions ($14.99 + GST per posting per month for employers, $9.99 + GST per posting per month for third party consultants), issue receipts and meet tax obligations.</li>
+          <li>To answer support requests, prevent abuse and improve the service.</li>
+        </ul>
+        <p>We do not sell personal information and we do not use it for advertising.</p>
+      </section>
 
-      <h2 id="rights">5. Your rights</h2>
-      <p>You may access, correct or delete your personal information at any time from your account pages, or by contacting us. You may withdraw consent to job alerts using the link in any alert email. If you are not satisfied with our response you may complain to the <a href="https://www.priv.gc.ca/" target="_blank" rel="noopener">Office of the Privacy Commissioner of Canada</a>.</p>
+      <section class="legal-section" id="share">
+        <p class="legal-section__num">03</p>
+        <h2>Who we share it with</h2>
+        <ul>
+          <li><strong>Employers you apply to</strong> receive your application, resume and profile details you have chosen to share. Once shared, the employer is responsible for its own handling of that information.</li>
+          <li><strong>Service providers</strong> that host our servers, deliver email and process payments, bound by contract to protect your data.</li>
+          <li><strong>Authorities</strong> when required by Canadian law or a valid legal order.</li>
+        </ul>
+      </section>
 
-      <h2 id="cookies">6. Cookies</h2>
-      <p>We use a single session cookie to keep you signed in. We do not use third-party advertising or tracking cookies.</p>
+      <section class="legal-section" id="keep">
+        <p class="legal-section__num">04</p>
+        <h2>Storage and retention</h2>
+        <p>Data is stored on servers in Canada where possible. Resumes are kept while your account is active and removed within 90 days of account deletion. Billing records are retained for seven years as required by the Canada Revenue Agency. Expired or cancelled job postings are removed from public view immediately and retained in the employer’s private archive.</p>
+      </section>
 
-      <h2 id="contact">7. Contact</h2>
-      <p>Privacy questions go to our support team through the <a href="/contact">contact page</a>. We respond within 30 days.</p>
-    </article>
+      <section class="legal-section" id="rights">
+        <p class="legal-section__num">05</p>
+        <h2>Your rights</h2>
+        <p>You may access, correct or delete your personal information at any time from your account pages, or by contacting us. You may withdraw consent to job alerts using the link in any alert email. If you are not satisfied with our response you may complain to the <a href="https://www.priv.gc.ca/" target="_blank" rel="noopener">Office of the Privacy Commissioner of Canada</a>.</p>
+      </section>
+
+      <section class="legal-section" id="cookies">
+        <p class="legal-section__num">06</p>
+        <h2>Cookies</h2>
+        <p>We use a single session cookie to keep you signed in. We do not use third-party advertising or tracking cookies.</p>
+      </section>
+
+      <section class="legal-section" id="contact">
+        <p class="legal-section__num">07</p>
+        <h2>Contact</h2>
+        <p>Privacy questions go to our support team through the <a href="/contact">contact page</a>. We respond within 30 days.</p>
+      </section>
+    </div>
   </div>
 </div>

@@ -156,28 +156,31 @@ a:hover { color: var(--cc-red); }
 .flash--error { background: var(--cc-red-100); border-color: #f3b1b1; color: #8a1b1b; }
 .flash--info { background: var(--cc-teal-100); border-color: #a7dfe2; color: #16606a; }
 
-/* ---------- footer: an editorial closing statement, not a four-column link grid.
-   1) a huge tagline band  2) a full-bleed red rule  3) link groups in an inline row  4) a legal strip. ---------- */
-.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 56px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
+/* ---------- footer: a Youth Futures brand conclusion, not a generic corporate link grid.
+   1) a left-aligned editorial statement  2) three nav groups  3) a distinct legal/utility row. ---------- */
+.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 64px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
 .site-footer .container { padding-left: 24px; padding-right: 24px; }
-.site-footer__statement { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 18px; padding-bottom: 40px; }
-.site-footer__mark { flex: none; display: block; background: #fff; border-radius: var(--kds-radius-md); padding: 6px; }
-.site-footer__tagline { margin: 0; font: 800 clamp(1.375rem, 3vw + .8rem, 2.5rem)/1.15 var(--cc-font-display); color: #fff; letter-spacing: -0.02em; }
-.site-footer__rule { height: 3px; background: var(--cc-red); }
-.site-footer__links { position: relative; padding: 40px 0; display: grid; gap: 32px; grid-template-columns: 1fr; text-align: center; }
-@media (min-width: 640px) {
-  .site-footer__statement { flex-direction: row; text-align: left; gap: 24px; }
-}
+.footer-statement { display: flex; flex-direction: column; gap: 24px; padding-bottom: 40px; border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent); }
+.footer-statement__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.footer-statement__brand img { display: block; background: #fff; border-radius: 8px; padding: 4px; }
+.footer-statement__brand span { font: 800 .9375rem/1.2 var(--cc-font-display); color: #fff; }
+.footer-statement__brand b { display: block; font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
+.footer-statement__text { margin: 0; font: 800 clamp(1.75rem, 2rem + 3vw, 3.5rem)/1.05 var(--cc-font-display); color: #fff; letter-spacing: -0.02em; }
+.footer-nav { position: relative; padding: 40px 0; display: grid; gap: 32px; grid-template-columns: 1fr; }
 .site-footer h3 { font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 12px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .site-footer a { color: color-mix(in srgb, #fff 82%, transparent); text-decoration: none; }
 .site-footer a:hover { color: #fff; }
 .site-footer .muted { color: color-mix(in srgb, #fff 65%, transparent); }
-.site-footer__contact p { margin: 0; color: color-mix(in srgb, #fff 72%, transparent); }
-.site-footer__legal { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 16px 0; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); color: color-mix(in srgb, #fff 55%, transparent); font-size: .8125rem; }
-.site-footer__legal p { margin: 0; }
-@media (min-width: 640px) { .site-footer__links { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .site-footer__links { grid-template-columns: repeat(4, 1fr); gap: 20px 32px; } }
+.footer-nav__meta { color: color-mix(in srgb, #fff 65%, transparent); }
+.footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; padding: 20px 0; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); font-size: .8125rem; }
+.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0; padding: 0; }
+.footer-utility__links a { font-weight: 700; color: #fff; }
+.footer-utility__links a:hover { color: var(--cc-spark); }
+.footer-utility__meta { display: grid; gap: 2px; color: color-mix(in srgb, #fff 55%, transparent); text-align: left; }
+.footer-utility__meta p { margin: 0; }
+@media (min-width: 640px) { .footer-utility__meta { text-align: right; } }
+@media (min-width: 1024px) { .footer-nav { grid-template-columns: repeat(3, 1fr); gap: 32px; } }
 
 /* ---------- audience chips (logo strip) ---------- */
 .audience-strip { display: flex !important; flex-wrap: wrap; gap: 6px !important; }

@@ -1,50 +1,93 @@
-<header class="page-head">
-  <div class="container page-head__inner">
-    <div>
-      <p class="eyebrow">Legal</p>
-      <h1>Terms of use</h1>
-      <p class="lead">The rules for posting, searching and applying on Youth Futures Canada. Last updated <%= h.formatDate(updated) %>.</p>
-    </div>
+<header class="legal-hero">
+  <div class="container">
+    <p class="eyebrow">Legal</p>
+    <h1>Terms of use</h1>
+    <p class="lead">The rules for posting, searching and applying on Youth Futures Canada.</p>
+    <p class="legal-hero__updated">Last updated <%= h.formatDate(updated) %></p>
   </div>
 </header>
-<div class="section">
-  <div class="container container--prose">
-    <nav class="card card--flat legal__toc" aria-label="On this page">
-      <strong>On this page</strong>
+
+<div class="legal-doc">
+  <div class="container legal-doc__grid">
+    <nav class="legal-index" aria-label="Sections">
+      <p class="legal-index__label">Terms of use</p>
       <ol>
-        <li><a href="#accounts">Accounts</a></li><li><a href="#postings">Job postings</a></li><li><a href="#billing">Pricing and billing</a></li>
-        <li><a href="#seekers">Job seekers</a></li><li><a href="#conduct">Acceptable use</a></li><li><a href="#liability">Liability</a></li><li><a href="#law">Governing law</a></li>
+        <li><a href="#accounts" data-legal-link>01 Accounts</a></li>
+        <li><a href="#postings" data-legal-link>02 Job postings</a></li>
+        <li><a href="#billing" data-legal-link>03 Pricing and billing</a></li>
+        <li><a href="#seekers" data-legal-link>04 Job seekers</a></li>
+        <li><a href="#conduct" data-legal-link>05 Acceptable use</a></li>
+        <li><a href="#liability" data-legal-link>06 Liability</a></li>
+        <li><a href="#law" data-legal-link>07 Governing law</a></li>
       </ol>
     </nav>
-    <article class="prose legal__body">
-      <p class="lead">By using Youth Futures Canada you agree to these terms. Please read them — they are short. If you are posting on behalf of a company you confirm you are authorised to do so.</p>
 
-      <h2 id="accounts">1. Accounts</h2>
-      <p>You must be at least 16 years old and provide accurate information. Keep your password private; you are responsible for activity under your account. We may suspend accounts that break these terms.</p>
+    <div class="legal-content">
+      <select class="input legal-jump" aria-label="Jump to section" data-legal-jump>
+        <option value="">Jump to section…</option>
+        <option value="#accounts">01 Accounts</option>
+        <option value="#postings">02 Job postings</option>
+        <option value="#billing">03 Pricing and billing</option>
+        <option value="#seekers">04 Job seekers</option>
+        <option value="#conduct">05 Acceptable use</option>
+        <option value="#liability">06 Liability</option>
+        <option value="#law">07 Governing law</option>
+      </select>
 
-      <h2 id="postings">2. Job postings</h2>
-      <ul>
-        <li>Postings must describe a genuine, lawful job located in or open to Canada, and must comply with the <em>Canadian Human Rights Act</em> and provincial human rights and employment standards legislation.</li>
-        <li>Tagging a posting with a community (Professionals, New Immigrants, Indigenous, Refugees, Youth) signals that the employer welcomes candidates from that community. It does not permit excluding other candidates on prohibited grounds.</li>
-        <li>No fees may be charged to candidates, no multi-level-marketing or “pay to work” schemes, and no collection of candidate data outside the application flow.</li>
-        <li>Every posting must give at least one complete work address (street address, city, province and postal code; several addresses may be listed on one posting) and the employer’s operating name where it differs from the legal name.</li>
-        <li>We may edit, decline or remove any posting that breaches these rules, without refund.</li>
-      </ul>
+      <p class="legal-content__intro">By using Youth Futures Canada you agree to these terms. Please read them — they are short. If you are posting on behalf of a company you confirm you are authorised to do so.</p>
 
-      <h2 id="billing">3. Pricing and billing</h2>
-      <p>Each posting is a monthly subscription priced by the account that pays: <strong>employers $14.99 + GST per posting per month</strong> (5% GST, $15.74 in total); <strong>third party consultants $9.99 + GST per posting per month</strong> (5% GST, $10.49 in total). All prices are in Canadian dollars. The price shown at checkout is locked in for that posting, charged when the posting goes live and again on the same day each month until you cancel. Receipts for every charge can be viewed and downloaded from Billing. Cancelling stops future charges; the posting stays live until the end of the paid period, or is removed immediately if you choose so. Charges already made are non-refundable except where required by law. Prices may change with 30 days’ notice, applying at your next renewal.</p>
+      <section class="legal-section" id="accounts">
+        <p class="legal-section__num">01</p>
+        <h2>Accounts</h2>
+        <p>You must be at least 16 years old and provide accurate information. Keep your password private; you are responsible for activity under your account. We may suspend accounts that break these terms.</p>
+      </section>
 
-      <h2 id="seekers">4. Job seekers</h2>
-      <p>Searching and applying is free. You are responsible for the accuracy of your profile and resume. Applications are delivered to the employer, who decides how to respond; Youth Futures Canada does not guarantee interviews, replies or employment.</p>
+      <section class="legal-section" id="postings">
+        <p class="legal-section__num">02</p>
+        <h2>Job postings</h2>
+        <ul>
+          <li>Postings must describe a genuine, lawful job located in or open to Canada, and must comply with the <em>Canadian Human Rights Act</em> and provincial human rights and employment standards legislation.</li>
+          <li>Tagging a posting with a community (Professionals, New Immigrants, Indigenous, Refugees, Youth) signals that the employer welcomes candidates from that community. It does not permit excluding other candidates on prohibited grounds.</li>
+          <li>No fees may be charged to candidates, no multi-level-marketing or “pay to work” schemes, and no collection of candidate data outside the application flow.</li>
+          <li>Every posting must give at least one complete work address (street address, city, province and postal code; several addresses may be listed on one posting) and the employer’s operating name where it differs from the legal name.</li>
+          <li>We may edit, decline or remove any posting that breaches these rules, without refund.</li>
+        </ul>
+      </section>
 
-      <h2 id="conduct">5. Acceptable use</h2>
-      <p>Do not scrape the site, send spam, impersonate others, upload malware, or interfere with the service. Content you submit remains yours; you grant us a licence to display it for the purpose of running the job bank.</p>
+      <section class="legal-section" id="billing">
+        <p class="legal-section__num">03</p>
+        <h2>Pricing and billing</h2>
+        <p>Each posting is a monthly subscription priced by the account that pays:</p>
+        <div class="legal-callout">
+          <p><strong>Employers:</strong> $14.99 + GST per posting per month (5% GST, $15.74 in total)</p>
+          <p><strong>Third Party Consultants:</strong> $9.99 + GST per posting per month (5% GST, $10.49 in total)</p>
+        </div>
+        <p>All prices are in Canadian dollars. The price shown at checkout is locked in for that posting, charged when the posting goes live and again on the same day each month until you cancel. Receipts for every charge can be viewed and downloaded from Billing. Cancelling stops future charges; the posting stays live until the end of the paid period, or is removed immediately if you choose so. Charges already made are non-refundable except where required by law. Prices may change with 30 days’ notice, applying at your next renewal.</p>
+      </section>
 
-      <h2 id="liability">6. Liability</h2>
-      <p>The service is provided “as is”. To the extent permitted by law, Youth Futures Canada is not liable for indirect or consequential loss, and our total liability for any claim is limited to the fees you paid us in the preceding 12 months. Nothing in these terms limits rights you have under consumer protection legislation in your province.</p>
+      <section class="legal-section" id="seekers">
+        <p class="legal-section__num">04</p>
+        <h2>Job seekers</h2>
+        <p>Searching and applying is free. You are responsible for the accuracy of your profile and resume. Applications are delivered to the employer, who decides how to respond; Youth Futures Canada does not guarantee interviews, replies or employment.</p>
+      </section>
 
-      <h2 id="law">7. Governing law</h2>
-      <p>These terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Questions? Use the <a href="/contact">contact page</a>. Our <a href="/privacy">privacy policy</a> explains how we handle personal information.</p>
-    </article>
+      <section class="legal-section" id="conduct">
+        <p class="legal-section__num">05</p>
+        <h2>Acceptable use</h2>
+        <p>Do not scrape the site, send spam, impersonate others, upload malware, or interfere with the service. Content you submit remains yours; you grant us a licence to display it for the purpose of running the job bank.</p>
+      </section>
+
+      <section class="legal-section" id="liability">
+        <p class="legal-section__num">06</p>
+        <h2>Liability</h2>
+        <p>The service is provided “as is”. To the extent permitted by law, Youth Futures Canada is not liable for indirect or consequential loss, and our total liability for any claim is limited to the fees you paid us in the preceding 12 months. Nothing in these terms limits rights you have under consumer protection legislation in your province.</p>
+      </section>
+
+      <section class="legal-section" id="law">
+        <p class="legal-section__num">07</p>
+        <h2>Governing law</h2>
+        <p>These terms are governed by the laws of the Province of Ontario and the federal laws of Canada applicable therein. Questions? Use the <a href="/contact">contact page</a>. Our <a href="/privacy">privacy policy</a> explains how we handle personal information.</p>
+      </section>
+    </div>
   </div>
 </div>

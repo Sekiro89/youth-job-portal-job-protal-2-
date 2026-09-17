@@ -535,12 +535,12 @@ router.get('/robots.txt', (req, res) => {
 router.get('/privacy', (req, res) => res.render('public/privacy', {
   title: 'Privacy policy',
   metaDescription: 'How Youth Futures Canada collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
-  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
+  extraCss: CSS.concat('/css/legal.css'), extraJs: ['/js/legal.js'], bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 router.get('/terms', (req, res) => res.render('public/terms', {
   title: 'Terms of use',
   metaDescription: 'The terms that govern use of Youth Futures Canada, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
-  extraCss: CSS, bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
+  extraCss: CSS.concat('/css/legal.css'), extraJs: ['/js/legal.js'], bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 
 module.exports = router;

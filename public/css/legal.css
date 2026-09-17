@@ -1,0 +1,51 @@
+/* Youth Futures Canada — legal document pages (privacy, terms) ONLY. Loaded via extraCss on those two routes
+   (routes/public.js), never globally, so nothing here can leak onto marketing pages. A deliberately different
+   visual system from the rest of the site: a restrained white hero (not the navy .page-head marketing band),
+   a two-column numbered document layout with a sticky index instead of a grey "on this page" card, and no
+   section is wrapped in a bordered card. Tokens from theme.css only. */
+
+.legal-hero { background: #fff; border-bottom: 1px solid var(--kds-border); padding: 48px 0 36px; }
+.legal-hero .eyebrow { color: var(--cc-red); }
+.legal-hero h1 { margin: 8px 0 12px; font-size: clamp(2rem, 1.4rem + 2.5vw, 2.75rem); color: var(--cc-navy); }
+.legal-hero .lead { margin: 0 0 14px; max-width: 62ch; color: var(--kds-fg-muted); font-size: 1.0625rem; }
+.legal-hero__updated { margin: 0; display: inline-block; font-size: .75rem; font-weight: 700; color: var(--kds-fg-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+.legal-doc { background: #fff; padding: 40px 0 80px; }
+.legal-doc__grid { display: grid; gap: 32px; align-items: start; }
+
+/* mobile/tablet: a native <select> instead of the sticky rail — keyboard/screen-reader native, no custom widget */
+.legal-jump { display: block; width: 100%; max-width: 420px; margin-bottom: 36px; }
+
+.legal-index { display: none; }
+.legal-index__label { margin: 0 0 16px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.legal-index ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--kds-border); display: grid; gap: 2px; }
+.legal-index a { display: block; padding: 8px 0 8px 18px; margin-left: -1px; border-left: 2px solid transparent; text-decoration: none; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); transition: color .15s, border-color .15s; }
+.legal-index a:hover, .legal-index a:focus-visible { color: var(--cc-navy); }
+.legal-index a.is-active { color: var(--cc-red); border-left-color: var(--cc-red); font-weight: 700; }
+
+.legal-content { max-width: 680px; min-width: 0; }
+.legal-content__intro { font-size: 1.0625rem; line-height: 1.65; color: var(--kds-fg-muted); margin: 0 0 32px; padding-bottom: 32px; border-bottom: 1px solid var(--kds-border); }
+
+.legal-section { padding: 36px 0; border-bottom: 1px solid var(--kds-border); scroll-margin-top: calc(var(--cc-header-h) + 20px); }
+.legal-section__num { margin: 0 0 6px; font: 800 1rem/1 var(--cc-font-display); color: var(--cc-red); letter-spacing: .04em; }
+.legal-section h2 { margin: 0 0 16px; font-size: 1.375rem; color: var(--cc-navy); }
+.legal-section p { margin: 0 0 14px; line-height: 1.65; color: var(--cc-ink); }
+.legal-section ul { margin: 0 0 14px; padding-left: 22px; display: grid; gap: 10px; line-height: 1.6; color: var(--cc-ink); }
+.legal-section li::marker { color: var(--cc-red); }
+.legal-section a { color: var(--cc-navy); text-decoration: underline; text-underline-offset: 2px; }
+.legal-section a:hover { color: var(--cc-red); }
+.legal-section strong { color: var(--cc-navy); }
+/* the last section (Governing law / Contact) closes the document — no bottom rule, a touch of extra breathing room */
+.legal-section:last-of-type { border-bottom: 0; padding-bottom: 4px; }
+
+/* a subtle highlighted block for figures that matter (pricing) — not another card, just a tinted inset */
+.legal-callout { margin: 18px 0; padding: 18px 20px; background: var(--cc-surface); border-left: 3px solid var(--cc-red); border-radius: 4px; }
+.legal-callout p { margin: 0; }
+.legal-callout p + p { margin-top: 8px; }
+.legal-callout strong { color: var(--cc-navy); }
+
+@media (min-width: 1024px) {
+  .legal-jump { display: none; }
+  .legal-index { display: block; position: sticky; top: calc(var(--cc-header-h) + 32px); }
+  .legal-doc__grid { grid-template-columns: 220px minmax(0, 1fr); gap: 64px; }
+}
