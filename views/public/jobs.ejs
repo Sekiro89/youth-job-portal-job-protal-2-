@@ -1,52 +1,77 @@
-<%# /jobs — Find Jobs (UX standard §6, 2026-09-10). Page head → filter bar (+ drawer/popover, _filters.ejs) → chips/sort
-    toolbar → one column of full-width rows (_job-row.ejs) + the results map (sticky at ≥1024, toggle at ≥768,
-    List | Map segmented control on phones). Styles: /css/jobs-search.css · behaviour: /js/jobs-search.js (both pushed by
-    the route). Every query param (q, category, province, city, job_type, work_arrangement, audience, salary_min, near,
-    lat/lng, radius_km, sort, view, page) keeps its meaning — see routes/public.js parseFilters/jobsUrl. %>
-<%# Before first paint: mark JS available and restore the visitor's map preference (cc:jobs-map = show | hide). With no
-    preference the map is on at ≥1024 and off below, so the ≥768 layout never shifts once jobs-search.js runs. %>
+<%# /jobs — Find Jobs (Career Journey redesign). Light hero (search + filters, visible labels) → a full-width
+    "Explore Canada" map discovery section → an editorial job index below. Styles: /css/jobs-search.css ·
+    behaviour: /js/jobs-search.js (unchanged — every data-* hook below is identical to before; only the
+    surrounding layout/composition changed). Every query param (q, category, province, city, job_type,
+    work_arrangement, audience, salary_min, near, lat/lng, radius_km, sort, view, page) keeps its meaning —
+    see routes/public.js parseFilters/jobsUrl. %>
+<%# Before first paint: mark JS available and restore the visitor's map preference (cc:jobs-map = show | hide). %>
 <script>(function(d){d.classList.add('js');var s=null;try{s=localStorage.getItem('cc:jobs-map');}catch(e){}if(s==='hide')d.classList.add('jobs-map-off');else if(s==='show'||(window.matchMedia&&matchMedia('(min-width: 1024px)').matches))d.classList.add('jobs-map-on');else d.classList.add('jobs-map-off');})(document.documentElement);</script>
 <script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script>
 <% const hasPoint = !!point; const isMapView = f.view === 'map'; %>
-<header class="page-head">
-  <div class="container page-head__inner">
-    <div>
-      <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page">Jobs</li></ol>
-      <h1><%= heading %></h1>
-      <p class="lead jsearch__total" aria-live="polite"><strong><%= total %></strong> job<%= total === 1 ? '' : 's' %> found<%= pages > 1 ? ` · page ${f.page} of ${pages}` : '' %><% if (hasPoint) { %> · sorted by distance<% } %></p>
-    </div>
+
+<header class="jobs-hero">
+  <div class="container">
+    <ol class="jobs-hero__route" aria-label="Your journey">
+      <li>01 Start</li>
+      <li class="is-active">02 Explore</li>
+      <li>03 Apply</li>
+    </ol>
+    <h1 class="jobs-hero__title">Explore your next move.</h1>
+    <p class="lead">Find opportunities across Canada and discover where your career could take you.</p>
   </div>
 </header>
 
 <div class="jsearch<%= isMapView ? ' is-map' : '' %>" data-jsearch data-geo-url="<%= geoUrl %>" data-total="<%= total %>">
-  <div class="container jsearch__shell">
-  <div class="jsearch__sidebar">
-    <p class="jsearch__sidebar-h">Filters</p>
-    <%- include('_filters', { f, point, chips, total, moreActive, RADII, salaryOptions }) %>
-  </div>
-  <div class="jsearch__main">
-    <div class="jsearch__toolbar">
+
+  <div class="jobs-hero__search">
+    <div class="container">
+      <%- include('_filters', { f, point, chips, total, moreActive, RADII, salaryOptions }) %>
       <% if (chips.length) { %>
         <ul class="jchips" aria-label="Active filters">
           <% chips.forEach(c => { %><li><a class="jchip" href="<%= c.href %>" aria-label="Remove filter: <%= c.label %>"><span><%= c.label %></span><span class="jchip__x" aria-hidden="true">×</span></a></li><% }) %>
           <li><a class="jchip jchip--clear" href="/jobs">Clear all</a></li>
         </ul>
-      <% } else { %>
-        <p class="jsearch__hint small muted">Showing all open positions across Canada.</p>
       <% } %>
-      <div class="jsearch__tools">
-        <div class="jview" role="group" aria-label="View as" data-view-switch>
-          <button type="button" data-view="list" aria-pressed="<%= isMapView ? 'false' : 'true' %>">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>List
-          </button>
-          <button type="button" data-view="map" aria-pressed="<%= isMapView ? 'true' : 'false' %>">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Map
+    </div>
+  </div>
+
+  <section class="jobs-map-section" aria-labelledby="map-h">
+    <div class="container jobs-map-section__head">
+      <div>
+        <p class="eyebrow">Explore Canada</p>
+        <h2 id="map-h">Your next opportunity could be anywhere.</h2>
+      </div>
+    </div>
+    <div class="container">
+      <aside class="jsearch__map" id="jobs-map" aria-label="Map of matching jobs" data-map-pane>
+        <div class="cc-map jsearch__canvas" data-map data-map-manual data-jobs-map data-empty="No mapped locations for these results yet." role="region" aria-label="Map"
+             <% if (hasPoint) { %>data-point-lat="<%= point.lat %>" data-point-lng="<%= point.lng %>" data-point-radius="<%= f.radius_km %>" data-point-label="<%= point.label %>"<% } %>></div>
+        <p class="jsearch__map-note small muted" data-map-note><%= total %> job<%= total === 1 ? '' : 's' %> · pins show each work location (up to 200). Click a pin to find it in the list.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="jobs-index" aria-labelledby="results-h">
+    <div class="container">
+      <div class="jobs-index__head">
+        <div>
+          <p class="eyebrow">Opportunities</p>
+          <h2 id="results-h"><strong><%= total %></strong> open position<%= total === 1 ? '' : 's' %> across Canada</h2>
+        </div>
+        <div class="jsearch__tools">
+          <div class="jview" role="group" aria-label="View as" data-view-switch>
+            <button type="button" data-view="list" aria-pressed="<%= isMapView ? 'false' : 'true' %>">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>List
+            </button>
+            <button type="button" data-view="map" aria-pressed="<%= isMapView ? 'true' : 'false' %>">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Map
+            </button>
+          </div>
+          <button class="kds-btn kds-btn--ghost kds-btn--sm jsearch__map-toggle" type="button" aria-pressed="true" aria-controls="jobs-map" data-map-toggle>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span data-map-toggle-label>Hide map</span>
           </button>
         </div>
-        <button class="kds-btn kds-btn--ghost kds-btn--sm jsearch__map-toggle" type="button" aria-pressed="true" aria-controls="jobs-map" data-map-toggle>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          <span data-map-toggle-label>Hide map</span>
-        </button>
         <label class="jsearch__sort">
           <span class="small muted">Sort</span>
           <select class="input" name="sort" form="jobs-form" data-autosubmit aria-label="Sort results">
@@ -59,46 +84,36 @@
           </select>
         </label>
       </div>
-    </div>
-
-  <div class="jsearch__body" data-body>
-    <section class="jsearch__results" aria-labelledby="results-h" data-results-list>
-      <h2 id="results-h" class="visually-hidden">Results</h2>
-      <% if (jobs.length) { %>
-        <div class="jsearch__list">
-          <% jobs.forEach(job => { %><%- include('_job-row', { job }) %><% }) %>
-        </div>
-        <% if (pages > 1) { %>
-          <nav class="jpager" aria-label="Pagination">
-            <% if (f.page > 1) { %><a class="kds-btn kds-btn--ghost" href="<%= jobsUrl(f, { page: f.page - 1 }) %>" rel="prev">← Previous</a><% } else { %><span class="kds-btn kds-btn--ghost" aria-disabled="true">← Previous</span><% } %>
-            <span class="jpager__pages">
-              <% for (let p = Math.max(1, f.page - 2); p <= Math.min(pages, f.page + 2); p++) { %>
-                <% if (p === f.page) { %><span class="jpager__num is-current" aria-current="page"><%= p %></span><% } else { %><a class="jpager__num" href="<%= jobsUrl(f, { page: p }) %>"><%= p %></a><% } %>
-              <% } %>
-            </span>
-            <% if (f.page < pages) { %><a class="kds-btn kds-btn--ghost" href="<%= jobsUrl(f, { page: f.page + 1 }) %>" rel="next">Next →</a><% } else { %><span class="kds-btn kds-btn--ghost" aria-disabled="true">Next →</span><% } %>
-          </nav>
-        <% } %>
-      <% } else { %>
-        <div class="empty jsearch__empty">
-          <h3>No jobs match those filters</h3>
-          <% if (chips.length) { %>
-            <p>Try removing a filter<%= hasPoint ? ' or widening the radius' : '' %> — or clear everything and start again.</p>
-            <a class="kds-btn kds-btn--brand" href="/jobs">Clear all filters</a>
-          <% } else { %>
-            <p>There are no open postings right now — set an alert and we will email you when new jobs go live.</p>
-            <a class="kds-btn kds-btn--brand" href="/jobseeker#alerts">Set a job alert</a>
+      <div data-results-list>
+        <% if (jobs.length) { %>
+          <div class="jsearch__list">
+            <% jobs.forEach(job => { %><%- include('_job-row', { job }) %><% }) %>
+          </div>
+          <% if (pages > 1) { %>
+            <nav class="jpager" aria-label="Pagination">
+              <% if (f.page > 1) { %><a class="kds-btn kds-btn--ghost" href="<%= jobsUrl(f, { page: f.page - 1 }) %>" rel="prev">← Previous</a><% } else { %><span class="kds-btn kds-btn--ghost" aria-disabled="true">← Previous</span><% } %>
+              <span class="jpager__pages">
+                <% for (let p = Math.max(1, f.page - 2); p <= Math.min(pages, f.page + 2); p++) { %>
+                  <% if (p === f.page) { %><span class="jpager__num is-current" aria-current="page"><%= p %></span><% } else { %><a class="jpager__num" href="<%= jobsUrl(f, { page: p }) %>"><%= p %></a><% } %>
+                <% } %>
+              </span>
+              <% if (f.page < pages) { %><a class="kds-btn kds-btn--ghost" href="<%= jobsUrl(f, { page: f.page + 1 }) %>" rel="next">Next →</a><% } else { %><span class="kds-btn kds-btn--ghost" aria-disabled="true">Next →</span><% } %>
+            </nav>
           <% } %>
-        </div>
-      <% } %>
-    </section>
+        <% } else { %>
+          <div class="empty jsearch__empty">
+            <h3>No jobs match those filters</h3>
+            <% if (chips.length) { %>
+              <p>Try removing a filter<%= hasPoint ? ' or widening the radius' : '' %> — or clear everything and start again.</p>
+              <a class="kds-btn kds-btn--brand" href="/jobs">Clear all filters</a>
+            <% } else { %>
+              <p>There are no open postings right now — set an alert and we will email you when new jobs go live.</p>
+              <a class="kds-btn kds-btn--brand" href="/jobseeker#alerts">Set a job alert</a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
 
-    <aside class="jsearch__map" id="jobs-map" aria-label="Map of matching jobs" data-map-pane>
-      <div class="cc-map jsearch__canvas" data-map data-map-manual data-jobs-map data-empty="No mapped locations for these results yet." role="region" aria-label="Map"
-           <% if (hasPoint) { %>data-point-lat="<%= point.lat %>" data-point-lng="<%= point.lng %>" data-point-radius="<%= f.radius_km %>" data-point-label="<%= point.label %>"<% } %>></div>
-      <p class="jsearch__map-note small muted" data-map-note><%= total %> job<%= total === 1 ? '' : 's' %> · pins show each work location (up to 200). Click a pin to find it in the list.</p>
-    </aside>
-  </div>
-  </div>
-  </div>
 </div>

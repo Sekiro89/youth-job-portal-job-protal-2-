@@ -5,7 +5,7 @@
 <% const hasPoint = !!point; const browserPoint = hasPoint && point.source === 'browser'; %>
 <form class="jsearch__form" id="jobs-form" method="get" action="/jobs" role="search" aria-label="Search jobs" data-search-form data-jsearch-form>
   <div class="jsearch__kw">
-    <label class="visually-hidden" for="f-q">Keyword</label>
+    <label class="jsearch__label" for="f-q">Search</label>
     <input class="input jsearch__kw-input" id="f-q" name="q" type="search" value="<%= f.q %>" placeholder="Job title, skill or company" autocomplete="off">
     <button class="jsearch__kw-go" type="submit" aria-label="Search">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -28,7 +28,7 @@
 
     <div class="jsearch__panel-body">
       <div class="field jsearch__near" data-near>
-        <label class="visually-hidden" for="f-near">Near a place</label>
+        <label class="jsearch__label" for="f-near">Location</label>
         <div class="jsearch__near-row">
           <input class="input" id="f-near" name="near" value="<%= f.near %>" placeholder="City or postal code" autocomplete="off" aria-describedby="near-status" data-near-input>
           <button class="kds-btn kds-btn--ghost jsearch__near-me" type="button" data-near-me title="Use my current location">
@@ -42,14 +42,14 @@
       </div>
 
       <div class="field jsearch__radius">
-        <label class="visually-hidden" for="f-radius">Search radius</label>
+        <label class="jsearch__label" for="f-radius">Distance</label>
         <select class="input" id="f-radius" name="radius_km" aria-label="Search radius">
           <% RADII.forEach(r => { %><option value="<%= r %>" <%= f.radius_km === r ? 'selected' : '' %>>Within <%= r %> km</option><% }) %>
         </select>
       </div>
 
       <div class="field jsearch__cat">
-        <label class="visually-hidden" for="f-category">Category</label>
+        <label class="jsearch__label" for="f-category">Category</label>
         <select class="input" id="f-category" name="category">
           <option value="">All categories</option>
           <% C.CATEGORIES.forEach(([k, n]) => { %><option value="<%= k %>" <%= f.category.includes(k) ? 'selected' : '' %>><%= n %></option><% }) %>
@@ -57,7 +57,7 @@
       </div>
 
       <div class="field jsearch__prov">
-        <label class="visually-hidden" for="f-province">Province or territory</label>
+        <label class="jsearch__label" for="f-province">Province</label>
         <select class="input" id="f-province" name="province">
           <option value="">All of Canada</option>
           <% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= f.province === k ? 'selected' : '' %>><%= n %></option><% }) %>
@@ -119,6 +119,6 @@
     </div>
   </div>
 
-  <button class="kds-btn kds-btn--brand jsearch__go" type="submit">Search</button>
+  <button class="kds-btn kds-btn--accent jsearch__go" type="submit">Search jobs →</button>
   <input type="hidden" name="view" value="<%= f.view === 'map' ? 'map' : '' %>" data-view-field>
 </form>
