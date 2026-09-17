@@ -1,12 +1,4 @@
 <section class="hero hero--journey">
-  <div class="hero__route" aria-hidden="true">
-    <svg viewBox="0 0 420 320" fill="none" preserveAspectRatio="xMidYMid slice">
-      <path d="M10 280 C 110 280, 90 190, 190 175 C 290 160, 270 70, 410 30" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
-      <circle cx="10" cy="280" r="6" fill="var(--cc-red)"/>
-      <circle cx="190" cy="175" r="5" fill="#fff" fill-opacity=".55"/>
-      <circle cx="410" cy="30" r="7" fill="var(--cc-red)"/>
-    </svg>
-  </div>
   <div class="container hero__inner">
     <div class="hero__copy">
       <p class="eyebrow fade-up fade-up--1">Start your journey</p>
@@ -17,10 +9,24 @@
         <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/about">Learn about Youth Futures →</a>
       </div>
     </div>
+    <div class="hero__journey fade-up fade-up--2" aria-hidden="true">
+      <svg class="hero__journey-svg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+        <path class="hero__journey-land" d="M40,600 L40,430 C20,380 55,340 40,290 C25,235 90,210 110,165 C130,120 190,130 230,95 C270,60 330,75 365,45 C395,20 430,25 455,0 L600,0 L600,600 Z"/>
+        <path class="hero__journey-route" d="M58,478 C108,450 138,422 168,392 C208,358 258,330 298,300 C348,268 388,238 428,200 C466,164 506,132 538,90" />
+      </svg>
+      <ol class="hero__journey-stops">
+        <li style="--x:9%; --y:80%"><span class="hero__stop-node" aria-hidden="true"></span><span class="hero__stop-label"><strong>01 Start</strong>Students</span></li>
+        <li style="--x:28%; --y:65%"><span class="hero__stop-node" aria-hidden="true"></span><span class="hero__stop-label"><strong>02 Explore</strong>Internships</span></li>
+        <li style="--x:50%; --y:50%"><span class="hero__stop-node" aria-hidden="true"></span><span class="hero__stop-label"><strong>03 Build</strong>Early career</span></li>
+        <li style="--x:71%; --y:33%"><span class="hero__stop-node" aria-hidden="true"></span><span class="hero__stop-label"><strong>04 Grow</strong>Skilled careers</span></li>
+        <li class="is-end" style="--x:90%; --y:15%"><span class="hero__stop-node" aria-hidden="true"></span><span class="hero__stop-label"><strong>05 Move</strong></span></li>
+      </ol>
+    </div>
   </div>
   <div class="search-band" aria-labelledby="search-h">
     <div class="container search-band__inner">
-      <h2 id="search-h" class="visually-hidden">Search jobs across Canada</h2>
+      <p class="search-band__eyebrow">The next step</p>
+      <h2 id="search-h">Find your next opportunity</h2>
       <form class="search-form" method="get" action="/jobs" role="search" aria-label="Search jobs">
         <div class="field search-form__field">
           <label for="hero-q">Search jobs, skills or companies</label>
@@ -38,7 +44,7 @@
             </optgroup><% } %>
           </select>
         </div>
-        <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs</button>
+        <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs →</button>
       </form>
       <p class="search-band__popular small">
         <span class="muted">Popular:</span>

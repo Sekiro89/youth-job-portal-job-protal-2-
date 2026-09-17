@@ -53,22 +53,8 @@
 /* ---------- hero: a full-bleed navy statement band — oversized type + a stat rail, no illustration.
    Deliberately NOT a two-column text-left/illustration-right split: every element here is typographic. ---------- */
 .hero { position: relative; overflow: hidden; background: var(--cc-navy); padding: var(--sp-9) 0 0; color: #fff; }
-.hero__inner { position: relative; padding-bottom: var(--sp-9); }
-.hero__copy { min-width: 0; max-width: 44rem; }
-.hero__route { position: absolute; inset: 0; z-index: 0; opacity: .9; pointer-events: none; }
-.hero__route svg { position: absolute; right: 0; top: 0; width: 60%; height: 100%; }
-.hero__shape { display: none; }
-@media (min-width: 900px) {
-  .hero__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 360px); align-items: center; gap: 40px; }
-  .hero__shape { display: block; position: relative; width: 100%; aspect-ratio: 16/11; pointer-events: none;
-    border-radius: 20px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.35); transform: rotate(3deg); border: 3px solid color-mix(in srgb, #fff 18%, transparent); }
-}
-.hero__shape picture, .hero__shape img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.hero__shape::before {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(135deg, var(--cc-red) 0%, var(--cc-navy) 100%);
-  mix-blend-mode: color; opacity: .65; }
-.hero__shape::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--cc-navy) 12%, transparent); }
+.hero__inner { position: relative; padding-bottom: var(--sp-8); }
+.hero__copy { min-width: 0; max-width: 34rem; }
 .hero .eyebrow { color: var(--cc-spark); }
 .hero .eyebrow::before { background: var(--cc-spark); }
 .hero__title { position: relative; z-index: 1; margin: 18px 0 22px; font-size: var(--yf-display-hero); line-height: .98; color: #fff; }
@@ -80,29 +66,76 @@
 .hero__cta .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
 .hero__cta .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
 @media (min-width: 640px) { .hero__cta .kds-btn { flex: 0 0 auto; } }
-@media (min-width: 1024px) {
-  .hero { padding: 80px 0 56px; }
-  .hero__title { font-size: clamp(3rem, 3.4vw + 1.5rem, 4.75rem); max-width: 18ch; }
+
+/* ---------- career journey visual: a deliberate route with 5 labelled stops, an abstract land silhouette
+   behind it, not a random diagonal line. Hidden on phone (section 15: mobile gets its own compact vertical
+   route further down the page rhythm is unchanged — the hero itself stays headline-first on small screens). ---------- */
+/* mobile: a compact vertical route (no SVG land/curve — just numbered stops joined by a short line) */
+.hero__journey { margin-top: var(--sp-6); }
+.hero__journey-svg { display: none; }
+.hero__journey-stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.hero__journey-stops li { display: flex; align-items: center; gap: 12px; position: relative; padding-left: 2px; }
+.hero__journey-stops li:not(:last-child)::after { content: ""; position: absolute; left: calc(var(--node-size) / 2 - 1px); top: 100%; width: 2px; height: 12px; background: #5F7692; }
+.hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; flex: none; }
+.hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); }
+.hero__stop-label { display: flex; align-items: baseline; gap: 8px; font-size: .8125rem; color: color-mix(in srgb, #fff 60%, transparent); }
+.hero__stop-label strong { font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 88%, transparent); }
+.hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
+@media (min-width: 900px) {
+  .hero__journey { margin-top: 0; position: relative; }
+  .hero__journey-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero__journey-land { fill: color-mix(in srgb, #fff 6%, transparent); stroke: none; }
+  .hero__journey-route { fill: none; stroke: #5F7692; stroke-width: 2; stroke-dasharray: 1 10; stroke-linecap: round; }
+  .hero__journey-stops { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+  .hero__journey-stops li { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; gap: 10px; transform: translate(-50%, -50%); }
+  .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; border: 2px solid var(--cc-navy); flex: none; }
+  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 25%, transparent); }
+  .hero__stop-label { display: grid; font-size: .6875rem; line-height: 1.3; color: color-mix(in srgb, #fff 55%, transparent); white-space: nowrap; }
+  .hero__stop-label strong { font: 700 .6875rem/1.3 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 82%, transparent); }
+  .hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__journey-route { stroke-dashoffset: 1; animation: yf-route-draw 1.8s ease-out both; animation-delay: .2s; }
+    .hero__journey-stops li { opacity: 0; animation: yf-stop-in .5s ease-out both; }
+    .hero__journey-stops li:nth-child(1) { animation-delay: .3s; } .hero__journey-stops li:nth-child(2) { animation-delay: .5s; }
+    .hero__journey-stops li:nth-child(3) { animation-delay: .7s; } .hero__journey-stops li:nth-child(4) { animation-delay: .9s; }
+    .hero__journey-stops li:nth-child(5) { animation-delay: 1.1s; }
+    .hero__journey-stops li.is-end .hero__stop-node { animation: yf-node-pulse 2.4s ease-in-out 2s infinite; }
+  }
 }
-/* ---------- search band: fused directly under the hero as a bold bar, not a floating white card ---------- */
-.search-band { background: var(--cc-navy-700); padding: 20px 0; }
+@keyframes yf-route-draw { from { stroke-dashoffset: 700; } to { stroke-dashoffset: 1; } }
+@keyframes yf-stop-in { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes yf-node-pulse { 0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 25%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--cc-red) 12%, transparent); } }
+
+@media (min-width: 900px) {
+  .hero__inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: var(--sp-8); }
+  .hero__journey { aspect-ratio: 1 / 1; }
+}
+@media (min-width: 1024px) {
+  .hero { padding: 80px 0 0; }
+  .hero__title { font-size: clamp(3rem, 3.4vw + 1.5rem, 4.75rem); max-width: 18ch; }
+  .hero__inner { grid-template-columns: minmax(0, 45fr) minmax(0, 55fr); }
+}
+
+/* ---------- search band: a bright "next step" panel directly beneath the hero — white, not another dark
+   strip, so the transition itself signals progress (dark journey → the bright next action). ---------- */
+.search-band { background: #fff; padding: var(--sp-6) 0; border-bottom: 1px solid var(--kds-border); }
+.search-band__eyebrow { margin: 0 0 6px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-red); }
+.search-band #search-h { margin: 0 0 var(--sp-4); font-size: var(--yf-display-md); color: var(--cc-navy); }
 .search-band__inner { display: grid; gap: 14px; }
 .search-form { display: grid; gap: 10px; }
-.search-form__field label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: color-mix(in srgb, #fff 65%, transparent); }
+.search-form__field label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--kds-fg-muted); }
 .search-form__submit { width: 100%; min-height: 48px; }
-.search-band__popular { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
-.search-band__popular .muted { color: color-mix(in srgb, #fff 55%, transparent); }
-.search-band__popular a { text-decoration: none; font-weight: 600; color: #fff; border-bottom: 1px solid color-mix(in srgb, #fff 35%, transparent); }
-.search-band__popular a:hover { color: var(--cc-spark); border-color: var(--cc-spark); }
+.search-band__popular { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.search-band__popular a { text-decoration: none; font-weight: 600; color: var(--cc-navy); border-bottom: 1px solid var(--cc-line-strong); }
+.search-band__popular a:hover { color: var(--cc-red); border-color: var(--cc-red); }
 @media (min-width: 640px) {
   .search-form { grid-template-columns: 1fr 1fr; align-items: end; }
   .search-form__submit { grid-column: 1 / -1; }
 }
 @media (min-width: 1024px) {
-  .search-band__inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
-  .search-form { grid-template-columns: 1.4fr 1fr auto; }
-  .search-form__submit { grid-column: auto; width: auto; min-width: 160px; }
-  .search-band__popular { justify-content: flex-end; }
+  .search-band__inner { max-width: 900px; }
+  .search-form { grid-template-columns: 1.4fr 1fr auto; align-items: end; }
+  .search-form__submit { grid-column: auto; width: auto; min-width: 180px; }
 }
 
 /* ---------- featured opportunities: an editorial directory, not a 4-col card grid. A running number,
