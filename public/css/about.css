@@ -9,7 +9,7 @@
 
 /* ---------- stat band: big numbers in a row, not a grid of cards ---------- */
 .about-stats-band { background: var(--cc-navy-50); border-bottom: 1px solid var(--kds-border); }
-.about-stats { list-style: none; margin: 0; padding: 20px 16px; display: flex; flex-wrap: wrap; gap: 20px 0; }
+.about-stats { list-style: none; margin: 0 auto; padding: 20px 16px; display: flex; flex-wrap: wrap; gap: 20px 0; }
 .about-stats li { flex: 1 1 50%; padding: 8px 20px 8px 0; border-right: 1px solid var(--cc-line-strong); }
 .about-stats li:nth-child(2n) { border-right: 0; }
 .about-stats strong { display: block; font: 800 1.75rem/1.1 var(--cc-font-display); color: var(--cc-navy); }
