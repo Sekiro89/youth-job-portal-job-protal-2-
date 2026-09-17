@@ -296,14 +296,6 @@
           <textarea class="input" id="benefits" name="benefits" rows="4" maxlength="6000" placeholder="Health and dental, training, relocation support, transit…"><%= v.benefits %></textarea>
         </div>
         <fieldset class="field fieldset">
-          <legend>Who is this role a great fit for? <span class="muted">(shown as tags on the posting)</span></legend>
-          <div class="checks checks--3 checks--aud">
-            <% C.AUDIENCES.forEach(([k, n]) => { %>
-              <label class="check check--aud aud--<%= k %>"><input type="checkbox" name="audiences" value="<%= k %>" <%= (v.audiences || []).includes(k) ? 'checked' : '' %>> <span class="aud aud--<%= k %>"><%= n %></span></label>
-            <% }) %>
-          </div>
-        </fieldset>
-        <fieldset class="field fieldset">
           <legend>Languages <span class="req">*</span></legend>
           <div class="checks checks--3">
             <% ['English', 'French', 'Other'].forEach(l => { %>
