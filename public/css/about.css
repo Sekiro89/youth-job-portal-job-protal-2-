@@ -92,9 +92,9 @@
 #tab-employers:checked ~ .about-tabs__nav label[for="tab-employers"],
 #tab-consultants:checked ~ .about-tabs__nav label[for="tab-consultants"],
 #tab-seekers:checked ~ .about-tabs__nav label[for="tab-seekers"] { color: var(--cc-navy); border-bottom-color: var(--cc-red); }
-#tab-employers:checked ~ .about-tabs__panels .about-tabs__panel--employers,
-#tab-consultants:checked ~ .about-tabs__panels .about-tabs__panel--consultants,
-#tab-seekers:checked ~ .about-tabs__panels .about-tabs__panel--seekers { display: block; }
+#tab-employers:checked ~ .about-tabs__body .about-tabs__panel--employers,
+#tab-consultants:checked ~ .about-tabs__body .about-tabs__panel--consultants,
+#tab-seekers:checked ~ .about-tabs__body .about-tabs__panel--seekers { display: block; }
 .about-tabs__panel h4 { margin-top: 1.4em; }
 
 /* ---------- how it works: a two-panel split (post a job / find a job), not two plain cards ---------- */
