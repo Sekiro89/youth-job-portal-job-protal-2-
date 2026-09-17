@@ -20,6 +20,7 @@
   var laneRows = document.querySelectorAll('[data-compass-row]');
   if (laneRows.length) {
     var setCompass = function (path) {
+      document.querySelectorAll('.compass').forEach(function (el) { el.classList.toggle('is-focused', !!path); });
       document.querySelectorAll('.compass__node, .compass__label').forEach(function (el) {
         el.classList.toggle('is-active', !!path && el.getAttribute('data-path') === path);
       });

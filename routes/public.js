@@ -62,21 +62,21 @@ function notFound(res, message) {
   return res.status(404).render('error', { title: 'Page not found', code: 404, message, noindex: true });
 }
 
-// Broad career-path clusters — every C.CATEGORIES key appears exactly once. Used to (a) label the "Find your
-// lane" career-compass directions on the homepage and (b) map each individual category to the compass node it
-// should light up on hover/focus (CATEGORY_TO_PATH below). This groups real categories for storytelling; it
-// never restricts what /jobs (the Job Bank) shows.
+// Broad career-path clusters — every C.CATEGORIES key appears exactly once, across exactly five groups (client
+// spec 2026-09-17). Used to (a) label the "Find your lane" career-compass directions on the homepage and (b) map
+// each individual category to the compass node it should light up on hover/focus (CATEGORY_TO_PATH below). This
+// groups real categories for storytelling; it never restricts what /jobs (the Job Bank) shows.
 const CAREER_PATHS = [
-  { key: 'technology', name: 'Technology', categories: ['it_software'] },
-  { key: 'business', name: 'Business & Professional', categories: ['accounting_finance', 'administration', 'human_resources', 'marketing_sales', 'customer_service', 'legal'] },
+  { key: 'technology', name: 'Technology', categories: ['it_software', 'science_research', 'engineering'] },
   { key: 'healthcare', name: 'Healthcare', categories: ['healthcare'] },
-  { key: 'engineering', name: 'Engineering & Skilled Trades', categories: ['engineering', 'construction_trades', 'manufacturing'] },
-  { key: 'other', name: 'More Opportunities', categories: ['agriculture', 'education', 'hospitality', 'retail', 'science_research', 'social_services', 'transport_logistics', 'warehouse_general_labour', 'other'] },
+  { key: 'business', name: 'Business', categories: ['administration', 'accounting_finance', 'human_resources', 'marketing_sales', 'legal'] },
+  { key: 'skilled_trades', name: 'Skilled Trades', categories: ['construction_trades', 'manufacturing', 'transport_logistics', 'warehouse_general_labour', 'agriculture'] },
+  { key: 'services', name: 'Services', categories: ['customer_service', 'hospitality', 'education', 'social_services', 'retail', 'other'] },
 ];
 const CATEGORY_TO_PATH = Object.fromEntries(CAREER_PATHS.flatMap(p => p.categories.map(c => [c, p.key])));
-// The compass shows four concrete directions (not the "other" catch-all bucket) — the full catalogue is always
-// one click away via "Explore all career areas →" to /jobs.
-const COMPASS_PATHS = CAREER_PATHS.filter(p => p.key !== 'other').map(({ key, name }) => ({ key, name }));
+// All five groups are shown on the compass now (no catch-all bucket excluded) — the full catalogue remains one
+// click away via "Explore all career areas →" to /jobs.
+const COMPASS_PATHS = CAREER_PATHS.map(({ key, name }) => ({ key, name }));
 
 // Career-stage bucket, from the existing experience_level/job_type fields (current Job Bank vocabulary + legacy
 // strings on older rows — lib/constants.js EXPERIENCE_LEGACY). Used only to weight the homepage's "Featured

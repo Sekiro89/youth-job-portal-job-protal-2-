@@ -148,13 +148,21 @@
   // homepage; the full catalogue is always one click away via "Explore all career areas". COMPASS_POS is a
   // presentational lookup only — the labels and hrefs are all live data from the route.
   const laneCategories = categories.filter(c => c.n > 0).slice(0, 6);
-  // Exact SVG coordinates (viewBox 400×320) — the labels below derive their percentage position from the same
-  // numbers, so dots, lines and labels always line up.
+  // Exact SVG coordinates (viewBox 400×320), five points spaced evenly (72°) around the centre — a balanced
+  // pentagon, not an arbitrary scatter. Labels derive their percentage position from these same numbers, so
+  // dots, lines and labels always line up.
   const COMPASS_VB = { w: 400, h: 320 };
-  const COMPASS_POS = { technology: { cx: 260, cy: 50 }, business: { cx: 350, cy: 160 }, healthcare: { cx: 50, cy: 160 }, engineering: { cx: 140, cy: 280 } };
-  // Short compass labels (the full CAREER_PATHS names are used for the row list below, not here — "Business &
-  // Professional" / "Engineering & Skilled Trades" would overflow the compass's own narrower box).
-  const COMPASS_LABEL = { technology: 'Technology', business: 'Business', healthcare: 'Healthcare', engineering: 'Skilled Trades' };
+  const COMPASS_CENTER = { cx: 200, cy: 160 };
+  const COMPASS_POS = {
+    technology: { cx: 200, cy: 50 },
+    business: { cx: 324, cy: 126 },
+    services: { cx: 276, cy: 249 },
+    skilled_trades: { cx: 124, cy: 249 },
+    healthcare: { cx: 76, cy: 126 },
+  };
+  // Concise compass labels (the full CAREER_PATHS names are used for the row list below — these five exact
+  // labels are the client's spec for the compass itself).
+  const COMPASS_LABEL = { technology: 'Technology', healthcare: 'Healthcare', business: 'Business', skilled_trades: 'Skilled Trades', services: 'Services' };
 %>
 <section class="section section--alt lane" aria-labelledby="lane-h">
   <div class="container lane__grid">
@@ -165,15 +173,16 @@
     </div>
     <div class="lane__compass compass" aria-hidden="true">
       <svg class="compass__svg" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet">
-        <line class="compass__line" x1="50" y1="160" x2="350" y2="160"/>
-        <line class="compass__line" x1="200" y1="160" x2="260" y2="50"/>
-        <line class="compass__line" x1="200" y1="160" x2="140" y2="280"/>
-        <circle class="compass__center" cx="200" cy="160" r="7"/>
+        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
+          <line class="compass__line" x1="<%= COMPASS_CENTER.cx %>" y1="<%= COMPASS_CENTER.cy %>" x2="<%= pos.cx %>" y2="<%= pos.cy %>"/>
+        <% }) %>
+        <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="7"/>
         <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
           <circle class="compass__node" data-path="<%= p.key %>" cx="<%= pos.cx %>" cy="<%= pos.cy %>" r="7"/>
         <% }) %>
       </svg>
       <ul class="compass__labels">
+        <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your starting point</li>
         <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; const pct = { x: (pos.cx / COMPASS_VB.w * 100).toFixed(1), y: (pos.cy / COMPASS_VB.h * 100).toFixed(1) }; %>
           <li class="compass__label" data-path="<%= p.key %>" style="--x:<%= pct.x %>%; --y:<%= pct.y %>%"><%= COMPASS_LABEL[p.key] || p.name %></li>
         <% }) %>
