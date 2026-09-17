@@ -26,7 +26,9 @@
 /* the asymmetric Sign In composition: intro (journey + headline) and form sit side by side at desktop,
    instead of one centred stacked column — everything below 1024px falls back to the normal stacked layout. */
 @media (min-width: 1024px) {
-  .auth-shell--split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; max-width: var(--cc-container); margin: 0 auto; padding-inline: var(--cc-page-padding); }
+  /* padding-based centering (not max-width + margin) so the shell's own background stays full-bleed —
+     matching the header/footer edge to edge — while the grid content still caps out at 1200px, centred. */
+  .auth-shell--split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; padding-inline: max(var(--cc-page-padding), calc((100% - var(--cc-container)) / 2)); }
   .auth-shell--split .auth-hero { text-align: left; max-width: none; padding: 0; margin: 0; position: sticky; top: calc(var(--cc-header-h) + 48px); }
   .auth-shell--split .auth-hero .eyebrow, .auth-shell--split .journey-line { justify-content: flex-start; }
   .auth-shell--split .auth-hero h1 { font-size: clamp(2.25rem, 1.4rem + 3vw, 3.25rem); }
