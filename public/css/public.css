@@ -188,21 +188,22 @@
 
 /* ---------- career categories: a plain, compact tile — deliberately NOT the pathway-card look above,
    so "browse by stage" and "browse by industry" read as two different things, not the same card twice ---------- */
-.category-tile-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
-.category-tile { display: flex; flex-direction: column; gap: 6px; align-items: start; padding: 18px 20px; background: #fff; border: 1px solid var(--kds-border); border-left: 4px solid var(--tile-c, var(--cc-navy)); border-radius: var(--kds-radius-md); text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s, background .15s; }
+.category-tile-grid { display: grid; gap: 20px; grid-template-columns: 1fr; margin-bottom: 36px; }
+.category-tile { display: flex; flex-direction: column; gap: 10px; align-items: start; padding: 28px 26px; background: #fff; border: 1px solid var(--kds-border); border-left: 4px solid var(--tile-c, var(--cc-navy)); border-radius: var(--kds-radius-md); text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s, background .15s; }
 .category-tile:hover { background: var(--cc-navy-50); box-shadow: var(--kds-shadow-2); color: var(--cc-ink); }
 .category-tile--a { --tile-c: var(--cc-navy); } .category-tile--b { --tile-c: var(--cc-red); } .category-tile--c { --tile-c: var(--cc-teal); }
 .category-tile--d { --tile-c: var(--cc-orange); } .category-tile--e { --tile-c: var(--cc-spark); }
-.category-tile h3 { margin: 0; font-size: 1.0625rem; }
+.category-tile h3 { margin: 0; font-size: 1.125rem; }
 .category-tile__meta { font-size: .8125rem; color: var(--kds-fg-muted); }
-.category-tile__cta { font-size: .8125rem; font-weight: 600; color: var(--tile-c, var(--cc-navy)); margin-top: 2px; }
+.category-tile__cta { font-size: .8125rem; font-weight: 600; color: var(--tile-c, var(--cc-navy)); margin-top: 4px; }
 @media (min-width: 640px) { .category-tile-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .category-tile-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .category-tile-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
 @media (min-width: 1280px) { .category-tile-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 768px) { .category-tile-grid { margin-bottom: 44px; } }
 
 /* ---------- job categories: chip cloud, not another grid of boxes ---------- */
-.category-cloud { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
-.category-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 999px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); transition: border-color .15s, background .15s, color .15s; }
+.category-cloud { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px; }
+.category-chip { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); transition: border-color .15s, background .15s, color .15s; }
 .category-chip:hover { border-color: var(--cc-navy); background: var(--cc-navy); color: #fff; }
 .category-chip:hover .category-chip__n { background: #fff; color: var(--cc-navy); }
 .category-chip__n { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy); font-size: .6875rem; font-weight: 700; }
