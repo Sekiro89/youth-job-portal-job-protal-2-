@@ -53,17 +53,20 @@
           <% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %>
         </div>
       <% } %>
-      <ul class="job-head__meta" aria-label="Key facts">
-        <li><%= h.jobTypeName(job.job_type) %></li>
-        <li><%= h.workArrangementName(job.work_arrangement) %></li>
-        <li class="job-head__salary"><%= h.formatSalary(job) %></li>
-        <% if (hours) { %><li class="job-head__hours"><%= hours %></li><% } %>
-        <% if (experienceText) { %><li><%= experienceText %></li><% } %>
-      </ul>
       <p class="print-only print-dates"><% if (pid) { %>Posting ID <%= pid %> · <% } %>Posted <%= posted %> · <%= closesLbl %> <%= closes %> · <%= job.vacancies %> vacanc<%= job.vacancies === 1 ? 'y' : 'ies' %></p>
     </div>
   </div>
 </header>
+
+<div class="job-facts-band">
+  <ul class="job-facts container" aria-label="Key facts">
+    <li class="job-facts__salary"><strong><%= h.formatSalary(job) %></strong><span>Salary</span></li>
+    <li><strong><%= h.jobTypeName(job.job_type) %></strong><span>Job type</span></li>
+    <li><strong><%= h.workArrangementName(job.work_arrangement) %></strong><span>Arrangement</span></li>
+    <% if (hours) { %><li><strong><%= hours %></strong><span>Hours</span></li><% } %>
+    <% if (experienceText) { %><li><strong><%= experienceText %></strong><span>Experience</span></li><% } %>
+  </ul>
+</div>
 
 <div class="section">
 <div class="container job-layout">
