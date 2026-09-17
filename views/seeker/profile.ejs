@@ -29,12 +29,6 @@
           <div class="field"><label for="province">Province / territory</label>
             <select class="input" id="province" name="province"><option value="">Select…</option><% C.PROVINCES.forEach(([k, n]) => { %><option value="<%= k %>" <%= profile.province === k ? 'selected' : '' %>><%= n %></option><% }) %></select></div>
         </div>
-        <fieldset class="field">
-          <legend>Communities you'd like employers to know about <span class="hint">(optional — surfaces postings from employers who explicitly welcome them)</span></legend>
-          <div class="checks checks--3">
-            <% C.AUDIENCES.forEach(([k, n]) => { %><label class="check"><input type="checkbox" name="audiences" value="<%= k %>" <%= checked(profile.audiences, k) %>> <span class="aud aud--<%= k %>"><%= n %></span></label><% }) %>
-          </div>
-        </fieldset>
       </section>
 
       <section class="card stack" aria-labelledby="want-h">
