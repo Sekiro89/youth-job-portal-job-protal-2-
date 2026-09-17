@@ -220,18 +220,26 @@
    graphic, not a map. Labels are positioned in %, matching the SVG node coordinates 1:1 (see home.ejs). Visual
    support only — the detailed category list on the left stays the primary navigation (see .lane-list above),
    so the compass is deliberately smaller/quieter than the list, never the other way round. */
-.compass { position: relative; margin-top: 8px; max-width: 340px; margin-inline: auto; }
-.compass__svg { display: block; width: 100%; height: auto; }
+.compass { position: relative; margin-top: 24px; max-width: 340px; margin-inline: auto; }
+.compass__svg { display: block; width: 100%; height: auto; overflow: visible; }
 .compass__line { stroke: var(--cc-line-strong); stroke-width: 1.5; transition: stroke .15s, opacity .15s; }
+.compass__hub-ring { fill: none; stroke: var(--cc-line-strong); stroke-width: 1; }
 .compass__center { fill: var(--cc-navy); }
 .compass__node { fill: #fff; stroke: var(--cc-navy); stroke-width: 2; transition: fill .15s, stroke .15s, r .15s, opacity .15s; }
 .compass__node.is-active { fill: var(--cc-red); stroke: var(--cc-red); r: 9; }
 .compass__labels { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
-/* every label centres under its own dot with the same top padding — a left/right-hugging label would need
-   an off-centre transform that risks running past the compass's own (fairly narrow) edges at tablet widths. */
-.compass__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: max-content; max-width: 92px; font: 700 .8125rem/1.2 var(--kds-font-sans); color: var(--kds-fg-muted); padding-top: 20px; text-align: center; transition: color .15s, opacity .15s; }
+/* each label is pulled outward from its own node, away from the hub, so it reads as "this branch leads here"
+   rather than sitting in the generic slot below the dot — see the per-path rules below. Offsets are kept modest
+   (single-digit/low-teens px) because the compass box itself can be nearly viewport-width on small phones, so a
+   wide outward pull on the healthcare/business (left/right) labels would run past the page edge. */
+.compass__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, 14px); width: max-content; max-width: 86px; font: 700 .8125rem/1.2 var(--kds-font-sans); color: var(--kds-fg-muted); text-align: center; transition: color .15s, opacity .15s, transform .15s; }
 .compass__label.is-active { color: var(--cc-red); font-weight: 800; }
-.compass__label--center { padding-top: 14px; font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-faint); }
+.compass__label[data-path="technology"] { transform: translate(-50%, calc(-100% - 14px)); }
+.compass__label[data-path="healthcare"] { top: var(--y); transform: translate(calc(-100% - 14px), -50%); max-width: 64px; text-align: right; }
+.compass__label[data-path="business"] { top: var(--y); transform: translate(14px, -50%); max-width: 64px; text-align: left; }
+.compass__label[data-path="skilled_trades"] { transform: translate(-68%, 12px); max-width: 78px; text-align: right; }
+.compass__label[data-path="services"] { transform: translate(-32%, 12px); max-width: 78px; text-align: left; }
+.compass__label--center { top: 50%; left: 50%; transform: translate(-50%, 34px); max-width: 50px; font-size: .625rem; line-height: 1.3; text-transform: uppercase; letter-spacing: .05em; color: var(--kds-fg-faint); }
 /* hovering/focusing a detailed category on the left mutes the four unrelated branches, so the highlighted
    one reads clearly instead of just adding one more red dot among equals */
 .compass.is-focused .compass__node:not(.is-active),

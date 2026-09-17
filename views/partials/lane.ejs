@@ -33,13 +33,14 @@
         <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
           <line class="compass__line" x1="<%= COMPASS_CENTER.cx %>" y1="<%= COMPASS_CENTER.cy %>" x2="<%= pos.cx %>" y2="<%= pos.cy %>"/>
         <% }) %>
-        <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="7"/>
+        <circle class="compass__hub-ring" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="15"/>
+        <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="6"/>
         <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
           <circle class="compass__node" data-path="<%= p.key %>" cx="<%= pos.cx %>" cy="<%= pos.cy %>" r="7"/>
         <% }) %>
       </svg>
       <ul class="compass__labels">
-        <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your starting point</li>
+        <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your<br>starting point</li>
         <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; const pct = { x: (pos.cx / COMPASS_VB.w * 100).toFixed(1), y: (pos.cy / COMPASS_VB.h * 100).toFixed(1) }; %>
           <li class="compass__label" data-path="<%= p.key %>" style="--x:<%= pct.x %>%; --y:<%= pct.y %>%"><%= COMPASS_LABEL[p.key] || p.name %></li>
         <% }) %>
