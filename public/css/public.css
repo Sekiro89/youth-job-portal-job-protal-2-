@@ -192,29 +192,47 @@
 @media (min-width: 768px) { .pathway-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1280px) { .pathway-grid--5 { grid-template-columns: repeat(5, 1fr); } }
 
-/* ---------- career categories: a plain, compact tile — deliberately NOT the pathway-card look above,
-   so "browse by stage" and "browse by industry" read as two different things, not the same card twice ---------- */
-.category-tile-grid { display: grid; gap: 20px; grid-template-columns: 1fr; margin-bottom: 36px; }
-.category-tile { display: flex; flex-direction: column; gap: 10px; align-items: start; padding: 28px 26px; background: #fff; border: 1px solid var(--kds-border); border-left: 4px solid var(--tile-c, var(--cc-navy)); border-radius: var(--kds-radius-md); text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s, background .15s; }
-.category-tile:hover { background: var(--cc-navy-50); box-shadow: var(--kds-shadow-2); color: var(--cc-ink); }
-.category-tile--a { --tile-c: var(--cc-navy); } .category-tile--b { --tile-c: var(--cc-red); } .category-tile--c { --tile-c: var(--cc-teal); }
-.category-tile--d { --tile-c: var(--cc-orange); } .category-tile--e { --tile-c: var(--cc-spark); }
-.category-tile h3 { margin: 0; font-size: 1.125rem; }
-.category-tile__meta { font-size: .8125rem; color: var(--kds-fg-muted); }
-.category-tile__cta { font-size: .8125rem; font-weight: 600; color: var(--tile-c, var(--cc-navy)); margin-top: 4px; }
-@media (min-width: 640px) { .category-tile-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .category-tile-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
-@media (min-width: 1280px) { .category-tile-grid { grid-template-columns: repeat(5, 1fr); } }
-@media (min-width: 768px) { .category-tile-grid { margin-bottom: 44px; } }
+/* ---------- "Find your lane": an editorial career-exploration list + a career-compass graphic, not a
+   card/pill catalogue. Asymmetric two-column at desktop (list ~55% / compass ~45%), stacked on mobile. ---------- */
+/* grid-template-areas (not source order) controls the sequence, because mobile needs head → compass → list
+   while desktop needs head+list stacked in one column beside the compass — two different orders from the
+   same three siblings. */
+.lane__grid { display: grid; gap: 40px; grid-template-areas: "head" "compass" "list"; }
+.lane__head { grid-area: head; min-width: 0; }
+.lane__compass { grid-area: compass; }
+.lane__list-wrap { grid-area: list; min-width: 0; }
+.lane-list { list-style: none; margin: 28px 0 20px; padding: 0; counter-reset: lane; border-top: 1px solid var(--kds-border); }
+.lane-list li { counter-increment: lane; border-bottom: 1px solid var(--kds-border); }
+.lane-list a { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding: 18px 0 18px 40px; text-decoration: none; color: var(--cc-ink); }
+.lane-list a::before { content: counter(lane, decimal-leading-zero); position: absolute; left: 0; top: 50%; transform: translateY(-50%); font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.lane-list__name { font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); transition: color .15s; }
+.lane-list__meta { flex: none; display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--kds-fg-muted); white-space: nowrap; }
+.lane-list__arrow { color: var(--cc-red); font-weight: 700; }
+@media (prefers-reduced-motion: no-preference) {
+  .lane-list__arrow { display: inline-block; transition: transform .15s; }
+}
+.lane-list a:hover .lane-list__name, .lane-list a:focus-visible .lane-list__name { color: var(--cc-red); }
+.lane-list a:hover .lane-list__arrow, .lane-list a:focus-visible .lane-list__arrow { transform: translateX(4px); }
+.lane-more { display: inline-flex; font: 700 .9375rem/1 var(--cc-font-display); color: var(--cc-navy); text-decoration: none; border-bottom: 1px solid var(--cc-line-strong); padding-bottom: 2px; }
+.lane-more:hover { color: var(--cc-red); border-color: var(--cc-red); }
 
-/* ---------- job categories: chip cloud, not another grid of boxes ---------- */
-.category-cloud { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px; }
-.category-chip { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); transition: border-color .15s, background .15s, color .15s; }
-.category-chip:hover { border-color: var(--cc-navy); background: var(--cc-navy); color: #fff; }
-.category-chip:hover .category-chip__n { background: #fff; color: var(--cc-navy); }
-.category-chip__n { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy); font-size: .6875rem; font-weight: 700; }
-.category-chip--empty { color: var(--kds-fg-muted); }
-.category-chip--empty .category-chip__n { background: var(--cc-surface); color: var(--kds-fg-faint); }
+/* career compass: one starting point, a few career directions branching from it — an abstract editorial
+   graphic, not a map. Labels are positioned in %, matching the SVG node coordinates 1:1 (see home.ejs). */
+.compass { position: relative; margin-top: 8px; }
+.compass__svg { display: block; width: 100%; height: auto; }
+.compass__line { stroke: var(--cc-line-strong); stroke-width: 1.5; }
+.compass__center { fill: var(--cc-navy); }
+.compass__node { fill: #fff; stroke: var(--cc-navy); stroke-width: 2; transition: fill .15s, stroke .15s, r .15s; }
+.compass__node.is-active { fill: var(--cc-red); stroke: var(--cc-red); r: 9; }
+.compass__labels { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+/* every label centres under its own dot with the same top padding — a left/right-hugging label would need
+   an off-centre transform that risks running past the compass's own (fairly narrow) edges at tablet widths. */
+.compass__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: max-content; max-width: 92px; font: 700 .8125rem/1.2 var(--kds-font-sans); color: var(--kds-fg-muted); padding-top: 20px; text-align: center; transition: color .15s; }
+.compass__label.is-active { color: var(--cc-red); font-weight: 800; }
+@media (min-width: 900px) {
+  .lane__grid { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-areas: "head compass" "list compass"; align-items: start; gap: 16px 64px; }
+  .lane__compass { align-self: center; }
+}
 
 /* ---------- Canada as a career destination ---------- */
 /* discover canada: pin-weighted province index (map presentation tokens), not a card/list split */

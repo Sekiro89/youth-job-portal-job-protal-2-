@@ -62,8 +62,10 @@ function notFound(res, message) {
   return res.status(404).render('error', { title: 'Page not found', code: 404, message, noindex: true });
 }
 
-// Broad career-path clusters for the homepage's "Explore Career Paths" section — every C.CATEGORIES key appears
-// exactly once. This groups real categories for storytelling; it never restricts what /jobs (the Job Bank) shows.
+// Broad career-path clusters — every C.CATEGORIES key appears exactly once. Used to (a) label the "Find your
+// lane" career-compass directions on the homepage and (b) map each individual category to the compass node it
+// should light up on hover/focus (CATEGORY_TO_PATH below). This groups real categories for storytelling; it
+// never restricts what /jobs (the Job Bank) shows.
 const CAREER_PATHS = [
   { key: 'technology', name: 'Technology', categories: ['it_software'] },
   { key: 'business', name: 'Business & Professional', categories: ['accounting_finance', 'administration', 'human_resources', 'marketing_sales', 'customer_service', 'legal'] },
@@ -71,6 +73,10 @@ const CAREER_PATHS = [
   { key: 'engineering', name: 'Engineering & Skilled Trades', categories: ['engineering', 'construction_trades', 'manufacturing'] },
   { key: 'other', name: 'More Opportunities', categories: ['agriculture', 'education', 'hospitality', 'retail', 'science_research', 'social_services', 'transport_logistics', 'warehouse_general_labour', 'other'] },
 ];
+const CATEGORY_TO_PATH = Object.fromEntries(CAREER_PATHS.flatMap(p => p.categories.map(c => [c, p.key])));
+// The compass shows four concrete directions (not the "other" catch-all bucket) — the full catalogue is always
+// one click away via "Explore all career areas →" to /jobs.
+const COMPASS_PATHS = CAREER_PATHS.filter(p => p.key !== 'other').map(({ key, name }) => ({ key, name }));
 
 // Career-stage bucket, from the existing experience_level/job_type fields (current Job Bank vocabulary + legacy
 // strings on older rows — lib/constants.js EXPERIENCE_LEGACY). Used only to weight the homepage's "Featured
@@ -106,12 +112,11 @@ router.get('/', async (req, res, next) => {
     jd.decorateJobs(featured);
     const catCount = Object.fromEntries(catRows.map(r => [r.category, r.n]));
     const provCount = Object.fromEntries(provRows.map(r => [r.province, r.n]));
-    const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0 }))
+    const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0, path: CATEGORY_TO_PATH[key] || '' }))
       .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
     const provinces = C.PROVINCES.map(([key, name]) => ({ key, name, n: provCount[key] || 0 }));
     const cities = cityRows.map(r => r.city).sort((a, b) => a.localeCompare(b));
     const provincesWithJobs = provinces.filter(p => p.n > 0).length;
-    const careerPaths = CAREER_PATHS.map(p => ({ ...p, n: p.categories.reduce((sum, c) => sum + (catCount[c] || 0), 0) }));
     const careerStages = C.CAREER_STAGES.map(([key, name]) => ({ key, name, n: stageRow[key] || 0 }));
 
     res.render('public/home', {
@@ -135,7 +140,7 @@ router.get('/', async (req, res, next) => {
           areaServed: { '@type': 'Country', name: 'Canada' },
         },
       ],
-      featured, categories, provinces, cities, totals, careerPaths, careerStages, provincesWithJobs,
+      featured, categories, provinces, cities, totals, compassPaths: COMPASS_PATHS, careerStages, provincesWithJobs,
     });
   } catch (e) { next(e); }
 });

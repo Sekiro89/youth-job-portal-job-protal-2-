@@ -15,6 +15,24 @@
     btn.addEventListener('click', function () { window.print(); });
   });
 
+  // Homepage "Find your lane": hovering/focusing a category row lights up its matching career-compass node.
+  // Pure enhancement — the rows are plain links and work identically without this.
+  var laneRows = document.querySelectorAll('[data-compass-row]');
+  if (laneRows.length) {
+    var setCompass = function (path) {
+      document.querySelectorAll('.compass__node, .compass__label').forEach(function (el) {
+        el.classList.toggle('is-active', !!path && el.getAttribute('data-path') === path);
+      });
+    };
+    laneRows.forEach(function (row) {
+      var path = row.getAttribute('data-compass-row');
+      row.addEventListener('mouseenter', function () { setCompass(path); });
+      row.addEventListener('focus', function () { setCompass(path); });
+      row.addEventListener('mouseleave', function () { setCompass(''); });
+      row.addEventListener('blur', function () { setCompass(''); });
+    });
+  }
+
   // Share: copy link (LinkedIn / X / email are plain links)
   document.querySelectorAll('[data-share="copy"]').forEach(function (btn) {
     btn.addEventListener('click', function () {
