@@ -1,17 +1,13 @@
-/* Canada Careers — Contact Us (mobile first; tokens from theme.css only).
-   Skeleton: standard .page-head → one .section holding .grid--2 (form card | help cards) → thanks page = .page-head + .container--narrow card.
-   Containers, header band, section paddings, cards and buttons are theme.css primitives — nothing is redefined here. */
+/* Youth Futures Canada — Contact Us (mobile first; tokens from theme.css only).
+   Skeleton (2026 editorial rework): page-head → a numbered category picker strip (full width) → a promise
+   band → a single narrow-column form, stacked full width instead of a form+sidebar split.
+   Thanks page = .page-head + .container--narrow card. */
 
-/* form card takes the wider column from 1024 (grid--2 is 1 column on phones, 2 equal columns from 640 — too tight for the form, so stay stacked until 1024) */
-.contact-grid { align-items: start; }
-@media (min-width: 640px) and (max-width: 1023px) { .contact-grid { grid-template-columns: 1fr; } }
-@media (min-width: 1024px) { .contact-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; } }
-.contact__h2 { margin-bottom: 16px; }
+.contact__h2 { margin-bottom: 20px; }
 .contact__message { min-height: 160px; }
 .contact__account { margin-bottom: 4px; }
 .contact__account span { font-size: .9rem; }
-.contact-side { display: grid; gap: 20px; align-content: start; }
-.req { color: var(--cc-red); }   /* required marker — same rule as portal.css; promote to theme.css */
+.req { color: var(--cc-red); }
 
 /* honeypot: off-screen, not display:none (some bots skip hidden inputs) */
 .hp { position: absolute !important; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
@@ -21,20 +17,24 @@
 .contact-alert ul { margin: 0; padding-left: 20px; }
 .contact-alert a { color: inherit; }
 
-/* help cards: .card + an icon column */
-.help-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.help-card { display: flex; gap: 14px; align-items: flex-start; }
-.help-card--tech { border-color: var(--cc-teal); background: linear-gradient(180deg, var(--cc-teal-100), #fff); }
-.help-card__icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--cc-navy-50); font-size: 1.25rem; }
-.help-card--tech .help-card__icon { background: #fff; }
-.help-card h3 { margin-bottom: 4px; }
-.help-card p { margin: 0 0 4px; font-size: .9375rem; color: var(--kds-fg-muted); }
-.help-card__link { font-weight: 600; font-size: .9rem; display: inline-flex; align-items: center; min-height: 44px; }
-.contact__promise h3 { margin-bottom: 6px; }
-.contact__promise p { font-size: .9375rem; }
-.contact__promise p:last-child { margin-bottom: 0; }
-@media (min-width: 640px) { .help-cards { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1024px) { .help-cards { grid-template-columns: 1fr; } }
+/* ---------- category picker: a numbered directory strip, not icon cards ---------- */
+.contact-picker-section { padding-bottom: 8px; }
+.contact-picker { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 2px; background: var(--kds-border); border: 1px solid var(--kds-border); }
+.contact-picker__item { position: relative; display: flex; align-items: baseline; gap: 16px; padding: 20px; background: #fff; text-decoration: none; color: var(--cc-ink); transition: background .15s, color .15s; }
+.contact-picker__item:hover { background: var(--cc-navy); color: #fff; }
+.contact-picker__item:hover small { color: color-mix(in srgb, #fff 70%, transparent); }
+.contact-picker__n { flex: none; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.contact-picker__item strong { display: block; font-family: var(--cc-font-display); font-size: 1.0625rem; margin-bottom: 2px; }
+.contact-picker__item small { display: block; color: var(--kds-fg-muted); font-size: .8125rem; }
+@media (min-width: 768px) { .contact-picker { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1200px) { .contact-picker { grid-template-columns: repeat(4, 1fr); } }
+
+/* ---------- promise band: a full-bleed statement, not a card in a sidebar ---------- */
+.contact-promise-band__inner p { margin: 0 0 6px; max-width: 68ch; }
+.contact-promise-band__inner p:last-child { margin-bottom: 0; }
+
+/* ---------- form: a single narrow column, no sidebar ---------- */
+.contact-form { display: grid; gap: 4px; }
 
 /* thanks page */
 .contact-thanks { text-align: center; }

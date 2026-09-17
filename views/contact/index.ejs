@@ -10,124 +10,98 @@
   </div>
 </header>
 
-<section class="section">
+<section class="section contact-picker-section">
   <div class="container">
-    <div class="grid grid--2 contact-grid">
-      <div class="card card--pad-lg contact-form">
-        <h2 class="contact__h2">Send us a message</h2>
-        <% if (hasErrors) { %>
-          <div class="contact-alert" role="alert" tabindex="-1" id="form-errors">
-            <% if (errors.form) { %><p><%= errors.form %></p><% } else { %>
-              <p><strong>Please fix the following:</strong></p>
-              <ul><% Object.keys(errors).forEach(k => { %><li><a href="#<%= k %>"><%= errors[k] %></a></li><% }) %></ul>
-            <% } %>
-          </div>
-        <% } %>
-        <form method="post" action="/contact" class="form" novalidate>
-          <%# Honeypot: hidden from humans (CSS + aria-hidden + tabindex=-1). Bots that fill it are silently dropped. %>
-          <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+    <p class="eyebrow">What is this about?</p>
+    <ul class="contact-picker">
+      <li><a href="/contact?category=technical#category" class="contact-picker__item contact-picker__item--tech"><span class="contact-picker__n">01</span><span><strong>Technical issue</strong><small>A page error, a failed upload, a login problem</small></span></a></li>
+      <li><a href="/contact?category=billing#category" class="contact-picker__item"><span class="contact-picker__n">02</span><span><strong>Billing</strong><small>Receipts, the monthly fee, cancellations and refunds</small></span></a></li>
+      <li><a href="/contact?category=posting#category" class="contact-picker__item"><span class="contact-picker__n">03</span><span><strong>Job postings</strong><small>Editing, pausing, renewing or reporting a posting</small></span></a></li>
+      <li><a href="/contact?category=account#category" class="contact-picker__item"><span class="contact-picker__n">04</span><span><strong>Accounts</strong><small>Email changes, password resets, privacy questions</small></span></a></li>
+    </ul>
+  </div>
+</section>
 
-          <% if (user) { %>
-            <label class="check contact__account">
-              <input type="checkbox" name="include_account" value="1" <%= values.include_account ? 'checked' : '' %> data-toggle-account>
-              <span><strong>Include my account</strong> — send as <%= user.name %> (<%= user.email %>, <%= ({employer:'Employer',consultant:'Third Party Consultant',seeker:'Job Seeker',admin:'Admin'})[user.role] || user.role %>) so our support team can look at your account straight away.</span>
-            </label>
+<section class="section section--alt contact-promise-band">
+  <div class="container contact-promise-band__inner">
+    <p><strong>Every message gets a ticket number right away.</strong> Technical issues are answered within one business day, Monday to Friday, 9am–5pm Eastern. Everything else within two business days.</p>
+    <% if (user) { %><p class="small muted">Signed in as an employer, third party consultant or job seeker? Tick <strong>Include my account</strong> below so our support team can see your account straight away.</p><% } %>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container container--narrow">
+    <div class="contact-form">
+      <p class="eyebrow">Send a message</p>
+      <h2 class="contact__h2">Tell us what happened</h2>
+      <% if (hasErrors) { %>
+        <div class="contact-alert" role="alert" tabindex="-1" id="form-errors">
+          <% if (errors.form) { %><p><%= errors.form %></p><% } else { %>
+            <p><strong>Please fix the following:</strong></p>
+            <ul><% Object.keys(errors).forEach(k => { %><li><a href="#<%= k %>"><%= errors[k] %></a></li><% }) %></ul>
           <% } %>
-
-          <div class="form-row">
-            <div class="field">
-              <label for="name">Your name <span class="req">*</span></label>
-              <input class="input" id="name" name="name" type="text" value="<%= values.name %>" required autocomplete="name" <%= values.include_account ? 'readonly' : '' %> data-account-field
-                <% if (errors.name) { %>aria-invalid="true" aria-describedby="err-name"<% } %>>
-              <% if (errors.name) { %><span class="error" id="err-name"><%= errors.name %></span><% } %>
-            </div>
-            <div class="field">
-              <label for="email">Email address <span class="req">*</span></label>
-              <input class="input" id="email" name="email" type="email" value="<%= values.email %>" required autocomplete="email" inputmode="email" <%= values.include_account ? 'readonly' : '' %> data-account-field
-                <% if (errors.email) { %>aria-invalid="true" aria-describedby="err-email"<% } else { %>aria-describedby="hint-email"<% } %>>
-              <% if (errors.email) { %><span class="error" id="err-email"><%= errors.email %></span><% } else { %><span class="hint" id="hint-email">We reply to this address.</span><% } %>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="field">
-              <label for="phone">Phone <span class="muted small">(optional)</span></label>
-              <input class="input" id="phone" name="phone" type="tel" value="<%= values.phone %>" autocomplete="tel" inputmode="tel">
-            </div>
-            <div class="field">
-              <label for="category">What is this about?</label>
-              <select class="input" id="category" name="category">
-                <% C.CONTACT_CATEGORIES.forEach(([k, label]) => { %>
-                  <option value="<%= k %>" <%= values.category === k ? 'selected' : '' %>><%= label %></option>
-                <% }) %>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="subject">Subject <span class="req">*</span></label>
-            <input class="input" id="subject" name="subject" type="text" value="<%= values.subject %>" required maxlength="200" placeholder="e.g. Logo upload does nothing on iPad"
-              <% if (errors.subject) { %>aria-invalid="true" aria-describedby="err-subject"<% } %>>
-            <% if (errors.subject) { %><span class="error" id="err-subject"><%= errors.subject %></span><% } %>
-          </div>
-
-          <div class="field">
-            <label for="message">Message <span class="req">*</span></label>
-            <textarea class="input contact__message" id="message" name="message" required minlength="20" maxlength="10000" rows="7" placeholder="What did you do, what did you expect, and what happened? Include the page address and your device/browser for technical issues."
-              <% if (errors.message) { %>aria-invalid="true" aria-describedby="err-message"<% } else { %>aria-describedby="hint-message"<% } %>><%= values.message %></textarea>
-            <% if (errors.message) { %><span class="error" id="err-message"><%= errors.message %></span><% } else { %><span class="hint" id="hint-message">At least 20 characters. The more detail, the faster we can fix it.</span><% } %>
-          </div>
-
-          <div class="form-actions">
-            <button class="kds-btn kds-btn--accent" type="submit">Send message</button>
-            <span class="muted small">We usually reply within one business day.</span>
-          </div>
-        </form>
-      </div>
-
-      <aside class="contact-side" aria-labelledby="help-h">
-        <h2 id="help-h" class="contact__h2">How we can help</h2>
-        <ul class="help-cards">
-          <li class="card help-card help-card--tech">
-            <span class="help-card__icon" aria-hidden="true">🛠</span>
-            <div>
-              <h3>Technical issue</h3>
-              <p>Something not working — a page error, an upload that fails, a login problem? <strong>Handled by our support team</strong>, who resolve it directly.</p>
-              <a href="/contact?category=technical#category" class="help-card__link">Report a technical issue</a>
-            </div>
-          </li>
-          <li class="card help-card">
-            <span class="help-card__icon" aria-hidden="true">💳</span>
-            <div>
-              <h3>Billing</h3>
-              <p>Receipts (downloadable from Billing), the monthly posting fee — $14.99 + GST for employers, $9.99 + GST for third party consultants — cancellations and refunds.</p>
-              <a href="/contact?category=billing#category" class="help-card__link">Ask about billing</a>
-            </div>
-          </li>
-          <li class="card help-card">
-            <span class="help-card__icon" aria-hidden="true">📋</span>
-            <div>
-              <h3>Job postings</h3>
-              <p>Editing, pausing or renewing a posting, or reporting a posting that looks wrong.</p>
-              <a href="/contact?category=posting#category" class="help-card__link">Ask about a posting</a>
-            </div>
-          </li>
-          <li class="card help-card">
-            <span class="help-card__icon" aria-hidden="true">👤</span>
-            <div>
-              <h3>Accounts</h3>
-              <p>Email changes, password resets, closing an account, or privacy questions.</p>
-              <a href="/contact?category=account#category" class="help-card__link">Get account help</a>
-            </div>
-          </li>
-        </ul>
-
-        <div class="card card--flat contact__promise">
-          <h3>Our response-time promise</h3>
-          <p>Every message gets a ticket number right away. <strong>Technical issues are answered within one business day</strong>, Monday to Friday, 9am–5pm Eastern. Everything else within two business days.</p>
-          <p class="small muted">Signed in as an employer, third party consultant or job seeker? Tick <strong>Include my account</strong> above so our support team can see your account straight away — the same team, the same ticket queue.</p>
         </div>
-      </aside>
+      <% } %>
+      <form method="post" action="/contact" class="form" novalidate>
+        <%# Honeypot: hidden from humans (CSS + aria-hidden + tabindex=-1). Bots that fill it are silently dropped. %>
+        <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+
+        <% if (user) { %>
+          <label class="check contact__account">
+            <input type="checkbox" name="include_account" value="1" <%= values.include_account ? 'checked' : '' %> data-toggle-account>
+            <span><strong>Include my account</strong> — send as <%= user.name %> (<%= user.email %>, <%= ({employer:'Employer',consultant:'Third Party Consultant',seeker:'Job Seeker',admin:'Admin'})[user.role] || user.role %>) so our support team can look at your account straight away.</span>
+          </label>
+        <% } %>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="name">Your name <span class="req">*</span></label>
+            <input class="input" id="name" name="name" type="text" value="<%= values.name %>" required autocomplete="name" <%= values.include_account ? 'readonly' : '' %> data-account-field
+              <% if (errors.name) { %>aria-invalid="true" aria-describedby="err-name"<% } %>>
+            <% if (errors.name) { %><span class="error" id="err-name"><%= errors.name %></span><% } %>
+          </div>
+          <div class="field">
+            <label for="email">Email address <span class="req">*</span></label>
+            <input class="input" id="email" name="email" type="email" value="<%= values.email %>" required autocomplete="email" inputmode="email" <%= values.include_account ? 'readonly' : '' %> data-account-field
+              <% if (errors.email) { %>aria-invalid="true" aria-describedby="err-email"<% } else { %>aria-describedby="hint-email"<% } %>>
+            <% if (errors.email) { %><span class="error" id="err-email"><%= errors.email %></span><% } else { %><span class="hint" id="hint-email">We reply to this address.</span><% } %>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="phone">Phone <span class="muted small">(optional)</span></label>
+            <input class="input" id="phone" name="phone" type="tel" value="<%= values.phone %>" autocomplete="tel" inputmode="tel">
+          </div>
+          <div class="field" id="category">
+            <label for="category-select">What is this about?</label>
+            <select class="input" id="category-select" name="category">
+              <% C.CONTACT_CATEGORIES.forEach(([k, label]) => { %>
+                <option value="<%= k %>" <%= values.category === k ? 'selected' : '' %>><%= label %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="subject">Subject <span class="req">*</span></label>
+          <input class="input" id="subject" name="subject" type="text" value="<%= values.subject %>" required maxlength="200" placeholder="e.g. Logo upload does nothing on iPad"
+            <% if (errors.subject) { %>aria-invalid="true" aria-describedby="err-subject"<% } %>>
+          <% if (errors.subject) { %><span class="error" id="err-subject"><%= errors.subject %></span><% } %>
+        </div>
+
+        <div class="field">
+          <label for="message">Message <span class="req">*</span></label>
+          <textarea class="input contact__message" id="message" name="message" required minlength="20" maxlength="10000" rows="7" placeholder="What did you do, what did you expect, and what happened? Include the page address and your device/browser for technical issues."
+            <% if (errors.message) { %>aria-invalid="true" aria-describedby="err-message"<% } else { %>aria-describedby="hint-message"<% } %>><%= values.message %></textarea>
+          <% if (errors.message) { %><span class="error" id="err-message"><%= errors.message %></span><% } else { %><span class="hint" id="hint-message">At least 20 characters. The more detail, the faster we can fix it.</span><% } %>
+        </div>
+
+        <div class="form-actions">
+          <button class="kds-btn kds-btn--accent" type="submit">Send message</button>
+          <span class="muted small">We usually reply within one business day.</span>
+        </div>
+      </form>
     </div>
   </div>
 </section>
