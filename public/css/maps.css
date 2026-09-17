@@ -21,9 +21,12 @@
 .map-block { margin-top: 12px; display: grid; gap: 10px; }
 .map-block .cc-map { height: 300px; }
 .map-block__note { margin: 0; }
-.locations__item { flex-wrap: wrap; }
-.locations__addr { flex: 1 1 200px; }
-.locations__map-link { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--kds-border); background: var(--cc-surface); color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+/* A small grid instead of one flex row: icon top-left, address beside it, the "Open in Google Maps" pill
+   always on its own line directly under the address, left-aligned (not centred, not floating mid-row). */
+.locations__item { display: grid; grid-template-columns: 18px 1fr; column-gap: 12px; row-gap: 6px; align-items: center; }
+.locations__item svg { grid-row: 1; grid-column: 1; }
+.locations__addr { grid-row: 1; grid-column: 2; flex: initial; }
+.locations__map-link { grid-row: 2; grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--kds-border); background: var(--cc-surface); color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .locations__map-link:hover { border-color: var(--cc-navy); }
 .locations__dist { flex: none; font-size: .8125rem; color: var(--kds-fg-muted); font-weight: 600; }
 

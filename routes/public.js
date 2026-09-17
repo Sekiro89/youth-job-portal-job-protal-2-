@@ -16,6 +16,14 @@ const JS = ['/js/maps.js', '/js/public.js'];   // deferred scripts run in order:
 const RADII = [10, 25, 50, 100];
 const DEFAULT_RADIUS = 25;
 const GEO_MARKER_CAP = 200;
+// Job detail's "Opportunity Profile" map gets a lighter, editorial basemap instead of the default OSM tile
+// style — presentation only (same Leaflet/marker/provider logic; free, no-key CARTO tiles, OSM data & attribution
+// retained). Scoped to this one route so the Job Bank / company maps elsewhere keep the standard OSM look.
+const JOB_DETAIL_TILES = {
+  url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+  maxZoom: 19,
+};
 
 // Card-level columns shared by every listing; detail page selects jobs.* on top.
 // operating_name = the per-posting choice (jobs.operating_name) falling back to the profile default (client PDF 2026-09-10, decision 5).
@@ -452,6 +460,8 @@ router.get('/jobs/:slug', async (req, res, next) => {
       ],
     };
     const shortDesc = String(job.description || '').replace(/\s+/g, ' ').trim().slice(0, 150);
+    const jobMapConfig = await geo.publicMapConfig();
+    if (jobMapConfig.provider !== 'google') jobMapConfig.tiles = JOB_DETAIL_TILES;
     res.render('public/job', {
       title: `${job.title} job in ${job.city}, ${h.provinceName(job.province)} — ${companyName}`,
       metaDescription: `${companyName} is hiring a ${job.title} in ${job.city}, ${h.provinceName(job.province)} (${h.jobTypeName(job.job_type)}, ${h.workArrangementName(job.work_arrangement)}). ${h.formatSalary(job)}. ${shortDesc}`.slice(0, 300),
@@ -459,7 +469,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
       jsonLd: [posting, breadcrumbs],
       job, more, similar, saved: !!savedRow, url, locations, companyName, legalName, educationText, experienceText, hoursText, industryText,
       postedAt, closesAt, closesLabel, applyUrlLabel: 'Apply on other platform',
-      mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
+      mapMarkers, gmapsUrl, mapConfig: jobMapConfig,
       // For the print footer: "Printed from canadacareers.jobs/jobs/<slug> on <date>" (host without scheme).
       printHost: String(res.locals.PUBLIC_URL || '').replace(/^https?:\/\//, ''), printedOn: h.formatDate(new Date(), { month: 'long' }),
     });
