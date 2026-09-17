@@ -11,6 +11,9 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">For employers</p>
       <h1>Meet the young talent building Canada's next workforce</h1>
       <p class="lead">Post once and reach students, co-op and internship candidates, new graduates, early-career hires and skilled young professionals — live in seconds, cancel any time.</p>
+      <ol class="hire-route" aria-label="How hiring works here">
+        <li>Post</li><li>Reach</li><li>Review</li><li class="is-active">Hire</li>
+      </ol>
       <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/employer">Post a job</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=employer">Employer sign in</a>
@@ -28,61 +31,36 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   </ul>
 </div>
 
-<section class="section" id="dashboard">
+<section class="section" id="hiring-flow">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">Your dashboard</p>
-      <h2>Everything about hiring in one place</h2>
+      <p class="eyebrow">The hiring flow</p>
+      <h2>From blank form to a hire, in four moves</h2>
     </div>
-    <ul class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Applicant tracking</h3><p>See every applicant, download resumes, shortlist and mark hires. Candidates are notified automatically as their status changes.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Pause, duplicate, repost</h3><p>Pause when you have enough applicants, duplicate a posting for a similar role, reactivate any time within the paid month.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Paperwork accounting won't question</h3><p>Every charge gets its own numbered GST receipt, sitting in Billing whenever someone needs to pull a PDF for the books.</p></li>
-    </ul>
-  </div>
-</section>
-
-<%- include('partials/landing-audiences', { mode: 'post' }) %>
-
-<section class="section" id="how-it-works">
-  <div class="container">
-    <div class="section__head">
-      <p class="eyebrow">How it works</p>
-      <h2>From blank form to live posting, quickly</h2>
-    </div>
-    <ol class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Fill in the details</h3><p>A title, where the work actually happens (list every site if there's more than one), what it pays and how often, languages needed, who it's aimed at and how people should apply. Nothing here has to be finished in one sitting — drafts save themselves.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Check out for <%= PRICE_EMP %> + GST</h3><p>The posting appears the moment payment clears, and keeps renewing at <%= TOTAL_EMP %> a month at that same locked-in rate until you say stop. Every applicant shows up in your dashboard as soon as they apply — pull the listing whenever the seat's filled.</p></li>
+    <ol class="workflow-chain workflow-chain--4">
+      <li class="workflow-chain__step"><h3>Post</h3><p>Sign up, add your logo, and fill in a title, every work location, pay, languages and who it's aimed at. Nothing has to be finished in one sitting — drafts save themselves, and it goes live for <%= PRICE_EMP %> + GST.</p></li>
+      <li class="workflow-chain__step"><h3>Reach</h3><p>Postings aimed at students, co-ops, new grads and early-career candidates rank ahead of senior roles by default — and still show up in every search and filter regardless of stage.</p></li>
+      <li class="workflow-chain__step"><h3>Review</h3><p>See every applicant as they come in, download resumes and shortlist candidates. Applicants are notified automatically as their status changes.</p></li>
+      <li class="workflow-chain__step"><h3>Hire</h3><p>Mark the hire, then pause, duplicate or repost within the paid month. The posting renews at <%= TOTAL_EMP %> a month at that same locked-in rate until you say stop.</p></li>
     </ol>
   </div>
 </section>
 
+<%- include('partials/landing-audiences', { mode: 'employer' }) %>
+
 <section class="section section--alt" id="posting">
   <div class="container">
-    <div class="section__head">
-      <p class="eyebrow">What every posting needs</p>
-      <h2>Complete, transparent postings job seekers can trust</h2>
+    <div class="proof-split">
+      <div class="proof-split__statement">
+        <p class="eyebrow">What every posting needs</p>
+        <h2>Complete, transparent postings job seekers can trust</h2>
+      </div>
+      <ul class="proof-split__points">
+        <li><h3>Where the job actually is</h3><p>Not a city name — the real street, unit, postal code, the works. Hiring across more than one site? List them all on the same posting so nobody applies to the wrong location.</p></li>
+        <li><h3>The name people actually know</h3><p>Whatever you're branded as day-to-day (say, "Flying Pig") leads the posting and your company page, with the registered legal entity noted underneath it — not the other way around.</p></li>
+        <li><h3>Money and expectations, spelled out</h3><p>Pay and how often it lands (hourly through annual), the education and experience bar from standard Job Bank lists, an industry tag and an optional NOC code — all of it fits on one printable sheet.</p></li>
+      </ul>
     </div>
-    <ul class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Where the job actually is</h3><p>Not a city name — the real street, unit, postal code, the works. Hiring across more than one site? List them all on the same posting so nobody applies to the wrong location.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>The name people actually know</h3><p>Whatever you're branded as day-to-day (say, "Flying Pig") leads the posting and your company page, with the registered legal entity noted underneath it — not the other way around.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Money and expectations, spelled out</h3><p>Pay and how often it lands (hourly through annual), the education and experience bar from standard Job Bank lists, an industry tag and an optional NOC code — all of it fits on one printable sheet.</p></li>
-    </ul>
-  </div>
-</section>
-
-<section class="section" id="targeting">
-  <div class="container">
-    <div class="section__head">
-      <p class="eyebrow">Who sees it first</p>
-      <h2>Built to put you in front of young talent, not buried under it</h2>
-    </div>
-    <ul class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Career-stage sort, on by default</h3><p>Postings aimed at students, co-ops, new grads and early-career candidates rank ahead of senior roles in the Job Bank's default order — no setting to turn on, it's just how search results come back.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Nothing gets hidden</h3><p>Your posting still shows up for every search, filter and direct link regardless of career stage — the ranking shapes what's seen first, it never removes anyone from the results.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Tag the stage that fits</h3><p>Job type and experience level double as the career-stage signal, so a posting written honestly already reaches the right shortlist on <a href="/jobs">the Job Bank</a>.</p></li>
-    </ul>
   </div>
 </section>
 

@@ -1,20 +1,24 @@
 <%#
-  Career-stage band — the same on all three landings. optional: mode ('post' = employer/consultant copy, 'seek' = job seeker copy).
-  Replaces the earlier "five audiences" positioning: Youth Futures Canada's audience is young people, at any
-  career stage (student, intern, graduate, early-career, skilled) — not five separate community segments.
+  Career-stage band — shared across seeker/employer/partner landings, one distinct heading per audience. optional:
+  mode ('seek' = job seeker copy, 'employer' = "who you can reach", 'network' = partner/consultant "talent your
+  clients can reach", legacy 'post' behaves as 'employer'). The underlying stages are one audience — young people,
+  at any career stage — reframed per page rather than five separate community segments.
 %>
-<% const audMode = typeof mode === 'string' && mode === 'seek' ? 'seek' : 'post';
+<% const audMode = typeof mode === 'string' && ['seek', 'employer', 'network'].includes(mode) ? mode : (mode === 'post' ? 'employer' : 'employer');
    const STAGE_COPY = audMode === 'seek'
      ? { student: 'Part-time and student-friendly work that fits around your studies.', intern_coop: 'Internships and co-ops that turn what you\'re learning into real experience.', graduate: 'Your first full-time role after finishing your studies.', early_career: 'Entry-level and junior roles to build your track record.', skilled: 'Technical, trade and experienced roles that match the skills you\'ve already built.' }
-     : { student: 'Reach students looking for part-time and flexible work.', intern_coop: 'Bring in interns and co-op candidates for real, hands-on work.', graduate: 'Hire new graduates ready to start their career with you.', early_career: 'Fill entry-level and junior roles with candidates ready to grow.', skilled: 'Reach skilled young professionals with real, relevant experience.' }; %>
+     : { student: 'Reach students looking for part-time and flexible work.', intern_coop: 'Bring in interns and co-op candidates for real, hands-on work.', graduate: 'Hire new graduates ready to start their career with you.', early_career: 'Fill entry-level and junior roles with candidates ready to grow.', skilled: 'Reach skilled young professionals with real, relevant experience.' };
+   const AUD_HEAD = {
+     seek: { eyebrow: 'Wherever you\'re starting from', h2: 'Different starting points. One future.', lead: 'Youth Futures Canada supports the full journey — not just your first job, but every move after it.' },
+     employer: { eyebrow: 'Every career stage', h2: 'Who you can reach', lead: 'Youth Futures Canada connects you with young talent from their first job to years of real experience.' },
+     network: { eyebrow: 'Across every client', h2: 'Talent your clients can reach', lead: 'Every client you add taps the same pool — young talent from their first job to years of real experience.' },
+   }[audMode]; %>
 <section class="section section--alt" id="stages">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow"><%= audMode === 'seek' ? 'Wherever you\'re starting from' : 'Every career stage' %></p>
-      <h2><%= audMode === 'seek' ? 'Different starting points. One future.' : 'Young talent, at every stage' %></h2>
-      <p class="lead"><%= audMode === 'seek'
-        ? 'Youth Futures Canada supports the full journey — not just your first job, but every move after it.'
-        : 'Youth Futures Canada connects you with young talent from their first job to years of real experience.' %></p>
+      <p class="eyebrow"><%= AUD_HEAD.eyebrow %></p>
+      <h2><%= AUD_HEAD.h2 %></h2>
+      <p class="lead"><%= AUD_HEAD.lead %></p>
     </div>
     <ol class="landing-journey">
       <% C.CAREER_STAGES.forEach(([k, n]) => { %>

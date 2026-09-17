@@ -11,6 +11,16 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">For Third Party Consultants</p>
       <h1>One login. Every client's next hire.</h1>
       <p class="lead">Recruiters, staffing agencies, HR and immigration consultants: add unlimited employer profiles, post on behalf of any of them, and put every client in front of Canada's next generation of talent from one dashboard.</p>
+      <ul class="network-glyph" aria-label="One partner account, many clients, many postings">
+        <li class="network-glyph__root">Your partner account</li>
+        <li>
+          <ul class="network-glyph__clients">
+            <li><b>Client A</b> <span>· jobs</span></li>
+            <li><b>Client B</b> <span>· jobs</span></li>
+            <li><b>Client C</b> <span>· jobs</span></li>
+          </ul>
+        </li>
+      </ul>
       <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/consultant">Create consultant account</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=consultant">Consultant sign in</a>
@@ -42,7 +52,7 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   </div>
 </section>
 
-<%- include('partials/landing-audiences', { mode: 'post' }) %>
+<%- include('partials/landing-audiences', { mode: 'network' }) %>
 
 <section class="section" id="how-it-works">
   <div class="container">
@@ -51,9 +61,9 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <h2>Three steps per client</h2>
     </div>
     <ol class="proc-flow">
-      <li class="proc-flow__step"><span class="proc-flow__n">01</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
-      <li class="proc-flow__step"><span class="proc-flow__n">02</span><h3>Write it under their name</h3><p>Choose the client, note where the role is actually based (more than one site is fine), flag who it's meant to reach, then either save it for later or push it live right away.</p></li>
-      <li class="proc-flow__step"><span class="proc-flow__n">03</span><h3>Check out at <%= PRICE_CON %> + GST</h3><p>That rate holds for as long as the posting stays up, renewing at <%= TOTAL_CON %> a month until you cancel. One dashboard tracks every applicant across every client, split out by company.</p></li>
+      <li class="proc-flow__step"><span class="proc-flow__n">01</span><h3>Create account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
+      <li class="proc-flow__step"><span class="proc-flow__n">02</span><h3>Add client</h3><p>Each client gets its own company profile — name, logo, location. Candidates see the client as the employer, not you.</p></li>
+      <li class="proc-flow__step"><span class="proc-flow__n">03</span><h3>Post for client</h3><p>Choose the client, note where the role is based and who it's aimed at, then check out at <%= PRICE_CON %> + GST — renewing at <%= TOTAL_CON %> a month until you cancel.</p></li>
     </ol>
   </div>
 </section>

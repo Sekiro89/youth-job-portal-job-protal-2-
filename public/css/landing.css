@@ -8,6 +8,26 @@
    (loaded before this file) cannot leak in. */
 
 /* ---------- hero: the standard .page-head, no illustration mockup — a stat strip carries the facts instead ---------- */
+/* employer hero — a tiny "Post → Reach → Review → Hire" flow tag, not a dashboard mockup */
+.hire-route { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.hire-route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
+.hire-route .is-active { color: var(--cc-red); }
+
+/* job seeker hero — a compact "Start → Experience → Career" progress tag (the full 5-stage version lives below in #stages) */
+.career-track { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.career-track li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
+.career-track .is-active { color: var(--cc-red); }
+
+/* partner hero — a compact network glyph: one account branching to clients, jobs branching from each client */
+.network-glyph { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 0; max-width: 360px; }
+.network-glyph__root { font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-navy); display: flex; align-items: center; gap: 8px; }
+.network-glyph__root::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--cc-navy); flex: none; }
+.network-glyph__clients { list-style: none; margin: 10px 0 0; padding: 0 0 0 5px; border-left: 1px dashed var(--cc-line-strong); display: grid; gap: 8px; }
+.network-glyph__clients li { padding-left: 17px; position: relative; font: 600 .8125rem/1.3 var(--kds-font-sans); color: var(--kds-fg-muted); }
+.network-glyph__clients li::before { content: ""; position: absolute; left: -1px; top: 8px; width: 14px; height: 1px; background: var(--cc-line-strong); }
+.network-glyph__clients b { color: var(--cc-navy); font-weight: 700; }
+.network-glyph__clients span { color: var(--cc-red); font-weight: 700; margin-left: 6px; }
+
 .landing-head .lead { max-width: 60ch; }
 .landing-head h1 { max-width: 20ch; }
 .landing-head__note { display: none; }
@@ -35,10 +55,10 @@
 .landing-journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; bottom: -28px; width: 2px; background: var(--cc-line-strong); }
 .landing-journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
 .landing-journey__num::before { content: counter(stage); }
-.landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-red); }
-.landing-journey__step:nth-child(3) .landing-journey__num { background: var(--cc-teal); }
-.landing-journey__step:nth-child(4) .landing-journey__num { background: var(--cc-orange); }
-.landing-journey__step:nth-child(5) .landing-journey__num { background: #a3860a; }
+.landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-navy-700, var(--cc-navy)); }
+.landing-journey__step:nth-child(3) .landing-journey__num { background: var(--cc-navy); }
+.landing-journey__step:nth-child(4) .landing-journey__num { background: var(--cc-navy-700, var(--cc-navy)); }
+.landing-journey__step:last-child .landing-journey__num { background: var(--cc-red); }
 .landing-journey__step h3 { margin: 6px 0 4px; }
 .landing-journey__step p { margin: 0; color: var(--kds-fg-muted); max-width: 48ch; }
 .landing-journey__step a { display: inline-flex; align-items: center; min-height: 32px; margin-top: 6px; font-weight: 600; font-size: .875rem; text-decoration: none; color: var(--cc-navy); }
@@ -100,7 +120,9 @@
 .workflow-chain__step p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
 @media (min-width: 900px) {
   .workflow-chain { grid-template-columns: repeat(3, 1fr); }
+  .workflow-chain--4 { grid-template-columns: repeat(4, 1fr); }
   .workflow-chain__step:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%); z-index: 1; width: 26px; height: 26px; border-radius: 50%; background: var(--cc-navy); color: #fff; display: grid; place-items: center; font-size: .9375rem; }
+  .workflow-chain__step:last-child::before { color: var(--cc-red); }
 }
 
 /* ---------- five-column audience grid (1 → 2 → 5) — still used by pathway-style contexts elsewhere ---------- */
@@ -108,15 +130,6 @@
 @media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
-/* ---------- numbered tile grid: replaces icon feature-cards AND circular numbered step badges with one
-   flush, tinted, numbered block family — used for "features", "how it works" and "what every posting needs" alike ---------- */
-.landing-tiles { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
-.landing-tile { position: relative; background: var(--cc-surface); padding: 32px 28px; display: grid; gap: 10px; align-content: start; }
-.landing-tile__n { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); opacity: .35; }
-.landing-tile h3 { margin: 0; }
-.landing-tile p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
-@media (min-width: 640px) { .landing-tiles { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .landing-tiles--3 { grid-template-columns: repeat(3, 1fr); } }
 
 /* ---------- pricing: a price stat beside a compact fact list — not a checklist card ---------- */
 .price-split { display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
