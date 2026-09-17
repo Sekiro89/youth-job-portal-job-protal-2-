@@ -5,7 +5,7 @@
 <% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', ...locals.h }; %>
 <div class="auth-shell">
   <div class="container auth-hero">
-    <p class="auth-journey" aria-hidden="true"><em>Enter</em><span class="auth-journey__line"></span>Explore<span class="auth-journey__line"></span>Move</p>
+    <p class="auth-journey" aria-hidden="true"><em>Start</em><span class="auth-journey__line"></span></p>
     <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
     <h1><%= hd.h1 %></h1>
     <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
