@@ -1,32 +1,26 @@
-<%- include('_head', { h: { eyebrow: 'Free to join', h1: 'Create your account', lead: 'Choose your starting point.' } }) %>
+<%- include('_head', { h: { eyebrow: 'Start here', h1: 'Create your account', lead: 'Choose where you\'re joining from.' } }) %>
     <div class="signup-chooser">
     <div class="role-select">
       <a class="role-opt" href="/signup/employer">
         <span class="role-opt__num">01</span>
-        <span class="role-opt__body">
-          <span class="role-opt__title">Employer</span>
-          <span class="role-opt__desc">Post opportunities and reach young talent.</span>
-          <span class="role-opt__meta">$14.99 per posting per month + GST</span>
-        </span>
-        <span class="role-opt__arrow" aria-hidden="true">→</span>
+        <span class="role-opt__title">Employer</span>
+        <span class="role-opt__desc">Post opportunities and reach young talent.</span>
+        <span class="role-opt__meta">$14.99 + GST</span>
+        <span class="role-opt__cta">Enter <span aria-hidden="true">→</span></span>
       </a>
       <a class="role-opt" href="/signup/consultant">
         <span class="role-opt__num">02</span>
-        <span class="role-opt__body">
-          <span class="role-opt__title">Partner</span>
-          <span class="role-opt__desc">Manage opportunities for your clients.</span>
-          <span class="role-opt__meta">$9.99 per posting per month + GST</span>
-        </span>
-        <span class="role-opt__arrow" aria-hidden="true">→</span>
+        <span class="role-opt__title">Partner</span>
+        <span class="role-opt__desc">Manage opportunities for your clients.</span>
+        <span class="role-opt__meta">$9.99 + GST</span>
+        <span class="role-opt__cta">Enter <span aria-hidden="true">→</span></span>
       </a>
       <a class="role-opt" href="/signup/seeker">
         <span class="role-opt__num">03</span>
-        <span class="role-opt__body">
-          <span class="role-opt__title">Job Seeker</span>
-          <span class="role-opt__desc">Find opportunities across Canada.</span>
-          <span class="role-opt__meta">Always free</span>
-        </span>
-        <span class="role-opt__arrow" aria-hidden="true">→</span>
+        <span class="role-opt__title">Job Seeker</span>
+        <span class="role-opt__desc">Find opportunities across Canada.</span>
+        <span class="role-opt__meta role-opt__meta--free">Free</span>
+        <span class="role-opt__cta">Enter <span aria-hidden="true">→</span></span>
       </a>
     </div>
     <p class="auth__foot">Already have an account? <a href="/login">Sign in</a></p>

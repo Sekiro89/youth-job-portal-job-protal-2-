@@ -1,7 +1,8 @@
-<%- include('_head', { h: { eyebrow: 'Create your account', h1: 'Partner', leadHtml: 'Manage postings for many employers under one login — $9.99 per posting per month + GST. <a href="/signup">Not a partner?</a>', crumb: 'Create your account' } }) %>
+<%- include('_head', { h: { eyebrow: '02 — Partner', h1: 'Create your partner account', leadHtml: 'Manage opportunities for multiple employers from one account — $9.99 per posting per month + GST. <a href="/signup">Not a partner?</a>', crumb: 'Create your account' } }) %>
     <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/consultant" novalidate>
+        <h2 class="auth__section">Your details</h2>
         <%- include('_field', { f: { name: 'name', label: 'Your full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
         <div class="form-row">
           <%- include('_field', { f: { name: 'email', label: 'Work email', type: 'email', value: values.email, error: errors.email, autocomplete: 'email', inputmode: 'email' } }) %>
@@ -12,6 +13,7 @@
           <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm password', error: errors.password_confirm } }) %>
         </div>
 
+        <h2 class="auth__section">Account details</h2>
         <div class="auth-info">
           <strong>How it works</strong>
           <ol>
@@ -21,6 +23,7 @@
           </ol>
         </div>
 
+        <h2 class="auth__section">Agreement</h2>
         <label class="check <%= errors.agree ? 'check--error' : '' %>" for="agree">
           <input type="checkbox" id="agree" name="agree" value="1" <%= values.agree ? 'checked' : '' %> required>
           <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>, and confirm I am authorised to post on behalf of the employers I add.</span>
@@ -28,7 +31,7 @@
         <% if (errors.agree) { %><span class="error" id="err-agree"><%= errors.agree %></span><% } %>
 
         <div class="form-actions">
-          <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Create consultant account</button>
+          <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Create partner account →</button>
         </div>
       </form>
       <p class="auth__foot">Already have an account? <a href="/login?role=consultant">Sign in</a></p>

@@ -1,4 +1,4 @@
-<%- include('_head', { h: { eyebrow: 'Account help', h1: 'Reset your password', lead: sent ? 'Check your inbox for the reset link.' : 'Enter the email you signed up with and we will send you a link to choose a new password.' } }) %>
+<%- include('_head', { h: { eyebrow: 'Start again', h1: sent ? 'Check your inbox' : 'Forgot your password?', lead: sent ? 'Check your inbox for the reset link.' : 'Enter your email and we\'ll help you get back into Youth Futures.' } }) %>
     <div class="auth__card">
       <% if (sent) { %>
         <div class="auth-info auth-info--ok" role="status">
@@ -6,16 +6,16 @@
           <p>If an account exists for <strong><%= values.email %></strong>, we have sent a password reset link. It works for 1 hour.</p>
           <p class="small muted">Nothing arrived? Check your spam folder, or <a href="/forgot">try again</a>.</p>
         </div>
-        <p class="auth__foot"><a href="/login">Back to sign in</a></p>
+        <p class="auth__foot">← <a href="/login">Back to sign in</a></p>
       <% } else { %>
         <%- include('_form-errors', { errors }) %>
         <form class="form" method="post" action="/forgot" novalidate>
           <%- include('_field', { f: { name: 'email', label: 'Email', type: 'email', value: values.email, error: errors.email, autocomplete: 'email', inputmode: 'email' } }) %>
           <div class="form-actions">
-            <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Send reset link</button>
+            <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Send reset link →</button>
           </div>
         </form>
-        <p class="auth__foot"><a href="/login">Back to sign in</a> · <a href="/signup">Create an account</a></p>
+        <p class="auth__foot">← <a href="/login">Back to sign in</a> · <a href="/signup">Create an account</a></p>
       <% } %>
     </div>
   </div>

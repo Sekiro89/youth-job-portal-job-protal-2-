@@ -12,6 +12,34 @@
 .auth-hero .eyebrow { justify-content: center; }
 .auth-hero h1 { font-family: var(--cc-font-display); font-weight: 800; font-size: clamp(1.75rem, 1.35rem + 2vw, 2.5rem); line-height: 1.1; color: var(--cc-navy); margin: 8px 0 12px; }
 .auth-hero .lead { color: var(--cc-ink-muted); font-size: 1.0625rem; max-width: 460px; margin: 0 auto; }
+.auth-badge { display: inline-flex; margin: 4px 0 0; padding: 4px 12px; border-radius: 999px; background: var(--cc-red-100); color: var(--cc-red-700); font: 700 .75rem/1.4 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; }
+
+/* Sign in only — a richer "Start ── you are here ──→" line (every other page keeps the plain single "Start"
+   auth-journey tag). Built entirely from flexible line segments, no absolute positioning, so it reflows
+   naturally instead of relying on fragile percentage placement. */
+.journey-line { display: flex; align-items: center; gap: 8px; margin: 0 0 20px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-faint); }
+.journey-line__seg { flex: 1 1 32px; min-width: 20px; height: 1px; background: var(--cc-line-strong); }
+.journey-line__here { display: inline-flex; align-items: center; gap: 6px; color: var(--cc-red); white-space: nowrap; }
+.journey-line__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc-red); display: inline-block; flex: none; }
+.journey-line__arrow { color: var(--cc-line-strong); font-size: .8125rem; }
+
+/* the asymmetric Sign In composition: intro (journey + headline) and form sit side by side at desktop,
+   instead of one centred stacked column — everything below 1024px falls back to the normal stacked layout. */
+@media (min-width: 1024px) {
+  .auth-shell--split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; align-items: start; max-width: var(--cc-container); margin: 0 auto; padding-inline: var(--cc-page-padding); }
+  .auth-shell--split .auth-hero { text-align: left; max-width: none; padding: 0; margin: 0; position: sticky; top: calc(var(--cc-header-h) + 48px); }
+  .auth-shell--split .auth-hero .eyebrow, .auth-shell--split .journey-line { justify-content: flex-start; }
+  .auth-shell--split .auth-hero h1 { font-size: clamp(2.25rem, 1.4rem + 3vw, 3.25rem); }
+  .auth-shell--split .auth-hero .lead { margin: 0; }
+  .auth-shell--split .auth-shell__form { padding-top: 0; align-items: flex-start; }
+  .auth-shell--split .auth-shell__form > * { max-width: 480px; }
+}
+
+/* job seeker signup only — a small decorative Start → Profile → Opportunity line (auth-journey stays a single
+   "Start" everywhere else; this is the one page allowed a little more of the career-journey language). */
+.seeker-progress { list-style: none; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-faint); }
+.seeker-progress li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
+.seeker-progress .is-active { color: var(--cc-red); }
 .auth-shell__form { padding: 0 20px 48px; display: flex; flex-direction: column; align-items: center; }
 .auth-shell__form > * { width: 100%; max-width: 560px; }
 .signup-chooser { display: grid; gap: 20px; }   /* stacks .role-select + .auth__foot with a sensible gap, sign-in always below the options */
@@ -21,6 +49,17 @@
 }
 
 .auth__card { display: grid; gap: 0; }
+/* Sign In's single "new here" entry point — replaces the old three Employer/Partner/Job Seeker rows with one
+   editorial link into the existing /signup chooser. */
+.auth-newhere { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--cc-line); text-align: center; }
+.auth-newhere .eyebrow { justify-content: center; color: var(--cc-ink-faint); }
+.auth-cta-link { display: inline-flex; align-items: center; gap: 8px; font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); text-decoration: none; }
+.auth-cta-link span { color: var(--cc-red); }
+.auth-cta-link:hover, .auth-cta-link:focus-visible { color: var(--cc-red-700); }
+@media (prefers-reduced-motion: no-preference) {
+  .auth-cta-link span { display: inline-block; transition: transform .15s; }
+  .auth-cta-link:hover span, .auth-cta-link:focus-visible span { transform: translateX(4px); }
+}
 .auth__section { margin: 8px 0 -4px; padding-bottom: 8px; border-bottom: 1px solid var(--kds-border); }
 .auth__section-note { margin: 0; }
 .auth__foot { text-align: center; margin: 20px 0 0; color: var(--kds-fg-muted); font-size: .9375rem; }
@@ -53,25 +92,27 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
 .pw__toggle:hover { background: var(--cc-navy-50); }
 
-/* /signup "Choose your path" — a numbered, horizontal-on-desktop role selector. Real <a> elements (not
-   clickable divs), so focus/keyboard behaviour is native; red = hover/focus, navy = the resting title ink. */
-.role-select { display: grid; gap: 12px; grid-template-columns: 1fr; }
-.role-opt { display: grid; grid-template-columns: auto 1fr auto; align-items: start; column-gap: 14px; row-gap: 6px; padding: 20px; text-decoration: none; color: var(--cc-ink); background: #fff; border: 1px solid var(--cc-line); border-radius: 8px; transition: border-color .15s, background-color .15s; }
-.role-opt:hover, .role-opt:focus-visible { border-color: var(--cc-red); background: var(--cc-red-100); }
-.role-opt:hover .role-opt__num, .role-opt:focus-visible .role-opt__num, .role-opt:hover .role-opt__arrow, .role-opt:focus-visible .role-opt__arrow { color: var(--cc-red-700); }
-.role-opt__num { font: 800 .75rem/1.5 var(--kds-font-sans); letter-spacing: .1em; color: var(--cc-red); }
-.role-opt__body { grid-column: 1 / -1; display: grid; gap: 4px; }
-.role-opt__title { font: 700 1.125rem/1.25 var(--cc-font-display); color: var(--cc-navy); }
-.role-opt__desc { color: var(--kds-fg-muted); font-size: .875rem; line-height: 1.5; }
-.role-opt__meta { color: var(--kds-fg-faint); font-size: .8125rem; font-weight: 600; }
-.role-opt__arrow { color: var(--cc-red); font-weight: 700; font-size: 1.125rem; }
+/* /signup "Choose your starting point" — three entry points divided by thin structural rules, not boxed
+   cards: no per-item border/radius/shadow, just a shared divider between rows (mobile) or columns (desktop).
+   Real <a> elements (not clickable divs), so focus/keyboard behaviour is native. */
+.role-select { display: grid; grid-template-columns: 1fr; }
+.role-opt { display: grid; gap: 10px; padding: 28px 6px; border-top: 1px solid var(--cc-line); text-decoration: none; color: var(--cc-ink); transition: background-color .15s; }
+.role-opt:first-child { border-top: 0; }
+.role-opt:hover, .role-opt:focus-visible { background: var(--cc-red-100); }
+.role-opt__num { font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red); }
+.role-opt__title { font: 700 1.375rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
+.role-opt__desc { color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
+.role-opt__meta { font: 700 .875rem/1 var(--kds-font-sans); color: var(--cc-navy); }
+.role-opt__meta--free { color: var(--cc-red); }
+.role-opt__cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font: 700 .8125rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-red); }
+@media (prefers-reduced-motion: no-preference) {
+  .role-opt__cta span { display: inline-block; transition: transform .15s; }
+  .role-opt:hover .role-opt__cta span, .role-opt:focus-visible .role-opt__cta span { transform: translateX(4px); }
+}
 @media (min-width: 900px) {
-  .role-select { grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--cc-line); border-radius: 8px; overflow: hidden; }
-  .role-opt { grid-template-columns: 1fr auto; border: 0; border-right: 1px solid var(--cc-line); border-radius: 0; align-content: start; height: 100%; }
-  .role-opt:last-child { border-right: 0; }
-  .role-opt__num { grid-column: 1; }
-  .role-opt__arrow { grid-column: 2; grid-row: 1; justify-self: end; }
-  .role-opt__body { grid-column: 1 / -1; }
+  .role-select { grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--cc-line); }
+  .role-opt { border-top: 0; border-left: 1px solid var(--cc-line); padding: 36px 28px; height: 100%; align-content: start; }
+  .role-opt:first-child { border-left: 0; }
 }
 
 /* login role hint chips */

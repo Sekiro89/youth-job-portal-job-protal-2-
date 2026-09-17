@@ -1,8 +1,8 @@
-<%- include('_head', { h: { eyebrow: 'Create your account', h1: 'Employer', leadHtml: 'Post jobs for your own company. Creating an account is free — you only pay when you publish a posting. <a href="/signup">Not an employer?</a>', crumb: 'Create your account' } }) %>
+<%- include('_head', { h: { eyebrow: '01 — Employer', h1: 'Create your account', leadHtml: 'You\'re a few steps from your first job posting. <a href="/signup">Not an employer?</a>', crumb: 'Create your account' } }) %>
     <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/employer" novalidate>
-        <h2 class="auth__section">About you</h2>
+        <h2 class="auth__section">Your details</h2>
         <%- include('_field', { f: { name: 'name', label: 'Your full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
         <div class="form-row">
           <%- include('_field', { f: { name: 'email', label: 'Work email', type: 'email', value: values.email, error: errors.email, autocomplete: 'email', inputmode: 'email' } }) %>
@@ -13,7 +13,7 @@
           <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm password', error: errors.password_confirm } }) %>
         </div>
 
-        <h2 class="auth__section">Your company</h2>
+        <h2 class="auth__section">Account details</h2>
         <div class="form-row">
           <%- include('_field', { f: { name: 'company_name', label: 'Legal company name', value: values.company_name, error: errors.company_name, autocomplete: 'organization', hint: 'The registered business name, as on your invoices.' } }) %>
           <%- include('_field', { f: { name: 'operating_name', label: 'Operating name', value: values.operating_name, error: errors.operating_name, required: false, placeholder: 'e.g. Flying Pig', hint: 'Operating / trade name — the name job seekers know you by. Shown first on your postings.' } }) %>
@@ -30,8 +30,7 @@
           <%- include('_field', { f: { name: 'website', label: 'Website', type: 'url', value: values.website, error: errors.website, autocomplete: 'url', required: false, placeholder: 'https://www.example.ca', inputmode: 'url' } }) %>
         </div>
 
-        <h2 class="auth__section">Business address</h2>
-        <p class="small muted auth__section-note">Saved to your profile as your first work location. When you post a job you tick the locations it applies to — add as many as you need later.</p>
+        <p class="small muted auth__section-note">Your business address, saved as your first work location. When you post a job you tick the locations it applies to — add as many as you need later.</p>
         <div class="form-row form-row--street">
           <div class="field">
             <label for="street_address">Street address <span class="req">*</span></label>
@@ -55,6 +54,7 @@
           <%- include('_field', { f: { name: 'postal_code', label: 'Postal code', value: values.postal_code, error: errors.postal_code, autocomplete: 'postal-code', placeholder: 'A1A 1A1' } }) %>
         </div>
 
+        <h2 class="auth__section">Agreement</h2>
         <label class="check <%= errors.agree ? 'check--error' : '' %>" for="agree">
           <input type="checkbox" id="agree" name="agree" value="1" <%= values.agree ? 'checked' : '' %> required>
           <span>I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span>
@@ -62,7 +62,7 @@
         <% if (errors.agree) { %><span class="error" id="err-agree"><%= errors.agree %></span><% } %>
 
         <div class="form-actions">
-          <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Create employer account</button>
+          <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Create employer account →</button>
         </div>
         <p class="small muted auth__note">Posting a job costs $14.99 per posting per month + GST. Creating an account is free — you only pay when you publish.</p>
       </form>

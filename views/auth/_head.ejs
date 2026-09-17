@@ -1,13 +1,36 @@
-<%# Centered shell for every auth page (login / signup ×4 / forgot / reset). locals: h — { eyebrow, h1,
-    lead (html allowed via leadHtml), crumb }. The global site header (partials/nav) already sits above this —
-    this partial only opens .auth-shell + a centered intro (closed here) + .auth-shell__form (left open); each
-    page's own template supplies the form content and closes the shell with its own trailing </div></div>. %>
-<% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', ...locals.h }; %>
-<div class="auth-shell">
+<%# Shell for every auth page (login / signup ×4 / forgot / reset). locals: h — { eyebrow, h1, lead (html
+    allowed via leadHtml), crumb, badge, progress, split, journeyLine }. badge is an optional short pill (e.g.
+    "Always free"); progress is an optional array of stage labels for a tiny decorative Start→…→ line (job
+    seeker signup only). split turns on the asymmetric two-column composition (Sign In only) — intro and form
+    sit side by side at ≥1024px instead of one stacked column; below that it falls back to the normal stacked
+    layout automatically. journeyLine swaps the plain single "Start" tag for the richer "Start — you are here —
+    →" line (Sign In only). The global site header/footer (partials/nav, partials/footer) are untouched by any
+    of this — this partial only opens .auth-shell + a centred/asymmetric intro (closed here) + .auth-shell__form
+    (left open); each page's own template supplies the form content and closes the shell with its own trailing
+    </div></div>. %>
+<% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', badge: '', progress: null, split: false, journeyLine: false, ...locals.h }; %>
+<div class="auth-shell<%= hd.split ? ' auth-shell--split' : '' %>">
   <div class="container auth-hero">
-    <p class="auth-journey" aria-hidden="true"><em>Start</em><span class="auth-journey__line"></span></p>
-    <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
+    <% if (hd.journeyLine) { %>
+      <p class="eyebrow">Your journey</p>
+      <div class="journey-line" aria-hidden="true">
+        <span>Start</span>
+        <span class="journey-line__seg"></span>
+        <span class="journey-line__here"><i class="journey-line__dot"></i>You are here</span>
+        <span class="journey-line__seg"></span>
+        <span class="journey-line__arrow">→</span>
+      </div>
+    <% } else { %>
+      <p class="auth-journey" aria-hidden="true"><em>Start</em><span class="auth-journey__line"></span></p>
+      <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
+    <% } %>
     <h1><%= hd.h1 %></h1>
     <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
+    <% if (hd.badge) { %><p class="auth-badge"><%= hd.badge %></p><% } %>
+    <% if (hd.progress && hd.progress.length) { %>
+      <ol class="seeker-progress" aria-hidden="true">
+        <% hd.progress.forEach((label, i) => { %><li class="<%= i === 0 ? 'is-active' : '' %>"><%= label %></li><% }) %>
+      </ol>
+    <% } %>
   </div>
   <div class="auth-shell__form">

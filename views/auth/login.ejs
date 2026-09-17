@@ -1,5 +1,5 @@
 <% const roles = [['employer', 'Employer'], ['consultant', 'Partner'], ['seeker', 'Job Seeker']]; %>
-<%- include('_head', { h: { eyebrow: 'Sign in', h1: 'Welcome back.', lead: 'One login for employers, partners and job seekers.' } }) %>
+<%- include('_head', { h: { h1: 'Welcome back.', lead: 'Pick up where you left off.', split: true, journeyLine: true } }) %>
     <div class="auth__card">
       <% if (roleHint) { %>
       <div class="role-hints" aria-label="Account type">
@@ -24,13 +24,10 @@
           <button class="kds-btn kds-btn--accent kds-btn--block" type="submit">Sign in →</button>
         </div>
       </form>
-      <div class="divider-maple" aria-hidden="true">🍁</div>
-      <p class="auth__foot"><strong>New to Youth Futures Canada?</strong></p>
-      <ul class="auth-links">
-        <li><a href="/signup/employer" <%= roleHint === 'employer' ? 'class="is-hint"' : '' %>>Employer</a></li>
-        <li><a href="/signup/consultant" <%= roleHint === 'consultant' ? 'class="is-hint"' : '' %>>Partner</a></li>
-        <li><a href="/signup/seeker" <%= roleHint === 'seeker' ? 'class="is-hint"' : '' %>>Job Seeker</a></li>
-      </ul>
+      <div class="auth-newhere">
+        <p class="eyebrow">New here?</p>
+        <a class="auth-cta-link" href="/signup">Choose where you're starting from <span aria-hidden="true">→</span></a>
+      </div>
     </div>
   </div>
 </div>
