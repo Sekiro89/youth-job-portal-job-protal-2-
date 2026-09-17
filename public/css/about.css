@@ -19,7 +19,7 @@
 
 /* ---------- jump strip: a sticky horizontal tab bar in place of a sidebar TOC ---------- */
 .about-jump { position: sticky; top: var(--cc-header-h); z-index: 60; background: #fff; border-bottom: 1px solid var(--kds-border); }
-.about-jump__list { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.about-jump__list { list-style: none; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .about-jump__list::-webkit-scrollbar { display: none; }
 .about-jump__list a { display: block; padding: 12px 14px; white-space: nowrap; text-decoration: none; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); border-bottom: 3px solid transparent; }
 .about-jump__list a:hover { color: var(--cc-navy); }
