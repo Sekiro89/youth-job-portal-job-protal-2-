@@ -79,7 +79,7 @@
       </aside>
     <% } %>
     <section class="job-section job-locations" aria-labelledby="loc-h">
-      <h2 id="loc-h">Work location<%= locations.length > 1 ? `s (${locations.length})` : '' %></h2>
+      <h2 id="loc-h">Where you'd be working<%= locations.length > 1 ? ` (${locations.length} sites)` : '' %></h2>
       <ul class="locations">
         <% locations.forEach((l, i) => { %>
           <li class="locations__item">
@@ -103,24 +103,24 @@
       </div>
     </section>
     <section class="job-section">
-      <h2>About the role</h2>
+      <h2>The role</h2>
       <div class="prose"><%- h.paragraphs(job.description) %></div>
     </section>
     <% if (job.requirements) { %>
       <section class="job-section">
-        <h2>Requirements</h2>
+        <h2>What you'll need</h2>
         <div class="prose"><%- h.paragraphs(job.requirements) %></div>
       </section>
     <% } %>
     <% if (job.benefits) { %>
       <section class="job-section">
-        <h2>Benefits</h2>
+        <h2>What's in it for you</h2>
         <div class="prose"><%- h.paragraphs(job.benefits) %></div>
       </section>
     <% } %>
     <% if ((job.skills || []).length) { %>
       <section class="job-section">
-        <h2>Skills</h2>
+        <h2>Skills that matter here</h2>
         <ul class="cluster tags"><% job.skills.forEach(s => { %><li class="tag"><%= s %></li><% }) %></ul>
       </section>
     <% } %>
