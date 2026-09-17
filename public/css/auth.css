@@ -20,13 +20,15 @@
 .auth-shell .eyebrow::before { background: var(--cc-spark); }
 .auth-shell__brand h1 { color: #fff; }
 .auth-shell__brand .lead { color: color-mix(in srgb, #fff 82%, transparent); }
-.auth-shell__form { padding: 32px 20px 48px; display: flex; align-items: start; justify-content: center; }
+.auth-shell__form { padding: 32px 20px 48px; display: flex; flex-direction: column; align-items: start; justify-content: center; }
 .auth-shell__form > * { width: 100%; max-width: 640px; }
+.signup-chooser { display: grid; gap: 20px; }   /* stacks .role-grid + .auth__foot with a sensible gap, sign-in always below the cards */
 @media (min-width: 1024px) {
   .auth-shell { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
   .auth-shell__brand { position: sticky; top: var(--cc-header-h); height: calc(100vh - var(--cc-header-h)); padding: 64px 48px; display: flex; align-items: center; }
   .auth-shell__form { padding: 64px 56px; justify-content: start; }
   .auth-shell__form > * { max-width: 760px; }
+  .auth-shell__form > .signup-chooser { max-width: 1040px; }
 }
 
 .auth__card { display: grid; gap: 0; }
