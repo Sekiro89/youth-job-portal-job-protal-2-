@@ -63,22 +63,21 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .pw__toggle:hover { background: var(--cc-navy-50); }
 
 .role-grid { grid-template-columns: 1fr; }
-@media (min-width: 700px) { .role-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 560px) { .role-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .role-grid { grid-template-columns: repeat(3, 1fr); } }
 
-/* /signup role chooser: .card + icon / title / desc / cta */
-.role-card { display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "icon title" "icon desc" "icon cta"; column-gap: 14px; row-gap: 6px; align-content: start; text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s; }
+/* /signup role chooser: .card + icon / title / desc / cta. Wide, short cards throughout — icon
+   beside the text, never stacked above it — so a card stays rectangular instead of tall and square
+   as the grid gains columns. */
+.role-card { display: grid; grid-template-columns: 52px 1fr; grid-template-areas: "icon title" "icon desc" "icon cta"; column-gap: 16px; row-gap: 6px; align-content: start; text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s; }
 .role-card:hover, .role-card:focus-visible { border-color: var(--cc-navy); box-shadow: var(--kds-shadow-2); color: var(--cc-ink); }
-.role-card__icon { grid-area: icon; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; background: var(--cc-navy-100); color: var(--cc-navy); }
-.role-card__icon svg { width: 28px; height: 28px; }
+.role-card__icon { grid-area: icon; width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: var(--cc-navy-100); color: var(--cc-navy); }
+.role-card__icon svg { width: 26px; height: 26px; }
 .role-card--consultant .role-card__icon { background: var(--cc-teal-100); color: var(--cc-teal); }
 .role-card--seeker .role-card__icon { background: var(--cc-green-100); color: #3E8E2E; }
-.role-card__title { grid-area: title; font: 700 1.15rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
-.role-card__desc { grid-area: desc; color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
-.role-card__cta { grid-area: cta; font-weight: 600; color: var(--cc-red); margin-top: 4px; padding: 10px 0 2px; }
-@media (min-width: 1024px) {
-  .role-card { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; grid-template-areas: "icon" "title" "desc" "cta"; row-gap: 10px; }
-  .role-card__cta { align-self: end; } /* CTAs line up across the three cards */
-}
+.role-card__title { grid-area: title; font: 700 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
+.role-card__desc { grid-area: desc; color: var(--kds-fg-muted); font-size: .875rem; line-height: 1.5; }
+.role-card__cta { grid-area: cta; font-weight: 600; color: var(--cc-red); margin-top: 4px; }
 
 /* login role hint chips */
 .role-hints { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
