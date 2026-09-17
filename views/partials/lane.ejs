@@ -22,44 +22,46 @@
   const COMPASS_LABEL = { technology: 'Technology', healthcare: 'Healthcare', business: 'Business', skilled_trades: 'Skilled Trades', services: 'Services' };
 %>
 <section class="section section--alt lane" aria-labelledby="lane-h">
-  <div class="container lane__grid">
-    <div class="lane__head">
-      <p class="eyebrow"><%= laneEyebrow %></p>
-      <h2 id="lane-h">Find your lane.</h2>
-      <p class="lead">Explore real opportunities across the fields shaping Canada's workforce.</p>
-    </div>
-    <div class="lane__compass compass" aria-hidden="true">
-      <svg class="compass__svg" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet">
-        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
-          <line class="compass__line" x1="<%= COMPASS_CENTER.cx %>" y1="<%= COMPASS_CENTER.cy %>" x2="<%= pos.cx %>" y2="<%= pos.cy %>"/>
-        <% }) %>
-        <circle class="compass__hub-ring" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="15"/>
-        <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="6"/>
-        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
-          <circle class="compass__node" data-path="<%= p.key %>" cx="<%= pos.cx %>" cy="<%= pos.cy %>" r="7"/>
-        <% }) %>
-      </svg>
-      <ul class="compass__labels">
-        <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your<br>starting point</li>
-        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; const pct = { x: (pos.cx / COMPASS_VB.w * 100).toFixed(1), y: (pos.cy / COMPASS_VB.h * 100).toFixed(1) }; %>
-          <li class="compass__label" data-path="<%= p.key %>" style="--x:<%= pct.x %>%; --y:<%= pct.y %>%"><%= COMPASS_LABEL[p.key] || p.name %></li>
-        <% }) %>
-      </ul>
-    </div>
-    <div class="lane__list-wrap">
-      <% if (laneCategories.length) { %>
-        <ol class="lane-list">
-          <% laneCategories.forEach(c => { %>
-            <li>
-              <a href="/jobs?category=<%= c.key %>" <% if (c.path) { %>data-compass-row="<%= c.path %>"<% } %>>
-                <span class="lane-list__name"><%= c.name %></span>
-                <span class="lane-list__meta"><%= c.n %> open role<%= c.n === 1 ? '' : 's' %> <span class="lane-list__arrow" aria-hidden="true">→</span></span>
-              </a>
-            </li>
+  <div class="container lane__head">
+    <p class="eyebrow"><%= laneEyebrow %></p>
+    <h2 id="lane-h">Find your lane.</h2>
+    <p class="lead">Explore real opportunities across the fields shaping Canada's workforce.</p>
+  </div>
+  <div class="lane__compass-band">
+    <div class="container">
+      <div class="lane__compass compass" aria-hidden="true">
+        <svg class="compass__svg" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet">
+          <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
+            <line class="compass__line" x1="<%= COMPASS_CENTER.cx %>" y1="<%= COMPASS_CENTER.cy %>" x2="<%= pos.cx %>" y2="<%= pos.cy %>"/>
           <% }) %>
-        </ol>
-      <% } %>
-      <a class="lane-more" href="/jobs">+ Explore all career areas</a>
+          <circle class="compass__hub-ring" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="15"/>
+          <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="6"/>
+          <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
+            <circle class="compass__node" data-path="<%= p.key %>" cx="<%= pos.cx %>" cy="<%= pos.cy %>" r="7"/>
+          <% }) %>
+        </svg>
+        <ul class="compass__labels">
+          <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your<br>starting point</li>
+          <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; const pct = { x: (pos.cx / COMPASS_VB.w * 100).toFixed(1), y: (pos.cy / COMPASS_VB.h * 100).toFixed(1) }; %>
+            <li class="compass__label" data-path="<%= p.key %>" style="--x:<%= pct.x %>%; --y:<%= pct.y %>%"><%= COMPASS_LABEL[p.key] || p.name %></li>
+          <% }) %>
+        </ul>
+      </div>
     </div>
+  </div>
+  <div class="container lane__list-wrap">
+    <% if (laneCategories.length) { %>
+      <ol class="lane-list">
+        <% laneCategories.forEach(c => { %>
+          <li>
+            <a href="/jobs?category=<%= c.key %>" <% if (c.path) { %>data-compass-row="<%= c.path %>"<% } %>>
+              <span class="lane-list__name"><%= c.name %></span>
+              <span class="lane-list__meta"><%= c.n %> open role<%= c.n === 1 ? '' : 's' %> <span class="lane-list__arrow" aria-hidden="true">→</span></span>
+            </a>
+          </li>
+        <% }) %>
+      </ol>
+    <% } %>
+    <a class="lane-more" href="/jobs">+ Explore all career areas</a>
   </div>
 </section>
