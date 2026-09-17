@@ -1,0 +1,19 @@
+<%# One entry in the homepage "Featured opportunities" editorial directory (not a job-card grid tile).
+    Same fields as _job-card.ejs, presented as a numbered directory row instead of a bordered box.
+    locals: job, i (zero-based index — the first entry gets the lead treatment). %>
+<% const extra = (job.location_count || 1) - 1; const hours = h.formatHours(job); const km = job.distance_km == null ? '' : (job.distance_km < 1 ? '< 1 km' : `≈ ${Math.round(job.distance_km)} km`);
+   const isRef = job.source === 'jobbank'; const closed = !!job.applications_closed; const pid = job.public_id || '';
+   const n = String(i + 1).padStart(2, '0'); const isLead = i === 0; %>
+<article class="feat-row<%= isLead ? ' feat-row--lead' : '' %><%= isRef ? ' feat-row--ref' : '' %>">
+  <span class="feat-row__n" aria-hidden="true"><%= n %></span>
+  <div class="feat-row__main">
+    <h3 class="feat-row__title"><a href="/jobs/<%= job.slug %>"><%= job.title %></a></h3>
+    <p class="feat-row__co"><span class="feat-row__co-name"><%= h.displayCompany(job) %></span> <span class="feat-row__sep" aria-hidden="true">·</span> <%= h.location(job) %><% if (extra > 0) { %> <span class="feat-row__more">+<%= extra %> more location<%= extra > 1 ? 's' : '' %></span><% } %><% if (km) { %> <span class="feat-row__dist"><%= km %></span><% } %></p>
+    <p class="feat-row__meta"><span><%= h.jobTypeName(job.job_type) %></span><span><%= h.workArrangementName(job.work_arrangement) %></span><% if (hours) { %><span><%= hours %></span><% } %></p>
+    <% if (closed) { %><span class="badge badge--danger feat-row__closed">Applications closed</span><% } %>
+  </div>
+  <div class="feat-row__side">
+    <p class="feat-row__salary"><%= h.formatSalary(job) %></p>
+    <p class="feat-row__foot">Posted <%= h.timeAgo(job.published_at) %> · <%= h.categoryName(job.category) %><% if (pid) { %><span class="feat-row__pid"> · ID <%= pid %></span><% } %></p>
+  </div>
+</article>

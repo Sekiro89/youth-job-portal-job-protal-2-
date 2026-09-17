@@ -69,8 +69,8 @@
       <a class="kds-btn kds-btn--ghost" href="/jobs">View the Job Bank</a>
     </div>
     <% if (featured.length) { %>
-      <div class="jobs-grid">
-        <% featured.forEach(job => { %><%- include('_job-card', { job }) %><% }) %>
+      <div class="feat-directory">
+        <% featured.forEach((job, i) => { %><%- include('_featured-row', { job, i }) %><% }) %>
       </div>
     <% } else { %>
       <div class="empty"><p>No open positions yet — check back soon, or <a href="/employer">post the first one</a>.</p></div>
