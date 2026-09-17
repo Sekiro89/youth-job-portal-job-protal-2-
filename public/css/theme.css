@@ -234,7 +234,8 @@ textarea.input { min-height: 120px; resize: vertical; }
 .page-head .kds-btn--brand:hover { background: color-mix(in srgb, #fff 85%, transparent); }
 .page-head .muted { color: color-mix(in srgb, #fff 65%, transparent); }
 
-/* dashboard shell: sidebar on desktop, tab strip on mobile */
+/* dashboard shell: an editorial rail on desktop (left accent bar marks the active item, no pill chrome),
+   a horizontal tab strip on mobile. */
 .dash { display: grid; gap: 20px; grid-template-columns: 1fr; padding-top: 20px; padding-bottom: 40px; }
 .dash__side { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
 .dash__side::-webkit-scrollbar { display: none; }
@@ -242,15 +243,17 @@ textarea.input { min-height: 120px; resize: vertical; }
 .dash__side a.is-active { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
 .dash__main { min-width: 0; display: grid; gap: 20px; align-content: start; }
 @media (min-width: 1024px) {
-  .dash { grid-template-columns: 240px 1fr; gap: 32px; }
-  .dash__side { flex-direction: column; overflow: visible; position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; }
-  .dash__side a { border-radius: 10px; }
+  .dash { grid-template-columns: 220px 1fr; gap: 40px; }
+  .dash__side { flex-direction: column; overflow: visible; position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; gap: 0; border-left: 2px solid var(--kds-border); }
+  .dash__side a { border-radius: 0; border: 0; padding: 11px 16px; margin-left: -2px; border-left: 2px solid transparent; background: none; color: var(--kds-fg-muted); }
+  .dash__side a:hover { color: var(--cc-navy); background: var(--cc-navy-50); }
+  .dash__side a.is-active { background: none; color: var(--cc-navy); border-left-color: var(--cc-red); font-weight: 800; }
 }
 
-/* stats */
-.stats { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+/* stats: a flush, numbered-family stat block (accent rule, tinted surface) instead of bordered white KPI cards */
+.stats { display: grid; gap: 2px; grid-template-columns: 1fr 1fr; background: var(--kds-border); }
 @media (min-width: 768px) { .stats { grid-template-columns: repeat(4, 1fr); } }
-.stat { background: #fff; border: 1px solid var(--kds-border); border-radius: 12px; padding: 14px 16px; }
+.stat { background: var(--cc-surface); border: 0; border-left: 3px solid var(--cc-navy); border-radius: 0; padding: 14px 16px; }
 .stat__value { font: 800 1.75rem/1.1 var(--cc-font-display); color: var(--cc-navy); }
 .stat__label { font-size: .8125rem; color: var(--kds-fg-muted); margin-top: 4px; }
 
@@ -332,7 +335,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 /* Card family: one radius, one border, one padding scale */
 .card { padding: 20px; }
 .card--pad-lg { padding: 28px; }
-.card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--kds-border); }
 .card__head h2, .card__head h3 { margin: 0; }
 /* Buttons: exactly three visual weights — brand (navy), accent (red, the ONE primary action per page), ghost */
 .kds-btn--brand:hover { background: var(--cc-navy-700); opacity: 1; }
