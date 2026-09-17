@@ -1,7 +1,9 @@
 <%
-  // Public job detail. Round-3 variables (docs/TEMPLATE-VARS-R3.md) are used when the route provides them and derived from
-  // the same rules otherwise, so this template renders for every state: active / locked, Job Bank reference rows, past
-  // application deadline, 1 or many locations, missing salary / hours / operating name.
+  // Public job detail — "Opportunity Profile" composition (Career Journey redesign). Round-3 variables
+  // (docs/TEMPLATE-VARS-R3.md) are used when the route provides them and derived from the same rules otherwise,
+  // so this template renders for every state: active / locked, Job Bank reference rows, past application
+  // deadline, 1 or many locations, missing salary / hours / operating name. No route/data logic changed here —
+  // only composition/classes below.
   const remote = job.work_arrangement === 'remote';
   const legalNote = h.legalNameNote(job); // "Operated by <legal name>" when the operating (trade) name differs
   const extraLoc = locations.length - 1;
@@ -38,38 +40,64 @@
 %>
 <link rel="stylesheet" href="/css/print.css" media="print">
 <% if (typeof mapConfig !== 'undefined' && mapConfig) { %><script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script><% } %>
-<header class="page-head job-head">
-  <div class="container page-head__inner">
-    <div>
+
+<header class="job-profile-head job-hero">
+  <div class="container job-profile-head__inner">
+    <div class="job-profile-head__main">
       <ol class="breadcrumb"><li><a href="/">Home</a></li><li><a href="/jobs">Jobs</a></li><li><a href="/jobs?category=<%= job.category %>"><%= h.categoryName(job.category) %></a></li></ol>
-      <h1 class="job-head__title"><%= job.title %></h1>
-      <p class="job-head__company">
+      <p class="eyebrow job-profile-head__stage">02 — Explore</p>
+      <h1 class="job-profile-head__title"><%= job.title %></h1>
+      <p class="job-profile-head__company">
         <a href="/companies/<%= job.company_slug %>"><%= companyName %></a>
         <span><span class="job-head__dot" aria-hidden="true">· </span><%= h.location(job) %><% if (extraLoc > 0) { %> <span class="job-head__more">+<%= extraLoc %> more location<%= extraLoc > 1 ? 's' : '' %></span><% } %><%= remote ? ' (remote across Canada)' : '' %></span>
       </p>
       <% if (legalNote) { %><p class="job-head__legal small muted"><%= legalNote %></p><% } %>
       <% if (closed) { %>
         <div class="cluster job-head__badges">
-          <% if (closed) { %><span class="badge badge--danger">Applications closed</span><% } %>
+          <span class="badge badge--danger">Applications closed</span>
         </div>
       <% } %>
       <p class="print-only print-dates"><% if (pid) { %>Posting ID <%= pid %> · <% } %>Posted <%= posted %> · <%= closesLbl %> <%= closes %> · <%= job.vacancies %> vacanc<%= job.vacancies === 1 ? 'y' : 'ies' %></p>
+      <ul class="job-profile-meta" aria-label="Key facts">
+        <li class="job-profile-meta__salary"><strong><%= h.formatSalary(job) %></strong></li>
+        <li><%= h.jobTypeName(job.job_type) %></li>
+        <li><%= h.workArrangementName(job.work_arrangement) %></li>
+        <% if (hours) { %><li><%= hours %></li><% } %>
+        <% if (experienceText) { %><li><%= experienceText %></li><% } %>
+      </ul>
+    </div>
+
+    <div class="job-profile-head__action">
+      <% if (imported) { %>
+        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a>
+        <p class="small muted apply-card__note">Opens the employer's application page in a new tab.</p>
+      <% } else if (closed) { %>
+        <div class="apply-card__closed" role="status">
+          <strong>Applications closed</strong>
+          <span class="small muted">Closed on <%= closes %>. You can still save or print this posting.</span>
+        </div>
+      <% } else { %>
+        <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/apply">Apply now →</a>
+        <% if (job.apply_url) { %><a class="apply-card__altlink" href="<%= job.apply_url %>" target="_blank" rel="noopener nofollow"><%= otherLabel %> ↗</a><% } else if (mailto) { %><a class="apply-card__altlink" href="<%= mailto %>">Apply by email instead</a><% } %>
+      <% } %>
+      <div class="apply-card__quick">
+        <form method="post" action="/jobs/<%= job.slug %>/<%= saved ? 'unsave' : 'save' %>" class="apply-card__save">
+          <button class="apply-card__quick-btn" type="submit" aria-pressed="<%= saved ? 'true' : 'false' %>">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="<%= saved ? 'currentColor' : 'none' %>" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+            <span><%= saved ? 'Saved' : 'Save job' %></span>
+          </button>
+        </form>
+        <button class="apply-card__quick-btn" type="button" data-print>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="9" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+          <span>Print</span>
+        </button>
+      </div>
     </div>
   </div>
 </header>
 
-<div class="job-facts-band">
-  <ul class="job-facts container" aria-label="Key facts">
-    <li class="job-facts__salary"><strong><%= h.formatSalary(job) %></strong><span>Salary</span></li>
-    <li><strong><%= h.jobTypeName(job.job_type) %></strong><span>Job type</span></li>
-    <li><strong><%= h.workArrangementName(job.work_arrangement) %></strong><span>Arrangement</span></li>
-    <% if (hours) { %><li><strong><%= hours %></strong><span>Hours</span></li><% } %>
-    <% if (experienceText) { %><li><strong><%= experienceText %></strong><span>Experience</span></li><% } %>
-  </ul>
-</div>
-
 <div class="section">
-<div class="container job-layout">
+<div class="container job-profile">
   <article class="job-main">
     <% if (closed) { %>
       <aside class="card closed-notice" role="status" aria-labelledby="closed-h">
@@ -78,54 +106,63 @@
         <p class="closed-notice__meta"><a href="/jobs?category=<%= job.category %>">See other <%= h.categoryName(job.category) %> jobs →</a></p>
       </aside>
     <% } %>
+
     <section class="job-section job-locations" aria-labelledby="loc-h">
-      <h2 id="loc-h">Where you'd be working<%= locations.length > 1 ? ` (${locations.length} sites)` : '' %></h2>
-      <ul class="locations">
-        <% locations.forEach((l, i) => { %>
-          <li class="locations__item">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            <span class="locations__addr"><%= h.fullAddress(l) %><% if (i === 0 && locations.length > 1) { %> <span class="small muted">(primary)</span><% } %></span>
-            <a class="locations__map-link" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow" aria-label="Open <%= h.fullAddress(l) %> in Google Maps">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
-              Open in Google Maps
-            </a>
-          </li>
-        <% }) %>
-      </ul>
-      <% if (remote) { %><p class="small muted locations__note">This role is remote across Canada; the address shown is the employer’s base.</p><% } %>
-      <div class="card map-block">
-        <% if (mapMarkers.length) { %>
-          <div class="cc-map" data-map data-zoom="14" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of work location<%= mapMarkers.length > 1 ? 's' : '' %>"></div>
-          <p class="map-block__note small muted"><%= mapMarkers.length %> of <%= locations.length %> location<%= locations.length === 1 ? '' : 's' %> shown on the map. Pins are approximate.</p>
-        <% } else { %>
-          <p class="map-block__note small muted">Map unavailable for this posting — use the “Open in Google Maps” link<%= locations.length > 1 ? 's' : '' %> above.</p>
-        <% } %>
+      <p class="eyebrow">Where the role takes you</p>
+      <h2 id="loc-h"><%= h.location(job) %><%= locations.length > 1 ? ` + ${locations.length - 1} more` : '' %></h2>
+      <div class="job-locations__grid">
+        <ul class="locations">
+          <% locations.forEach((l, i) => { %>
+            <li class="locations__item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              <span class="locations__addr"><%= h.fullAddress(l) %><% if (i === 0 && locations.length > 1) { %> <span class="small muted">(primary)</span><% } %></span>
+              <a class="locations__map-link" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow" aria-label="Open <%= h.fullAddress(l) %> in Google Maps">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+                Open in Google Maps
+              </a>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="job-map">
+          <% if (mapMarkers.length) { %>
+            <div class="cc-map" data-map data-zoom="14" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of work location<%= mapMarkers.length > 1 ? 's' : '' %>"></div>
+            <p class="map-block__note small muted"><%= mapMarkers.length %> of <%= locations.length %> location<%= locations.length === 1 ? '' : 's' %> shown on the map. Pins are approximate.</p>
+          <% } else { %>
+            <p class="map-block__note small muted">Map unavailable for this posting — use the “Open in Google Maps” link<%= locations.length > 1 ? 's' : '' %> above.</p>
+          <% } %>
+        </div>
       </div>
+      <% if (remote) { %><p class="small muted locations__note">This role is remote across Canada; the address shown is the employer’s base.</p><% } %>
     </section>
-    <section class="job-section">
-      <h2>The role</h2>
-      <div class="prose"><%- h.paragraphs(job.description) %></div>
-    </section>
-    <% if (job.requirements) { %>
-      <section class="job-section">
-        <h2>What you'll need</h2>
-        <div class="prose"><%- h.paragraphs(job.requirements) %></div>
+
+    <div class="job-progression">
+      <section class="job-section job-section--num">
+        <h2>The role</h2>
+        <div class="prose"><%- h.paragraphs(job.description) %></div>
       </section>
-    <% } %>
-    <% if (job.benefits) { %>
-      <section class="job-section">
-        <h2>What's in it for you</h2>
-        <div class="prose"><%- h.paragraphs(job.benefits) %></div>
-      </section>
-    <% } %>
-    <% if ((job.skills || []).length) { %>
-      <section class="job-section">
-        <h2>Skills that matter here</h2>
-        <ul class="cluster tags"><% job.skills.forEach(s => { %><li class="tag"><%= s %></li><% }) %></ul>
-      </section>
-    <% } %>
-    <section class="card card--flat job-section job-about-co">
-      <h2>About <%= companyName %></h2>
+      <% if (job.requirements) { %>
+        <section class="job-section job-section--num">
+          <h2>What you'll need</h2>
+          <div class="prose"><%- h.paragraphs(job.requirements) %></div>
+        </section>
+      <% } %>
+      <% if (job.benefits) { %>
+        <section class="job-section job-section--num">
+          <h2>What's in it for you</h2>
+          <div class="prose"><%- h.paragraphs(job.benefits) %></div>
+        </section>
+      <% } %>
+      <% if ((job.skills || []).length) { %>
+        <section class="job-section job-section--num">
+          <h2>Skills that matter here</h2>
+          <ul class="cluster tags"><% job.skills.forEach(s => { %><li class="tag"><%= s %></li><% }) %></ul>
+        </section>
+      <% } %>
+    </div>
+
+    <section class="job-employer">
+      <p class="eyebrow">The employer</p>
+      <h2><%= companyName %></h2>
       <% if (legalNote) { %><p class="small muted"><%= legalNote %></p><% } %>
       <% if (job.company_description) { %><div class="prose"><%- h.paragraphs(job.company_description) %></div><% } %>
       <p class="cluster small muted">
@@ -133,8 +170,9 @@
         <% if (job.company_size) { %><span><%= job.company_size %> employees</span><% } %>
         <% if (job.company_city) { %><span><%= h.location({ city: job.company_city, province: job.company_province }) %></span><% } %>
       </p>
-      <p><a href="/companies/<%= job.company_slug %>">All jobs from <%= companyName %> →</a></p>
+      <p><a href="/companies/<%= job.company_slug %>">View all opportunities →</a></p>
     </section>
+
     <section class="job-section print-only print-apply">
       <h2>How to apply</h2>
       <% if (imported) { %>
@@ -145,37 +183,9 @@
         <p>Apply online at <%= printHost %>/jobs/<%= job.slug %><% if (job.apply_url) { %>, on the other platform at <%= job.apply_url %><% } %><% if (job.apply_email) { %>, or by email to <%= job.apply_email %><% } %>.</p>
       <% } %>
     </section>
-  </article>
 
-  <aside class="job-side">
-    <div class="apply-card">
-      <div class="apply-card__cta">
-        <% if (imported) { %>
-          <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a>
-          <p class="small muted apply-card__note">Opens the employer's application page in a new tab.</p>
-        <% } else if (closed) { %>
-          <div class="apply-card__closed" role="status">
-            <strong>Applications closed</strong>
-            <span class="small muted">Closed on <%= closes %>. You can still save or print this posting.</span>
-          </div>
-        <% } else { %>
-          <a class="kds-btn kds-btn--accent kds-btn--block apply-card__primary" href="/jobs/<%= job.slug %>/apply">Apply now</a>
-          <% if (job.apply_url) { %><a class="apply-card__altlink" href="<%= job.apply_url %>" target="_blank" rel="noopener nofollow"><%= otherLabel %> ↗</a><% } else if (mailto) { %><a class="apply-card__altlink" href="<%= mailto %>">Apply by email instead</a><% } %>
-        <% } %>
-        <div class="apply-card__quick">
-          <form method="post" action="/jobs/<%= job.slug %>/<%= saved ? 'unsave' : 'save' %>" class="apply-card__save">
-            <button class="apply-card__quick-btn" type="submit" aria-pressed="<%= saved ? 'true' : 'false' %>">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="<%= saved ? 'currentColor' : 'none' %>" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
-              <span><%= saved ? 'Saved' : 'Save job' %></span>
-            </button>
-          </form>
-          <button class="apply-card__quick-btn" type="button" data-print>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="9" rx="2"/><path d="M6 14h12v7H6z"/></svg>
-            <span>Print</span>
-          </button>
-        </div>
-      </div>
-      <div class="apply-card__body">
+    <section class="job-glance" aria-labelledby="glance-h">
+      <p class="eyebrow" id="glance-h">At a glance</p>
       <dl class="facts facts--cols">
         <% if (pid) { %><div><dt>Posting ID</dt><dd class="facts__pid"><%= pid %></dd></div><% } %>
         <div><dt>Posted</dt><dd><time datetime="<%= new Date(postedDate).toISOString() %>"><%= posted %></time></dd></div>
@@ -204,9 +214,8 @@
         <span class="share__status small" role="status" aria-live="polite"></span>
       </div>
       <p class="small muted apply-card__note"><% if (pid) { %>Quote <strong>Posting ID <%= pid %></strong> when you contact the employer or our support team. <% } %><a href="/contact?category=posting">Report this posting</a></p>
-      </div>
-    </div>
-  </aside>
+    </section>
+  </article>
   <p class="print-only print-foot">Printed from <%= printHost %>/jobs/<%= job.slug %> on <%= printedOn %></p>
 </div>
 </div>
@@ -217,13 +226,13 @@
   <% if (more.length) { %>
     <div class="related__block">
       <div class="section__head section__head--split"><div><h2 id="more-h">More jobs from <%= companyName %></h2></div><a href="/companies/<%= job.company_slug %>">View company →</a></div>
-      <div class="jobs-grid"><% more.forEach(j => { %><%- include('_job-card', { job: j }) %><% }) %></div>
+      <div class="jsearch__list"><% more.forEach(j => { %><%- include('_job-row', { job: j }) %><% }) %></div>
     </div>
   <% } %>
   <% if (similar.length) { %>
     <div class="related__block">
       <div class="section__head section__head--split"><div><h2 id="similar-h">Similar jobs</h2></div><a href="/jobs?category=<%= job.category %>">All <%= h.categoryName(job.category) %> jobs →</a></div>
-      <div class="jobs-grid"><% similar.forEach(j => { %><%- include('_job-card', { job: j }) %><% }) %></div>
+      <div class="jsearch__list"><% similar.forEach(j => { %><%- include('_job-row', { job: j }) %><% }) %></div>
     </div>
   <% } %>
   </div>

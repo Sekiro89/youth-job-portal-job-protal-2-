@@ -455,7 +455,7 @@ router.get('/jobs/:slug', async (req, res, next) => {
     res.render('public/job', {
       title: `${job.title} job in ${job.city}, ${h.provinceName(job.province)} — ${companyName}`,
       metaDescription: `${companyName} is hiring a ${job.title} in ${job.city}, ${h.provinceName(job.province)} (${h.jobTypeName(job.job_type)}, ${h.workArrangementName(job.work_arrangement)}). ${h.formatSalary(job)}. ${shortDesc}`.slice(0, 300),
-      extraCss: CSS, extraJs: JS, bodyClass: 'page-job has-applybar',
+      extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS, bodyClass: 'page-job has-applybar',
       jsonLd: [posting, breadcrumbs],
       job, more, similar, saved: !!savedRow, url, locations, companyName, legalName, educationText, experienceText, hoursText, industryText,
       postedAt, closesAt, closesLabel, applyUrlLabel: 'Apply on other platform',
