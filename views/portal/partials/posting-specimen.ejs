@@ -1,0 +1,31 @@
+<%#
+  An annotated example posting — replaces the old 3-bullet "proof-split" text list with something that actually
+  looks like a posting, labelled field by field. Every fact shown here already exists as copy on this page (real
+  street address/unit/postal, brand name + legal entity, pay + period, education/experience bar, industry tag) —
+  this only changes HOW it's shown, from prose bullets to a specimen document. Clearly marked "Example posting"
+  so it never reads as a claim about a specific real employer. Requires locals: eyebrow, heading, lead,
+  identityLabel (e.g. "Employer identity" / "Client identity"), identityNote (e.g. "Not the agency's own name").
+%>
+<section class="section section--alt" id="posting">
+  <div class="container specimen-split">
+    <div class="specimen-split__statement">
+      <p class="eyebrow"><%= eyebrow %></p>
+      <h2><%= heading %></h2>
+      <p class="lead"><%= lead %></p>
+    </div>
+    <div class="specimen" aria-label="Example job posting with key fields labelled">
+      <p class="specimen__tag">Example posting</p>
+      <h3 class="specimen__title">Retail Associate — Seasonal</h3>
+      <p class="specimen__field" data-annotate="<%= identityLabel %>">Flying Pig Co.<span class="specimen__note"><%= identityNote %></span></p>
+      <p class="specimen__field" data-annotate="Work location">148 Queen Street West, Unit 2<br>Toronto, ON&nbsp;&nbsp;M5H 2A5</p>
+      <div class="specimen__row">
+        <p class="specimen__field" data-annotate="Pay">$17.50–$19.00 / hour</p>
+        <p class="specimen__field" data-annotate="Hours">Part-time · 20–24 hrs/week</p>
+      </div>
+      <div class="specimen__row">
+        <p class="specimen__field" data-annotate="Requirements">High school diploma · 0–6 months experience</p>
+        <p class="specimen__field" data-annotate="Industry">Retail Trade</p>
+      </div>
+    </div>
+  </div>
+</section>

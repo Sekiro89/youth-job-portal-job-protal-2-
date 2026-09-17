@@ -62,21 +62,10 @@ function notFound(res, message) {
   return res.status(404).render('error', { title: 'Page not found', code: 404, message, noindex: true });
 }
 
-// Broad career-path clusters — every C.CATEGORIES key appears exactly once, across exactly five groups (client
-// spec 2026-09-17). Used to (a) label the "Find your lane" career-compass directions on the homepage and (b) map
-// each individual category to the compass node it should light up on hover/focus (CATEGORY_TO_PATH below). This
-// groups real categories for storytelling; it never restricts what /jobs (the Job Bank) shows.
-const CAREER_PATHS = [
-  { key: 'technology', name: 'Technology', categories: ['it_software', 'science_research', 'engineering'] },
-  { key: 'healthcare', name: 'Healthcare', categories: ['healthcare'] },
-  { key: 'business', name: 'Business', categories: ['administration', 'accounting_finance', 'human_resources', 'marketing_sales', 'legal'] },
-  { key: 'skilled_trades', name: 'Skilled Trades', categories: ['construction_trades', 'manufacturing', 'transport_logistics', 'warehouse_general_labour', 'agriculture'] },
-  { key: 'services', name: 'Services', categories: ['customer_service', 'hospitality', 'education', 'social_services', 'retail', 'other'] },
-];
-const CATEGORY_TO_PATH = Object.fromEntries(CAREER_PATHS.flatMap(p => p.categories.map(c => [c, p.key])));
-// All five groups are shown on the compass now (no catch-all bucket excluded) — the full catalogue remains one
-// click away via "Explore all career areas →" to /jobs.
-const COMPASS_PATHS = CAREER_PATHS.map(({ key, name }) => ({ key, name }));
+// CAREER_PATHS / CATEGORY_TO_PATH now live in lib/constants.js (shared with the job-seeker landing page's own
+// "Find your lane" section). All five groups are shown on the compass — the full catalogue remains one click
+// away via "Explore all career areas →" to /jobs.
+const COMPASS_PATHS = C.CAREER_PATHS.map(({ key, name }) => ({ key, name }));
 
 // Career-stage bucket, from the existing experience_level/job_type fields (current Job Bank vocabulary + legacy
 // strings on older rows — lib/constants.js EXPERIENCE_LEGACY). Used only to weight the homepage's "Featured
@@ -112,7 +101,7 @@ router.get('/', async (req, res, next) => {
     jd.decorateJobs(featured);
     const catCount = Object.fromEntries(catRows.map(r => [r.category, r.n]));
     const provCount = Object.fromEntries(provRows.map(r => [r.province, r.n]));
-    const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0, path: CATEGORY_TO_PATH[key] || '' }))
+    const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0, path: C.CATEGORY_TO_PATH[key] || '' }))
       .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
     const provinces = C.PROVINCES.map(([key, name]) => ({ key, name, n: provCount[key] || 0 }));
     const cities = cityRows.map(r => r.city).sort((a, b) => a.localeCompare(b));

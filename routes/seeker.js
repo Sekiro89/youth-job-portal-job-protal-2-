@@ -178,8 +178,16 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // ------------------------------------------------------------------ 1. public landing
-router.get('/jobseeker', (req, res) => {
+router.get('/jobseeker', async (req, res, next) => {
+ try {
   if (req.user && req.user.role === 'seeker') return res.redirect('/jobseeker/dashboard');
+  // Same live category counts + broad-group mapping as the homepage's "Find your lane" (views/partials/lane.ejs)
+  // — real data, not a second hardcoded catalogue.
+  const catRows = await db.many(`SELECT category, count(*)::int AS n FROM jobs WHERE ${PUBLIC_WHERE} GROUP BY category`);
+  const catCount = Object.fromEntries(catRows.map(r => [r.category, r.n]));
+  const categories = C.CATEGORIES.map(([key, name]) => ({ key, name, n: catCount[key] || 0, path: C.CATEGORY_TO_PATH[key] || '' }))
+    .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  const compassPaths = C.CAREER_PATHS.map(({ key, name }) => ({ key, name }));
   const faqs = [
     ['Does it actually cost anything to job hunt here?', 'Nothing. Creating a profile, uploading your resume, applying to jobs and getting alerts are all free, and always will be. Employers pay a small monthly fee to post — you never do.'],
     ['Do I need to upload a resume for every job?', 'Just once. Upload it (PDF, DOC or DOCX, up to 5 MB) and every application uses it automatically — or swap in a different one for a specific role whenever you want.'],
@@ -191,12 +199,14 @@ router.get('/jobseeker', (req, res) => {
   res.render('seeker/landing', {
     title: 'Job Seekers — free profile, one-click apply, job alerts',
     metaDescription: 'Create a free Youth Futures Canada profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills — internships, graduate roles, entry-level jobs and skilled careers.',
-    extraCss: ['/css/seeker.css'], extraJs: ['/js/seeker.js'], noindex: false, faqs,
+    extraCss: ['/css/seeker.css', '/css/public.css'], extraJs: ['/js/seeker.js', '/js/public.js'], noindex: false, faqs,
+    categories, compassPaths,
     jsonLd: [{
       '@context': 'https://schema.org', '@type': 'FAQPage',
       mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
     }],
   });
+ } catch (e) { next(e); }
 });
 
 // ------------------------------------------------------------------ 2. dashboard

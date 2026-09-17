@@ -20,7 +20,7 @@
       <h2><%= AUD_HEAD.h2 %></h2>
       <p class="lead"><%= AUD_HEAD.lead %></p>
     </div>
-    <ol class="landing-journey">
+    <ol class="landing-journey<%= typeof stack !== 'undefined' && stack ? ' landing-journey--stack' : '' %>">
       <% C.CAREER_STAGES.forEach(([k, n]) => { %>
         <li class="landing-journey__step">
           <span class="landing-journey__num"></span>

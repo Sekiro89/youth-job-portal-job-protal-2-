@@ -48,21 +48,13 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
 
 <%- include('partials/landing-audiences', { mode: 'employer' }) %>
 
-<section class="section section--alt" id="posting">
-  <div class="container">
-    <div class="proof-split">
-      <div class="proof-split__statement">
-        <p class="eyebrow">What every posting needs</p>
-        <h2>Complete, transparent postings job seekers can trust</h2>
-      </div>
-      <ul class="proof-split__points">
-        <li><h3>Where the job actually is</h3><p>Not a city name — the real street, unit, postal code, the works. Hiring across more than one site? List them all on the same posting so nobody applies to the wrong location.</p></li>
-        <li><h3>The name people actually know</h3><p>Whatever you're branded as day-to-day (say, "Flying Pig") leads the posting and your company page, with the registered legal entity noted underneath it — not the other way around.</p></li>
-        <li><h3>Money and expectations, spelled out</h3><p>Pay and how often it lands (hourly through annual), the education and experience bar from standard Job Bank lists, an industry tag and an optional NOC code — all of it fits on one printable sheet.</p></li>
-      </ul>
-    </div>
-  </div>
-</section>
+<%- include('partials/posting-specimen', {
+  eyebrow: 'What every posting needs',
+  heading: 'What your posting tells candidates',
+  lead: 'Every field candidates see when they open your listing — the real work location, your name (not just a legal entity), the pay, and what the role actually needs. Nothing here is optional.',
+  identityLabel: 'Employer identity',
+  identityNote: 'Registered as 1234567 Ontario Inc.',
+}) %>
 
 <%- include('partials/landing-pricing', { signupHref: '/signup/employer', audienceLabel: 'employer', priceCents: EMP, otherLabel: 'Third Party Consultants', otherCents: CON }) %>
 

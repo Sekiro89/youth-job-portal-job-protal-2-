@@ -65,10 +65,13 @@
 .landing-journey__step a { display: inline-flex; align-items: center; min-height: 32px; margin-top: 6px; font-weight: 600; font-size: .875rem; text-decoration: none; color: var(--cc-navy); }
 .landing-journey__step a:hover { color: var(--cc-red); }
 @media (min-width: 1024px) {
-  .landing-journey { grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .landing-journey__step { padding-left: 0; padding-top: 56px; }
-  .landing-journey__num { left: 0; top: 0; }
-  .landing-journey__step:not(:last-child)::after { left: 40px; right: -4px; top: 19px; bottom: auto; width: auto; height: 2px; }
+  .landing-journey:not(.landing-journey--stack) { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .landing-journey:not(.landing-journey--stack) .landing-journey__step { padding-left: 0; padding-top: 56px; }
+  .landing-journey:not(.landing-journey--stack) .landing-journey__num { left: 0; top: 0; }
+  .landing-journey:not(.landing-journey--stack) .landing-journey__step:not(:last-child)::after { left: 40px; right: -4px; top: 19px; bottom: auto; width: auto; height: 2px; }
+  /* .landing-journey--stack (partner page): stays the vertical connected list at every width, so its talent
+     spectrum reads differently from the employer page's horizontal one. */
+  .landing-journey--stack { max-width: 640px; }
 }
 
 /* ---------- editorial benefits: one lead point + two supporting points, not three equal cards ---------- */
@@ -100,6 +103,51 @@
   .proc-flow__step:not(:last-child)::after { content: "→"; position: absolute; right: -4px; top: 8px; font-size: 1.5rem; color: var(--cc-line-strong); }
 }
 
+/* ---------- stage select: "Where are you starting?" — a large interactive list, not five generic cards.
+   Every description stays visible as text (nothing is hover-only); hover/focus only adds emphasis. Real
+   <a> links to the existing /jobs?stage= filter — no new functionality. ---------- */
+.stage-select { list-style: none; margin: 28px 0 0; padding: 0; border-top: 1px solid var(--kds-border); }
+.stage-select li { border-bottom: 1px solid var(--kds-border); }
+.stage-select a { display: flex; align-items: center; gap: 20px; min-height: 44px; padding: 22px 4px; text-decoration: none; color: var(--cc-ink); transition: background-color .15s, padding-left .15s; }
+.stage-select__num { flex: none; font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-line-strong); transition: color .15s; }
+.stage-select__body { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; }
+.stage-select__body strong { font: 700 1.1875rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
+.stage-select__body span { color: var(--kds-fg-muted); font-size: .9375rem; max-width: 56ch; }
+.stage-select__arrow { flex: none; color: var(--cc-red); font-weight: 700; font-size: 1.25rem; opacity: 0; transition: opacity .15s, transform .15s; }
+.stage-select a:hover, .stage-select a:focus-visible, .stage-select a.is-active { background: var(--cc-red-100); padding-left: 16px; }
+.stage-select a:hover .stage-select__num, .stage-select a:focus-visible .stage-select__num, .stage-select a.is-active .stage-select__num { color: var(--cc-red); }
+.stage-select a:hover .stage-select__arrow, .stage-select a:focus-visible .stage-select__arrow, .stage-select a.is-active .stage-select__arrow { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .stage-select a:hover .stage-select__arrow, .stage-select a:focus-visible .stage-select__arrow { transform: translateX(4px); }
+}
+
+/* ---------- client switch: "Partner account → Client A/B/C", one active at a time — a relationship system,
+   not a marketing card grid. Illustrative only (data-client-switch in landing.js toggles .is-active). ---------- */
+.client-switch { margin-top: 28px; max-width: 640px; }
+.client-switch__account { margin: 0 0 16px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.client-switch__tabs { display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--kds-border); padding-bottom: 0; }
+.client-switch__tab { min-height: 48px; padding: 0 20px; border: 1px solid var(--kds-border); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--cc-surface); color: var(--cc-navy); font: 700 .9375rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, color .15s; }
+.client-switch__tab:hover { color: var(--cc-red); }
+.client-switch__tab.is-active { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
+.client-switch__note { margin: 14px 0 0; }
+
+/* ---------- posting specimen: an annotated example posting (a labelled document), not a 3-card row.
+   Each field gets its label from the data-annotate attribute itself, so the markup stays plain content. ---------- */
+.specimen-split { margin-top: 8px; display: grid; gap: 32px; grid-template-columns: 1fr; align-items: start; }
+.specimen { background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-md, 8px); padding: 28px 24px; position: relative; }
+.specimen__tag { position: absolute; top: 20px; right: 24px; margin: 0; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.specimen__title { margin: 0 0 20px; padding-right: 110px; font-size: 1.375rem; color: var(--cc-navy); }
+.specimen__field { margin: 0 0 20px; font: 700 1.0625rem/1.4 var(--cc-font-display); color: var(--cc-ink); }
+.specimen__field:last-child { margin-bottom: 0; }
+.specimen__field::before { content: attr(data-annotate); display: block; margin-bottom: 4px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--cc-red); }
+.specimen__note { display: block; margin-top: 2px; font: 500 .8125rem/1.4 var(--kds-font-sans); color: var(--kds-fg-muted); }
+.specimen__row { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+@media (min-width: 900px) {
+  .specimen-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 56px; }
+  .specimen-split__statement { position: sticky; top: calc(var(--cc-header-h) + 24px); }
+  .specimen { padding: 36px 40px; }
+}
+
 /* ---------- proof split: a statement on one side, proof points stacked on the other — not a 3-card row ---------- */
 .proof-split { margin-top: 8px; display: grid; gap: 32px; grid-template-columns: 1fr; align-items: start; }
 .proof-split__points { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
@@ -112,19 +160,33 @@
   .proof-split__statement { position: sticky; top: calc(var(--cc-header-h) + 24px); }
 }
 
-/* ---------- workflow chain: a labelled pipeline (account → clients → postings → visibility), used only
-   on the consultant page in place of a plain feature grid. ---------- */
+/* ---------- workflow chain: a labelled pipeline (account → clients → postings → visibility), used on the
+   employer page (Post→Reach→Review→Hire) and the consultant page in place of a plain feature grid. Large
+   numbers + a hover/focus-active state, so a stage genuinely responds instead of just sitting in a row. ---------- */
 .workflow-chain { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); counter-reset: flow; }
-.workflow-chain__step { counter-increment: flow; position: relative; background: #fff; padding: 24px 26px; display: grid; gap: 8px; }
-.workflow-chain__step::before { content: counter(flow, decimal-leading-zero); font: 800 .75rem/1 var(--cc-font-display); color: var(--kds-fg-faint); letter-spacing: .06em; }
+.workflow-chain__step { counter-increment: flow; position: relative; background: #fff; padding: 28px 26px; display: grid; gap: 10px; transition: background-color .15s; }
+.workflow-chain__step::before { content: counter(flow, decimal-leading-zero); font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-line-strong); letter-spacing: 0; transition: color .15s; }
 .workflow-chain__step h3 { margin: 0; font-size: 1.0625rem; }
 .workflow-chain__step p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+.workflow-chain__step:hover, .workflow-chain__step:focus-within { background: var(--cc-red-100); }
+.workflow-chain__step:hover::before, .workflow-chain__step:focus-within::before { color: var(--cc-red); }
 @media (min-width: 900px) {
   .workflow-chain { grid-template-columns: repeat(3, 1fr); }
   .workflow-chain--4 { grid-template-columns: repeat(4, 1fr); }
   .workflow-chain__step:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%); z-index: 1; width: 26px; height: 26px; border-radius: 50%; background: var(--cc-navy); color: #fff; display: grid; place-items: center; font-size: .9375rem; }
   .workflow-chain__step:last-child::before { color: var(--cc-red); }
 }
+
+/* vertical variant — the partner "account → clients → postings → billing" pipeline stays a single column and
+   connected by a line even at desktop, so it reads as a hierarchy rather than the employer page's horizontal
+   flow (same brand system, deliberately different shape). */
+.workflow-chain--vertical { grid-template-columns: 1fr !important; background: none; gap: 0; counter-reset: flow; max-width: 560px; }
+.workflow-chain--vertical .workflow-chain__step { background: none; padding: 0 0 0 64px; margin-bottom: 28px; }
+.workflow-chain--vertical .workflow-chain__step::before { position: absolute; left: 0; top: 0; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font-size: 1.0625rem; }
+.workflow-chain--vertical .workflow-chain__step:hover::before, .workflow-chain--vertical .workflow-chain__step:focus-within::before { background: var(--cc-red); color: #fff; }
+.workflow-chain--vertical .workflow-chain__step:not(:last-child)::after { content: "↓"; position: absolute; left: 15px; top: 50px; color: var(--cc-line-strong); font-size: 1.125rem; line-height: 1; }
+.workflow-chain--vertical .workflow-chain__step:last-child::before { background: var(--cc-red); }
+.workflow-chain--vertical .workflow-chain__step:last-child { margin-bottom: 0; }
 
 /* ---------- five-column audience grid (1 → 2 → 5) — still used by pathway-style contexts elsewhere ---------- */
 .grid--5 { grid-template-columns: minmax(0, 1fr); }

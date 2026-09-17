@@ -40,17 +40,37 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   <div class="container">
     <div class="section__head">
       <p class="eyebrow">Built for agencies</p>
-      <h2>One account, all your clients</h2>
+      <h2>Everything you manage, from one place</h2>
     </div>
-    <ul class="workflow-chain">
-      <li class="workflow-chain__step"><h3>Unlimited employer profiles</h3><p>Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></li>
-      <li class="workflow-chain__step"><h3>Post on behalf of any client</h3><p>The posting form asks "Post as company". Switch between clients with one click on every jobs list and dashboard.</p></li>
-      <li class="workflow-chain__step"><h3>Billing that doesn't scatter</h3><p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p></li>
-    </ul>
+    <ol class="workflow-chain workflow-chain--vertical">
+      <li class="workflow-chain__step"><h3>Partner account</h3><p>One login for your whole practice — created once, used for every client you take on.</p></li>
+      <li class="workflow-chain__step"><h3>Clients</h3><p>Add every client as its own company profile — name, logo, location, description. Job seekers see the client as the employer, not you.</p></li>
+      <li class="workflow-chain__step"><h3>Postings</h3><p>The posting form asks "Post as company." Switch between clients with one click on every jobs list and dashboard.</p></li>
+      <li class="workflow-chain__step"><h3>Billing</h3><p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p></li>
+    </ol>
   </div>
 </section>
 
-<%- include('partials/landing-audiences', { mode: 'network' }) %>
+<section class="section section--alt" id="switch">
+  <div class="container">
+    <div class="section__head">
+      <p class="eyebrow">One login, every client</p>
+      <h2>Switch clients without switching accounts</h2>
+      <p class="lead">Every client gets their own profile under your one login — pick who you're posting for and everything after that (postings, applicants, billing) is scoped to them.</p>
+    </div>
+    <div class="client-switch" role="group" aria-label="Example client switcher">
+      <p class="client-switch__account">Your partner account</p>
+      <div class="client-switch__tabs">
+        <button type="button" class="client-switch__tab is-active" aria-pressed="true">Client A</button>
+        <button type="button" class="client-switch__tab" aria-pressed="false">Client B</button>
+        <button type="button" class="client-switch__tab" aria-pressed="false">Client C</button>
+      </div>
+      <p class="client-switch__note small muted">Illustrative — the same "post as company" switch already in your dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/landing-audiences', { mode: 'network', stack: true }) %>
 
 <section class="section" id="how-it-works">
   <div class="container">
@@ -66,21 +86,13 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   </div>
 </section>
 
-<section class="section section--alt" id="posting">
-  <div class="container">
-    <div class="proof-split">
-      <div class="proof-split__statement">
-        <p class="eyebrow">What every posting needs</p>
-        <h2>Complete, transparent postings job seekers can trust</h2>
-      </div>
-      <ul class="proof-split__points">
-        <li><h3>Where the work happens</h3><p>Street, unit, postal code — the real thing, not a city name. Sites in more than one location get every address listed on the same posting.</p></li>
-        <li><h3>The client's name, not yours</h3><p>Each client profile carries the name their candidates would recognize (say, "Flying Pig"), which leads on every posting and company page, legal name tucked beneath. Your agency stays invisible to job seekers.</p></li>
-        <li><h3>Pay and expectations, upfront</h3><p>Wage or salary with the pay period, education and experience from standard Job Bank lists, an industry tag and an optional NOC code — everything a candidate needs on one printable sheet.</p></li>
-      </ul>
-    </div>
-  </div>
-</section>
+<%- include('partials/posting-specimen', {
+  eyebrow: 'What every posting needs',
+  heading: 'Your client, not your agency, leads every posting',
+  lead: 'Each client profile carries the name their candidates would recognize — that leads the posting and the company page, legal name tucked beneath. Your agency stays invisible to job seekers.',
+  identityLabel: 'Client identity',
+  identityNote: 'Not the agency\'s own name',
+}) %>
 
 <%- include('partials/landing-pricing', { signupHref: '/signup/consultant', audienceLabel: 'consultant', priceCents: CON, otherLabel: 'Employers posting for their own company', otherCents: EMP }) %>
 

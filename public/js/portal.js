@@ -145,4 +145,14 @@
     });
     window.addEventListener('beforeunload', function (e) { if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; } });
   }
+
+  // Consultant landing page: illustrative "switch clients" tabs (.client-switch) — one active at a time.
+  document.querySelectorAll('.client-switch__tabs').forEach(function (tabs) {
+    tabs.addEventListener('click', function (e) {
+      var btn = e.target.closest('.client-switch__tab');
+      if (!btn) return;
+      tabs.querySelectorAll('.client-switch__tab').forEach(function (t) { t.classList.remove('is-active'); t.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('is-active'); btn.setAttribute('aria-pressed', 'true');
+    });
+  });
 })();

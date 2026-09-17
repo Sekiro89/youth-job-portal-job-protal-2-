@@ -1,0 +1,64 @@
+<%#
+  "Find your lane" — the career-exploration list + career-compass, shared by the homepage and the job-seeker
+  landing page (client spec 2026-09-17: "use the existing career compass / exploration interface where
+  appropriate" on /jobseeker too, same broad groupings, same live category data — not a second implementation).
+  Requires locals: categories (from C.CATEGORIES via routes/public.js|seeker.js, each { key, name, n, path } —
+  path is C.CATEGORY_TO_PATH[key]), compassPaths (C.CAREER_PATHS mapped to { key, name }). Optional: eyebrow.
+  Styles: /css/public.css (.lane*/.compass*) — the including page must load it. Behaviour: /js/public.js
+  ([data-compass-row] hover/focus lights up the matching compass node) — the including page must load it too.
+%>
+<%
+  const laneEyebrow = typeof eyebrow === 'string' ? eyebrow : '05 — Explore';
+  const laneCategories = categories.filter(c => c.n > 0).slice(0, 6);
+  const COMPASS_VB = { w: 400, h: 320 };
+  const COMPASS_CENTER = { cx: 200, cy: 160 };
+  const COMPASS_POS = {
+    technology: { cx: 200, cy: 50 },
+    business: { cx: 324, cy: 126 },
+    services: { cx: 276, cy: 249 },
+    skilled_trades: { cx: 124, cy: 249 },
+    healthcare: { cx: 76, cy: 126 },
+  };
+  const COMPASS_LABEL = { technology: 'Technology', healthcare: 'Healthcare', business: 'Business', skilled_trades: 'Skilled Trades', services: 'Services' };
+%>
+<section class="section section--alt lane" aria-labelledby="lane-h">
+  <div class="container lane__grid">
+    <div class="lane__head">
+      <p class="eyebrow"><%= laneEyebrow %></p>
+      <h2 id="lane-h">Find your lane.</h2>
+      <p class="lead">Explore real opportunities across the fields shaping Canada's workforce.</p>
+    </div>
+    <div class="lane__compass compass" aria-hidden="true">
+      <svg class="compass__svg" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid meet">
+        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
+          <line class="compass__line" x1="<%= COMPASS_CENTER.cx %>" y1="<%= COMPASS_CENTER.cy %>" x2="<%= pos.cx %>" y2="<%= pos.cy %>"/>
+        <% }) %>
+        <circle class="compass__center" cx="<%= COMPASS_CENTER.cx %>" cy="<%= COMPASS_CENTER.cy %>" r="7"/>
+        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; %>
+          <circle class="compass__node" data-path="<%= p.key %>" cx="<%= pos.cx %>" cy="<%= pos.cy %>" r="7"/>
+        <% }) %>
+      </svg>
+      <ul class="compass__labels">
+        <li class="compass__label compass__label--center" style="--x:50%; --y:50%">Your starting point</li>
+        <% compassPaths.forEach(p => { const pos = COMPASS_POS[p.key]; if (!pos) return; const pct = { x: (pos.cx / COMPASS_VB.w * 100).toFixed(1), y: (pos.cy / COMPASS_VB.h * 100).toFixed(1) }; %>
+          <li class="compass__label" data-path="<%= p.key %>" style="--x:<%= pct.x %>%; --y:<%= pct.y %>%"><%= COMPASS_LABEL[p.key] || p.name %></li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="lane__list-wrap">
+      <% if (laneCategories.length) { %>
+        <ol class="lane-list">
+          <% laneCategories.forEach(c => { %>
+            <li>
+              <a href="/jobs?category=<%= c.key %>" <% if (c.path) { %>data-compass-row="<%= c.path %>"<% } %>>
+                <span class="lane-list__name"><%= c.name %></span>
+                <span class="lane-list__meta"><%= c.n %> open role<%= c.n === 1 ? '' : 's' %> <span class="lane-list__arrow" aria-hidden="true">→</span></span>
+              </a>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
+      <a class="lane-more" href="/jobs">+ Explore all career areas</a>
+    </div>
+  </div>
+</section>

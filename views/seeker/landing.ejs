@@ -45,37 +45,58 @@
   </div>
 </section>
 
-<%- include('../portal/partials/landing-audiences', { mode: 'seek' }) %>
-
-<section class="section" id="how-it-works">
+<%
+  // "Where are you starting?" — an interactive career-start selector, not five generic cards. Same
+  // C.CAREER_STAGES data and copy the shared landing-audiences partial uses for 'seek' mode, presented as a
+  // clickable list instead: hover/focus highlights a stage, the description is always readable as text too
+  // (no information is hover-only), and each row is still a real link to the existing /jobs?stage= filter.
+  const STAGE_COPY = { student: 'Part-time and student-friendly work that fits around your studies.', intern_coop: 'Internships and co-ops that turn what you\'re learning into real experience.', graduate: 'Your first full-time role after finishing your studies.', early_career: 'Entry-level and junior roles to build your track record.', skilled: 'Technical, trade and experienced roles that match the skills you\'ve already built.' };
+%>
+<section class="section section--alt" id="starting-point">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">How it works</p>
-      <h2>Three steps to your next job</h2>
+      <p class="eyebrow">Choose your starting point</p>
+      <h2>Where are you starting?</h2>
+      <p class="lead">Youth Futures Canada supports the full journey — not just your first job, but every move after it.</p>
     </div>
-    <ol class="proc-flow">
-      <li class="proc-flow__step"><span class="proc-flow__n">01</span><h3>Create your free profile</h3><p>Sign up with your email, add a headline and upload your resume. It takes about five minutes.</p></li>
-      <li class="proc-flow__step"><span class="proc-flow__n">02</span><h3>Choose what you want</h3><p>Pick job categories, provinces, keywords and skills. That becomes your alert criteria and your match list.</p></li>
-      <li class="proc-flow__step"><span class="proc-flow__n">03</span><h3>Apply in one click</h3><p>See matched jobs on your dashboard, apply with your saved resume, and track every application's status.</p></li>
+    <ol class="stage-select">
+      <% C.CAREER_STAGES.forEach(([k, n], i) => { %>
+        <li>
+          <a href="/jobs?stage=<%= k %>" class="<%= i === 0 ? 'is-active' : '' %>">
+            <span class="stage-select__num"><%= String(i + 1).padStart(2, '0') %></span>
+            <span class="stage-select__body"><strong><%= n %></strong><span><%= STAGE_COPY[k] %></span></span>
+            <span class="stage-select__arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      <% }) %>
     </ol>
   </div>
 </section>
 
-<section class="section section--alt" id="posting">
+<%- include('../partials/lane', { categories, compassPaths, eyebrow: 'Find your lane' }) %>
+
+<section class="section" id="how-it-works">
   <div class="container">
-    <div class="proof-split">
-      <div class="proof-split__statement">
-        <p class="eyebrow">What every posting shows you</p>
-        <h2>Complete, transparent postings you can trust</h2>
-      </div>
-      <ul class="proof-split__points">
-        <li><h3>Exactly where you'd be working</h3><p>Real street address, unit, postal code — never just a city — so you know the commute before you ever hit apply.</p></li>
-        <li><h3>Who you'd actually be working for</h3><p>The brand name leads every posting, legal entity noted beneath it — no blind ads, no agency hiding who's really behind the role.</p></li>
-        <li><h3>What it pays, what it needs</h3><p>Pay with its period spelled out, the education and experience bar from standard lists, and an industry tag — everything fits on one printable sheet.</p></li>
-      </ul>
+    <div class="section__head">
+      <p class="eyebrow">Make your next move</p>
+      <h2>One journey, four steps</h2>
     </div>
+    <ol class="workflow-chain workflow-chain--vertical">
+      <li class="workflow-chain__step"><h3>Create your profile</h3><p>Sign up with your email, add a headline and upload your resume. It takes about five minutes.</p></li>
+      <li class="workflow-chain__step"><h3>Find what you want</h3><p>Pick job categories, provinces, keywords and skills. That becomes your alert criteria and your match list.</p></li>
+      <li class="workflow-chain__step"><h3>Apply</h3><p>See matched jobs on your dashboard and apply in one click with your saved resume.</p></li>
+      <li class="workflow-chain__step"><h3>Track your application</h3><p>Every application's status — submitted, viewed, shortlisted — stays visible on your Applications page.</p></li>
+    </ol>
   </div>
 </section>
+
+<%- include('../portal/partials/posting-specimen', {
+  eyebrow: 'Know what you\'re applying for',
+  heading: 'Complete, transparent postings you can trust',
+  lead: 'Real street address, unit, postal code — never just a city — so you know the commute before you ever hit apply. The brand name leads every posting, legal entity noted beneath it.',
+  identityLabel: 'Employer',
+  identityNote: 'Registered as 1234567 Ontario Inc.',
+}) %>
 
 <%- include('../portal/partials/landing-pricing', { signupHref: '/signup/seeker', audienceLabel: 'seeker' }) %>
 
