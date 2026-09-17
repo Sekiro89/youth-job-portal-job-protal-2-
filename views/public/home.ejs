@@ -1,19 +1,26 @@
 <section class="hero">
-  <div class="hero__shape" aria-hidden="true"></div>
   <div class="container hero__inner">
-    <p class="eyebrow fade-up fade-up--1">Careers in Canada, for young talent everywhere</p>
-    <h1 class="hero__title fade-up fade-up--1">Your next opportunity <span class="hero__title-accent">could be in Canada.</span></h1>
-    <div class="hero__row fade-up fade-up--2">
-      <p class="lead hero__lead">Search <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> Canadian employer<%= totals.companies === 1 ? '' : 's' %> — internships, graduate roles, entry-level jobs, skilled trades and experienced positions, for young talent at every stage of their career.</p>
-      <ul class="hero__stats-rail">
-        <li><strong><%= totals.jobs %></strong><span>open roles</span></li>
-        <li><strong><%= totals.companies %></strong><span>employers</span></li>
-        <li><strong><%= provincesWithJobs %></strong><span>provinces &amp; territories</span></li>
-      </ul>
+    <div class="hero__copy">
+      <p class="eyebrow fade-up fade-up--1">Careers in Canada, for young talent everywhere</p>
+      <h1 class="hero__title fade-up fade-up--1">Your next opportunity <span class="hero__title-accent">could be in Canada.</span></h1>
+      <div class="hero__row fade-up fade-up--2">
+        <p class="lead hero__lead">Search <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> Canadian employer<%= totals.companies === 1 ? '' : 's' %> — internships, graduate roles, entry-level jobs, skilled trades and experienced positions, for young talent at every stage of their career.</p>
+        <ul class="hero__stats-rail">
+          <li><strong><%= totals.jobs %></strong><span>open roles</span></li>
+          <li><strong><%= totals.companies %></strong><span>employers</span></li>
+          <li><strong><%= provincesWithJobs %></strong><span>provinces &amp; territories</span></li>
+        </ul>
+      </div>
+      <div class="hero__cta fade-up fade-up--3">
+        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Find Jobs</a>
+        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="#career-paths">Explore Opportunities</a>
+      </div>
     </div>
-    <div class="hero__cta fade-up fade-up--3">
-      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Find Jobs</a>
-      <a class="kds-btn kds-btn--ghost kds-btn--lg" href="#career-paths">Explore Opportunities</a>
+    <div class="hero__shape fade-up fade-up--2" aria-hidden="true">
+      <picture>
+        <source srcset="/img/hero-accent.webp" type="image/webp">
+        <img src="/img/hero-accent.jpg" alt="" width="900" height="502">
+      </picture>
     </div>
   </div>
 </section>
