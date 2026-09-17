@@ -1,5 +1,5 @@
 <% const dashHref = ({employer:'/employer/dashboard',consultant:'/consultant/dashboard',seeker:'/jobseeker/dashboard',admin:'/admin'})[user.role]; %>
-<header class="page-head">
+<header class="page-head account-hero">
   <div class="container page-head__inner">
     <div>
       <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="<%= dashHref %>">Dashboard</a></li><li aria-current="page">Account settings</li></ol>
@@ -12,63 +12,79 @@
 </header>
 
 <section class="section auth">
-  <div class="container container--narrow">
-    <div class="stack auth__stack">
-      <% if (locals.isAdmin) { %><div class="auth-info auth-info--admin"><strong>Administrator</strong> — this page only covers your own sign-in details. Manage the site from <a href="/admin">/admin</a>.</div><% } %>
-      <div class="card">
-        <h2 class="auth__section">Your details</h2>
-        <dl class="auth-meta">
-          <div><dt>Account type</dt><dd><span class="badge badge--teal"><%= roleLabel %></span></dd></div>
-          <div><dt>Email</dt><dd><span class="auth-meta__email"><%= user.email %></span><br><span class="small muted">Contact us to change it</span></dd></div>
-          <div><dt>Member since</dt><dd><%= h.formatDate(user.created_at) %></dd></div>
-        </dl>
-        <%- include('_form-errors', { errors }) %>
-        <form class="form" method="post" action="/account" novalidate>
-          <input type="hidden" name="form" value="profile">
-          <div class="form-row">
-            <%- include('_field', { f: { name: 'name', label: 'Full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
-            <%- include('_field', { f: { name: 'phone', label: 'Phone', type: 'tel', value: values.phone, error: errors.phone, autocomplete: 'tel', inputmode: 'tel', required: false } }) %>
-          </div>
-          <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save details</button></div>
-        </form>
-      </div>
+  <div class="container account-shell">
+    <% if (locals.isAdmin) { %><div class="auth-info auth-info--admin account-shell__notice"><strong>Administrator</strong> — this page only covers your own sign-in details. Manage the site from <a href="/admin">/admin</a>.</div><% } %>
 
-      <div class="card">
-        <h2 class="auth__section">Change password</h2>
-        <%- include('_form-errors', { errors: pwErrors }) %>
-        <form class="form" method="post" action="/account" novalidate>
-          <input type="hidden" name="form" value="password">
-          <input type="hidden" name="email" value="<%= user.email %>" autocomplete="username">
-          <%- include('_password', { f: { name: 'current_password', label: 'Current password', error: pwErrors.current_password, autocomplete: 'current-password' } }) %>
-          <div class="form-row">
-            <%- include('_password', { f: { name: 'password', label: 'New password', error: pwErrors.password, hint: 'At least 8 characters, with a letter and a number.' } }) %>
-            <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm new password', error: pwErrors.password_confirm } }) %>
-          </div>
-          <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Change password</button></div>
-        </form>
-      </div>
+    <div class="account-layout">
+      <nav class="account-nav" aria-label="Settings sections">
+        <p class="account-nav__label">Account</p>
+        <ul>
+          <li><a href="#profile" data-account-link>Profile</a></li>
+          <li><a href="#security" data-account-link>Security</a></li>
+          <li><a href="#devices" data-account-link>Devices</a></li>
+        </ul>
+      </nav>
 
-      <div class="card">
-        <h2 class="auth__section">Signed-in devices</h2>
-        <p class="muted">Lost a phone or used a shared computer? Sign out everywhere except this device. Changing your password does this automatically.</p>
-        <form class="form" method="post" action="/account" novalidate>
-          <input type="hidden" name="form" value="logout_all">
-          <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Sign out of all other devices</button></div>
-        </form>
-      </div>
+      <div class="account-main">
+        <section class="account-section" id="profile">
+          <p class="eyebrow">Your details</p>
+          <h2>Profile</h2>
+          <dl class="auth-meta">
+            <div><dt>Account type</dt><dd><span class="badge badge--teal"><%= roleLabel %></span></dd></div>
+            <div><dt>Email</dt><dd><span class="auth-meta__email"><%= user.email %></span><br><span class="small muted">Contact us to change it</span></dd></div>
+            <div><dt>Member since</dt><dd><%= h.formatDate(user.created_at) %></dd></div>
+          </dl>
+          <%- include('_form-errors', { errors }) %>
+          <form class="form" method="post" action="/account" novalidate>
+            <input type="hidden" name="form" value="profile">
+            <div class="form-row">
+              <%- include('_field', { f: { name: 'name', label: 'Full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
+              <%- include('_field', { f: { name: 'phone', label: 'Phone', type: 'tel', value: values.phone, error: errors.phone, autocomplete: 'tel', inputmode: 'tel', required: false } }) %>
+            </div>
+            <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Save details</button></div>
+          </form>
+        </section>
 
-      <div class="card danger-zone">
-        <h2 class="auth__section">Danger zone</h2>
-        <p class="muted">Deactivating signs you out and disables sign-in. Your postings and applications are kept but hidden. Contact us to restore the account.</p>
-        <% if (locals.deactivateError) { %><div class="auth-alert" role="alert"><p><%= deactivateError %></p></div><% } %>
-        <form class="form" method="post" action="/account" novalidate>
-          <input type="hidden" name="form" value="deactivate">
-          <div class="field">
-            <label for="confirm_text">Type <strong>DEACTIVATE</strong> to confirm <span class="req">*</span></label>
-            <input class="input" id="confirm_text" name="confirm_text" type="text" autocomplete="off" autocapitalize="characters" required>
-          </div>
-          <div class="form-actions"><button class="kds-btn kds-btn--danger" type="submit" data-confirm="Deactivate your account and sign out?">Deactivate my account</button></div>
-        </form>
+        <section class="account-section" id="security">
+          <p class="eyebrow">Security</p>
+          <h2>Change password</h2>
+          <%- include('_form-errors', { errors: pwErrors }) %>
+          <form class="form" method="post" action="/account" novalidate>
+            <input type="hidden" name="form" value="password">
+            <input type="hidden" name="email" value="<%= user.email %>" autocomplete="username">
+            <%- include('_password', { f: { name: 'current_password', label: 'Current password', error: pwErrors.current_password, autocomplete: 'current-password' } }) %>
+            <div class="form-row">
+              <%- include('_password', { f: { name: 'password', label: 'New password', error: pwErrors.password, hint: 'At least 8 characters, with a letter and a number.' } }) %>
+              <%- include('_password', { f: { name: 'password_confirm', label: 'Confirm new password', error: pwErrors.password_confirm } }) %>
+            </div>
+            <div class="form-actions"><button class="kds-btn kds-btn--brand" type="submit">Change password</button></div>
+          </form>
+        </section>
+
+        <section class="account-section" id="devices">
+          <p class="eyebrow">Security</p>
+          <h2>Signed-in devices</h2>
+          <p class="muted">Lost a phone or used a shared computer? Sign out everywhere except this device. Changing your password does this automatically.</p>
+          <form class="form" method="post" action="/account" novalidate>
+            <input type="hidden" name="form" value="logout_all">
+            <div class="form-actions"><button class="kds-btn kds-btn--ghost" type="submit">Sign out of all other devices</button></div>
+          </form>
+        </section>
+
+        <section class="account-section account-section--danger">
+          <p class="eyebrow">Danger zone</p>
+          <h2>Deactivate your account</h2>
+          <p class="muted">Deactivating signs you out and disables sign-in. Your postings and applications are kept but hidden. Contact us to restore the account.</p>
+          <% if (locals.deactivateError) { %><div class="auth-alert" role="alert"><p><%= deactivateError %></p></div><% } %>
+          <form class="form" method="post" action="/account" novalidate>
+            <input type="hidden" name="form" value="deactivate">
+            <div class="field">
+              <label for="confirm_text">Type <strong>DEACTIVATE</strong> to confirm <span class="req">*</span></label>
+              <input class="input" id="confirm_text" name="confirm_text" type="text" autocomplete="off" autocapitalize="characters" required>
+            </div>
+            <div class="form-actions"><button class="kds-btn kds-btn--danger" type="submit" data-confirm="Deactivate your account and sign out?">Deactivate my account</button></div>
+          </form>
+        </section>
       </div>
     </div>
   </div>

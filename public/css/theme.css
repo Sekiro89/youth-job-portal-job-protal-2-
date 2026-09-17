@@ -176,8 +176,11 @@ a:hover { color: var(--cc-red); }
 .site-footer a:hover { color: #fff; }
 .site-footer .muted { color: color-mix(in srgb, #fff 65%, transparent); }
 .footer-nav__meta { color: color-mix(in srgb, #fff 65%, transparent); }
-.footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding: 16px 0; font-size: .8125rem; }
-.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; }
+.footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding: 14px 0; font-size: .8125rem; }
+/* ul.footer-utility__links (not just .footer-utility__links) — needs to out-specificity ".site-footer ul"
+   above, which was otherwise winning and forcing this into its display:grid single-column stack, exactly the
+   "Privacy/Terms/Contact wasting vertical space" bug this row exists to avoid. */
+ul.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; }
 .footer-utility__links a { font-weight: 700; color: #fff; }
 .footer-utility__links a:hover { color: var(--cc-spark); }
 .footer-utility__meta { display: grid; gap: 2px; color: color-mix(in srgb, #fff 55%, transparent); text-align: left; }

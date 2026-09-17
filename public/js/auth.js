@@ -26,4 +26,24 @@
   // move focus to the error summary after a failed submit so screen readers announce it
   var alert = document.getElementById('form-errors');
   if (alert) alert.focus();
+
+  // Account settings: highlight the current section in the settings nav as you scroll (Profile/Security/Devices).
+  var accountLinks = document.querySelectorAll('[data-account-link]');
+  var accountSections = document.querySelectorAll('.account-section[id]');
+  if (accountLinks.length && accountSections.length && 'IntersectionObserver' in window) {
+    var byId = {};
+    accountLinks.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+    var active = null;
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var link = byId[entry.target.id];
+        if (!link || active === link) return;
+        if (active) active.classList.remove('is-active');
+        active = link;
+        active.classList.add('is-active');
+      });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    accountSections.forEach(function (s) { observer.observe(s); });
+  }
 })();

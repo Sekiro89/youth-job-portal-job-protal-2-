@@ -122,17 +122,39 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .role-hint { flex: 1 1 auto; text-align: center; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .8125rem; color: var(--cc-navy); }
 .role-hint.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 
-/* account */
+/* ---------- account settings: a two-column workspace (nav + main), not four narrow stacked cards.
+   .account-shell widens the page beyond the shared .container--narrow (640px, used by other auth/checkout
+   pages, left untouched) since this page alone needs the extra room. ---------- */
+.account-shell { max-width: 1100px; }
+.account-shell__notice { margin-bottom: 28px; }
+.account-layout { display: grid; gap: 32px; }
+.account-nav__label { margin: 0 0 10px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.account-nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.account-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); transition: border-color .15s, background-color .15s, color .15s; }
+.account-nav a:hover, .account-nav a:focus-visible { border-color: var(--cc-navy); }
+.account-nav a.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
+.account-main { max-width: 720px; min-width: 0; }
+.account-section { padding: 32px 0; border-bottom: 1px solid var(--kds-border); scroll-margin-top: calc(var(--cc-header-h) + 20px); }
+.account-section:first-child { padding-top: 0; }
+.account-section h2 { margin: 4px 0 20px; }
+.account-section--danger { margin-top: 12px; padding: 24px; border-bottom: 0; background: var(--cc-red-100); border-radius: var(--kds-radius-md, 8px); }
+
 .auth-meta { display: grid; gap: 10px; margin: 14px 0 16px; }
 .auth-meta div { display: grid; gap: 2px; align-content: start; min-width: 0; }
 .auth-meta dd { overflow-wrap: anywhere; margin: 0; }
 .auth-meta dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-muted); font-weight: 600; }
-.danger-zone { border-color: #f3b1b1; background: #fffafa; }
-.danger-zone .auth__section { color: var(--cc-red-700); border-bottom-color: #f3b1b1; }
 .kds-btn--danger { background: var(--cc-red); color: #fff; }
 .kds-btn--danger:hover { background: var(--cc-red-700); color: #fff; }
 
 @media (min-width: 640px) {
   .auth-meta { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; }
   .auth .form-actions .kds-btn--block { width: auto; min-width: 240px; margin: 0 auto; }
+}
+@media (min-width: 900px) {
+  .account-layout { grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); gap: 56px; align-items: start; }
+  .account-nav { position: sticky; top: calc(var(--cc-header-h) + 24px); }
+  .account-nav ul { flex-direction: column; gap: 2px; }
+  .account-nav a { border: 0; border-left: 2px solid transparent; border-radius: 0; padding: 8px 0 8px 16px; min-height: 0; color: var(--kds-fg-muted); }
+  .account-nav a:hover, .account-nav a:focus-visible { color: var(--cc-navy); }
+  .account-nav a.is-active { background: none; color: var(--cc-red); border-left-color: var(--cc-red); font-weight: 700; }
 }
