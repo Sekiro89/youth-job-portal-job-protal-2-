@@ -1,6 +1,32 @@
-/* Canada Careers — auth pages (signup chooser / signup ×3 / login / forgot / reset / account). Mobile first; tokens from theme.css only.
-   Skeleton: standard .page-head (eyebrow · h1 · lead) → .section > .container--narrow > .card--pad-lg.
-   The /signup chooser uses .container > .grid--3 of role cards. Containers, bands, section paddings, cards and buttons come from theme.css. */
+/* Youth Futures Canada — auth pages (signup chooser / signup ×3 / login / forgot / reset). Mobile first; tokens from
+   theme.css only. Skeleton (2026 editorial rework): a full-height split screen — a solid navy brand pane (sticky on
+   desktop) beside the form, instead of a page-head band stacked above a centred card. account.ejs is a dashboard
+   settings page and keeps the standard .page-head + .dash shell, not this split. */
+.auth-shell { display: grid; grid-template-columns: 1fr; min-height: calc(100vh - var(--cc-header-h)); }
+.auth-shell__brand { background: var(--cc-navy); color: #fff; padding: 32px 20px; position: relative; overflow: hidden; }
+.auth-shell__brand::before {
+  content: ""; position: absolute; inset: -30% -10% auto auto; width: 55%; aspect-ratio: 1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cc-red) 45%, transparent), transparent 70%);
+  opacity: .6; pointer-events: none;
+}
+.auth-shell__brand-inner { position: relative; max-width: 440px; margin: 0 auto; }
+.auth-shell__logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 28px; }
+.auth-shell__logo img { display: block; background: #fff; border-radius: 10px; padding: 4px; }
+.auth-shell__logo span { font: 800 1rem/1.2 var(--cc-font-display); color: #fff; }
+.auth-shell__logo b { display: block; font-size: .6875rem; font-weight: 700; color: var(--cc-red); letter-spacing: .14em; text-transform: uppercase; }
+.auth-shell .breadcrumb { color: color-mix(in srgb, #fff 55%, transparent); }
+.auth-shell .breadcrumb a { color: color-mix(in srgb, #fff 70%, transparent); }
+.auth-shell .eyebrow { color: var(--cc-spark); }
+.auth-shell .eyebrow::before { background: var(--cc-spark); }
+.auth-shell__brand h1 { color: #fff; }
+.auth-shell__brand .lead { color: color-mix(in srgb, #fff 82%, transparent); }
+.auth-shell__form { padding: 32px 20px 48px; display: flex; align-items: start; justify-content: center; }
+.auth-shell__form > * { width: 100%; max-width: 560px; }
+@media (min-width: 1024px) {
+  .auth-shell { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .auth-shell__brand { position: sticky; top: var(--cc-header-h); height: calc(100vh - var(--cc-header-h)); padding: 64px 48px; display: flex; align-items: center; }
+  .auth-shell__form { padding: 64px 48px; justify-content: start; }
+}
 
 .auth__card { display: grid; gap: 0; }
 .auth__section { margin: 8px 0 -4px; padding-bottom: 8px; border-bottom: 1px solid var(--kds-border); }
@@ -34,6 +60,9 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .pw .input { padding-right: 72px; }
 .pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
 .pw__toggle:hover { background: var(--cc-navy-50); }
+
+.role-grid { grid-template-columns: 1fr; }
+@media (min-width: 700px) { .role-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* /signup role chooser: .card + icon / title / desc / cta */
 .role-card { display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "icon title" "icon desc" "icon cta"; column-gap: 14px; row-gap: 6px; align-content: start; text-decoration: none; color: var(--cc-ink); transition: border-color .15s, box-shadow .15s; }

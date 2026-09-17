@@ -1,8 +1,5 @@
 <%- include('_head', { h: { eyebrow: 'Third Party Consultant account', h1: 'Create your consultant account', leadHtml: 'Manage postings for many employers under one login — $9.99 per posting per month + GST. <a href="/signup">Not a consultant?</a>', crumb: 'Create your account' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/consultant" novalidate>
         <%- include('_field', { f: { name: 'name', label: 'Your full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
@@ -37,4 +34,4 @@
       <p class="auth__foot">Already have an account? <a href="/login?role=consultant">Sign in</a></p>
     </div>
   </div>
-</section>
+</div>

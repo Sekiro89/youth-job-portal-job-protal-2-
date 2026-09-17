@@ -16,14 +16,14 @@
         ? 'Youth Futures Canada supports the full journey — not just your first job, but every move after it.'
         : 'Youth Futures Canada connects you with young talent from their first job to years of real experience.' %></p>
     </div>
-    <div class="grid grid--5">
+    <ul class="grid grid--5 landing-aud-list">
       <% C.CAREER_STAGES.forEach(([k, n]) => { %>
-        <div class="card landing-aud landing-aud--<%= k %>">
+        <li class="landing-aud landing-aud--<%= k %>">
           <h3><%= n %></h3>
           <p><%= STAGE_COPY[k] %></p>
           <% if (audMode === 'seek') { %><a href="/jobs?stage=<%= k %>">See <%= n.toLowerCase() %> roles →</a><% } %>
-        </div>
+        </li>
       <% }) %>
-    </div>
+    </ul>
   </div>
 </section>

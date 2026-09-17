@@ -9,25 +9,24 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   <div class="container page-head__inner">
     <div>
       <p class="eyebrow">For employers</p>
-      <h1>Post a job across Canada for <%= PRICE_EMP %> a month</h1>
-      <p class="lead">Connect with Canada's next generation of talent — students, graduates, early-career candidates and skilled young professionals who are ready to work. Live in seconds, cancel any time.</p>
+      <h1>Meet the young talent building Canada's next workforce</h1>
+      <p class="lead">Post once and reach students, co-op and internship candidates, new graduates, early-career hires and skilled young professionals — live in seconds, cancel any time.</p>
       <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/employer">Post a job</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=employer">Employer sign in</a>
       </div>
-      <p class="small muted landing-head__note"><%= PRICE_EMP %> per posting per month + GST (<%= TOTAL_EMP %>) · renews monthly · no contracts</p>
-    </div>
-    <div class="landing-head__art" aria-hidden="true">
-      <div class="card mock">
-        <div class="mock__bar"><span></span><span></span><span></span></div>
-        <div class="mock__title">Junior QA Analyst — Co-op</div>
-        <div class="mock__sub">Maple Byte Software · Vancouver, BC</div>
-        <div class="cluster"><span class="badge">Internship / Co-op</span><span class="badge">Entry Level</span></div>
-        <div class="mock__foot"><span class="badge badge--positive">Active</span><span>18 applicants</span></div>
-      </div>
     </div>
   </div>
 </header>
+
+<div class="landing-facts-band">
+  <ul class="landing-facts container">
+    <li><strong><%= PRICE_EMP %></strong><span>+ GST, per posting monthly</span></li>
+    <li><strong>Seconds</strong><span>to go live after checkout</span></li>
+    <li><strong>Monthly</strong><span>renewal, no contracts</span></li>
+    <li><strong>Any time</strong><span>pause or cancel</span></li>
+  </ul>
+</div>
 
 <section class="section" id="dashboard">
   <div class="container">
@@ -35,11 +34,11 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">Your dashboard</p>
       <h2>Everything about hiring in one place</h2>
     </div>
-    <div class="grid grid--3">
-      <div class="card feature"><h3>Applicant tracking</h3><p>See every applicant, download resumes, shortlist and mark hires. Candidates are notified automatically as their status changes.</p></div>
-      <div class="card feature"><h3>Pause, duplicate, repost</h3><p>Pause when you have enough applicants, duplicate a posting for a similar role, reactivate any time within the paid month.</p></div>
-      <div class="card feature"><h3>Billing you can hand to accounting</h3><p>Every charge has a numbered GST receipt you can view or download as a PDF any time from Billing — all receipts are available from your login.</p></div>
-    </div>
+    <ul class="landing-tiles landing-tiles--3">
+      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Applicant tracking</h3><p>See every applicant, download resumes, shortlist and mark hires. Candidates are notified automatically as their status changes.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Pause, duplicate, repost</h3><p>Pause when you have enough applicants, duplicate a posting for a similar role, reactivate any time within the paid month.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Billing you can hand to accounting</h3><p>Every charge has a numbered GST receipt you can view or download as a PDF any time from Billing — all receipts are available from your login.</p></li>
+    </ul>
   </div>
 </section>
 
@@ -51,10 +50,10 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">How it works</p>
       <h2>Three steps. Ten minutes.</h2>
     </div>
-    <ol class="grid grid--3 landing-steps">
-      <li class="card landing-step"><span class="landing-step__n">1</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
-      <li class="card landing-step"><span class="landing-step__n">2</span><h3>Write the posting</h3><p>Title, the full work address (add more than one if the job is offered at several sites), pay with its period, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
-      <li class="card landing-step"><span class="landing-step__n">3</span><h3>Pay <%= PRICE_EMP %> + GST and go live</h3><p>Your posting is live instantly and renews every month for <%= TOTAL_EMP %> — the price you pay at checkout stays locked in for that posting. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
+    <ol class="landing-tiles landing-tiles--3">
+      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Create your account</h3><p>Sign up with your company name and a contact. Add a logo and a short description so job seekers know who you are.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Write the posting</h3><p>Title, the full work address (add more than one if the job is offered at several sites), pay with its period, languages, the audiences it suits and how to apply. Save a draft for free and come back to it any time.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Pay <%= PRICE_EMP %> + GST and go live</h3><p>Your posting is live instantly and renews every month for <%= TOTAL_EMP %> — the price you pay at checkout stays locked in for that posting. Applicants land in your dashboard. Cancel with one click when the role is filled.</p></li>
     </ol>
   </div>
 </section>
@@ -65,11 +64,11 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">What every posting needs</p>
       <h2>Complete, transparent postings job seekers can trust</h2>
     </div>
-    <div class="grid grid--3">
-      <div class="card feature"><h3>A full work address</h3><p>Every posting carries at least one complete work location — street address, city, province and postal code. If the job is offered at several sites, add more than one address to the same posting; seekers see each one listed in full.</p></div>
-      <div class="card feature"><h3>Your operating name</h3><p>Tell seekers the name they know you by (e.g. “Flying Pig”). The operating name is shown first on the posting and your company page, with the legal name beneath it.</p></div>
-      <div class="card feature"><h3>Clear pay and requirements</h3><p>Salary with its period (per hour, day, week, bi-weekly, month or year), education and experience picked from standard lists, an industry category and an optional NOC code — printable on one clean sheet.</p></div>
-    </div>
+    <ul class="landing-tiles landing-tiles--3">
+      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>A full work address</h3><p>Every posting carries at least one complete work location — street address, city, province and postal code. If the job is offered at several sites, add more than one address to the same posting; seekers see each one listed in full.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Your operating name</h3><p>Tell seekers the name they know you by (e.g. "Flying Pig"). The operating name is shown first on the posting and your company page, with the legal name beneath it.</p></li>
+      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Clear pay and requirements</h3><p>Salary with its period (per hour, day, week, bi-weekly, month or year), education and experience picked from standard lists, an industry category and an optional NOC code — printable on one clean sheet.</p></li>
+    </ul>
   </div>
 </section>
 

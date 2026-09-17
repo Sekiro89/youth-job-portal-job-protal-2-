@@ -1,9 +1,6 @@
 <% const roles = [['employer', 'Employer'], ['consultant', 'Third Party Consultant'], ['seeker', 'Job Seeker']]; %>
 <%- include('_head', { h: { eyebrow: 'Welcome back', h1: 'Sign in', lead: 'One login for employers, third party consultants and job seekers.' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <% if (roleHint) { %>
       <div class="role-hints" aria-label="Account type">
         <% roles.forEach(([k, n]) => { %><a class="role-hint <%= roleHint === k ? 'is-active' : '' %>" href="/login?role=<%= k %>" <%= roleHint === k ? 'aria-current="true"' : '' %>><%= n %></a><% }) %>
@@ -36,4 +33,4 @@
       </ul>
     </div>
   </div>
-</section>
+</div>

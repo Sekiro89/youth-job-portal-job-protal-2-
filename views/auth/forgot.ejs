@@ -1,8 +1,5 @@
 <%- include('_head', { h: { eyebrow: 'Account help', h1: 'Reset your password', lead: sent ? 'Check your inbox for the reset link.' : 'Enter the email you signed up with and we will send you a link to choose a new password.' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <% if (sent) { %>
         <div class="auth-info auth-info--ok" role="status">
           <strong>Check your inbox</strong>
@@ -22,4 +19,4 @@
       <% } %>
     </div>
   </div>
-</section>
+</div>

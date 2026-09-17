@@ -1,60 +1,53 @@
 <section class="hero">
+  <div class="hero__shape" aria-hidden="true"></div>
   <div class="container hero__inner">
-    <div class="hero__copy fade-up fade-up--1">
-      <p class="eyebrow">Careers in Canada, for young talent everywhere</p>
-      <h1 class="hero__title">Your next opportunity <span class="hero__title-accent">could be in Canada.</span></h1>
+    <p class="eyebrow fade-up fade-up--1">Careers in Canada, for young talent everywhere</p>
+    <h1 class="hero__title fade-up fade-up--1">Your next opportunity <span class="hero__title-accent">could be in Canada.</span></h1>
+    <div class="hero__row fade-up fade-up--2">
       <p class="lead hero__lead">Search <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> Canadian employer<%= totals.companies === 1 ? '' : 's' %> — internships, graduate roles, entry-level jobs, skilled trades and experienced positions, for young talent at every stage of their career.</p>
-      <div class="hero__cta">
-        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Find Jobs</a>
-        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="#career-paths">Explore Opportunities</a>
-      </div>
-      <ul class="hero__stats">
+      <ul class="hero__stats-rail">
         <li><strong><%= totals.jobs %></strong><span>open roles</span></li>
         <li><strong><%= totals.companies %></strong><span>employers</span></li>
         <li><strong><%= provincesWithJobs %></strong><span>provinces &amp; territories</span></li>
       </ul>
     </div>
-    <div class="hero__art fade-up fade-up--2">
-      <picture>
-        <source srcset="/img/herosection.webp" type="image/webp">
-        <img class="hero__art-img" src="/img/herosection.png" alt="Young people with backpacks heading toward a Canadian city skyline" width="1672" height="941">
-      </picture>
+    <div class="hero__cta fade-up fade-up--3">
+      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Find Jobs</a>
+      <a class="kds-btn kds-btn--ghost kds-btn--lg" href="#career-paths">Explore Opportunities</a>
     </div>
   </div>
 </section>
 
 <section class="search-band" aria-labelledby="search-h">
-  <div class="container">
-    <div class="card search-card fade-up fade-up--3">
-      <h2 id="search-h" class="search-card__head">Search jobs across Canada</h2>
-      <form class="search-form" method="get" action="/jobs" role="search" aria-label="Search jobs">
-        <div class="field search-form__field">
-          <label for="hero-q">What</label>
-          <input class="input" id="hero-q" name="q" type="search" placeholder="Job title, skill or company" autocomplete="off">
-        </div>
-        <div class="field search-form__field">
-          <label for="hero-loc">Where</label>
-          <select class="input" id="hero-loc" name="loc">
-            <option value="">All of Canada</option>
-            <optgroup label="Provinces &amp; territories">
-              <% provinces.forEach(p => { %><option value="prov:<%= p.key %>"><%= p.name %></option><% }) %>
-            </optgroup>
-            <% if (cities.length) { %><optgroup label="Cities with open jobs">
-              <% cities.forEach(c => { %><option value="city:<%= c %>"><%= c %></option><% }) %>
-            </optgroup><% } %>
-          </select>
-        </div>
-        <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs</button>
-      </form>
-      <p class="search-card__popular small">
-        <span class="muted">Popular:</span>
-        <a href="/jobs?job_type=internship">Internships &amp; co-ops</a>
-        <a href="/jobs?work_arrangement=remote">Remote</a>
-        <a href="/jobs?category=it_software">IT &amp; software</a>
-        <a href="/jobs?category=healthcare">Healthcare</a>
-        <a href="/jobs?category=construction_trades">Skilled trades</a>
-      </p>
-    </div>
+  <div class="container search-band__inner">
+    <h2 id="search-h" class="visually-hidden">Search jobs across Canada</h2>
+    <form class="search-form" method="get" action="/jobs" role="search" aria-label="Search jobs">
+      <div class="field search-form__field">
+        <label for="hero-q">Job title, skill or company</label>
+        <input class="input" id="hero-q" name="q" type="search" placeholder="e.g. warehouse associate" autocomplete="off">
+      </div>
+      <div class="field search-form__field">
+        <label for="hero-loc">City or province</label>
+        <select class="input" id="hero-loc" name="loc">
+          <option value="">All of Canada</option>
+          <optgroup label="Provinces &amp; territories">
+            <% provinces.forEach(p => { %><option value="prov:<%= p.key %>"><%= p.name %></option><% }) %>
+          </optgroup>
+          <% if (cities.length) { %><optgroup label="Cities with open jobs">
+            <% cities.forEach(c => { %><option value="city:<%= c %>"><%= c %></option><% }) %>
+          </optgroup><% } %>
+        </select>
+      </div>
+      <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs</button>
+    </form>
+    <p class="search-band__popular small">
+      <span class="muted">Popular:</span>
+      <a href="/jobs?job_type=internship">Internships &amp; co-ops</a>
+      <a href="/jobs?work_arrangement=remote">Remote</a>
+      <a href="/jobs?category=it_software">IT &amp; software</a>
+      <a href="/jobs?category=healthcare">Healthcare</a>
+      <a href="/jobs?category=construction_trades">Skilled trades</a>
+    </p>
   </div>
 </section>
 

@@ -1,8 +1,5 @@
 <%- include('_head', { h: { eyebrow: 'Account help', h1: 'Choose a new password', leadHtml: 'For <strong>' + email.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</strong>' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/reset/<%= token %>" novalidate>
         <input type="hidden" name="email" value="<%= email %>" autocomplete="username">
@@ -15,4 +12,4 @@
       <p class="auth__foot"><a href="/login">Back to sign in</a></p>
     </div>
   </div>
-</section>
+</div>

@@ -95,8 +95,8 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 /* result row — an editorial directory listing: no card box, a running index number, a single rule
    between entries, and a red spine that appears on hover/active rather than a whole-row border. */
 .jsearch__list { counter-reset: jrow; }
-.jrow { counter-increment: jrow; position: relative; display: grid; gap: 10px; padding: 18px 16px 18px 46px; border-bottom: 1px solid var(--kds-border); transition: background .15s, box-shadow .15s; }
-.jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 0; top: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); letter-spacing: .06em; }
+.jrow { counter-increment: jrow; position: relative; display: grid; gap: 10px; padding: 18px 16px 18px 56px; border-bottom: 1px solid var(--kds-border); transition: background .15s, box-shadow .15s; }
+.jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 18px; top: 19px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--cc-line-strong); letter-spacing: .04em; }
 .jrow:hover { background: var(--cc-navy-50); box-shadow: inset 4px 0 0 var(--cc-red); }
 .jrow.is-active { background: var(--cc-navy-100); box-shadow: inset 4px 0 0 var(--cc-navy); }
 .jrow--ref { box-shadow: inset 4px 0 0 var(--cc-teal); }

@@ -1,8 +1,5 @@
 <%- include('_head', { h: { eyebrow: 'Employer account', h1: 'Create your employer account', leadHtml: 'Post jobs for your own company. Creating an account is free — you only pay when you publish a posting. <a href="/signup">Not an employer?</a>', crumb: 'Create your account' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/employer" novalidate>
         <h2 class="auth__section">About you</h2>
@@ -72,4 +69,4 @@
       <p class="auth__foot">Already have an account? <a href="/login?role=employer">Sign in</a></p>
     </div>
   </div>
-</section>
+</div>

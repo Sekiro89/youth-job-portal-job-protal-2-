@@ -1,12 +1,15 @@
-<%# Standard page header band for auth pages. locals: h — { eyebrow, h1, lead (html allowed via leadHtml), crumb } %>
+<%# Split-screen shell for every auth page (login / signup ×4 / forgot / reset). locals: h — { eyebrow, h1,
+    lead (html allowed via leadHtml), crumb }. Opens .auth-shell + the brand pane here; each page's own template
+    supplies the form content and closes the shell (see the matching </div></div> at the end of those files). %>
 <% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', ...locals.h }; %>
-<header class="page-head">
-  <div class="container page-head__inner">
-    <div>
+<div class="auth-shell">
+  <aside class="auth-shell__brand hero">
+    <div class="auth-shell__brand-inner">
+      <a class="auth-shell__logo" href="/"><img src="/img/logo-mark.png" alt="" width="48" height="48"><span>Youth Futures<b>Canada</b></span></a>
       <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page"><%= hd.crumb || hd.h1 %></li></ol>
       <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
       <h1><%= hd.h1 %></h1>
       <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
     </div>
-  </div>
-</header>
+  </aside>
+  <div class="auth-shell__form">

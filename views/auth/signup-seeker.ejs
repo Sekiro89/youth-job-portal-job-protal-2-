@@ -1,8 +1,5 @@
 <%- include('_head', { h: { eyebrow: 'Job Seeker account · always free', h1: 'Create your job seeker account', leadHtml: 'Upload your resume, apply online and get alerts. No fees, ever. <a href="/signup">Hiring instead?</a>', crumb: 'Create your account' } }) %>
-
-<section class="section auth">
-  <div class="container container--narrow">
-    <div class="card card--pad-lg auth__card">
+    <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/seeker" novalidate>
         <%- include('_field', { f: { name: 'name', label: 'Your full name', value: values.name, error: errors.name, autocomplete: 'name' } }) %>
@@ -44,4 +41,4 @@
       <p class="auth__foot">Already have an account? <a href="/login?role=seeker">Sign in</a></p>
     </div>
   </div>
-</section>
+</div>
