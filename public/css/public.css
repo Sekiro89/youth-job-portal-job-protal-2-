@@ -17,18 +17,20 @@
 @media (min-width: 768px) { .section__head--split { margin-bottom: 40px; } }
 .h3 { font-size: 1.15rem; }                                     /* an h2 inside a 340px sidebar card uses the h3 step of the scale */
 
-.job-card { display: grid; gap: 8px; align-content: start; background: #fff; border: 1px solid var(--kds-border); border-radius: var(--kds-radius-lg); padding: 20px; transition: box-shadow .15s, border-color .15s; }
-.job-card:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow-2); }
-.job-card__title { font: 700 1.0625rem/1.3 var(--cc-font-display); margin: 0; }
+/* Editorial job card: sharp corners, a quiet left rule that turns red only on hover (not a rounded
+   white box + shadow by default — the shadow is reserved for the active/hover state). */
+.job-card { display: grid; gap: 9px; align-content: start; background: #fff; border: 1px solid var(--kds-border); border-left: 3px solid var(--cc-line-strong); border-radius: 6px; padding: 20px; transition: box-shadow .15s, border-color .15s, transform .15s; }
+.job-card:not(.job-card--ref):hover { border-color: var(--kds-border); border-left-color: var(--cc-red); box-shadow: var(--kds-shadow-2); transform: translateY(-2px); }
+.job-card__title { font: 800 1.125rem/1.3 var(--cc-font-display); margin: 0; letter-spacing: -0.01em; }
 .job-card__title a { text-decoration: none; color: var(--cc-navy); }
 .job-card__title a:hover { color: var(--cc-red); }
 .job-card__company { color: var(--kds-fg-muted); font-size: .9375rem; overflow-wrap: anywhere; }
 .job-card__more { color: var(--kds-fg-muted); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
 .job-card__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .875rem; color: var(--kds-fg-muted); }
-.job-card__salary { font-weight: 600; color: var(--cc-ink); }
+.job-card__salary { font: 700 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .job-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8125rem; color: var(--kds-fg-faint); }
 .job-card__co { color: var(--cc-ink); font-weight: 600; }
-.job-card--ref { border-left: 4px solid var(--cc-teal); }
+.job-card--ref { border-left-color: var(--cc-teal); }
 .job-card__ref { white-space: normal; text-align: left; line-height: 1.3; }
 .job-card__pid { flex: none; white-space: nowrap; }
 .job-card__pid span { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; letter-spacing: .04em; color: var(--kds-fg-muted); }
