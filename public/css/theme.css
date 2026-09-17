@@ -167,7 +167,7 @@ a:hover { color: var(--cc-red); }
 .footer-brand__logo img { display: block; background: #fff; border-radius: 8px; padding: 3px; }
 .footer-brand__logo span { font: 800 .875rem/1.2 var(--cc-font-display); color: #fff; }
 .footer-brand__logo b { display: block; font-size: .625rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
-.footer-brand__tagline { margin: 0; font: 700 1.0625rem/1.4 var(--cc-font-display); color: #fff; letter-spacing: -0.01em; }
+.footer-brand__tagline { margin: 0; font: 800 clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem)/1.25 var(--cc-font-display); color: #fff; letter-spacing: -0.01em; }
 .footer-nav { position: relative; display: flex; flex-wrap: wrap; gap: 28px 40px; }
 .footer-nav nav { flex: 1 1 160px; min-width: 160px; }
 .site-footer h3 { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 10px; }
