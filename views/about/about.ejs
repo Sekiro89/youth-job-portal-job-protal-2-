@@ -47,14 +47,14 @@ const toc = [
 
   <section class="about-section about-quote" id="mission" aria-labelledby="mission-h">
     <div class="container about-quote__inner">
-      <p class="about-quote__mark" aria-hidden="true">“</p>
-      <div class="about-quote__body">
+      <div class="about-quote__lede-col">
+        <p class="about-quote__mark" aria-hidden="true">“</p>
         <h2 id="mission-h" class="about-quote__lede">Real Canadian opportunities for young talent, wherever you're starting from.</h2>
-        <div class="prose about-quote__text">
-          <p>Most job boards assume you already live where the job is. Youth Futures Canada was created for young people building a career in Canada from any starting point — students and graduates looking for a first role, young professionals ready to take their skills further, skilled workers with a trade or technical background, and newcomers, Indigenous job seekers and refugees among them. We are a <strong>Canadian job bank</strong>, not an immigration consultancy: every listing is a real opportunity from a real Canadian employer, presented honestly.</p>
-          <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price per posting — <%= price.employer.base %> + GST for employers, <%= price.consultant.base %> + GST for consultants posting on behalf of clients. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
-          <p>Our name says exactly what we do: <strong>Youth Futures Canada</strong> connects young talent everywhere with careers in Canada, from Toronto and Vancouver to the smallest community in Nunavut.</p>
-        </div>
+      </div>
+      <div class="prose about-quote__text">
+        <p>Most job boards assume you already live where the job is. Youth Futures Canada was created for young people building a career in Canada from any starting point — students and graduates looking for a first role, young professionals ready to take their skills further, skilled workers with a trade or technical background, and newcomers, Indigenous job seekers and refugees among them. We are a <strong>Canadian job bank</strong>, not an immigration consultancy: every listing is a real opportunity from a real Canadian employer, presented honestly.</p>
+        <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price per posting — <%= price.employer.base %> + GST for employers, <%= price.consultant.base %> + GST for consultants posting on behalf of clients. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
+        <p>Our name says exactly what we do: <strong>Youth Futures Canada</strong> connects young talent everywhere with careers in Canada, from Toronto and Vancouver to the smallest community in Nunavut.</p>
       </div>
     </div>
   </section>
@@ -77,6 +77,7 @@ const toc = [
           <label for="tab-consultants">For consultants</label>
           <label for="tab-seekers">For job seekers</label>
         </div>
+        <div class="about-tabs__body">
         <div class="about-tabs__panels">
           <section class="about-tabs__panel about-tabs__panel--employers prose" aria-labelledby="employers-h">
             <h3 id="employers-h">Post a job in Canada for <%= price.employer.base %> a month + GST</h3>
@@ -103,6 +104,19 @@ const toc = [
             <p>Tell us your preferred categories, province and city, work arrangement (on-site, hybrid or remote), experience level and the audiences you identify with, and <strong>job alerts</strong> will bring matching jobs to your inbox as soon as they are published — instantly or as a daily digest, your choice. Your resume is only ever shared with the employer or consultant behind a job you choose to apply to.</p>
             <p><a href="/jobseeker">Create your free job seeker profile →</a></p>
           </section>
+        </div>
+        <aside class="about-tabs__aside">
+          <div class="about-tabs__aside-card">
+            <p class="eyebrow">At a glance</p>
+            <dl>
+              <div><dt>Employers</dt><dd><%= price.employer.base %> + GST /month</dd></div>
+              <div><dt>Consultants</dt><dd><%= price.consultant.base %> + GST /month</dd></div>
+              <div><dt>Job seekers</dt><dd>Free, always</dd></div>
+            </dl>
+            <a class="kds-btn kds-btn--accent kds-btn--block" href="/employer">Post a job</a>
+            <a class="kds-btn kds-btn--ghost kds-btn--block" href="/jobseeker">Create a free profile</a>
+          </div>
+        </aside>
         </div>
       </div>
     </div>

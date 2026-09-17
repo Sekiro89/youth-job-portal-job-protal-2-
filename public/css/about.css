@@ -38,16 +38,16 @@
 .about-quick dd { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
 @media (min-width: 768px) { .about-quick { grid-template-columns: repeat(2, 1fr); gap: 0 40px; padding-top: 40px; } }
 
-/* ---------- mission: an oversized pull-quote beside the supporting prose ---------- */
+/* ---------- mission: an oversized pull-quote column beside the supporting prose column ---------- */
 .about-quote { padding-top: 8px; }
-.about-quote__inner { position: relative; display: grid; gap: 20px; }
-.about-quote__mark { position: absolute; top: -36px; left: -8px; margin: 0; font: 800 8rem/1 Georgia, serif; color: var(--cc-navy-100); pointer-events: none; z-index: 0; }
-.about-quote__body { position: relative; display: grid; gap: 20px; }
-.about-quote__lede { max-width: 20ch; }
+.about-quote__inner { display: grid; gap: 24px; }
+.about-quote__lede-col { display: grid; gap: 4px; }
+.about-quote__mark { margin: 0; line-height: .6; font: 800 4.5rem/1 Georgia, serif; color: var(--cc-red); }
+.about-quote__lede { margin: 0; max-width: 18ch; }
 .about-quote__text { max-width: 62ch; }
 @media (min-width: 1024px) {
-  .about-quote__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
-  .about-quote__mark { top: -50px; font-size: 10rem; }
+  .about-quote__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
+  .about-quote__lede-col { position: sticky; top: calc(var(--cc-header-h) + 68px); }
 }
 
 /* ---------- audiences (stage tiles): a numbered index row, matching the site's editorial job-card language ---------- */
@@ -77,7 +77,18 @@
 .about-tabs__nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--kds-border); margin-bottom: 28px; }
 .about-tabs__nav label { cursor: pointer; padding: 14px 18px; font: 700 .9375rem/1 var(--cc-font-display); color: var(--kds-fg-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
 .about-tabs__nav label:hover { color: var(--cc-navy); }
-.about-tabs__panel { display: none; max-width: 72ch; }
+.about-tabs__body { display: grid; gap: 28px; }
+.about-tabs__panel { display: none; max-width: 62ch; }
+.about-tabs__aside-card { background: var(--cc-navy-50); border-radius: var(--kds-radius-lg); padding: 22px; display: grid; gap: 14px; }
+.about-tabs__aside-card .eyebrow { margin: 0; }
+.about-tabs__aside-card dl { margin: 0; display: grid; gap: 8px; }
+.about-tabs__aside-card dl > div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--kds-border); font-size: .9375rem; }
+.about-tabs__aside-card dt { color: var(--kds-fg-muted); }
+.about-tabs__aside-card dd { margin: 0; font-weight: 700; color: var(--cc-navy); }
+@media (min-width: 1024px) {
+  .about-tabs__body { grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); align-items: start; }
+  .about-tabs__aside { position: sticky; top: calc(var(--cc-header-h) + 68px); }
+}
 #tab-employers:checked ~ .about-tabs__nav label[for="tab-employers"],
 #tab-consultants:checked ~ .about-tabs__nav label[for="tab-consultants"],
 #tab-seekers:checked ~ .about-tabs__nav label[for="tab-seekers"] { color: var(--cc-navy); border-bottom-color: var(--cc-red); }
