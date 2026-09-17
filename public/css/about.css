@@ -1,86 +1,126 @@
-/* Canada Careers — About Us. Mobile first; tokens from theme.css only.
-   Skeleton: standard .page-head → one .section holding the facts strip (full width) + [240px sticky TOC | main column] at >=1024
-   → .section--alt closing CTA band. Containers, header band, section paddings, cards and buttons are theme.css primitives. */
+/* Youth Futures Canada — About Us. Mobile first; tokens from theme.css only.
+   Skeleton (2026 editorial rework): page-head → full-bleed stat band → sticky horizontal jump strip →
+   full-width stacked sections (mission pull-quote, stage tiles, a tabbed "who it's for" panel, a two-panel
+   how-it-works split, a numbered commitment grid, FAQ) → closing CTA. No sidebar TOC, no repeated card grid. */
 
-/* ---------- header: three actions are too many for the right-hand column, so they sit under the lead (same as the landings) ---------- */
+/* ---------- header: three actions are too many for the right-hand column, so they sit under the lead ---------- */
 @media (min-width: 768px) { .about-head .page-head__inner { grid-template-columns: minmax(0, 1fr); } }
 .about-head .page-head__actions { margin-top: 4px; }
 
-/* ---------- layout: facts strip spans both columns; TOC + main below it ---------- */
-.about-layout { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.about-toc { display: none; }
-.about-main { min-width: 0; display: grid; gap: 40px; align-content: start; }
-.about-main > * { min-width: 0; }
-@media (min-width: 768px) { .about-layout { gap: 40px; } .about-main { gap: 48px; } }
-@media (min-width: 1024px) {
-  .about-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 48px 40px; }
-  .about-facts { grid-column: 1 / -1; }
-  .about-toc { display: block; position: sticky; top: calc(var(--cc-header-h) + 24px); align-self: start; }
-  .about-toc__title { font: 700 .75rem/1 var(--cc-font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--kds-fg-muted); margin: 0 0 12px; }
-  .about-toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; border-left: 2px solid var(--kds-border); }
-  .about-toc ol a { display: block; padding: 8px 12px; margin-left: -2px; border-left: 2px solid transparent; text-decoration: none; font-size: .9375rem; font-weight: 500; color: var(--kds-fg-muted); }
-  .about-toc ol a:hover, .about-toc ol a:focus-visible { color: var(--cc-navy); border-left-color: var(--cc-red); background: var(--cc-navy-50); }
-  .about-toc__cta { margin-top: 20px; text-decoration: none; }
-}
-@media (min-width: 1200px) { .about-layout { gap: 56px 64px; } }
+/* ---------- stat band: big numbers in a row, not a grid of cards ---------- */
+.about-stats-band { background: var(--cc-navy-50); border-bottom: 1px solid var(--kds-border); }
+.about-stats { list-style: none; margin: 0; padding: 20px 16px; display: flex; flex-wrap: wrap; gap: 20px 0; }
+.about-stats li { flex: 1 1 50%; padding: 8px 20px 8px 0; border-right: 1px solid var(--cc-line-strong); }
+.about-stats li:nth-child(2n) { border-right: 0; }
+.about-stats strong { display: block; font: 800 1.75rem/1.1 var(--cc-font-display); color: var(--cc-navy); }
+.about-stats span { font-size: .75rem; color: var(--kds-fg-muted); }
+@media (min-width: 640px) { .about-stats { flex-wrap: nowrap; padding: 28px 24px; } .about-stats li { flex: 1 1 0; border-right: 1px solid var(--cc-line-strong); padding-right: 20px; } .about-stats li:last-child { border-right: 0; } }
+@media (min-width: 1024px) { .about-stats strong { font-size: 2rem; } }
 
-/* ---------- facts strip: 2 → 4 → 7 small cards ---------- */
-.about-facts { list-style: none; margin: 0; padding: 0; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.about-facts li { display: grid; gap: 2px; padding: 14px 16px; }
-.about-facts li:last-child { grid-column: 1 / -1; }
-.about-facts strong { font: 800 1.125rem/1.15 var(--cc-font-display); color: var(--cc-navy); }
-.about-facts span { font-size: .8125rem; color: var(--kds-fg-muted); }
-@media (min-width: 768px) { .about-facts { grid-template-columns: repeat(4, 1fr); } .about-facts li:last-child { grid-column: span 2; } }
-@media (min-width: 1200px) { .about-facts { grid-template-columns: repeat(7, 1fr); } .about-facts li:last-child { grid-column: auto; } }
+/* ---------- jump strip: a sticky horizontal tab bar in place of a sidebar TOC ---------- */
+.about-jump { position: sticky; top: var(--cc-header-h); z-index: 60; background: #fff; border-bottom: 1px solid var(--kds-border); }
+.about-jump__list { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.about-jump__list::-webkit-scrollbar { display: none; }
+.about-jump__list a { display: block; padding: 12px 14px; white-space: nowrap; text-decoration: none; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); border-bottom: 3px solid transparent; }
+.about-jump__list a:hover { color: var(--cc-navy); }
 
-/* ---------- sections + prose ---------- */
-.about-section { scroll-margin-top: calc(var(--cc-header-h) + 16px); }
-.about-section > h2 { margin-top: 0; }
+.about-main { display: grid; gap: 0; }
+.about-section { scroll-margin-top: calc(var(--cc-header-h) + 52px); padding: 40px 0; }
+@media (min-width: 768px) { .about-section { padding: 56px 0; } }
 .prose strong { color: var(--cc-navy); }
 .prose a { font-weight: 500; }
 
-/* ---------- quick answers (AEO) ---------- */
-.about-quick { margin: 0; }
-.about-quick__item { border-left: 4px solid var(--cc-red); }
-.about-quick dt { font: 700 .9375rem/1.3 var(--cc-font-display); color: var(--cc-navy); margin-bottom: 6px; }
-.about-quick dd { margin: 0; font-size: .9375rem; }
+/* ---------- quick answers: a running numbered list, not a card grid ---------- */
+.about-quick { display: grid; gap: 0; counter-reset: quick; padding-top: 32px; padding-bottom: 8px; border-top: 1px solid var(--kds-border); }
+.about-quick__item { counter-increment: quick; position: relative; display: grid; gap: 4px; padding: 18px 0 18px 44px; border-bottom: 1px solid var(--kds-border); }
+.about-quick__item::before { content: counter(quick, decimal-leading-zero); position: absolute; left: 0; top: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.about-quick dt { font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
+.about-quick dd { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
+@media (min-width: 768px) { .about-quick { grid-template-columns: repeat(2, 1fr); gap: 0 40px; padding-top: 40px; } }
 
-/* ---------- audiences (1 → 2 → 5 columns) ---------- */
+/* ---------- mission: an oversized pull-quote beside the supporting prose ---------- */
+.about-quote { padding-top: 8px; }
+.about-quote__inner { position: relative; display: grid; gap: 20px; }
+.about-quote__mark { position: absolute; top: -36px; left: -8px; margin: 0; font: 800 8rem/1 Georgia, serif; color: var(--cc-navy-100); pointer-events: none; z-index: 0; }
+.about-quote__body { position: relative; display: grid; gap: 20px; }
+.about-quote__lede { max-width: 20ch; }
+.about-quote__text { max-width: 62ch; }
+@media (min-width: 1024px) {
+  .about-quote__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
+  .about-quote__mark { top: -50px; font-size: 10rem; }
+}
+
+/* ---------- audiences (stage tiles): a numbered index row, matching the site's editorial job-card language ---------- */
 .grid--5 { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }   /* the About main column is ~700px at 1024: 3 across, 5 from 1280 */
+@media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1280px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.about-aud { list-style: none; margin: 8px 0 28px; padding: 0; }
-.about-aud__card { position: relative; display: grid; gap: 8px; align-content: start; border-top: 4px solid var(--cc-navy); }
-.about-aud__card--student { border-top-color: var(--cc-navy); }
-.about-aud__card--intern_coop { border-top-color: var(--cc-red); }
-.about-aud__card--graduate { border-top-color: var(--cc-teal); }
-.about-aud__card--early_career { border-top-color: var(--cc-orange); }
-.about-aud__card--skilled { border-top-color: var(--cc-spark); }
+.about-aud { list-style: none; margin: 24px 0 0; padding: 0; counter-reset: aud; }
+.about-aud__card { counter-increment: aud; position: relative; display: grid; gap: 8px; align-content: start; background: #fff; border: 0; border-radius: 2px; padding: 22px 20px 18px; transition: background .15s, color .15s; }
+.about-aud__card::before { content: counter(aud, decimal-leading-zero); position: absolute; top: 16px; right: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.about-aud__card--student:hover { background: var(--cc-navy); }
+.about-aud__card--intern_coop:hover { background: var(--cc-red); }
+.about-aud__card--graduate:hover { background: var(--cc-teal); }
+.about-aud__card--early_career:hover { background: var(--cc-orange); }
+.about-aud__card--skilled:hover { background: #a3860a; }
+.about-aud__card:hover::before { color: color-mix(in srgb, #fff 35%, transparent); }
+.about-aud__card:hover h3 a, .about-aud__card:hover p { color: #fff; }
 .about-aud__card h3 { margin: 0; }
 .about-aud__card h3 a { text-decoration: none; }
 .about-aud__card h3 a::after { content: ""; position: absolute; inset: 0; }
 .about-aud__card p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
 .about-aud__card .aud { justify-self: start; margin-top: 4px; }
 
-/* ---------- how it works (two numbered lists in flat cards) ---------- */
-.about-steps h3 { margin: 0 0 12px; }
+/* ---------- who it's for: a CSS-only tabbed panel (progressive: no JS needed, radios drive the state) ---------- */
+.about-tabs { scroll-margin-top: calc(var(--cc-header-h) + 52px); }
+.about-tabs__input { position: absolute; opacity: 0; pointer-events: none; }
+.about-tabs__nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--kds-border); margin-bottom: 28px; }
+.about-tabs__nav label { cursor: pointer; padding: 14px 18px; font: 700 .9375rem/1 var(--cc-font-display); color: var(--kds-fg-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.about-tabs__nav label:hover { color: var(--cc-navy); }
+.about-tabs__panel { display: none; max-width: 72ch; }
+#tab-employers:checked ~ .about-tabs__nav label[for="tab-employers"],
+#tab-consultants:checked ~ .about-tabs__nav label[for="tab-consultants"],
+#tab-seekers:checked ~ .about-tabs__nav label[for="tab-seekers"] { color: var(--cc-navy); border-bottom-color: var(--cc-red); }
+#tab-employers:checked ~ .about-tabs__panels .about-tabs__panel--employers,
+#tab-consultants:checked ~ .about-tabs__panels .about-tabs__panel--consultants,
+#tab-seekers:checked ~ .about-tabs__panels .about-tabs__panel--seekers { display: block; }
+.about-tabs__panel h4 { margin-top: 1.4em; }
+
+/* ---------- how it works: a two-panel split (post a job / find a job), not two plain cards ---------- */
+.about-flow__grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+.about-flow__panel { background: var(--cc-surface); border-radius: 2px; overflow: hidden; }
+.about-flow__panel--alt { background: var(--cc-red-100); }
+.about-flow__head { padding: 16px 24px; font: 800 1.0625rem/1 var(--cc-font-display); color: #fff; background: var(--cc-navy); }
+.about-flow__panel--alt .about-flow__head { background: var(--cc-red); }
+.about-flow__panel .about-steps__list { padding: 24px; }
+@media (min-width: 768px) { .about-flow__grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---------- how it works (numbered lists inside the split panels) ---------- */
 .about-steps__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: step; }
 .about-steps__list li { position: relative; padding-left: 44px; counter-increment: step; }
-.about-steps__list li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy); color: #fff; font: 700 .9rem/1 var(--cc-font-display); }
+.about-steps__list li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--cc-navy); font: 700 .9rem/1 var(--cc-font-display); }
 .about-steps__list strong { color: var(--cc-navy); }
 
-/* ---------- commitment ---------- */
-.about-commit h3 { margin: 0 0 6px; padding-left: 14px; border-left: 3px solid var(--cc-red); }
-.about-commit p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
-.about-cite { margin-top: 20px; padding: 16px 18px; border-left: 4px solid var(--cc-teal); background: var(--cc-teal-100); border-radius: 0 12px 12px 0; max-width: 72ch; }
+/* ---------- commitment: a numbered tinted tile grid, not bordered cards ---------- */
+.about-commit-grid { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
+.about-commit-tile { position: relative; background: var(--cc-surface); padding: 24px 22px; display: grid; gap: 6px; align-content: start; }
+.about-commit-tile__n { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.about-commit-tile--a .about-commit-tile__n { color: var(--cc-navy); opacity: .5; }
+.about-commit-tile--b .about-commit-tile__n { color: var(--cc-red); opacity: .5; }
+.about-commit-tile--c .about-commit-tile__n { color: var(--cc-teal); opacity: .5; }
+.about-commit-tile--d .about-commit-tile__n { color: var(--cc-orange); opacity: .5; }
+.about-commit-tile h3 { margin: 0; }
+.about-commit-tile p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
+@media (min-width: 640px) { .about-commit-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .about-commit-grid { grid-template-columns: repeat(4, 1fr); } }
+.about-cite { margin-top: 28px; padding: 16px 18px; border-left: 4px solid var(--cc-teal); background: var(--cc-teal-100); border-radius: 0 12px 12px 0; max-width: 72ch; }
 .about-cite h3 { margin: 0 0 6px; font-size: .9375rem; }
 .about-cite p { margin: 0; font-size: .9rem; }
 .about-cite q { font-style: italic; }
 
-/* ---------- FAQ: native <details> styled as cards (same look as the landings) ---------- */
+/* ---------- FAQ: native <details> styled as cards ---------- */
 .faq { display: grid; gap: 10px; max-width: 80ch; }
-.faq__item { padding: 0; }
+.faq__item { padding: 0; background: #fff; border-radius: var(--kds-radius-lg); border: 1px solid var(--kds-border); }
 .faq__item summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 20px; font: 700 1rem/1.35 var(--cc-font-display); color: var(--cc-navy); }
 .faq__item summary::-webkit-details-marker { display: none; }
 .faq__item summary::after { content: "+"; flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cc-navy-50); color: var(--cc-navy); font: 700 1.1rem/1 var(--kds-font-sans); }
@@ -91,7 +131,7 @@
 .faq__body p { margin: 0 0 .5em; }
 .faq__more { font-size: .9375rem; font-weight: 500; }
 
-/* ---------- closing CTA band (inside .section--alt) ---------- */
+/* ---------- closing CTA band (inside .section) ---------- */
 .cta-band { display: grid; gap: 16px; align-items: center; }
 .cta-band h2, .cta-band p { margin: 0; }
 .cta-band p { margin-top: 6px; max-width: 60ch; }

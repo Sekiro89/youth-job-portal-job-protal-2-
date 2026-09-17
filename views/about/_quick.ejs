@@ -1,8 +1,11 @@
 <section class="about-section" id="quick-answers" aria-labelledby="quick-h">
-  <h2 id="quick-h">Quick answers</h2>
-  <dl class="grid grid--3 about-quick">
+  <div class="container">
+    <p class="eyebrow">Quick answers</p>
+    <h2 id="quick-h">Straight answers, no scrolling required</h2>
+  </div>
+  <dl class="container about-quick">
     <% quick.forEach(({ q, a }) => { %>
-      <div class="card about-quick__item">
+      <div class="about-quick__item">
         <dt><%= q %></dt>
         <dd><%= a %></dd>
       </div>

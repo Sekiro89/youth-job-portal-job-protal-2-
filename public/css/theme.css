@@ -81,20 +81,32 @@ a:hover { color: var(--cc-red); }
 @media (min-width: 768px) { .container { padding-left: 24px; padding-right: 24px; } .section-pad { padding-top: 56px; padding-bottom: 56px; } }
 @media (min-width: 1024px) { .section-pad { padding-top: 72px; padding-bottom: 72px; } }
 
-/* ---------- header / nav (mobile first) ---------- */
-.site-header { position: sticky; top: 0; z-index: var(--kds-z-sticky, 500); background: #fff; border-bottom: 1px solid var(--kds-border); }
-.site-header__inner { display: flex; align-items: center; justify-content: space-between; min-height: var(--cc-header-h); gap: 12px; flex-wrap: wrap; }
+/* ---------- header / nav (mobile first) — two-tier masthead: a thin utility strip carries the
+   secondary destinations + account actions, the main row is dominated by the wordmark and a single
+   prominent Job Bank action. Structurally different from a one-row navbar with tabs beside a logo. */
+.site-header { position: sticky; top: 0; z-index: var(--kds-z-sticky, 500); background: #fff; }
+.site-header__utility { display: none; background: var(--cc-navy-700); }
+.site-header__utility-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 40px; }
+.site-header__tabs { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+.site-header__tabs a { display: block; padding: 9px 12px; font-size: .8125rem; font-weight: 600; text-decoration: none; color: color-mix(in srgb, #fff 78%, transparent); }
+.site-header__tabs a:hover, .site-header__tabs a.is-active { color: #fff; }
+.site-header__tabs a.is-active { box-shadow: inset 0 -2px 0 var(--cc-red); }
+.site-header__auth { display: flex; align-items: center; gap: 14px; }
+.site-header__auth a, .site-header__auth button { background: none; border: 0; padding: 9px 0; font: inherit; font-size: .8125rem; font-weight: 600; color: color-mix(in srgb, #fff 78%, transparent); text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.site-header__auth a:hover, .site-header__auth button:hover { color: #fff; }
+.site-header__main { display: flex; align-items: center; justify-content: space-between; min-height: var(--cc-header-h); gap: 12px; border-bottom: 2px solid var(--cc-navy); }
 .site-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; min-height: 44px; }
 .site-logo img { display: block; height: 40px; width: auto; flex: none; }
 .site-logo__word { font-family: var(--cc-font-display); line-height: 1.05; }
-.site-logo__word b { display: block; font-size: .9375rem; font-weight: 800; color: var(--cc-navy); letter-spacing: -0.01em; }
+.site-logo__word b { display: block; font-size: 1.0625rem; font-weight: 800; color: var(--cc-navy); letter-spacing: -0.01em; }
 .site-logo__word span { display: block; font-size: .625rem; font-weight: 700; color: var(--cc-red); letter-spacing: .16em; text-transform: uppercase; }
+.site-header__jobbank { display: none; }
 .nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: 8px; background: #fff; cursor: pointer; }
 .nav-toggle span { display: block; height: 2px; background: var(--cc-navy); border-radius: 2px; transition: transform .2s, opacity .2s; }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-.site-nav { display: none; flex-basis: 100%; padding: 8px 0 16px; }
+.site-nav { display: none; position: absolute; left: 0; right: 0; top: 100%; background: #fff; border-bottom: 1px solid var(--kds-border); box-shadow: 0 16px 32px rgba(15,36,68,.12); padding: 8px 16px 16px; }
 .site-nav.is-open { display: block; }
 .site-nav__tabs { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .site-nav__tabs a { display: block; padding: 12px 10px; border-radius: 8px; font-weight: 600; text-decoration: none; color: var(--cc-navy); }
@@ -104,25 +116,12 @@ a:hover { color: var(--cc-red); }
 .site-nav__auth .kds-btn { flex: 1 1 auto; }
 .avatar { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--cc-teal); color: #fff; font-size: .75rem; font-weight: 700; }
 @media (min-width: 1024px) {
-  .site-header__inner { flex-wrap: nowrap; }
+  .site-header__utility { display: block; }
   .nav-toggle { display: none; }
-  .site-nav { display: flex !important; flex-basis: auto; align-items: center; gap: 16px; padding: 0; flex: 1; justify-content: flex-end; }
-  .site-nav__tabs { flex-direction: row; margin: 0; gap: 2px; }
-  .site-nav__tabs a { padding: 8px 12px; font-size: .9375rem; position: relative; }
-  .site-nav__tabs a.is-active { background: none; box-shadow: none; }
-  .site-nav__tabs a.is-active::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -2px; height: 3px; border-radius: 2px; background: var(--cc-red); }
-  .site-nav__auth .kds-btn { flex: 0 0 auto; }
+  .site-header__jobbank { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px; background: var(--cc-red); color: #fff; font-weight: 700; font-size: .9375rem; text-decoration: none; }
+  .site-header__jobbank:hover { background: var(--cc-red-700); color: #fff; }
+  .site-nav { display: none !important; }
 }
-.nav-label-short { display: none; }
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .site-nav { gap: 8px; }
-  .site-nav__tabs a { padding: 8px 8px; font-size: .875rem; }
-  .site-nav__auth { gap: 6px; }
-  .site-nav__auth .kds-btn { padding: .5rem .7rem; font-size: .8125rem; }
-  .site-nav__auth .avatar + .nav-label { display: none; }
-}
-@media (min-width: 1280px) { .site-nav__tabs a { padding: 8px 10px; font-size: .9375rem; } .site-nav__auth .kds-btn { padding: .5rem .8rem; font-size: .875rem; } }
-@media (min-width: 1024px) { .site-nav__tabs a, .site-nav__auth .kds-btn { white-space: nowrap; } }
 
 /* ---------- flash ---------- */
 .flash-region { padding-top: 12px; }
@@ -131,26 +130,24 @@ a:hover { color: var(--cc-red); }
 .flash--error { background: var(--cc-red-100); border-color: #f3b1b1; color: #8a1b1b; }
 .flash--info { background: var(--cc-teal-100); border-color: #a7dfe2; color: #16606a; }
 
-/* ---------- footer: the final brand statement — a full-width navy band, inverted ---------- */
-.site-footer { position: relative; background: var(--cc-navy); border-top: none; margin-top: 24px; padding: 56px 0 24px; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
-.site-footer::before {
-  content: ""; position: absolute; left: -6%; bottom: -35%; width: 30%; aspect-ratio: 1;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--cc-red) 70%, transparent), transparent 70%);
-  clip-path: polygon(48% 0%, 100% 35%, 84% 100%, 18% 86%, 0% 28%);
-  opacity: .5; pointer-events: none;
-}
-.site-footer__grid, .site-footer__legal { position: relative; }
-.site-footer__grid { display: grid; gap: 28px; grid-template-columns: 1fr; }
+/* ---------- footer: an editorial closing statement, not a four-column link grid.
+   1) a huge tagline band  2) a full-bleed red rule  3) link groups in an inline row  4) a legal strip. ---------- */
+.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 48px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
+.site-footer__statement { display: flex; align-items: center; gap: 20px; padding-bottom: 36px; }
+.site-footer__mark { flex: none; display: block; background: #fff; border-radius: var(--kds-radius-md); padding: 6px; }
+.site-footer__tagline { margin: 0; font: 800 clamp(1.375rem, 3vw + .8rem, 2.5rem)/1.15 var(--cc-font-display); color: #fff; letter-spacing: -0.02em; }
+.site-footer__rule { height: 3px; background: var(--cc-red); }
+.site-footer__links { position: relative; padding: 32px 0; display: grid; gap: 28px; grid-template-columns: 1fr; }
 .site-footer h3 { font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 12px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .site-footer a { color: color-mix(in srgb, #fff 82%, transparent); text-decoration: none; }
 .site-footer a:hover { color: #fff; }
-.site-footer__brand img { display: block; background: #fff; border-radius: var(--kds-radius-md); padding: 6px; }
-.site-footer__brand p { color: color-mix(in srgb, #fff 72%, transparent); margin: 12px 0; }
 .site-footer .muted { color: color-mix(in srgb, #fff 65%, transparent); }
-.site-footer__legal { margin-top: 28px; padding-top: 16px; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); color: color-mix(in srgb, #fff 55%, transparent); font-size: .8125rem; }
-@media (min-width: 640px) { .site-footer__grid { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1024px) { .site-footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+.site-footer__contact p { margin: 0; color: color-mix(in srgb, #fff 72%, transparent); }
+.site-footer__legal { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 16px 0; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); color: color-mix(in srgb, #fff 55%, transparent); font-size: .8125rem; }
+.site-footer__legal p { margin: 0; }
+@media (min-width: 640px) { .site-footer__links { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .site-footer__links { grid-template-columns: repeat(4, 1fr); gap: 20px 32px; } }
 
 /* ---------- audience chips (logo strip) ---------- */
 .audience-strip { display: flex !important; flex-wrap: wrap; gap: 6px !important; }
@@ -213,18 +210,29 @@ textarea.input { min-height: 120px; resize: vertical; }
 .badge--danger { background: var(--cc-red-100); color: #8a1b1b; }
 .badge--teal { background: var(--cc-teal-100); color: #16606a; }
 
-/* page header band — the editorial signature: white ground, a cropped angular shape (maple-point
-   geometry, abstracted) bleeding from the top-right corner, and an oversized headline. Same band on
-   every inner page, so the brand reads as one system without needing a bespoke hero per route. */
-.page-head { position: relative; background: #fff; border-bottom: 1px solid var(--kds-border); padding: 32px 0; overflow: hidden; }
+/* page header band — the editorial signature flips to a bold, full-bleed navy masthead with an oversized
+   white headline; a thin red spine runs down the left edge. Same band on every inner page (the brand frame),
+   while each page's body composition below it differs by purpose (see homepage / search / job-detail / etc). */
+.page-head { position: relative; background: var(--cc-navy); padding: 28px 0; overflow: hidden; border-left: 6px solid var(--cc-red); }
 .page-head::before {
-  content: ""; position: absolute; top: -30%; right: -6%; width: 42%; aspect-ratio: 1;
-  background: linear-gradient(135deg, var(--cc-navy-100), transparent 72%);
-  clip-path: polygon(48% 0%, 100% 35%, 84% 100%, 18% 86%, 0% 28%);
-  opacity: .8; pointer-events: none;
+  content: ""; position: absolute; inset: -40% -8% auto auto; width: 30%; aspect-ratio: 1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cc-red) 45%, transparent), transparent 70%);
+  opacity: .6; pointer-events: none;
 }
 .page-head__inner { position: relative; }
-.page-head h1 { margin-bottom: 8px; }
+.page-head h1 { margin-bottom: 8px; color: #fff; }
+.page-head a:not(.kds-btn) { color: #fff; }
+.page-head .breadcrumb { color: color-mix(in srgb, #fff 55%, transparent); }
+.page-head .breadcrumb a { color: color-mix(in srgb, #fff 70%, transparent); }
+.page-head .breadcrumb li + li::before { color: color-mix(in srgb, #fff 40%, transparent); }
+.page-head .eyebrow { color: var(--cc-spark); }
+.page-head .eyebrow::before { background: var(--cc-spark); }
+.page-head .lead { color: color-mix(in srgb, #fff 80%, transparent); }
+.page-head .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
+.page-head .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); }
+.page-head .kds-btn--brand { background: #fff; color: var(--cc-navy); }
+.page-head .kds-btn--brand:hover { background: color-mix(in srgb, #fff 85%, transparent); }
+.page-head .muted { color: color-mix(in srgb, #fff 65%, transparent); }
 
 /* dashboard shell: sidebar on desktop, tab strip on mobile */
 .dash { display: grid; gap: 20px; grid-template-columns: 1fr; padding-top: 20px; padding-bottom: 40px; }
@@ -258,17 +266,27 @@ textarea.input { min-height: 120px; resize: vertical; }
   .table--stack td::before { content: attr(data-label); font-weight: 600; color: var(--kds-fg-muted); font-size: .8125rem; flex: none; }
 }
 
-/* job cards (shared by home/list/dashboards) — editorial: sharp corners, a quiet left rule that
-   turns red on hover. Kept in sync with public.css's fuller job-card rules (pages that don't load
-   public.css — portal/seeker dashboards — still get the same visual language from this copy). */
-.job-card { display: grid; gap: 9px; background: #fff; border: 1px solid var(--kds-border); border-left: 3px solid var(--cc-line-strong); border-radius: 6px; padding: 16px; transition: box-shadow .15s, border-color .15s, transform .15s; }
-.job-card:hover { border-color: var(--kds-border); border-left-color: var(--cc-red); box-shadow: var(--kds-shadow-2); transform: translateY(-2px); }
+/* job cards (shared by home/list/dashboards) — an editorial directory entry, not a bordered box: a
+   tinted block, a running index number, and a full colour inversion on hover. Kept in sync with
+   public.css's fuller job-card rules (pages that don't load public.css — portal/seeker dashboards —
+   still get the same visual language from this copy). */
+.jobs-grid, .jobs-stack { counter-reset: joblist; }
+.job-card { counter-increment: joblist; position: relative; display: grid; gap: 9px; background: var(--cc-surface); border: 0; border-radius: 2px; padding: 22px 44px 18px 20px; transition: background .15s, color .15s; }
+.job-card::before { content: counter(joblist, decimal-leading-zero); position: absolute; top: 16px; right: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); letter-spacing: .06em; }
+.job-card:hover { background: var(--cc-navy); }
+.job-card:hover::before { color: color-mix(in srgb, #fff 32%, transparent); }
 .job-card__title { font: 800 1.0625rem/1.3 var(--cc-font-display); margin: 0; letter-spacing: -0.01em; }
 .job-card__title a { text-decoration: none; color: var(--cc-navy); }
+.job-card:hover .job-card__title a { color: #fff; }
 .job-card__company { color: var(--kds-fg-muted); font-size: .9375rem; }
+.job-card:hover .job-card__company { color: color-mix(in srgb, #fff 78%, transparent); }
 .job-card__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .875rem; color: var(--kds-fg-muted); }
+.job-card:hover .job-card__meta { color: color-mix(in srgb, #fff 75%, transparent); }
 .job-card__salary { font: 700 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
+.job-card:hover .job-card__salary { color: #fff; }
 .job-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8125rem; color: var(--kds-fg-faint); }
+.job-card:hover .job-card__foot { color: color-mix(in srgb, #fff 55%, transparent); }
+.job-card--ref { box-shadow: inset 4px 0 0 var(--cc-teal); }
 
 /* empty states */
 .empty { text-align: center; padding: 40px 16px; color: var(--kds-fg-muted); border: 1px dashed var(--kds-border-strong); border-radius: 14px; }

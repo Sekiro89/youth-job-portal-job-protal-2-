@@ -17,23 +17,18 @@
 @media (min-width: 768px) { .section__head--split { margin-bottom: 40px; } }
 .h3 { font-size: 1.15rem; }                                     /* an h2 inside a 340px sidebar card uses the h3 step of the scale */
 
-/* Editorial job card: sharp corners, a quiet left rule that turns red only on hover (not a rounded
-   white box + shadow by default — the shadow is reserved for the active/hover state). */
-.job-card { display: grid; gap: 9px; align-content: start; background: #fff; border: 1px solid var(--kds-border); border-left: 3px solid var(--cc-line-strong); border-radius: 6px; padding: 20px; transition: box-shadow .15s, border-color .15s, transform .15s; }
-.job-card:not(.job-card--ref):hover { border-color: var(--kds-border); border-left-color: var(--cc-red); box-shadow: var(--kds-shadow-2); transform: translateY(-2px); }
-.job-card__title { font: 800 1.125rem/1.3 var(--cc-font-display); margin: 0; letter-spacing: -0.01em; }
-.job-card__title a { text-decoration: none; color: var(--cc-navy); }
-.job-card__title a:hover { color: var(--cc-red); }
-.job-card__company { color: var(--kds-fg-muted); font-size: .9375rem; overflow-wrap: anywhere; }
+/* Editorial job card: a tinted directory entry with a running index number, not a bordered box.
+   Full rules live in theme.css (shared with portal/seeker dashboards); this file only adds what's
+   specific to public-page grids: more-locations text, the reference co-brand, and the posting ID. */
 .job-card__more { color: var(--kds-fg-muted); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
-.job-card__meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .875rem; color: var(--kds-fg-muted); }
-.job-card__salary { font: 700 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
-.job-card__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8125rem; color: var(--kds-fg-faint); }
+.job-card:hover .job-card__more { color: color-mix(in srgb, #fff 70%, transparent); }
+.job-card__company { overflow-wrap: anywhere; }
 .job-card__co { color: var(--cc-ink); font-weight: 600; }
-.job-card--ref { border-left-color: var(--cc-teal); }
+.job-card:hover .job-card__co { color: #fff; }
 .job-card__ref { white-space: normal; text-align: left; line-height: 1.3; }
 .job-card__pid { flex: none; white-space: nowrap; }
 .job-card__pid span { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; letter-spacing: .04em; color: var(--kds-fg-muted); }
+.job-card:hover .job-card__pid span { color: color-mix(in srgb, #fff 60%, transparent); }
 
 /* ---------- shared: facts list, tags ---------- */
 .prose p { margin: 0 0 1em; }
@@ -216,17 +211,17 @@
 @media (min-width: 768px) { .cta-grid { grid-template-columns: repeat(3, 1fr); } }
 
 /* ---------- final CTA band ---------- */
-.final-cta { background: var(--cc-navy); background-image: radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--cc-red) 55%, transparent), transparent 45%); color: #fff; text-align: left; }
-.final-cta .eyebrow { color: var(--cc-spark); }
-.final-cta h2 { color: #fff; max-width: 16ch; }
-.final-cta .lead { color: color-mix(in srgb, #fff 82%, transparent); max-width: 48ch; }
+.final-cta { background: #fff; background-image: radial-gradient(circle at 88% 12%, var(--cc-red-100), transparent 55%); color: var(--cc-ink); text-align: left; border-top: 1px solid var(--kds-border); }
+.final-cta .eyebrow { color: var(--cc-red); }
+.final-cta h2 { color: var(--cc-navy); max-width: 16ch; }
+.final-cta .lead { color: var(--kds-fg-muted); max-width: 48ch; }
 .final-cta__inner { display: grid; gap: 20px; }
 .final-cta__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .final-cta__actions .kds-btn { flex: 1 1 auto; }
-.final-cta__actions .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
-.final-cta__actions .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); }
-.final-cta__employer { margin: 28px auto 0; color: color-mix(in srgb, #fff 75%, transparent); }
-.final-cta__employer a { color: #fff; }
+.final-cta__actions .kds-btn--ghost { color: var(--cc-navy); border-color: var(--kds-border-strong); }
+.final-cta__actions .kds-btn--ghost:hover { background: var(--cc-navy-50); }
+.final-cta__employer { margin: 28px auto 0; color: var(--kds-fg-muted); }
+.final-cta__employer a { color: var(--cc-navy); }
 @media (min-width: 640px) { .final-cta__actions .kds-btn { flex: 0 0 auto; } }
 @media (min-width: 1024px) { .final-cta__inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 40px; } }
 
@@ -249,7 +244,7 @@
 /* ---------- job detail: two columns at ≥1024 (content · 340px sticky sidebar) ---------- */
 .job-layout { display: grid; gap: 24px; grid-template-columns: 1fr; align-items: start; }
 .job-main { min-width: 0; display: grid; gap: 32px; }
-.job-section h2 { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--cc-navy-100); }
+.job-section h2 { margin-bottom: 12px; padding-bottom: 10px; padding-left: 14px; border-left: 4px solid var(--cc-red); border-bottom: 0; }
 .job-attribution { border-left: 4px solid var(--cc-teal); display: grid; gap: 6px; }
 .job-attribution .eyebrow { color: var(--kds-fg-muted); margin-bottom: 0; }
 .job-attribution p { margin: 0; }

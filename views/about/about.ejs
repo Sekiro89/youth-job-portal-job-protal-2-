@@ -3,9 +3,7 @@ const toc = [
   ['quick-answers', 'Quick answers'],
   ['mission', 'Our mission'],
   ['who-we-serve', 'Explore your path'],
-  ['employers', 'For employers'],
-  ['consultants', 'For consultants'],
-  ['job-seekers', 'For job seekers'],
+  ['about-tabs', "Who it's for"],
   ['how-it-works', 'How it works'],
   ['commitment', 'Our commitment'],
   ['faq', 'FAQ'],
@@ -27,120 +25,143 @@ const toc = [
   </div>
 </header>
 
-<div class="section">
-  <div class="container about-layout">
-    <ul class="grid about-facts" aria-label="Youth Futures Canada at a glance">
-      <li class="card"><strong><%= price.employer.base %> + GST</strong><span>per employer posting, per month (<%= price.employer.total %>)</span></li>
-      <li class="card"><strong><%= price.consultant.base %> + GST</strong><span>per consultant posting, per month (<%= price.consultant.total %>)</span></li>
-      <li class="card"><strong>5 career stages</strong><span>one Job Bank</span></li>
-      <li class="card"><strong>13</strong><span>provinces &amp; territories</span></li>
-      <li class="card"><strong><%= C.CATEGORIES.length %></strong><span>job categories</span></li>
-      <li class="card"><strong>Free</strong><span>for every job seeker</span></li>
-      <li class="card"><strong>Monthly</strong><span>renewal, cancel any time</span></li>
-    </ul>
+<div class="about-stats-band">
+  <ul class="about-stats container" aria-label="Youth Futures Canada at a glance">
+    <li><strong><%= price.employer.base %></strong><span>+ GST per employer posting / month</span></li>
+    <li><strong><%= price.consultant.base %></strong><span>+ GST per consultant posting / month</span></li>
+    <li><strong>5</strong><span>career stages, one Job Bank</span></li>
+    <li><strong>13</strong><span>provinces &amp; territories</span></li>
+    <li><strong><%= C.CATEGORIES.length %></strong><span>job categories</span></li>
+    <li><strong>Free</strong><span>for every job seeker</span></li>
+  </ul>
+</div>
 
-    <aside class="about-toc" aria-label="On this page">
-      <p class="about-toc__title">On this page</p>
-      <ol>
-        <% toc.forEach(([id, label]) => { %><li><a href="#<%= id %>"><%= label %></a></li><% }) %>
-      </ol>
-      <a class="kds-btn kds-btn--brand kds-btn--block about-toc__cta" href="/employer">Post a job</a>
-    </aside>
+<nav class="about-jump" aria-label="Jump to section">
+  <ul class="container about-jump__list">
+    <% toc.forEach(([id, label]) => { %><li><a href="#<%= id %>"><%= label %></a></li><% }) %>
+  </ul>
+</nav>
 
-    <div class="about-main">
-      <%- include('_quick', { quick }) %>
+<div class="about-main">
+  <%- include('_quick', { quick }) %>
 
-      <section class="about-section prose" id="mission" aria-labelledby="mission-h">
-        <h2 id="mission-h">Our mission: real Canadian opportunities for young talent, wherever you're starting from</h2>
-        <p>Most job boards assume you already live where the job is. Youth Futures Canada was created for young people building a career in Canada from any starting point — students and graduates looking for a first role, young professionals ready to take their skills further, skilled workers with a trade or technical background, and newcomers, Indigenous job seekers and refugees among them. We are a <strong>Canadian job bank</strong>, not an immigration consultancy: every listing is a real opportunity from a real Canadian employer, presented honestly.</p>
-        <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price per posting — <%= price.employer.base %> + GST for employers, <%= price.consultant.base %> + GST for consultants posting on behalf of clients. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
-        <p>Our name says exactly what we do: <strong>Youth Futures Canada</strong> connects young talent everywhere with careers in Canada, from Toronto and Vancouver to the smallest community in Nunavut.</p>
-      </section>
+  <section class="about-section about-quote" id="mission" aria-labelledby="mission-h">
+    <div class="container about-quote__inner">
+      <p class="about-quote__mark" aria-hidden="true">“</p>
+      <div class="about-quote__body">
+        <h2 id="mission-h" class="about-quote__lede">Real Canadian opportunities for young talent, wherever you're starting from.</h2>
+        <div class="prose about-quote__text">
+          <p>Most job boards assume you already live where the job is. Youth Futures Canada was created for young people building a career in Canada from any starting point — students and graduates looking for a first role, young professionals ready to take their skills further, skilled workers with a trade or technical background, and newcomers, Indigenous job seekers and refugees among them. We are a <strong>Canadian job bank</strong>, not an immigration consultancy: every listing is a real opportunity from a real Canadian employer, presented honestly.</p>
+          <p>We keep the model simple on purpose. Employers and third-party consultants pay one flat, published price per posting — <%= price.employer.base %> + GST for employers, <%= price.consultant.base %> + GST for consultants posting on behalf of clients. Job seekers never pay anything. Every listing is searchable by category, province, city, job type and work arrangement, and every job seeker can tell us who they are so that the right opportunities find them. No hidden fees, no bidding for visibility, no pay-to-apply.</p>
+          <p>Our name says exactly what we do: <strong>Youth Futures Canada</strong> connects young talent everywhere with careers in Canada, from Toronto and Vancouver to the smallest community in Nunavut.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <div class="section section--alt">
+    <div class="container">
       <%- include('_audiences', { cities }) %>
+    </div>
+  </div>
 
-      <section class="about-section prose" id="employers" aria-labelledby="employers-h">
-        <h2 id="employers-h">For employers: post a job in Canada for <%= price.employer.base %> a month + GST</h2>
-        <p>Youth Futures Canada is a <strong>job board for employers in Canada</strong> of every size — a family restaurant in Halifax, a trucking company in Winnipeg, a hospital network in Ontario or a software start-up in Vancouver — looking to reach students, graduates, young professionals and skilled workers. Create an employer account, describe your company once, and post as many jobs as you need.</p>
-        <h3>Transparent job posting pricing</h3>
-        <p>A <strong><%= price.employer.base %> job posting</strong> is exactly that: <strong><%= price.employer.base %> CAD per posting per month, plus 5% GST (<%= price.employer.gst %>)</strong>, for a total of <strong><%= price.employer.total %> CAD</strong>. The price is the same for every business in every province, it is locked in for the life of the posting, and every payment produces a numbered GST receipt you can view or download as a PDF from Billing — all receipts are available from your login.</p>
-        <h3>What every posting includes</h3>
-        <p>Postings on Youth Futures Canada follow the Job Bank format job seekers already trust: at least one <strong>full work address</strong> (street, city, province and postal code — and a posting may list <strong>several addresses</strong> when the job is offered at more than one site), your <strong>operating name</strong> shown first with the legal company name beneath it, salary with its pay period, education and experience from standard lists, an industry category and an optional NOC code. Job seekers can print any posting to a single clean sheet.</p>
-        <h3>Monthly renewal you control</h3>
-        <p>Each posting renews automatically every month so a live job never quietly disappears mid-search. Cancel at any time from your dashboard — at the end of the current paid month (the job stays live until then) or immediately. No contracts, no cancellation fees.</p>
-        <h3>What happens to expired, cancelled and inactive postings</h3>
-        <p>When a posting expires because payment lapses, when you cancel it, or when you pause it, Youth Futures Canada <strong>archives</strong> the job. Archived jobs are removed from search results, job alerts, the sitemap and their public page, so candidates never apply to a role that is no longer open. The posting and every application it received stay in your dashboard, and you can duplicate an archived job to post it again in a couple of clicks.</p>
-        <p><a href="/employer">Read the full employer guide and pricing →</a></p>
-      </section>
+  <section class="about-section" aria-labelledby="audience-tabs-h">
+    <div class="container">
+      <h2 id="audience-tabs-h" class="visually-hidden">Who Youth Futures Canada is for</h2>
+      <div class="about-tabs" id="about-tabs">
+        <input type="radio" name="about-audience" id="tab-employers" class="about-tabs__input" checked>
+        <input type="radio" name="about-audience" id="tab-consultants" class="about-tabs__input">
+        <input type="radio" name="about-audience" id="tab-seekers" class="about-tabs__input">
+        <div class="about-tabs__nav" role="tablist">
+          <label for="tab-employers">For employers</label>
+          <label for="tab-consultants">For consultants</label>
+          <label for="tab-seekers">For job seekers</label>
+        </div>
+        <div class="about-tabs__panels">
+          <section class="about-tabs__panel about-tabs__panel--employers prose" aria-labelledby="employers-h">
+            <h3 id="employers-h">Post a job in Canada for <%= price.employer.base %> a month + GST</h3>
+            <p>Youth Futures Canada is a <strong>job board for employers in Canada</strong> of every size — a family restaurant in Halifax, a trucking company in Winnipeg, a hospital network in Ontario or a software start-up in Vancouver — looking to reach students, graduates, young professionals and skilled workers. Create an employer account, describe your company once, and post as many jobs as you need.</p>
+            <h4>Transparent job posting pricing</h4>
+            <p>A <strong><%= price.employer.base %> job posting</strong> is exactly that: <strong><%= price.employer.base %> CAD per posting per month, plus 5% GST (<%= price.employer.gst %>)</strong>, for a total of <strong><%= price.employer.total %> CAD</strong>. The price is the same for every business in every province, it is locked in for the life of the posting, and every payment produces a numbered GST receipt you can view or download as a PDF from Billing — all receipts are available from your login.</p>
+            <h4>What every posting includes</h4>
+            <p>Postings on Youth Futures Canada follow the Job Bank format job seekers already trust: at least one <strong>full work address</strong> (street, city, province and postal code — and a posting may list <strong>several addresses</strong> when the job is offered at more than one site), your <strong>operating name</strong> shown first with the legal company name beneath it, salary with its pay period, education and experience from standard lists, an industry category and an optional NOC code. Job seekers can print any posting to a single clean sheet.</p>
+            <h4>Monthly renewal you control</h4>
+            <p>Each posting renews automatically every month so a live job never quietly disappears mid-search. Cancel at any time from your dashboard — at the end of the current paid month (the job stays live until then) or immediately. No contracts, no cancellation fees.</p>
+            <h4>What happens to expired, cancelled and inactive postings</h4>
+            <p>When a posting expires because payment lapses, when you cancel it, or when you pause it, Youth Futures Canada <strong>archives</strong> the job. Archived jobs are removed from search results, job alerts, the sitemap and their public page, so candidates never apply to a role that is no longer open. The posting and every application it received stay in your dashboard, and you can duplicate an archived job to post it again in a couple of clicks.</p>
+            <p><a href="/employer">Read the full employer guide and pricing →</a></p>
+          </section>
+          <section class="about-tabs__panel about-tabs__panel--consultants prose" aria-labelledby="consultants-h">
+            <h3 id="consultants-h">Third-party consultants and recruiters</h3>
+            <p>Staffing agencies, recruitment firms, immigration consultants helping newcomers find work, and HR consultants hiring on behalf of clients use Youth Futures Canada as a <strong>third-party recruiter job posting</strong> platform. A Third Party Consultant account holds <strong>many employer profiles</strong> — one for each client — so you can post, renew and manage jobs for all of your clients from a single sign-in, with applicants organised by client company.</p>
+            <p>Consultants pay a dedicated consultant rate: <strong><%= price.consultant.base %> CAD per posting per month plus 5% GST (<%= price.consultant.gst %>), <%= price.consultant.total %> in total</strong> — billed per posting and cancellable at any time. Each client profile carries the client's operating name, so job seekers see the business they know, never your agency. Your billing page shows every subscription and receipt across all of your profiles in one place, each downloadable as a PDF.</p>
+            <p><a href="/consultant">See how consultant accounts work →</a></p>
+          </section>
+          <section class="about-tabs__panel about-tabs__panel--seekers prose" aria-labelledby="seekers-h">
+            <h3 id="seekers-h">Free, always</h3>
+            <p>Searching for <strong>jobs in Canada</strong> should not cost anything, and on Youth Futures Canada it never will. Sign up free, build a profile in a few minutes and upload your resume as a PDF or Word document. From then on you can apply to any job online with one click, save jobs to come back to, and track every application from your dashboard.</p>
+            <p>Tell us your preferred categories, province and city, work arrangement (on-site, hybrid or remote), experience level and the audiences you identify with, and <strong>job alerts</strong> will bring matching jobs to your inbox as soon as they are published — instantly or as a daily digest, your choice. Your resume is only ever shared with the employer or consultant behind a job you choose to apply to.</p>
+            <p><a href="/jobseeker">Create your free job seeker profile →</a></p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <section class="about-section prose" id="consultants" aria-labelledby="consultants-h">
-        <h2 id="consultants-h">For third-party consultants and recruiters</h2>
-        <p>Staffing agencies, recruitment firms, immigration consultants helping newcomers find work, and HR consultants hiring on behalf of clients use Youth Futures Canada as a <strong>third-party recruiter job posting</strong> platform. A Third Party Consultant account holds <strong>many employer profiles</strong> — one for each client — so you can post, renew and manage jobs for all of your clients from a single sign-in, with applicants organised by client company.</p>
-        <p>Consultants pay a dedicated consultant rate: <strong><%= price.consultant.base %> CAD per posting per month plus 5% GST (<%= price.consultant.gst %>), <%= price.consultant.total %> in total</strong> — billed per posting and cancellable at any time. Each client profile carries the client’s operating name, so job seekers see the business they know, never your agency. Your billing page shows every subscription and receipt across all of your profiles in one place, each downloadable as a PDF.</p>
-        <p><a href="/consultant">See how consultant accounts work →</a></p>
-      </section>
-
-      <section class="about-section prose" id="job-seekers" aria-labelledby="seekers-h">
-        <h2 id="seekers-h">For job seekers: free, always</h2>
-        <p>Searching for <strong>jobs in Canada</strong> should not cost anything, and on Youth Futures Canada it never will. Sign up free, build a profile in a few minutes and upload your resume as a PDF or Word document. From then on you can apply to any job online with one click, save jobs to come back to, and track every application from your dashboard.</p>
-        <p>Tell us your preferred categories, province and city, work arrangement (on-site, hybrid or remote), experience level and the audiences you identify with, and <strong>job alerts</strong> will bring matching jobs to your inbox as soon as they are published — instantly or as a daily digest, your choice. Your resume is only ever shared with the employer or consultant behind a job you choose to apply to.</p>
-        <p><a href="/jobseeker">Create your free job seeker profile →</a></p>
-      </section>
-
-      <section class="about-section" id="how-it-works" aria-labelledby="how-h">
+  <section class="about-section about-flow" id="how-it-works" aria-labelledby="how-h">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">Two ways in</p>
         <h2 id="how-h">How Youth Futures Canada works</h2>
-        <div class="grid grid--2">
-          <div class="card card--flat about-steps">
-            <h3>Posting a job (employers and consultants)</h3>
-            <ol class="about-steps__list">
-              <li><strong>Create your account.</strong> Employers add their company profile; consultants add a profile for each client they represent.</li>
-              <li><strong>Write the posting.</strong> Title, description, category, full work address (one or several), job type, salary with its period and the audiences you want to reach.</li>
-              <li><strong>Publish and pay.</strong> Check out for <%= price.employer.base %> + GST as an employer or <%= price.consultant.base %> + GST as a third-party consultant. The job goes live immediately, matching job seekers are alerted, and the posting renews monthly until you cancel.</li>
-            </ol>
-          </div>
-          <div class="card card--flat about-steps">
-            <h3>Finding a job (job seekers)</h3>
-            <ol class="about-steps__list">
-              <li><strong>Sign up free.</strong> Create your profile and upload your resume (PDF, DOC or DOCX).</li>
-              <li><strong>Search or wait for alerts.</strong> Filter jobs by province, city, category and work arrangement, or let matched alerts come to you.</li>
-              <li><strong>Apply online.</strong> One click sends your resume to the employer. Track the status of every application from your dashboard.</li>
-            </ol>
-          </div>
+      </div>
+      <div class="about-flow__grid">
+        <div class="about-flow__panel">
+          <div class="about-flow__head">Post a job</div>
+          <ol class="about-steps__list">
+            <li><strong>Create your account.</strong> Employers add their company profile; consultants add a profile for each client they represent.</li>
+            <li><strong>Write the posting.</strong> Title, description, category, full work address (one or several), job type, salary with its period and the audiences you want to reach.</li>
+            <li><strong>Publish and pay.</strong> Check out for <%= price.employer.base %> + GST as an employer or <%= price.consultant.base %> + GST as a third-party consultant. The job goes live immediately, matching job seekers are alerted, and the posting renews monthly until you cancel.</li>
+          </ol>
         </div>
-      </section>
-
-      <section class="about-section" id="commitment" aria-labelledby="commit-h">
-        <h2 id="commit-h">Our commitment</h2>
-        <div class="grid grid--2">
-          <div class="card about-commit">
-            <h3>Inclusion</h3>
-            <p>Youth Futures Canada serves young people at every career stage. Every posting can also be tagged for the communities it explicitly welcomes, and job seekers can search by that too.</p>
-          </div>
-          <div class="card about-commit">
-            <h3>Accessibility</h3>
-            <p>We build with the Web Content Accessibility Guidelines (WCAG) in mind: semantic structure, keyboard navigation, visible focus, labelled forms and readable contrast on every screen size.</p>
-          </div>
-          <div class="card about-commit">
-            <h3>Privacy (PIPEDA)</h3>
-            <p>Personal information is handled in line with Canada’s Personal Information Protection and Electronic Documents Act. We collect only what the job bank needs, and resumes are never exposed by public link.</p>
-          </div>
-          <div class="card about-commit">
-            <h3>Canadian data</h3>
-            <p>Youth Futures Canada is a Canadian service for the Canadian labour market: prices in Canadian dollars, GST handled correctly, and your data kept on infrastructure we control.</p>
-          </div>
+        <div class="about-flow__panel about-flow__panel--alt">
+          <div class="about-flow__head">Find a job</div>
+          <ol class="about-steps__list">
+            <li><strong>Sign up free.</strong> Create your profile and upload your resume (PDF, DOC or DOCX).</li>
+            <li><strong>Search or wait for alerts.</strong> Filter jobs by province, city, category and work arrangement, or let matched alerts come to you.</li>
+            <li><strong>Apply online.</strong> One click sends your resume to the employer. Track the status of every application from your dashboard.</li>
+          </ol>
         </div>
-        <aside class="about-cite">
-          <h3>How to cite us</h3>
-          <p>When referencing this page, please cite it as: <q>Youth Futures Canada, “About Youth Futures Canada — careers in Canada for young talent everywhere,” <%= canonical %>.</q></p>
-        </aside>
-      </section>
+      </div>
+    </div>
+  </section>
 
+  <section class="about-section about-commit-section" id="commitment" aria-labelledby="commit-h">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">Our commitment</p>
+        <h2 id="commit-h">What we hold ourselves to</h2>
+      </div>
+      <ul class="about-commit-grid">
+        <li class="about-commit-tile about-commit-tile--a"><span class="about-commit-tile__n">01</span><h3>Inclusion</h3><p>Youth Futures Canada serves young people at every career stage. Every posting can also be tagged for the communities it explicitly welcomes, and job seekers can search by that too.</p></li>
+        <li class="about-commit-tile about-commit-tile--b"><span class="about-commit-tile__n">02</span><h3>Accessibility</h3><p>We build with the Web Content Accessibility Guidelines (WCAG) in mind: semantic structure, keyboard navigation, visible focus, labelled forms and readable contrast on every screen size.</p></li>
+        <li class="about-commit-tile about-commit-tile--c"><span class="about-commit-tile__n">03</span><h3>Privacy (PIPEDA)</h3><p>Personal information is handled in line with Canada's Personal Information Protection and Electronic Documents Act. We collect only what the job bank needs, and resumes are never exposed by public link.</p></li>
+        <li class="about-commit-tile about-commit-tile--d"><span class="about-commit-tile__n">04</span><h3>Canadian data</h3><p>Youth Futures Canada is a Canadian service for the Canadian labour market: prices in Canadian dollars, GST handled correctly, and your data kept on infrastructure we control.</p></li>
+      </ul>
+      <aside class="about-cite">
+        <h3>How to cite us</h3>
+        <p>When referencing this page, please cite it as: <q>Youth Futures Canada, “About Youth Futures Canada — careers in Canada for young talent everywhere,” <%= canonical %>.</q></p>
+      </aside>
+    </div>
+  </section>
+
+  <div class="section section--alt">
+    <div class="container">
       <%- include('_faq', { faq }) %>
     </div>
   </div>
 </div>
 
-<section class="section section--alt" aria-labelledby="close-h">
+<section class="section" aria-labelledby="close-h">
   <div class="container">
     <div class="cta-band">
       <div>

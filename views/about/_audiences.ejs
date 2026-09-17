@@ -12,7 +12,7 @@ const blurbs = {
   <p class="prose">Youth Futures Canada serves young people — not one kind of job. A student, a graduate, and a skilled professional with several years of experience are all part of the same audience; they're just at different points in the same journey.</p>
   <ul class="grid grid--5 about-aud">
     <% C.CAREER_STAGES.forEach(([key, name]) => { %>
-      <li class="card about-aud__card about-aud__card--<%= key %>">
+      <li class="about-aud__card about-aud__card--<%= key %>">
         <h3><a href="/jobs?stage=<%= key %>"><%= name %></a></h3>
         <p><%= blurbs[key] %></p>
       </li>
