@@ -1,5 +1,5 @@
-<% const roles = [['employer', 'Employer'], ['consultant', 'Third Party Consultant'], ['seeker', 'Job Seeker']]; %>
-<%- include('_head', { h: { eyebrow: 'Welcome back', h1: 'Sign in', lead: 'One login for employers, third party consultants and job seekers.' } }) %>
+<% const roles = [['employer', 'Employer'], ['consultant', 'Partner'], ['seeker', 'Job Seeker']]; %>
+<%- include('_head', { h: { eyebrow: 'Sign in', h1: 'Welcome back.', lead: 'One login for employers, partners and job seekers.' } }) %>
     <div class="auth__card">
       <% if (roleHint) { %>
       <div class="role-hints" aria-label="Account type">
@@ -28,7 +28,7 @@
       <p class="auth__foot"><strong>New to Youth Futures Canada?</strong></p>
       <ul class="auth-links">
         <li><a href="/signup/employer" <%= roleHint === 'employer' ? 'class="is-hint"' : '' %>>Sign up as an employer</a></li>
-        <li><a href="/signup/consultant" <%= roleHint === 'consultant' ? 'class="is-hint"' : '' %>>Sign up as a third party consultant</a></li>
+        <li><a href="/signup/consultant" <%= roleHint === 'consultant' ? 'class="is-hint"' : '' %>>Sign up as a partner</a></li>
         <li><a href="/signup/seeker" <%= roleHint === 'seeker' ? 'class="is-hint"' : '' %>>Sign up as a job seeker</a></li>
       </ul>
     </div>

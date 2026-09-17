@@ -1,15 +1,13 @@
-<%# Split-screen shell for every auth page (login / signup ×4 / forgot / reset). locals: h — { eyebrow, h1,
-    lead (html allowed via leadHtml), crumb }. Opens .auth-shell + the brand pane here; each page's own template
-    supplies the form content and closes the shell (see the matching </div></div> at the end of those files). %>
+<%# Centered shell for every auth page (login / signup ×4 / forgot / reset). locals: h — { eyebrow, h1,
+    lead (html allowed via leadHtml), crumb }. The global site header (partials/nav) already sits above this —
+    this partial only opens .auth-shell + a centered intro (closed here) + .auth-shell__form (left open); each
+    page's own template supplies the form content and closes the shell with its own trailing </div></div>. %>
 <% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', ...locals.h }; %>
 <div class="auth-shell">
-  <aside class="auth-shell__brand hero">
-    <div class="auth-shell__brand-inner">
-      <a class="auth-shell__logo" href="/"><img src="/img/logo-mark.png" alt="" width="48" height="48"><span>Youth Futures<b>Canada</b></span></a>
-      <ol class="breadcrumb" aria-label="Breadcrumb"><li><a href="/">Home</a></li><li aria-current="page"><%= hd.crumb || hd.h1 %></li></ol>
-      <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
-      <h1><%= hd.h1 %></h1>
-      <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
-    </div>
-  </aside>
+  <div class="container auth-hero">
+    <p class="auth-journey" aria-hidden="true"><em>Enter</em><span class="auth-journey__line"></span>Explore<span class="auth-journey__line"></span>Move</p>
+    <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
+    <h1><%= hd.h1 %></h1>
+    <% if (hd.leadHtml) { %><p class="lead"><%- hd.leadHtml %></p><% } else if (hd.lead) { %><p class="lead"><%= hd.lead %></p><% } %>
+  </div>
   <div class="auth-shell__form">

@@ -1,4 +1,4 @@
-<%- include('_head', { h: { eyebrow: 'Job Seeker account · always free', h1: 'Create your job seeker account', leadHtml: 'Upload your resume, apply online and get alerts. No fees, ever. <a href="/signup">Hiring instead?</a>', crumb: 'Create your account' } }) %>
+<%- include('_head', { h: { eyebrow: 'Create your account', h1: 'Job Seeker', leadHtml: 'Upload your resume, apply online and get alerts. No fees, ever. <a href="/signup">Hiring instead?</a>', crumb: 'Create your account' } }) %>
     <div class="auth__card">
       <%- include('_form-errors', { errors }) %>
       <form class="form" method="post" action="/signup/seeker" novalidate>
