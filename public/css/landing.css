@@ -28,23 +28,85 @@
   .landing-facts li:last-child { border-right: 0; }
 }
 
-/* ---------- five-column audience grid (1 → 2 → 5) ---------- */
+/* ---------- career journey: five stages as a connected progression (numbered, joined by a line),
+   not five identical cards in a row. Shared by employer/consultant ("reach") and seeker ("your path"). ---------- */
+.landing-journey { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 32px; grid-template-columns: 1fr; counter-reset: stage; }
+.landing-journey__step { counter-increment: stage; position: relative; padding-left: 56px; }
+.landing-journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; bottom: -28px; width: 2px; background: var(--cc-line-strong); }
+.landing-journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
+.landing-journey__num::before { content: counter(stage); }
+.landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-red); }
+.landing-journey__step:nth-child(3) .landing-journey__num { background: var(--cc-teal); }
+.landing-journey__step:nth-child(4) .landing-journey__num { background: var(--cc-orange); }
+.landing-journey__step:nth-child(5) .landing-journey__num { background: #a3860a; }
+.landing-journey__step h3 { margin: 6px 0 4px; }
+.landing-journey__step p { margin: 0; color: var(--kds-fg-muted); max-width: 48ch; }
+.landing-journey__step a { display: inline-flex; align-items: center; min-height: 32px; margin-top: 6px; font-weight: 600; font-size: .875rem; text-decoration: none; color: var(--cc-navy); }
+.landing-journey__step a:hover { color: var(--cc-red); }
+@media (min-width: 1024px) {
+  .landing-journey { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .landing-journey__step { padding-left: 0; padding-top: 56px; }
+  .landing-journey__num { left: 0; top: 0; }
+  .landing-journey__step:not(:last-child)::after { left: 40px; right: -4px; top: 19px; bottom: auto; width: auto; height: 2px; }
+}
+
+/* ---------- editorial benefits: one lead point + two supporting points, not three equal cards ---------- */
+.edit-benefits { margin-top: 24px; display: grid; gap: 28px; grid-template-columns: 1fr; }
+.edit-benefits__lead { padding: 28px 0; border-top: 2px solid var(--cc-navy); }
+.edit-benefits__lead .edit-benefits__n { color: var(--cc-red); font-size: 1rem; }
+.edit-benefits__lead h3 { font-size: clamp(1.25rem, 1vw + 1rem, 1.625rem); margin: 8px 0 10px; }
+.edit-benefits__lead p { margin: 0; max-width: 52ch; color: var(--kds-fg-muted); font-size: 1.0625rem; }
+.edit-benefits__support { display: grid; gap: 24px; grid-template-columns: 1fr; }
+.edit-benefits__item { padding: 20px 0 0; border-top: 1px solid var(--kds-border); }
+.edit-benefits__n { display: block; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); margin-bottom: 8px; }
+.edit-benefits__item h3 { margin: 0 0 6px; font-size: 1.0625rem; }
+.edit-benefits__item p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+@media (min-width: 900px) {
+  .edit-benefits { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 48px; }
+  .edit-benefits__lead { padding: 0 40px 0 0; border-top: 0; border-right: 2px solid var(--cc-navy); }
+}
+
+/* ---------- numbered process: oversized flat numbers in a connected horizontal flow, distinct from
+   the circular-dot journey above — used for "how it works" (2-3 short steps). ---------- */
+.proc-flow { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 28px; grid-template-columns: 1fr; counter-reset: proc; }
+.proc-flow__step { position: relative; display: grid; gap: 10px; }
+.proc-flow__n { font: 800 3rem/1 var(--cc-font-display); color: var(--cc-navy-100); }
+.proc-flow__step h3 { margin: 0; }
+.proc-flow__step p { margin: 0; color: var(--kds-fg-muted); max-width: 40ch; }
+@media (min-width: 900px) {
+  .proc-flow { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .proc-flow__step { padding-right: 32px; }
+  .proc-flow__step:not(:last-child)::after { content: "→"; position: absolute; right: -4px; top: 8px; font-size: 1.5rem; color: var(--cc-line-strong); }
+}
+
+/* ---------- proof split: a statement on one side, proof points stacked on the other — not a 3-card row ---------- */
+.proof-split { margin-top: 8px; display: grid; gap: 32px; grid-template-columns: 1fr; align-items: start; }
+.proof-split__points { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.proof-split__points li { padding: 18px 0; border-top: 1px solid var(--kds-border); }
+.proof-split__points li:last-child { border-bottom: 1px solid var(--kds-border); }
+.proof-split__points h3 { margin: 0 0 6px; font-size: 1.0625rem; }
+.proof-split__points p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+@media (min-width: 900px) {
+  .proof-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 56px; }
+  .proof-split__statement { position: sticky; top: calc(var(--cc-header-h) + 24px); }
+}
+
+/* ---------- workflow chain: a labelled pipeline (account → clients → postings → visibility), used only
+   on the consultant page in place of a plain feature grid. ---------- */
+.workflow-chain { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); counter-reset: flow; }
+.workflow-chain__step { counter-increment: flow; position: relative; background: #fff; padding: 24px 26px; display: grid; gap: 8px; }
+.workflow-chain__step::before { content: counter(flow, decimal-leading-zero); font: 800 .75rem/1 var(--cc-font-display); color: var(--kds-fg-faint); letter-spacing: .06em; }
+.workflow-chain__step h3 { margin: 0; font-size: 1.0625rem; }
+.workflow-chain__step p { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+@media (min-width: 900px) {
+  .workflow-chain { grid-template-columns: repeat(3, 1fr); }
+  .workflow-chain__step:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%); z-index: 1; width: 26px; height: 26px; border-radius: 50%; background: var(--cc-navy); color: #fff; display: grid; place-items: center; font-size: .9375rem; }
+}
+
+/* ---------- five-column audience grid (1 → 2 → 5) — still used by pathway-style contexts elsewhere ---------- */
 .grid--5 { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 640px) { .grid--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .grid--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.landing-aud-list { list-style: none; margin: 0; padding: 0; counter-reset: aud; }
-.landing-aud { counter-increment: aud; position: relative; display: grid; gap: 8px; align-content: start; background: #fff; border: 0; border-radius: 2px; padding: 22px 20px 18px; transition: background .15s, color .15s; }
-.landing-aud::before { content: counter(aud, decimal-leading-zero); position: absolute; top: 16px; right: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
-.landing-aud--student:hover { background: var(--cc-navy); }
-.landing-aud--intern_coop:hover { background: var(--cc-red); }
-.landing-aud--graduate:hover { background: var(--cc-teal); }
-.landing-aud--early_career:hover { background: var(--cc-orange); }
-.landing-aud--skilled:hover { background: #a3860a; }
-.landing-aud:hover::before { color: color-mix(in srgb, #fff 35%, transparent); }
-.landing-aud:hover h3, .landing-aud:hover p, .landing-aud:hover a { color: #fff; }
-.landing-aud h3 { margin: 0; }
-.landing-aud p { margin: 0; font-size: .9375rem; color: var(--kds-fg-muted); }
-.landing-aud a { font-weight: 600; font-size: .9rem; text-decoration: none; margin-top: auto; display: inline-flex; align-items: center; min-height: 44px; color: var(--cc-navy); }
 
 /* ---------- numbered tile grid: replaces icon feature-cards AND circular numbered step badges with one
    flush, tinted, numbered block family — used for "features", "how it works" and "what every posting needs" alike ---------- */

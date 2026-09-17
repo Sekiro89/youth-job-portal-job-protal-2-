@@ -34,10 +34,10 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">Built for agencies</p>
       <h2>One account, all your clients</h2>
     </div>
-    <ul class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Unlimited employer profiles</h3><p>Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Post on behalf of any client</h3><p>The posting form asks “Post as company”. Switch between clients with one click on every jobs list and dashboard.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Billing that doesn't scatter</h3><p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p></li>
+    <ul class="workflow-chain">
+      <li class="workflow-chain__step"><h3>Unlimited employer profiles</h3><p>Add every client as its own company — name, logo, location, description. Job seekers see the client as the employer, not you.</p></li>
+      <li class="workflow-chain__step"><h3>Post on behalf of any client</h3><p>The posting form asks "Post as company". Switch between clients with one click on every jobs list and dashboard.</p></li>
+      <li class="workflow-chain__step"><h3>Billing that doesn't scatter</h3><p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p></li>
     </ul>
   </div>
 </section>
@@ -50,25 +50,27 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">How it works</p>
       <h2>Three steps per client</h2>
     </div>
-    <ol class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>Write it under their name</h3><p>Choose the client, note where the role is actually based (more than one site is fine), flag who it's meant to reach, then either save it for later or push it live right away.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Check out at <%= PRICE_CON %> + GST</h3><p>That rate holds for as long as the posting stays up, renewing at <%= TOTAL_CON %> a month until you cancel. One dashboard tracks every applicant across every client, split out by company.</p></li>
+    <ol class="proc-flow">
+      <li class="proc-flow__step"><span class="proc-flow__n">01</span><h3>Create your consultant account</h3><p>One login for your whole practice. Then add each client under Companies — it takes a minute per client.</p></li>
+      <li class="proc-flow__step"><span class="proc-flow__n">02</span><h3>Write it under their name</h3><p>Choose the client, note where the role is actually based (more than one site is fine), flag who it's meant to reach, then either save it for later or push it live right away.</p></li>
+      <li class="proc-flow__step"><span class="proc-flow__n">03</span><h3>Check out at <%= PRICE_CON %> + GST</h3><p>That rate holds for as long as the posting stays up, renewing at <%= TOTAL_CON %> a month until you cancel. One dashboard tracks every applicant across every client, split out by company.</p></li>
     </ol>
   </div>
 </section>
 
 <section class="section section--alt" id="posting">
   <div class="container">
-    <div class="section__head">
-      <p class="eyebrow">What every posting needs</p>
-      <h2>Complete, transparent postings job seekers can trust</h2>
+    <div class="proof-split">
+      <div class="proof-split__statement">
+        <p class="eyebrow">What every posting needs</p>
+        <h2>Complete, transparent postings job seekers can trust</h2>
+      </div>
+      <ul class="proof-split__points">
+        <li><h3>Where the work happens</h3><p>Street, unit, postal code — the real thing, not a city name. Sites in more than one location get every address listed on the same posting.</p></li>
+        <li><h3>The client's name, not yours</h3><p>Each client profile carries the name their candidates would recognize (say, "Flying Pig"), which leads on every posting and company page, legal name tucked beneath. Your agency stays invisible to job seekers.</p></li>
+        <li><h3>Pay and expectations, upfront</h3><p>Wage or salary with the pay period, education and experience from standard Job Bank lists, an industry tag and an optional NOC code — everything a candidate needs on one printable sheet.</p></li>
+      </ul>
     </div>
-    <ul class="landing-tiles landing-tiles--3">
-      <li class="landing-tile"><span class="landing-tile__n">01</span><h3>Where the work happens</h3><p>Street, unit, postal code — the real thing, not a city name. Sites in more than one location get every address listed on the same posting.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">02</span><h3>The client's name, not yours</h3><p>Each client profile carries the name their candidates would recognize (say, "Flying Pig"), which leads on every posting and company page, legal name tucked beneath. Your agency stays invisible to job seekers.</p></li>
-      <li class="landing-tile"><span class="landing-tile__n">03</span><h3>Pay and expectations, upfront</h3><p>Wage or salary with the pay period, education and experience from standard Job Bank lists, an industry tag and an optional NOC code — everything a candidate needs on one printable sheet.</p></li>
-    </ul>
   </div>
 </section>
 
