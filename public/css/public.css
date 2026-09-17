@@ -84,12 +84,14 @@
 @media (min-width: 900px) {
   .hero__journey { margin-top: 0; position: relative; }
   .hero__journey-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
-  .hero__journey-land { fill: color-mix(in srgb, #fff 6%, transparent); stroke: none; }
-  .hero__journey-route { fill: none; stroke: #5F7692; stroke-width: 2; stroke-dasharray: 1 10; stroke-linecap: round; }
+  /* a soft radial glow, not a flat tint — the silhouette fades into the navy instead of reading as a
+     panel with a hard (if wavy) boundary. */
+  .hero__journey-land { fill: url(#heroJourneyGlow); stroke: none; }
+  .hero__journey-route { fill: none; stroke: #5F7692; stroke-width: 2.3; stroke-dasharray: 1.4 9; stroke-linecap: round; }
   .hero__journey-stops { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
   .hero__journey-stops li { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; gap: 10px; transform: translate(-50%, -50%); }
   .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; border: 2px solid var(--cc-navy); flex: none; }
-  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 25%, transparent); }
+  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 22%, transparent), 0 0 0 10px color-mix(in srgb, var(--cc-red) 9%, transparent); }
   .hero__stop-label { display: grid; font-size: .6875rem; line-height: 1.3; color: color-mix(in srgb, #fff 55%, transparent); white-space: nowrap; }
   .hero__stop-label strong { font: 700 .6875rem/1.3 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 82%, transparent); }
   .hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
@@ -104,11 +106,15 @@
 }
 @keyframes yf-route-draw { from { stroke-dashoffset: 700; } to { stroke-dashoffset: 1; } }
 @keyframes yf-stop-in { from { opacity: 0; transform: translate(-50%, -40%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-@keyframes yf-node-pulse { 0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 25%, transparent); } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--cc-red) 12%, transparent); } }
+@keyframes yf-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 22%, transparent), 0 0 0 10px color-mix(in srgb, var(--cc-red) 9%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--cc-red) 18%, transparent), 0 0 0 13px color-mix(in srgb, var(--cc-red) 6%, transparent); }
+}
 
 @media (min-width: 900px) {
   .hero__inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: var(--sp-8); }
   .hero__journey { aspect-ratio: 1 / 1; }
+  .hero__copy { margin-top: -48px; }
 }
 @media (min-width: 1024px) {
   .hero { padding: 80px 0 0; }
