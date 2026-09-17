@@ -171,7 +171,7 @@
 .grid--job { grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 1024px) {
   .grid--job { grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 24px; }
-  .grid--job > aside { position: sticky; top: calc(var(--cc-header-h) + 16px); max-height: calc(100vh - var(--cc-header-h) - 32px); overflow-y: auto; }
+  .grid--job > aside { position: sticky; top: calc(var(--cc-header-h) + 24px); max-height: calc(100vh - var(--cc-header-h) - 32px); overflow-y: auto; }
 }
 @media (max-width: 1023px) { .grid--job > aside { order: -1; } }   /* status + actions first on phones/tablets; the long preview follows */
 .job-actions { display: grid; gap: 8px; margin-top: 12px; }

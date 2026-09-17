@@ -85,20 +85,20 @@ function sendLogo(res, profile) {
 const EP = pricingFor('employer'), CP = pricingFor('consultant');
 const landingFaq = {
   employer: [
-    ['How much does it cost to post a job?', `Each posting is $${$(EP.PRICE)} per month plus 5% GST — $${$(EP.TOTAL)} CAD in total. It renews automatically every month until you cancel. There are no setup fees and no contracts.`],
-    ['Can I cancel at any time?', 'Yes. Cancel from your dashboard with one click. Your posting stays live until the end of the paid month and is then archived. You can also cancel immediately.'],
-    ['How long does approval take?', 'There is no approval queue. Your posting goes live the moment your payment is confirmed — usually within a few seconds.'],
-    ['Who will see my posting?', 'Everyone who searches Youth Futures Canada, plus every job seeker whose saved profile matches your posting gets an instant email alert. Postings are indexed by Google for Jobs.'],
-    ['How do I receive applications?', 'Applicants apply on Youth Futures Canada with their resume and cover letter. You review, shortlist and download resumes from your dashboard; applicants are notified of every status change. You can also add an external apply link or email.'],
-    ['Do I get a receipt?', 'Every charge produces a GST receipt with your company name and a unique receipt number, available any time under Billing.'],
+    ['What does a posting actually cost?', `$${$(EP.PRICE)} per month plus 5% GST — $${$(EP.TOTAL)} CAD in total. It renews automatically every month until you cancel. No setup fees, no contracts.`],
+    ['Can I walk away whenever I want?', 'Yes. Cancel from your dashboard with one click. Your posting stays live until the end of the paid month and is then archived — or take it down immediately, your call.'],
+    ['How fast does a posting go live?', 'Instantly. There is no approval queue — the moment your payment is confirmed, young talent can already be viewing your posting.'],
+    ['Who actually sees the job?', 'Everyone searching Youth Futures Canada, plus every job seeker whose saved profile matches gets an instant email alert. Postings are also indexed by Google for Jobs.'],
+    ['How do candidates apply?', 'Through Youth Futures Canada, with their resume and cover letter. Review, shortlist and download resumes from your dashboard — applicants are notified automatically as their status changes. An external apply link or email works too.'],
+    ['Do I get proof of payment?', 'Every charge produces a GST receipt with your company name and a unique receipt number, available any time under Billing.'],
   ],
   consultant: [
-    ['Who is the consultant account for?', 'Recruitment agencies, staffing firms, HR consultants and immigration consultants who post jobs on behalf of more than one employer.'],
-    ['How many employer profiles can I add?', 'Unlimited. Each client gets its own company profile with logo, description and contact details, and each posting is published under the client company name.'],
-    ['How is billing handled?', `Every posting is $${$(CP.PRICE)} + GST ($${$(CP.TOTAL)}) per month, billed to your account. Billing shows one list of subscriptions and receipts across all your clients, so you can pass costs through cleanly.`],
-    ['Can my clients see the applicants?', 'Applicants land in your dashboard. You can download resumes and update statuses; forward what you need to your client. Client logins for shared access are on our roadmap.'],
-    ['Can I switch between companies quickly?', 'Yes — a company selector appears on every job list, and the posting form asks which client you are posting for.'],
-    ['Is there a volume discount?', `Not yet. Pricing is a flat $${$(CP.PRICE)} + GST per posting per month for third-party consultants, with no contracts.`],
+    ['Is this account built for agencies like mine?', 'Yes — recruitment agencies, staffing firms, HR consultants and immigration consultants who post on behalf of more than one employer.'],
+    ['How many clients can I run through one login?', 'As many as you need. Each client gets its own company profile with logo, description and contact details, and every posting goes out under the client\'s name, not yours.'],
+    ['How does billing work across clients?', `Every posting is $${$(CP.PRICE)} + GST ($${$(CP.TOTAL)}) per month, billed to your account. One list of subscriptions and receipts across every client, so pass-through invoicing takes minutes, not hours.`],
+    ['Can a client see their own applicants?', 'Applicants land in your dashboard first. Download resumes, update statuses, and forward what your client needs. Direct client logins are on our roadmap.'],
+    ['How fast can I switch between companies?', 'One click. A company selector sits on every job list, and the posting form always asks which client you\'re posting for.'],
+    ['Any discount for higher volume?', `Not yet — it's a flat $${$(CP.PRICE)} + GST per posting per month, no matter how many you run, no contracts either way.`],
   ],
 };
 const faqJsonLd = (items) => ({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });

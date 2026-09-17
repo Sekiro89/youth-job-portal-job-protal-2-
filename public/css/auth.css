@@ -92,7 +92,7 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .danger-zone { border-color: #f3b1b1; background: #fffafa; }
 .danger-zone .auth__section { color: var(--cc-red-700); border-bottom-color: #f3b1b1; }
 .kds-btn--danger { background: var(--cc-red); color: #fff; }
-.kds-btn--danger:hover { background: var(--cc-red-700); }
+.kds-btn--danger:hover { background: var(--cc-red-700); color: #fff; }
 
 @media (min-width: 640px) {
   .auth-meta { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; }

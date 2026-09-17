@@ -132,12 +132,17 @@ a:hover { color: var(--cc-red); }
 
 /* ---------- footer: an editorial closing statement, not a four-column link grid.
    1) a huge tagline band  2) a full-bleed red rule  3) link groups in an inline row  4) a legal strip. ---------- */
-.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 48px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
-.site-footer__statement { display: flex; align-items: center; gap: 20px; padding-bottom: 36px; }
+.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 56px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
+.site-footer .container { padding-left: 24px; padding-right: 24px; }
+.site-footer__statement { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; padding-bottom: 40px; }
 .site-footer__mark { flex: none; display: block; background: #fff; border-radius: var(--kds-radius-md); padding: 6px; }
 .site-footer__tagline { margin: 0; font: 800 clamp(1.375rem, 3vw + .8rem, 2.5rem)/1.15 var(--cc-font-display); color: #fff; letter-spacing: -0.02em; }
 .site-footer__rule { height: 3px; background: var(--cc-red); }
-.site-footer__links { position: relative; padding: 32px 0; display: grid; gap: 28px; grid-template-columns: 1fr; }
+.site-footer__links { position: relative; padding: 40px 0; display: grid; gap: 32px; grid-template-columns: 1fr; text-align: center; }
+@media (min-width: 640px) {
+  .site-footer__statement { flex-direction: row; text-align: left; gap: 24px; }
+  .site-footer__links { text-align: left; }
+}
 .site-footer h3 { font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 12px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .site-footer a { color: color-mix(in srgb, #fff 82%, transparent); text-decoration: none; }
@@ -198,7 +203,8 @@ textarea.input { min-height: 120px; resize: vertical; }
 /* buttons: touch-friendly sizes + brand variants */
 .kds-btn { min-height: 44px; border-radius: 10px; }
 .kds-btn--accent { background: var(--cc-red); color: #fff; }
-.kds-btn--accent:hover { background: var(--cc-red-700); opacity: 1; }
+.kds-btn--accent:hover { background: var(--cc-red-700); opacity: 1; color: #fff; }
+.kds-btn--ghost:hover { color: var(--kds-fg); }
 .kds-btn--block { width: 100%; }
 .kds-btn--sm { min-height: 36px; padding: .4rem .8rem; }
 @media (max-width: 767px) { .kds-btn--sm { min-height: 44px; } }
@@ -229,9 +235,9 @@ textarea.input { min-height: 120px; resize: vertical; }
 .page-head .eyebrow::before { background: var(--cc-spark); }
 .page-head .lead { color: color-mix(in srgb, #fff 80%, transparent); }
 .page-head .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
-.page-head .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); }
+.page-head .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
 .page-head .kds-btn--brand { background: #fff; color: var(--cc-navy); }
-.page-head .kds-btn--brand:hover { background: color-mix(in srgb, #fff 85%, transparent); }
+.page-head .kds-btn--brand:hover { background: color-mix(in srgb, #fff 85%, transparent); color: var(--cc-navy); }
 .page-head .muted { color: color-mix(in srgb, #fff 65%, transparent); }
 
 /* dashboard shell: an editorial rail on desktop (left accent bar marks the active item, no pill chrome),
@@ -338,7 +344,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 .card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--kds-border); }
 .card__head h2, .card__head h3 { margin: 0; }
 /* Buttons: exactly three visual weights — brand (navy), accent (red, the ONE primary action per page), ghost */
-.kds-btn--brand:hover { background: var(--cc-navy-700); opacity: 1; }
+.kds-btn--brand:hover { background: var(--cc-navy-700); opacity: 1; color: #fff; }
 /* Sticky mobile action bar — shared by apply, job form, checkout */
 .sticky-bar { position: sticky; bottom: 0; z-index: 20; background: rgba(255,255,255,.97); backdrop-filter: blur(6px); border-top: 1px solid var(--kds-border); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; }
 @media (min-width: 1024px) { .sticky-bar { position: static; background: none; border: 0; padding: 0; backdrop-filter: none; } }

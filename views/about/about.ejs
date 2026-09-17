@@ -80,28 +80,28 @@ const toc = [
         <div class="about-tabs__body">
         <div class="about-tabs__panels">
           <section class="about-tabs__panel about-tabs__panel--employers prose" aria-labelledby="employers-h">
-            <h3 id="employers-h">Post a job in Canada for <%= price.employer.base %> a month + GST</h3>
-            <p>Youth Futures Canada is a <strong>job board for employers in Canada</strong> of every size — a family restaurant in Halifax, a trucking company in Winnipeg, a hospital network in Ontario or a software start-up in Vancouver — looking to reach students, graduates, young professionals and skilled workers. Create an employer account, describe your company once, and post as many jobs as you need.</p>
-            <h4>Transparent job posting pricing</h4>
-            <p>A <strong><%= price.employer.base %> job posting</strong> is exactly that: <strong><%= price.employer.base %> CAD per posting per month, plus 5% GST (<%= price.employer.gst %>)</strong>, for a total of <strong><%= price.employer.total %> CAD</strong>. The price is the same for every business in every province, it is locked in for the life of the posting, and every payment produces a numbered GST receipt you can view or download as a PDF from Billing — all receipts are available from your login.</p>
-            <h4>What every posting includes</h4>
-            <p>Postings on Youth Futures Canada follow the Job Bank format job seekers already trust: at least one <strong>full work address</strong> (street, city, province and postal code — and a posting may list <strong>several addresses</strong> when the job is offered at more than one site), your <strong>operating name</strong> shown first with the legal company name beneath it, salary with its pay period, education and experience from standard lists, an industry category and an optional NOC code. Job seekers can print any posting to a single clean sheet.</p>
-            <h4>Monthly renewal you control</h4>
-            <p>Each posting renews automatically every month so a live job never quietly disappears mid-search. Cancel at any time from your dashboard — at the end of the current paid month (the job stays live until then) or immediately. No contracts, no cancellation fees.</p>
-            <h4>What happens to expired, cancelled and inactive postings</h4>
-            <p>When a posting expires because payment lapses, when you cancel it, or when you pause it, Youth Futures Canada <strong>archives</strong> the job. Archived jobs are removed from search results, job alerts, the sitemap and their public page, so candidates never apply to a role that is no longer open. The posting and every application it received stay in your dashboard, and you can duplicate an archived job to post it again in a couple of clicks.</p>
+            <h3 id="employers-h">Hiring in Canada shouldn't take a sales call</h3>
+            <p>Youth Futures Canada works for employers at any scale — a restaurant in Halifax, a trucking outfit in Winnipeg, a hospital network in Ontario, a software team in Vancouver — all looking to bring in students, graduates, early-career hires and skilled young professionals. Set up your company once, then post whatever you need, whenever you need it.</p>
+            <h4>One rate, published, no negotiating</h4>
+            <p><strong><%= price.employer.base %> CAD</strong> per posting per month, plus 5% GST (<%= price.employer.gst %>) — <strong><%= price.employer.total %> CAD</strong> total. Every business pays the same amount in every province, that rate holds for as long as the posting runs, and each payment lands a numbered receipt in your Billing tab, ready to download whenever your books need it.</p>
+            <h4>What has to be on a posting</h4>
+            <p>Youth Futures Canada mirrors the fields job seekers already expect from a Canadian job bank: a real work location (not just a city — street, unit, postal code, and every site if there's more than one), the name your business actually goes by up front with the registered legal name underneath, pay and its schedule, an education/experience bar pulled from standard lists, an industry tag and an optional NOC code. Candidates can print the whole thing to one page.</p>
+            <h4>Renewal happens automatically, cancellation doesn't wait</h4>
+            <p>A posting keeps renewing month to month so it never vanishes from search mid-cycle without warning. Pull it whenever you want from your dashboard — let it run out the paid month or drop it immediately, whichever you'd rather. No contract locks you in either way.</p>
+            <h4>Once a posting stops running</h4>
+            <p>A lapsed payment, a manual cancel, or you pausing it — any of the three archives the job. Archived listings disappear from search, alerts, the sitemap and their own page, so nobody applies to something that's already closed. Everything about it, applicants included, stays in your dashboard, and a couple of clicks brings the same posting back to life if you need it again.</p>
             <p><a href="/employer">Read the full employer guide and pricing →</a></p>
           </section>
           <section class="about-tabs__panel about-tabs__panel--consultants prose" aria-labelledby="consultants-h">
             <h3 id="consultants-h">Third-party consultants and recruiters</h3>
-            <p>Staffing agencies, recruitment firms, immigration consultants helping newcomers find work, and HR consultants hiring on behalf of clients use Youth Futures Canada as a <strong>third-party recruiter job posting</strong> platform. A Third Party Consultant account holds <strong>many employer profiles</strong> — one for each client — so you can post, renew and manage jobs for all of your clients from a single sign-in, with applicants organised by client company.</p>
-            <p>Consultants pay a dedicated consultant rate: <strong><%= price.consultant.base %> CAD per posting per month plus 5% GST (<%= price.consultant.gst %>), <%= price.consultant.total %> in total</strong> — billed per posting and cancellable at any time. Each client profile carries the client's operating name, so job seekers see the business they know, never your agency. Your billing page shows every subscription and receipt across all of your profiles in one place, each downloadable as a PDF.</p>
+            <p>Staffing agencies, immigration consultants placing newcomers, HR firms hiring for clients — anyone posting on someone else's behalf runs it through a Third Party Consultant account, which holds one profile per client and lets you manage every one of them, and every applicant, from a single login.</p>
+            <p>The consultant rate is <strong><%= price.consultant.base %> CAD</strong> per posting per month plus 5% GST (<%= price.consultant.gst %>), <strong><%= price.consultant.total %></strong> total — set per posting, dropped whenever you're done with it. Candidates see the client's own name on every listing, never your agency's. One Billing screen holds every client's subscriptions and receipts, each ready to download as a PDF.</p>
             <p><a href="/consultant">See how consultant accounts work →</a></p>
           </section>
           <section class="about-tabs__panel about-tabs__panel--seekers prose" aria-labelledby="seekers-h">
             <h3 id="seekers-h">Free, always</h3>
-            <p>Searching for <strong>jobs in Canada</strong> should not cost anything, and on Youth Futures Canada it never will. Sign up free, build a profile in a few minutes and upload your resume as a PDF or Word document. From then on you can apply to any job online with one click, save jobs to come back to, and track every application from your dashboard.</p>
-            <p>Tell us your preferred categories, province and city, work arrangement (on-site, hybrid or remote), experience level and the audiences you identify with, and <strong>job alerts</strong> will bring matching jobs to your inbox as soon as they are published — instantly or as a daily digest, your choice. Your resume is only ever shared with the employer or consultant behind a job you choose to apply to.</p>
+            <p>Looking for work in Canada shouldn't cost you a cent here, and it never will. Set up a profile in a few minutes, drop in your resume as a PDF or Word file, and from there every application, saved job and status update lives in one dashboard you can check any time.</p>
+            <p>Tell it what you're after — categories, province and city, on-site or remote, experience level, the communities you identify with — and matching roles land in your inbox as soon as they go live, either right away or bundled into a daily digest, whichever you'd rather. Nobody but the employer or consultant behind a job you actually apply to ever sees your resume.</p>
             <p><a href="/jobseeker">Create your free job seeker profile →</a></p>
           </section>
         </div>
@@ -132,9 +132,9 @@ const toc = [
         <div class="about-flow__panel">
           <div class="about-flow__head">Post a job</div>
           <ol class="about-steps__list">
-            <li><strong>Create your account.</strong> Employers add their company profile; consultants add a profile for each client they represent.</li>
-            <li><strong>Write the posting.</strong> Title, description, category, full work address (one or several), job type, salary with its period and the audiences you want to reach.</li>
-            <li><strong>Publish and pay.</strong> Check out for <%= price.employer.base %> + GST as an employer or <%= price.consultant.base %> + GST as a third-party consultant. The job goes live immediately, matching job seekers are alerted, and the posting renews monthly until you cancel.</li>
+            <li><strong>Set up your profile.</strong> One company profile for employers; consultants add a separate one per client they represent.</li>
+            <li><strong>Put the role together.</strong> Title, description, category, where it's actually based (list more than one site if needed), the job type, pay and period, and who you're hoping to reach.</li>
+            <li><strong>Pay and it's live.</strong> <%= price.employer.base %> + GST as an employer, <%= price.consultant.base %> + GST as a consultant. The posting appears right away, matching candidates get pinged, and it keeps renewing monthly until you cancel it.</li>
           </ol>
         </div>
         <div class="about-flow__panel about-flow__panel--alt">

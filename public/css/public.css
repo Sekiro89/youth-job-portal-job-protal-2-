@@ -71,7 +71,7 @@
 .hero__cta { display: flex; flex-wrap: wrap; gap: 10px; }
 .hero__cta .kds-btn { flex: 1 1 auto; }
 .hero__cta .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
-.hero__cta .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); }
+.hero__cta .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
 @media (min-width: 640px) { .hero__cta .kds-btn { flex: 0 0 auto; } }
 @media (min-width: 1024px) {
   .hero { padding: 80px 0 56px; }
@@ -192,7 +192,7 @@
    three segments by role colour, a compact fact list instead of a checkmark bullet list, and a text link
    instead of a full-width button-in-a-card (deliberately not the "pricing card with ticks" pattern). ---------- */
 .entry-panel { display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
-.entry-seg { background: #fff; padding: 26px 24px; display: grid; gap: 10px; align-content: start; border-top: 4px solid var(--seg-c, var(--cc-navy)); }
+.entry-seg { background: #fff; padding: 36px 30px; display: grid; gap: 14px; align-content: start; border-top: 4px solid var(--seg-c, var(--cc-navy)); }
 .entry-seg--employer { --seg-c: var(--cc-navy); }
 .entry-seg--consultant { --seg-c: var(--cc-teal); }
 .entry-seg--seeker { --seg-c: var(--cc-red); }
@@ -217,7 +217,7 @@
 .final-cta__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .final-cta__actions .kds-btn { flex: 1 1 auto; }
 .final-cta__actions .kds-btn--ghost { color: var(--cc-navy); border-color: var(--kds-border-strong); }
-.final-cta__actions .kds-btn--ghost:hover { background: var(--cc-navy-50); }
+.final-cta__actions .kds-btn--ghost:hover { background: var(--cc-navy-50); color: var(--cc-navy); }
 .final-cta__employer { margin: 28px auto 0; color: var(--kds-fg-muted); }
 .final-cta__employer a { color: var(--cc-navy); }
 @media (min-width: 640px) { .final-cta__actions .kds-btn { flex: 0 0 auto; } }
@@ -308,7 +308,7 @@
 .related__block + .related__block { margin-top: 40px; }
 @media (min-width: 1024px) {
   .job-layout { grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; }
-  .job-side { position: sticky; top: calc(var(--cc-header-h) + 16px); }
+  .job-side { position: sticky; top: calc(var(--cc-header-h) + 24px); }
 }
 /* sticky mobile apply bar (hidden at ≥1024 where the sidebar is sticky instead) */
 .applybar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 450; background: #fff; border-top: 1px solid var(--kds-border); box-shadow: 0 -6px 24px rgba(22, 28, 38, .08); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }

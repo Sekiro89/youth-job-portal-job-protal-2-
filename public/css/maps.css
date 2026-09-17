@@ -54,7 +54,7 @@
   .view-toggle { display: none; }
   .results__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 38%); gap: 20px; align-items: start; }
   .results__main { min-width: 0; }
-  .results__map { display: block; position: sticky; top: calc(var(--cc-header-h) + 16px); }
+  .results__map { display: block; position: sticky; top: calc(var(--cc-header-h) + 24px); }
   .results__map .cc-map { height: calc(100vh - var(--cc-header-h) - 32px); min-height: 380px; max-height: 820px; }
   .results.is-map .results__list, .results.is-map .pager, .results.is-map .results__empty { display: grid; }
   .results.is-map .pager { display: flex; }
