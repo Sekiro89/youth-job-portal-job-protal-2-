@@ -53,7 +53,9 @@
    not five identical cards in a row. Shared by employer/consultant ("reach") and seeker ("your path"). ---------- */
 .landing-journey { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 32px; grid-template-columns: 1fr; counter-reset: stage; }
 .landing-journey__step { counter-increment: stage; position: relative; padding-left: 56px; }
-.landing-journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; bottom: -28px; width: 2px; background: var(--cc-line-strong); }
+/* explicit calc() height, not top+bottom (which under-measures against this auto-height grid item — same
+   issue found and fixed on .workflow-chain--vertical), so the line always reaches the next node exactly. */
+.landing-journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; width: 2px; height: calc(100% - 44px + 32px); background: var(--cc-line-strong); }
 .landing-journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
 .landing-journey__num::before { content: counter(stage); }
 .landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-navy-700, var(--cc-navy)); }
@@ -70,8 +72,14 @@
   .landing-journey:not(.landing-journey--stack) .landing-journey__num { left: 0; top: 0; }
   .landing-journey:not(.landing-journey--stack) .landing-journey__step:not(:last-child)::after { left: 40px; right: -4px; top: 19px; bottom: auto; width: auto; height: 2px; }
   /* .landing-journey--stack (partner page): stays the vertical connected list at every width, so its talent
-     spectrum reads differently from the employer page's horizontal one. */
-  .landing-journey--stack { max-width: 640px; }
+     spectrum reads differently from the employer page's horizontal one. Widened from an earlier 640px cap
+     that left it hugging the left edge of the page container; title now sits beside its description in one
+     wider row instead of both stacking in a narrow column. */
+  .landing-journey--stack { max-width: 960px; }
+  .landing-journey--stack .landing-journey__step { display: grid; grid-template-columns: minmax(160px, 240px) 1fr; column-gap: 40px; align-items: baseline; padding-left: 76px; }
+  .landing-journey--stack .landing-journey__step h3 { margin: 0; }
+  .landing-journey--stack .landing-journey__step p { margin: 0; max-width: 56ch; }
+  .landing-journey--stack .landing-journey__step a { grid-column: 2; margin-top: 0; }
 }
 
 /* ---------- editorial benefits: one lead point + two supporting points, not three equal cards ---------- */
@@ -123,7 +131,7 @@
 
 /* ---------- client switch: "Partner account → Client A/B/C", one active at a time — a relationship system,
    not a marketing card grid. Illustrative only (data-client-switch in landing.js toggles .is-active). ---------- */
-.client-switch { margin-top: 28px; max-width: 640px; }
+.client-switch { margin-top: 28px; max-width: 960px; }
 .client-switch__account { margin: 0 0 16px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .client-switch__tabs { display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--kds-border); padding-bottom: 0; }
 .client-switch__tab { min-height: 48px; padding: 0 20px; border: 1px solid var(--kds-border); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--cc-surface); color: var(--cc-navy); font: 700 .9375rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, color .15s; }
@@ -179,9 +187,11 @@
 
 /* vertical variant — the partner "account → clients → postings → billing" pipeline stays a single column and
    connected by a line even at desktop, so it reads as a hierarchy rather than the employer page's horizontal
-   flow (same brand system, deliberately different shape). */
-.workflow-chain--vertical { grid-template-columns: 1fr !important; background: none; gap: 0; counter-reset: flow; max-width: 560px; }
-.workflow-chain--vertical .workflow-chain__step { background: none; padding: 0 0 0 64px; margin-bottom: 28px; }
+   flow (same brand system, deliberately different shape). Widened from an earlier 560px cap, which left the
+   section hugging the left edge of the page container with unused whitespace on the right — the number/title
+   now sits beside the description in one wider editorial row instead of stacking both above it. */
+.workflow-chain--vertical { grid-template-columns: 1fr !important; background: none; gap: 0; counter-reset: flow; max-width: 960px; }
+.workflow-chain--vertical .workflow-chain__step { background: none; padding: 0 0 0 64px; margin-bottom: 32px; }
 .workflow-chain--vertical .workflow-chain__step::before { position: absolute; left: 0; top: 0; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font-size: 1.0625rem; }
 .workflow-chain--vertical .workflow-chain__step:hover::before, .workflow-chain--vertical .workflow-chain__step:focus-within::before { background: var(--cc-red); color: #fff; }
 /* a connecting line between circles, reaching all the way to the next one. An explicit calc() height (not
@@ -190,6 +200,12 @@
 .workflow-chain--vertical .workflow-chain__step:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 44px; width: 2px; height: calc(100% - 44px + 28px); background: var(--cc-line-strong); }
 .workflow-chain--vertical .workflow-chain__step:last-child::before { background: var(--cc-red); }
 .workflow-chain--vertical .workflow-chain__step:last-child { margin-bottom: 0; }
+@media (min-width: 700px) {
+  /* number+title beside the description, one wider row — not four cards, not a single narrow column */
+  .workflow-chain--vertical .workflow-chain__step { display: grid; grid-template-columns: minmax(160px, 240px) 1fr; column-gap: 40px; align-items: baseline; padding-left: 84px; }
+  .workflow-chain--vertical .workflow-chain__step h3 { margin: 0; }
+  .workflow-chain--vertical .workflow-chain__step p { margin: 0; max-width: 56ch; }
+}
 
 /* ---------- five-column audience grid (1 → 2 → 5) — still used by pathway-style contexts elsewhere ---------- */
 .grid--5 { grid-template-columns: minmax(0, 1fr); }

@@ -156,31 +156,37 @@ a:hover { color: var(--cc-red); }
 .flash--error { background: var(--cc-red-100); border-color: #f3b1b1; color: #8a1b1b; }
 .flash--info { background: var(--cc-teal-100); border-color: #a7dfe2; color: #16606a; }
 
-/* ---------- footer: a Youth Futures brand conclusion, not a generic corporate link grid.
-   1) a left-aligned editorial statement  2) three nav groups  3) a distinct legal/utility row. ---------- */
-.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 64px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
+/* ---------- footer: a compact Youth Futures brand conclusion, not a tall generic corporate link grid.
+   Brand statement and nav groups sit in ONE row at desktop (not two stacked full-width bands), followed by
+   one thin legal/utility row — the whole footer stays well under half the height of the old stacked version. ---------- */
+.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 36px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
 .site-footer .container { padding-left: 24px; padding-right: 24px; }
-.footer-statement { display: flex; flex-direction: column; gap: 24px; padding-bottom: 40px; border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent); }
-.footer-statement__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-.footer-statement__brand img { display: block; background: #fff; border-radius: 8px; padding: 4px; }
-.footer-statement__brand span { font: 800 .9375rem/1.2 var(--cc-font-display); color: #fff; }
-.footer-statement__brand b { display: block; font-size: .6875rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
-.footer-statement__text { margin: 0; font: 800 clamp(1.75rem, 2rem + 3vw, 3.5rem)/1.05 var(--cc-font-display); color: #fff; letter-spacing: -0.02em; }
-.footer-nav { position: relative; padding: 40px 0; display: grid; gap: 32px; grid-template-columns: 1fr; }
-.site-footer h3 { font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 12px; }
-.site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.footer-top { display: flex; flex-direction: column; gap: 28px; padding-bottom: 28px; border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent); }
+.footer-brand { flex: 0 0 auto; max-width: 320px; }
+.footer-brand__logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 10px; }
+.footer-brand__logo img { display: block; background: #fff; border-radius: 8px; padding: 3px; }
+.footer-brand__logo span { font: 800 .875rem/1.2 var(--cc-font-display); color: #fff; }
+.footer-brand__logo b { display: block; font-size: .625rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
+.footer-brand__tagline { margin: 0; font: 700 1.0625rem/1.4 var(--cc-font-display); color: #fff; letter-spacing: -0.01em; }
+.footer-nav { position: relative; display: flex; flex-wrap: wrap; gap: 28px 40px; }
+.footer-nav nav { flex: 1 1 160px; min-width: 160px; }
+.site-footer h3 { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 10px; }
+.site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
 .site-footer a { color: color-mix(in srgb, #fff 82%, transparent); text-decoration: none; }
 .site-footer a:hover { color: #fff; }
 .site-footer .muted { color: color-mix(in srgb, #fff 65%, transparent); }
 .footer-nav__meta { color: color-mix(in srgb, #fff 65%, transparent); }
-.footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; padding: 20px 0; border-top: 1px solid color-mix(in srgb, #fff 16%, transparent); font-size: .8125rem; }
-.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0; padding: 0; }
+.footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding: 16px 0; font-size: .8125rem; }
+.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; }
 .footer-utility__links a { font-weight: 700; color: #fff; }
 .footer-utility__links a:hover { color: var(--cc-spark); }
 .footer-utility__meta { display: grid; gap: 2px; color: color-mix(in srgb, #fff 55%, transparent); text-align: left; }
 .footer-utility__meta p { margin: 0; }
 @media (min-width: 640px) { .footer-utility__meta { text-align: right; } }
-@media (min-width: 1024px) { .footer-nav { grid-template-columns: repeat(3, 1fr); gap: 32px; } }
+@media (min-width: 900px) {
+  .footer-top { flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 40px; }
+  .footer-nav { flex: 1 1 auto; justify-content: flex-end; }
+}
 
 /* ---------- audience chips (logo strip) ---------- */
 .audience-strip { display: flex !important; flex-wrap: wrap; gap: 6px !important; }
