@@ -52,9 +52,11 @@
 
 /* ---------- hero: a full-bleed navy statement band — oversized type + a stat rail, no illustration.
    Deliberately NOT a two-column text-left/illustration-right split: every element here is typographic. ---------- */
-.hero { position: relative; overflow: hidden; background: var(--cc-navy); padding: 56px 0 40px; color: #fff; }
-.hero__inner { position: relative; }
-.hero__copy { min-width: 0; }
+.hero { position: relative; overflow: hidden; background: var(--cc-navy); padding: var(--sp-9) 0 0; color: #fff; }
+.hero__inner { position: relative; padding-bottom: var(--sp-9); }
+.hero__copy { min-width: 0; max-width: 44rem; }
+.hero__route { position: absolute; inset: 0; z-index: 0; opacity: .9; pointer-events: none; }
+.hero__route svg { position: absolute; right: 0; top: 0; width: 60%; height: 100%; }
 .hero__shape { display: none; }
 @media (min-width: 900px) {
   .hero__inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 360px); align-items: center; gap: 40px; }
@@ -69,16 +71,11 @@
 .hero__shape::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--cc-navy) 12%, transparent); }
 .hero .eyebrow { color: var(--cc-spark); }
 .hero .eyebrow::before { background: var(--cc-spark); }
-.hero__title { margin-bottom: 20px; max-width: 16ch; color: #fff; }
-.hero__title-accent { color: var(--cc-red); display: block; }
-.hero__row { display: grid; gap: 20px; margin-bottom: 28px; padding-top: 20px; border-top: 1px solid color-mix(in srgb, #fff 18%, transparent); }
-.hero__lead { margin: 0; max-width: 56ch; color: color-mix(in srgb, #fff 82%, transparent); }
+.hero__title { position: relative; z-index: 1; margin: 18px 0 22px; font-size: var(--yf-display-hero); line-height: .98; color: #fff; }
+.hero__title-accent { color: var(--cc-red); }
+.hero__lead { position: relative; z-index: 1; margin: 0 0 28px; max-width: 52ch; font-size: 1.125rem; color: color-mix(in srgb, #fff 82%, transparent); }
 .hero__lead strong { color: #fff; }
-.hero__stats-rail { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 20px 32px; }
-.hero__stats-rail li { display: flex; flex-direction: column; gap: 2px; }
-.hero__stats-rail strong { font: 800 1.75rem/1 var(--cc-font-display); color: #fff; }
-.hero__stats-rail span { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: color-mix(in srgb, #fff 60%, transparent); }
-.hero__cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero__cta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; }
 .hero__cta .kds-btn { flex: 1 1 auto; }
 .hero__cta .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
 .hero__cta .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
@@ -180,16 +177,24 @@
 .category-chip--empty .category-chip__n { background: var(--cc-surface); color: var(--kds-fg-faint); }
 
 /* ---------- Canada as a career destination ---------- */
-.destination { display: grid; gap: 32px; }
-.destination__copy .lead { max-width: 52ch; }
-.destination__facts { list-style: none; margin: 20px 0 0; padding: 20px 0 0; border-top: 1px solid var(--cc-line-strong); display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.destination__facts strong { display: block; font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
-.destination__facts span { font-size: .75rem; color: var(--kds-fg-muted); }
-.destination__provinces { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: 1fr; }
-.destination__provinces a { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: #fff; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-ink); }
-.destination__provinces a:hover { border-color: var(--cc-red); color: var(--cc-ink); }
-.destination__count { flex: none; min-width: 26px; height: 26px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 999px; background: var(--cc-navy); color: #fff; font-size: .6875rem; font-weight: 700; }
-.destination__prov--empty .destination__count { background: var(--cc-navy-100); color: var(--kds-fg-muted); }
+/* discover canada: pin-weighted province index (map presentation tokens), not a card/list split */
+.dest-stats { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--sp-6); flex: none; }
+.dest-stats strong { display: block; font: 800 1.75rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.dest-stats span { font-size: .75rem; color: var(--kds-fg-muted); }
+.dest-map { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: var(--map-border); }
+.dest-map li { background: var(--map-bg); }
+.dest-map a { display: flex; align-items: center; gap: var(--sp-3); padding: 16px 18px; text-decoration: none; color: var(--cc-ink); }
+.dest-map__pin { flex: none; width: calc(8px + 10px * var(--weight, 0)); height: calc(8px + 10px * var(--weight, 0)); border-radius: 50%; background: var(--map-marker); }
+.dest-map__pin--empty .dest-map__pin { background: var(--cc-line-strong); }
+.dest-map__name { flex: 1 1 auto; font-weight: 700; color: var(--map-label); }
+.dest-map__count { flex: none; font: 800 .9375rem/1 var(--cc-font-display); color: var(--cc-ink-muted); }
+.dest-map li:hover { background: #fff; }
+.dest-map li:hover .dest-map__pin { background: var(--map-marker-active); }
+@media (min-width: 640px) { .dest-map { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .dest-map { grid-template-columns: repeat(5, 1fr); } }
+
+.how-h__links { margin: var(--sp-6) 0 0; padding-top: var(--sp-5); border-top: 1px solid var(--kds-border); }
+.how-h__links a { color: var(--cc-navy); font-weight: 600; }
 @media (min-width: 480px) { .destination__provinces { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .destination { grid-template-columns: minmax(0, 5fr) minmax(0, 5fr); align-items: start; gap: 48px; } }
 
@@ -229,25 +234,25 @@
 .jobbank-cta .kds-btn { flex: none; }
 @media (min-width: 768px) { .jobbank-cta__box { padding: 36px 40px; } }
 
-/* ---------- three-way entry panel (employer / consultant / job seeker) — one flush panel divided into
-   three segments by role colour, a compact fact list instead of a checkmark bullet list, and a text link
-   instead of a full-width button-in-a-card (deliberately not the "pricing card with ticks" pattern). ---------- */
-.entry-panel { display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
-.entry-seg { background: #fff; padding: 36px 30px; display: grid; gap: 14px; align-content: start; border-top: 4px solid var(--seg-c, var(--cc-navy)); }
-.entry-seg--employer { --seg-c: var(--cc-navy); }
-.entry-seg--consultant { --seg-c: var(--cc-teal); }
-.entry-seg--seeker { --seg-c: var(--cc-red); }
-.entry-seg__role { margin: 0; font: 800 .8125rem/1 var(--cc-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--seg-c); }
-.entry-seg__price { margin: 0; font: 800 1.75rem/1 var(--cc-font-display); color: var(--cc-navy); }
-.entry-seg__price span { display: block; margin-top: 4px; font: 500 .8125rem/1 var(--kds-font-sans); color: var(--kds-fg-muted); text-transform: none; letter-spacing: 0; }
-.entry-seg__desc { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
-.entry-seg__facts { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--kds-border); display: grid; gap: 6px; }
-.entry-seg__facts > div { display: flex; justify-content: space-between; gap: 12px; font-size: .8125rem; }
-.entry-seg__facts dt { color: var(--kds-fg-muted); }
-.entry-seg__facts dd { margin: 0; font-weight: 600; color: var(--cc-ink); text-align: right; }
-.entry-seg__link { margin-top: 4px; font-weight: 700; font-size: .9375rem; color: var(--seg-c); text-decoration: none; }
-.entry-seg__link:hover { color: var(--cc-red); }
-@media (min-width: 768px) { .entry-panel { grid-template-columns: repeat(3, 1fr); } }
+/* ---------- audiences: one lead destination (job seekers — free, largest) beside two smaller stops,
+   each its own visual weight rather than three identical segments. ---------- */
+.aud-panel { display: grid; gap: var(--sp-5); grid-template-columns: 1fr; }
+.aud-panel__stop { padding: var(--sp-6) 0; border-top: 3px solid var(--cc-navy); }
+.aud-panel__tag { display: block; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-navy-muted, var(--kds-fg-muted)); margin-bottom: var(--sp-3); }
+.aud-panel__price { margin: 0 0 var(--sp-3); font: 800 2rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.aud-panel__price span { margin-left: 6px; font: 500 .875rem/1 var(--kds-font-sans); color: var(--kds-fg-muted); text-transform: none; }
+.aud-panel__desc { margin: 0 0 var(--sp-4); max-width: 46ch; color: var(--kds-fg-muted); }
+.aud-panel__link { font-weight: 700; color: var(--cc-navy); text-decoration: none; }
+.aud-panel__link:hover { color: var(--cc-red); }
+.aud-panel__stop--lead { border-top-color: var(--cc-red); }
+.aud-panel__stop--lead .aud-panel__tag { color: var(--cc-red); }
+.aud-panel__stop--lead .aud-panel__price { font-size: var(--yf-display-md); }
+@media (min-width: 900px) {
+  .aud-panel { grid-template-columns: repeat(6, 1fr); align-items: start; }
+  .aud-panel__stop--lead { grid-column: 1 / span 3; padding-right: var(--sp-6); }
+  .aud-panel__stop:nth-child(2) { grid-column: 4 / span 3; }
+  .aud-panel__stop:nth-child(3) { grid-column: 4 / span 3; margin-top: var(--sp-7); }
+}
 
 /* ---------- final CTA band ---------- */
 .final-cta { background: #fff; background-image: radial-gradient(circle at 88% 12%, var(--cc-red-100), transparent 55%); color: var(--cc-ink); text-align: left; border-top: 1px solid var(--kds-border); }

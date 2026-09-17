@@ -1,60 +1,54 @@
-<section class="hero">
+<section class="hero hero--journey">
+  <div class="hero__route" aria-hidden="true">
+    <svg viewBox="0 0 420 320" fill="none" preserveAspectRatio="xMidYMid slice">
+      <path d="M10 280 C 110 280, 90 190, 190 175 C 290 160, 270 70, 410 30" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
+      <circle cx="10" cy="280" r="6" fill="var(--cc-red)"/>
+      <circle cx="190" cy="175" r="5" fill="#fff" fill-opacity=".55"/>
+      <circle cx="410" cy="30" r="7" fill="var(--cc-red)"/>
+    </svg>
+  </div>
   <div class="container hero__inner">
     <div class="hero__copy">
-      <p class="eyebrow fade-up fade-up--1">Careers in Canada, for young talent everywhere</p>
-      <h1 class="hero__title fade-up fade-up--1">Your next opportunity <span class="hero__title-accent">could be in Canada.</span></h1>
-      <div class="hero__row fade-up fade-up--2">
-        <p class="lead hero__lead">Search <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> Canadian employer<%= totals.companies === 1 ? '' : 's' %> — internships, graduate roles, entry-level jobs, skilled trades and experienced positions, for young talent at every stage of their career.</p>
-        <ul class="hero__stats-rail">
-          <li><strong><%= totals.jobs %></strong><span>open roles</span></li>
-          <li><strong><%= totals.companies %></strong><span>employers</span></li>
-          <li><strong><%= provincesWithJobs %></strong><span>provinces &amp; territories</span></li>
-        </ul>
-      </div>
+      <p class="eyebrow fade-up fade-up--1">Start your journey</p>
+      <h1 class="hero__title fade-up fade-up--1">Where will<br>your career<br><span class="hero__title-accent">take you?</span></h1>
+      <p class="lead hero__lead fade-up fade-up--2">Jobs, experience and opportunities for young people across Canada — <strong><%= totals.jobs %></strong> open position<%= totals.jobs === 1 ? '' : 's' %> from <strong><%= totals.companies %></strong> Canadian employer<%= totals.companies === 1 ? '' : 's' %>.</p>
       <div class="hero__cta fade-up fade-up--3">
-        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Find Jobs</a>
-        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="#career-paths">Explore Opportunities</a>
+        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore jobs →</a>
+        <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/about">Learn about Youth Futures →</a>
       </div>
-    </div>
-    <div class="hero__shape fade-up fade-up--2" aria-hidden="true">
-      <picture>
-        <source srcset="/img/hero-accent.webp" type="image/webp">
-        <img src="/img/hero-accent.jpg" alt="" width="900" height="502">
-      </picture>
     </div>
   </div>
-</section>
-
-<section class="search-band" aria-labelledby="search-h">
-  <div class="container search-band__inner">
-    <h2 id="search-h" class="visually-hidden">Search jobs across Canada</h2>
-    <form class="search-form" method="get" action="/jobs" role="search" aria-label="Search jobs">
-      <div class="field search-form__field">
-        <label for="hero-q">Job title, skill or company</label>
-        <input class="input" id="hero-q" name="q" type="search" placeholder="e.g. warehouse associate" autocomplete="off">
-      </div>
-      <div class="field search-form__field">
-        <label for="hero-loc">City or province</label>
-        <select class="input" id="hero-loc" name="loc">
-          <option value="">All of Canada</option>
-          <optgroup label="Provinces &amp; territories">
-            <% provinces.forEach(p => { %><option value="prov:<%= p.key %>"><%= p.name %></option><% }) %>
-          </optgroup>
-          <% if (cities.length) { %><optgroup label="Cities with open jobs">
-            <% cities.forEach(c => { %><option value="city:<%= c %>"><%= c %></option><% }) %>
-          </optgroup><% } %>
-        </select>
-      </div>
-      <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs</button>
-    </form>
-    <p class="search-band__popular small">
-      <span class="muted">Popular:</span>
-      <a href="/jobs?job_type=internship">Internships &amp; co-ops</a>
-      <a href="/jobs?work_arrangement=remote">Remote</a>
-      <a href="/jobs?category=it_software">IT &amp; software</a>
-      <a href="/jobs?category=healthcare">Healthcare</a>
-      <a href="/jobs?category=construction_trades">Skilled trades</a>
-    </p>
+  <div class="search-band" aria-labelledby="search-h">
+    <div class="container search-band__inner">
+      <h2 id="search-h" class="visually-hidden">Search jobs across Canada</h2>
+      <form class="search-form" method="get" action="/jobs" role="search" aria-label="Search jobs">
+        <div class="field search-form__field">
+          <label for="hero-q">Search jobs, skills or companies</label>
+          <input class="input" id="hero-q" name="q" type="search" placeholder="e.g. warehouse associate" autocomplete="off">
+        </div>
+        <div class="field search-form__field">
+          <label for="hero-loc">City or province</label>
+          <select class="input" id="hero-loc" name="loc">
+            <option value="">All of Canada</option>
+            <optgroup label="Provinces &amp; territories">
+              <% provinces.forEach(p => { %><option value="prov:<%= p.key %>"><%= p.name %></option><% }) %>
+            </optgroup>
+            <% if (cities.length) { %><optgroup label="Cities with open jobs">
+              <% cities.forEach(c => { %><option value="city:<%= c %>"><%= c %></option><% }) %>
+            </optgroup><% } %>
+          </select>
+        </div>
+        <button class="kds-btn kds-btn--accent search-form__submit" type="submit">Search jobs</button>
+      </form>
+      <p class="search-band__popular small">
+        <span class="muted">Popular:</span>
+        <a href="/jobs?job_type=internship">Internships &amp; co-ops</a>
+        <a href="/jobs?work_arrangement=remote">Remote</a>
+        <a href="/jobs?category=it_software">IT &amp; software</a>
+        <a href="/jobs?category=healthcare">Healthcare</a>
+        <a href="/jobs?category=construction_trades">Skilled trades</a>
+      </p>
+    </div>
   </div>
 </section>
 
@@ -62,11 +56,11 @@
   <div class="container">
     <div class="section__head section__head--split">
       <div>
-        <p class="eyebrow">Featured opportunities</p>
-        <h2 id="featured-h">A mix of opportunities, for every stage</h2>
+        <p class="eyebrow">04 — Opportunities</p>
+        <h2 id="featured-h">Opportunities along the way.</h2>
         <p class="lead">Real postings from real Canadian employers — from first internships to experienced hires. Not just junior roles.</p>
       </div>
-      <a class="kds-btn kds-btn--ghost" href="/jobs">View the Job Bank</a>
+      <a class="kds-btn kds-btn--ghost" href="/jobs">View the Job Bank →</a>
     </div>
     <% if (featured.length) { %>
       <div class="feat-directory">
@@ -81,36 +75,65 @@
 <section class="section section--alt" id="career-paths" aria-labelledby="paths-h">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">Explore your path</p>
-      <h2 id="paths-h">Different starting points. One future.</h2>
-      <p class="lead">Young people arrive at Youth Futures Canada from every stage of their journey — a first job, a degree in hand, or years of hands-on experience. Wherever you're starting from, there's a real posting for it.</p>
+      <p class="eyebrow">02 — Explore</p>
+      <h2 id="paths-h">Every career starts somewhere.</h2>
+      <p class="lead">Young people arrive at Youth Futures Canada from every stage of their journey. Wherever you're starting from, there's a real posting for it.</p>
     </div>
-    <div class="pathway-grid pathway-grid--5">
-      <% const STAGE_COPY = {
+    <% const JOURNEY_LABEL = ['Start', 'Experience', 'Launch', 'Build', 'Move'];
+       const STAGE_COPY = {
         student: 'Find student jobs, part-time opportunities and work experience.',
         intern_coop: 'Gain practical experience and connect what you learn with real work.',
         graduate: 'Find opportunities to start your career after completing your studies.',
         early_career: 'Explore entry-level, junior and early-career opportunities.',
         skilled: 'Discover technical, trade and other opportunities that match your skills.',
       }; %>
+    <ol class="jstage-list jstage-list--row" style="--jcount: <%= careerStages.length %>">
       <% careerStages.forEach((s, i) => { %>
-        <a class="pathway-card pathway-card--<%= ['a','b','c','d','e'][i % 5] %>" href="/jobs?stage=<%= s.key %>">
-          <span class="pathway-card__num"><%= String(i + 1).padStart(2, '0') %></span>
-          <h3><%= s.name %></h3>
-          <p><%= STAGE_COPY[s.key] %></p>
-          <span class="pathway-card__meta"><%= s.n %> open role<%= s.n === 1 ? '' : 's' %></span>
-          <span class="pathway-card__cta">Browse roles →</span>
-        </a>
+        <li class="jstage">
+          <span class="jstage__node" aria-hidden="true"></span>
+          <span class="jstage__label"><%= JOURNEY_LABEL[i] %></span>
+          <h3 class="jstage__name"><%= s.name %></h3>
+          <p class="jstage__desc"><%= STAGE_COPY[s.key] %> <strong><%= s.n %></strong> open role<%= s.n === 1 ? '' : 's' %>.</p>
+          <a class="jstage__link" href="/jobs?stage=<%= s.key %>">Browse roles →</a>
+        </li>
       <% }) %>
-    </div>
+    </ol>
   </div>
 </section>
 
-<section class="section" aria-labelledby="cat-paths-h">
+<section class="section" aria-labelledby="dest-h">
+  <div class="container">
+    <div class="section__head section__head--split">
+      <div>
+        <p class="eyebrow">03 — Discover Canada</p>
+        <h2 id="dest-h">Your next step could be anywhere.</h2>
+        <p class="lead">Every posting shows exactly where the work is — one province, one city at a time.</p>
+      </div>
+      <ul class="dest-stats" aria-label="Youth Futures Canada, by the numbers">
+        <li><strong>13</strong><span>provinces &amp; territories</span></li>
+        <li><strong><%= categories.length %></strong><span>industries hiring</span></li>
+      </ul>
+    </div>
+    <ul class="dest-map" aria-label="Provinces and territories with open jobs">
+      <% const maxN = Math.max(1, ...provinces.map(p => p.n)); %>
+      <% provinces.slice().sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).forEach(p => { %>
+        <li class="<%= p.n ? '' : 'dest-map__pin--empty' %>" style="--weight: <%= (p.n / maxN).toFixed(2) %>">
+          <a href="/jobs?province=<%= p.key %>">
+            <span class="dest-map__pin" aria-hidden="true"></span>
+            <span class="dest-map__name"><%= p.name %></span>
+            <span class="dest-map__count"><%= p.n %></span>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+</section>
+
+<section class="section section--alt" aria-labelledby="cat-paths-h">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">Career categories</p>
-      <h2 id="cat-paths-h">Every industry is hiring young talent</h2>
+      <p class="eyebrow">05 — Pathways</p>
+      <h2 id="cat-paths-h">Not every journey looks the same.</h2>
       <p class="lead">Whichever field you're headed for, there are real openings in it right now.</p>
     </div>
     <div class="category-tile-grid">
@@ -122,116 +145,73 @@
         </a>
       <% }) %>
     </div>
-  </div>
-</section>
-
-<section class="section section--alt" aria-labelledby="dest-h">
-  <div class="container destination">
-    <div class="destination__copy section__head">
-      <p class="eyebrow">Canada, one career at a time</p>
-      <h2 id="dest-h">Explore opportunities across Canada's provinces and industries</h2>
-      <p class="lead">Every posting shows exactly where the work is, so you can picture your next move — one province, one industry at a time.</p>
-      <ul class="destination__facts">
-        <li><strong>13</strong><span>provinces &amp; territories</span></li>
-        <li><strong><%= categories.length %></strong><span>industries hiring</span></li>
-        <li><strong><%= totals.companies %></strong><span>Canadian employers</span></li>
-      </ul>
-    </div>
-    <ul class="destination__provinces" aria-label="Provinces and territories with open jobs">
-      <% provinces.slice().sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).forEach(p => { %>
-        <li><a href="/jobs?province=<%= p.key %>" class="<%= p.n ? '' : 'destination__prov--empty' %>"><span><%= p.name %></span><span class="destination__count"><%= p.n %></span></a></li>
+    <ul class="category-cloud" aria-label="All job categories">
+      <% categories.forEach(c => { %>
+        <li><a class="category-chip <%= c.n ? '' : 'category-chip--empty' %>" href="/jobs?category=<%= c.key %>"><%= c.name %><span class="category-chip__n"><%= c.n %></span></a></li>
       <% }) %>
     </ul>
   </div>
 </section>
 
-<section class="section" aria-labelledby="resources-h">
+<section class="section" aria-labelledby="how-h">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">Get ready</p>
-      <h2 id="resources-h">Build your future, step by step</h2>
-      <p class="lead">A career in Canada starts before the application. A few places to start.</p>
+      <p class="eyebrow">06 — How it works</p>
+      <h2 id="how-h">Three stops to your next opportunity.</h2>
     </div>
-    <div class="resource-grid">
-      <a class="resource-card" href="/jobs?stage=intern_coop">
-        <h3>Find internships &amp; co-ops</h3>
-        <p>Gain real experience and see if a field is the right fit for you.</p>
-      </a>
-      <a class="resource-card" href="/jobseeker">
-        <h3>Build your profile</h3>
-        <p>Add your resume, skills and experience once — apply everywhere in one click.</p>
-      </a>
-      <a class="resource-card" href="/jobs?stage=skilled">
-        <h3>Explore skilled trades</h3>
-        <p>Technical and hands-on careers with real, in-demand opportunities across Canada.</p>
-      </a>
-      <a class="resource-card" href="/about">
-        <h3>Understand how it works</h3>
-        <p>How postings, applications and job alerts work on Youth Futures Canada.</p>
-      </a>
-    </div>
+    <ol class="jstage-list jstage-list--row" style="--jcount: 3">
+      <li class="jstage">
+        <span class="jstage__node" aria-hidden="true"></span>
+        <span class="jstage__num">01</span>
+        <h3 class="jstage__name">Search</h3>
+        <p class="jstage__desc">Search the full Job Bank by keyword, location, category or career stage — every posting is real and current.</p>
+      </li>
+      <li class="jstage">
+        <span class="jstage__node" aria-hidden="true"></span>
+        <span class="jstage__num">02</span>
+        <h3 class="jstage__name">Explore</h3>
+        <p class="jstage__desc">Filter by career stage, industry or province to find roles that fit where you are right now — from your first internship to a skilled career.</p>
+      </li>
+      <li class="jstage">
+        <span class="jstage__node" aria-hidden="true"></span>
+        <span class="jstage__num">03</span>
+        <h3 class="jstage__name">Apply</h3>
+        <p class="jstage__desc">Create a free profile, save your resume once, and apply directly — track every application from your dashboard.</p>
+      </li>
+    </ol>
+    <p class="how-h__links small">
+      <a href="/jobs?stage=intern_coop">Find internships &amp; co-ops</a> ·
+      <a href="/jobseeker">Build your profile</a> ·
+      <a href="/jobs?stage=skilled">Explore skilled trades</a> ·
+      <a href="/about">Understand how it works</a>
+    </p>
   </div>
 </section>
 
-<section class="section jobbank-cta" aria-labelledby="jobbank-h">
-  <div class="container">
-    <div class="jobbank-cta__box">
-      <div class="section__head section__head--split">
-        <div>
-          <p class="eyebrow">The complete catalogue</p>
-          <h2 id="jobbank-h">The full Youth Futures Canada Job Bank</h2>
-          <p class="lead">Internships, co-ops, graduate roles, entry-level jobs, junior roles, skilled trades and experienced positions — <%= totals.jobs %> open roles across <%= categories.length %> categories, all searchable and filterable.</p>
-        </div>
-        <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore the Job Bank</a>
-      </div>
-      <ul class="category-cloud" aria-label="All job categories">
-        <% categories.forEach(c => { %>
-          <li><a class="category-chip <%= c.n ? '' : 'category-chip--empty' %>" href="/jobs?category=<%= c.key %>"><%= c.name %><span class="category-chip__n"><%= c.n %></span></a></li>
-        <% }) %>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="section section--alt" aria-labelledby="cta-h">
+<section class="section section--alt" aria-labelledby="aud-h">
   <div class="container">
     <div class="section__head">
-      <p class="eyebrow">Get started</p>
-      <h2 id="cta-h">One platform, three ways in</h2>
+      <p class="eyebrow">07 — Audiences</p>
+      <h2 id="aud-h">The journey has more than one side.</h2>
     </div>
-    <div class="entry-panel">
-      <article class="entry-seg entry-seg--employer">
-        <p class="entry-seg__role">For employers</p>
-        <p class="entry-seg__price">$<%= (C.priceCentsFor('employer') / 100).toFixed(2) %> <span>+ GST / posting / month</span></p>
-        <p class="entry-seg__desc">Reach students, graduates, young professionals and skilled workers looking to build a career in Canada.</p>
-        <dl class="entry-seg__facts">
-          <div><dt>Applicants</dt><dd>Unlimited</dd></div>
-          <div><dt>Contract</dt><dd>None — cancel any time</dd></div>
-          <div><dt>Receipts</dt><dd>Every charge, PDF</dd></div>
-        </dl>
-        <a class="entry-seg__link" href="/employer">Post a job →</a>
+    <div class="aud-panel">
+      <article class="aud-panel__stop aud-panel__stop--lead">
+        <span class="aud-panel__tag">For job seekers</span>
+        <p class="aud-panel__price">Free <span>always</span></p>
+        <p class="aud-panel__desc">Create a profile, upload your resume once and apply in one click — wherever in the world you're applying from.</p>
+        <a class="kds-btn kds-btn--accent" href="/jobseeker">Create your profile →</a>
       </article>
-      <article class="entry-seg entry-seg--consultant">
-        <p class="entry-seg__role">For third party consultants</p>
-        <p class="entry-seg__price">$<%= (C.priceCentsFor('consultant') / 100).toFixed(2) %> <span>+ GST / posting / month</span></p>
-        <p class="entry-seg__desc">Recruiters and consultants manage many client companies from one account, each with its own public profile.</p>
-        <dl class="entry-seg__facts">
-          <div><dt>Client profiles</dt><dd>Unlimited</dd></div>
-          <div><dt>Billing</dt><dd>One dashboard, one trail</dd></div>
-          <div><dt>Reposting</dt><dd>Duplicate in a click</dd></div>
-        </dl>
-        <a class="entry-seg__link" href="/consultant">Manage clients →</a>
+      <article class="aud-panel__stop">
+        <span class="aud-panel__tag">For employers</span>
+        <p class="aud-panel__price">$<%= (C.priceCentsFor('employer') / 100).toFixed(2) %> <span>+ GST / month</span></p>
+        <p class="aud-panel__desc">Reach students, graduates and skilled young professionals building a career in Canada.</p>
+        <a class="aud-panel__link" href="/employer">Post a job →</a>
       </article>
-      <article class="entry-seg entry-seg--seeker">
-        <p class="entry-seg__role">For job seekers</p>
-        <p class="entry-seg__price">Free <span>always</span></p>
-        <p class="entry-seg__desc">Create a profile, upload your resume once and apply in one click — wherever in the world you're applying from.</p>
-        <dl class="entry-seg__facts">
-          <div><dt>Alerts</dt><dd>By email or in-app</dd></div>
-          <div><dt>Saved jobs</dt><dd>Come back any time</dd></div>
-          <div><dt>Applications</dt><dd>Tracked in your dashboard</dd></div>
-        </dl>
-        <a class="entry-seg__link" href="/jobseeker">Create your profile →</a>
+      <article class="aud-panel__stop">
+        <span class="aud-panel__tag">For partners</span>
+        <p class="aud-panel__price">$<%= (C.priceCentsFor('consultant') / 100).toFixed(2) %> <span>+ GST / month</span></p>
+        <p class="aud-panel__desc">Recruiters and consultants manage every client from one account, one dashboard.</p>
+        <a class="aud-panel__link" href="/consultant">Manage clients →</a>
       </article>
     </div>
   </div>
@@ -240,13 +220,12 @@
 <section class="section final-cta" aria-labelledby="final-h">
   <div class="container final-cta__inner">
     <div class="final-cta__copy">
-      <p class="eyebrow">Your future starts here</p>
-      <h2 id="final-h">Your future starts with the right opportunity.</h2>
-      <p class="lead">Create a free profile, save jobs for later and apply in one click — or jump straight into the search.</p>
+      <p class="eyebrow">08 — Your next move</p>
+      <h2 id="final-h">Your next move<br>starts here.</h2>
     </div>
     <div class="final-cta__actions">
-      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore Canadian Jobs</a>
-      <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/jobseeker">Create a free profile</a>
+      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore jobs →</a>
+      <a class="kds-btn kds-btn--ghost kds-btn--lg" href="/about">Learn about Youth Futures →</a>
     </div>
   </div>
 </section>
