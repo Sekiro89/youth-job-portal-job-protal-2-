@@ -184,7 +184,9 @@
 .workflow-chain--vertical .workflow-chain__step { background: none; padding: 0 0 0 64px; margin-bottom: 28px; }
 .workflow-chain--vertical .workflow-chain__step::before { position: absolute; left: 0; top: 0; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font-size: 1.0625rem; }
 .workflow-chain--vertical .workflow-chain__step:hover::before, .workflow-chain--vertical .workflow-chain__step:focus-within::before { background: var(--cc-red); color: #fff; }
-.workflow-chain--vertical .workflow-chain__step:not(:last-child)::after { content: "↓"; position: absolute; left: 15px; top: 50px; color: var(--cc-line-strong); font-size: 1.125rem; line-height: 1; }
+/* a connecting line between circles (same technique as .landing-journey above), not a loose arrow glyph
+   sitting under the circle */
+.workflow-chain--vertical .workflow-chain__step:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 44px; bottom: -28px; width: 2px; background: var(--cc-line-strong); }
 .workflow-chain--vertical .workflow-chain__step:last-child::before { background: var(--cc-red); }
 .workflow-chain--vertical .workflow-chain__step:last-child { margin-bottom: 0; }
 
