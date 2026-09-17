@@ -19,9 +19,12 @@
 </header>
 
 <div class="jsearch<%= isMapView ? ' is-map' : '' %>" data-jsearch data-geo-url="<%= geoUrl %>" data-total="<%= total %>">
-  <div class="container jsearch__top">
+  <div class="container jsearch__shell">
+  <div class="jsearch__sidebar">
+    <p class="jsearch__sidebar-h">Filters</p>
     <%- include('_filters', { f, point, chips, total, moreActive, RADII, salaryOptions }) %>
-
+  </div>
+  <div class="jsearch__main">
     <div class="jsearch__toolbar">
       <% if (chips.length) { %>
         <ul class="jchips" aria-label="Active filters">
@@ -57,9 +60,8 @@
         </label>
       </div>
     </div>
-  </div>
 
-  <div class="container jsearch__body" data-body>
+  <div class="jsearch__body" data-body>
     <section class="jsearch__results" aria-labelledby="results-h" data-results-list>
       <h2 id="results-h" class="visually-hidden">Results</h2>
       <% if (jobs.length) { %>
@@ -96,5 +98,7 @@
            <% if (hasPoint) { %>data-point-lat="<%= point.lat %>" data-point-lng="<%= point.lng %>" data-point-radius="<%= f.radius_km %>" data-point-label="<%= point.label %>"<% } %>></div>
       <p class="jsearch__map-note small muted" data-map-note><%= total %> job<%= total === 1 ? '' : 's' %> · pins show each work location (up to 200). Click a pin to find it in the list.</p>
     </aside>
+  </div>
+  </div>
   </div>
 </div>
