@@ -3,7 +3,10 @@
    shell is a single centred column, not a split screen — a small "Enter" journey line, a headline + supporting
    line, then a narrow form. account.ejs is a dashboard settings page and keeps the standard .page-head + .dash
    shell, not this one. */
-.auth-shell { background: var(--cc-surface); padding-block: var(--sp-8) var(--sp-9); min-height: calc(100vh - var(--cc-header-h)); }
+/* No min-height here on purpose: forcing the shell to fill the viewport left a large dead gap between the
+   form and the footer on short pages (signup chooser, forgot, reset) and tall viewports — the shell should
+   size to its own content, with the footer following right after. */
+.auth-shell { background: var(--cc-surface); padding-block: var(--sp-8) var(--sp-9); }
 .auth-hero { max-width: 640px; margin: 0 auto; text-align: center; padding-bottom: 32px; }
 .auth-journey { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 20px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
 .auth-journey em { font-style: normal; }
