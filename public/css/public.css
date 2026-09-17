@@ -188,23 +188,25 @@
 .jobbank-cta .kds-btn { flex: none; }
 @media (min-width: 768px) { .jobbank-cta__box { padding: 36px 40px; } }
 
-/* ---------- three-way CTA (employer / consultant / job seeker) ---------- */
-.cta-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-.cta-card { display: flex; flex-direction: column; gap: 10px; border-top: 5px solid var(--cta-c, var(--cc-navy)); }
-.cta-card--employer { --cta-c: var(--cc-navy); }
-.cta-card--consultant { --cta-c: var(--cc-teal); }
-.cta-card--seeker { --cta-c: var(--cc-red); }
-.cta-card h3 { margin: 0; }
-.cta-card p { margin: 0; color: var(--kds-fg-muted); }
-.cta-card__price { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-.cta-card__price strong { font: 800 1.75rem/1 var(--cc-font-display); color: var(--cta-c); }
-.cta-card__price span { font-size: .875rem; color: var(--kds-fg-muted); }
-.ticks { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; gap: 6px; font-size: .9375rem; }
-.ticks li { padding-left: 24px; position: relative; }
-.ticks li::before { content: ""; position: absolute; left: 0; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--cc-green-100); }
-.ticks li::after { content: ""; position: absolute; left: 5px; top: 7px; width: 5px; height: 8px; border: solid var(--cc-green); border-width: 0 2px 2px 0; transform: rotate(45deg); }
-.cta-card .kds-btn { margin-top: auto; }
-@media (min-width: 768px) { .cta-grid { grid-template-columns: repeat(3, 1fr); } }
+/* ---------- three-way entry panel (employer / consultant / job seeker) — one flush panel divided into
+   three segments by role colour, a compact fact list instead of a checkmark bullet list, and a text link
+   instead of a full-width button-in-a-card (deliberately not the "pricing card with ticks" pattern). ---------- */
+.entry-panel { display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
+.entry-seg { background: #fff; padding: 26px 24px; display: grid; gap: 10px; align-content: start; border-top: 4px solid var(--seg-c, var(--cc-navy)); }
+.entry-seg--employer { --seg-c: var(--cc-navy); }
+.entry-seg--consultant { --seg-c: var(--cc-teal); }
+.entry-seg--seeker { --seg-c: var(--cc-red); }
+.entry-seg__role { margin: 0; font: 800 .8125rem/1 var(--cc-font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--seg-c); }
+.entry-seg__price { margin: 0; font: 800 1.75rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.entry-seg__price span { display: block; margin-top: 4px; font: 500 .8125rem/1 var(--kds-font-sans); color: var(--kds-fg-muted); text-transform: none; letter-spacing: 0; }
+.entry-seg__desc { margin: 0; color: var(--kds-fg-muted); font-size: .9375rem; }
+.entry-seg__facts { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--kds-border); display: grid; gap: 6px; }
+.entry-seg__facts > div { display: flex; justify-content: space-between; gap: 12px; font-size: .8125rem; }
+.entry-seg__facts dt { color: var(--kds-fg-muted); }
+.entry-seg__facts dd { margin: 0; font-weight: 600; color: var(--cc-ink); text-align: right; }
+.entry-seg__link { margin-top: 4px; font-weight: 700; font-size: .9375rem; color: var(--seg-c); text-decoration: none; }
+.entry-seg__link:hover { color: var(--cc-red); }
+@media (min-width: 768px) { .entry-panel { grid-template-columns: repeat(3, 1fr); } }
 
 /* ---------- final CTA band ---------- */
 .final-cta { background: #fff; background-image: radial-gradient(circle at 88% 12%, var(--cc-red-100), transparent 55%); color: var(--cc-ink); text-align: left; border-top: 1px solid var(--kds-border); }

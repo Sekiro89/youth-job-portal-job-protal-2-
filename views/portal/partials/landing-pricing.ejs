@@ -1,5 +1,5 @@
 <%#
-  Pricing band — one card with the page's accent button + a plain aside.
+  Pricing band — a price stat beside a compact fact list, not a checklist card.
   expects: signupHref, audienceLabel ('employer' | 'consultant' | 'seeker').
   optional: priceCents (defaults to C.priceCentsFor(audienceLabel); seeker = free), otherLabel + otherCents (the other role's rate, shown as a footnote).
   Pricing is role-based (client decision 2026-09-09): employers $14.99, third party consultants $9.99, + 5% GST, per posting per month. Job seekers never pay.
@@ -19,49 +19,42 @@ const pButton = { consultant: 'Create consultant account', employer: 'Create emp
       <p class="eyebrow">Pricing</p>
       <h2><%= pSeeker ? 'Free for job seekers. Always.' : 'One simple price per posting. No contracts.' %></h2>
     </div>
-    <div class="landing-pricing">
-      <div class="card card--pad-lg landing-pricing__card">
+    <div class="price-split">
+      <div class="price-split__figure">
         <p class="eyebrow"><%= pRoleName %></p>
         <% if (pSeeker) { %>
-          <div class="landing-pricing__amount"><span class="landing-pricing__currency">$</span>0<span class="landing-pricing__per">forever</span></div>
-          <p class="landing-pricing__total">No fees to sign up, apply or receive alerts — <strong>ever</strong>.</p>
-          <ul class="landing-pricing__list">
-            <li>Free profile with your headline, skills and preferences</li>
-            <li>Upload your resume once (PDF, DOC or DOCX); every application sends it</li>
-            <li>Apply to any posting in one click and track its status</li>
-            <li>Job alerts by email or in-app — instantly or as a daily digest</li>
-            <li>Save jobs to come back to</li>
-            <li>Your resume is never listed publicly or searchable</li>
-          </ul>
+          <p class="price-split__amount">$0 <span>forever</span></p>
         <% } else { %>
-          <div class="landing-pricing__amount"><span class="landing-pricing__currency">$</span><%= (pBase / 100).toFixed(2) %><span class="landing-pricing__per">/month + GST</span></div>
-          <p class="landing-pricing__total"><%= pDollars(pBase) %> per posting per month + GST = <strong><%= pDollars(pTotal) %> CAD</strong></p>
-          <ul class="landing-pricing__list">
-            <li>Live within seconds of payment — no approval queue</li>
-            <li>Renews monthly at the price you paid, cancel any time from your dashboard</li>
-            <li>Full work address on every posting — several addresses on one posting allowed</li>
-            <li>Your operating name shown to job seekers, legal name beneath it</li>
-            <li>Unlimited applicants, resumes and cover sheets in your dashboard</li>
-            <li>Instant email alerts to matching job seekers</li>
-            <li>Indexed by Google for Jobs</li>
-            <li>GST receipt for every charge — view or download as PDF from your login</li>
-          </ul>
+          <p class="price-split__amount">$<%= (pBase / 100).toFixed(2) %> <span>+ GST / month</span></p>
+          <p class="price-split__total"><%= pDollars(pBase) %> + <%= pDollars(pGst(pBase)) %> GST = <strong><%= pDollars(pTotal) %> CAD</strong> per posting</p>
         <% } %>
         <a class="kds-btn kds-btn--accent kds-btn--block" href="<%= signupHref %>"><%= pButton %></a>
-        <p class="small muted landing-pricing__note"><%= pSeeker ? 'Takes about five minutes. No card, no fees.' : 'Pay by card. Nothing is charged until you publish a posting.' %></p>
       </div>
-      <div class="landing-pricing__aside prose">
+      <dl class="price-split__facts">
+        <% if (pSeeker) { %>
+          <div><dt>Sign-up fee</dt><dd>None, ever</dd></div>
+          <div><dt>Profile</dt><dd>Headline, skills, preferences</dd></div>
+          <div><dt>Resume</dt><dd>Uploaded once (PDF, DOC or DOCX)</dd></div>
+          <div><dt>Applying</dt><dd>One click, status tracked</dd></div>
+          <div><dt>Alerts</dt><dd>Email or in-app, instant or daily</dd></div>
+          <div><dt>Visibility</dt><dd>Resume never listed publicly</dd></div>
+        <% } else { %>
+          <div><dt>Live</dt><dd>Within seconds of payment</dd></div>
+          <div><dt>Renewal</dt><dd>Monthly at the price you paid</dd></div>
+          <div><dt>Cancellation</dt><dd>Any time, from your dashboard</dd></div>
+          <div><dt>Work address</dt><dd>Full address, several allowed</dd></div>
+          <div><dt>Applicants</dt><dd>Unlimited, resumes included</dd></div>
+          <div><dt>Receipts</dt><dd>Numbered GST PDF, every charge</dd></div>
+        <% } %>
+      </dl>
+      <div class="price-split__aside prose">
         <% if (pSeeker) { %>
           <h3>Who pays, then?</h3>
           <p>Employers and third party consultants pay a small flat fee to post — <%= pDollars(C.priceCentsFor('employer')) %> + GST per posting per month for employers, <%= pDollars(C.priceCentsFor('consultant')) %> + GST for third party consultants. That keeps the job bank free for every job seeker, with no pay-to-apply and no featured-candidate upsells.</p>
-          <p>Your resume is only ever shared with the employer or consultant behind a job you choose to apply to.</p>
         <% } else { %>
           <h3>What <%= pDollars(pTotal) %> gets you</h3>
-          <p>A posting stays live for a full month and renews automatically. Pause it when you have enough applicants; cancel it the moment the role is filled — you are never locked in.</p>
-          <p>Compare: most Canadian job boards charge $200–$500 for a single 30-day posting.</p>
-          <div class="divider-maple" aria-hidden="true">🍁</div>
+          <p>A posting stays live for a full month and renews automatically. Pause it when you have enough applicants; cancel it the moment the role is filled — you are never locked in. Most Canadian job boards charge $200–$500 for a single 30-day posting.</p>
           <% if (pOtherCents !== null) { %><p class="small muted"><%= otherLabel %>: <%= pDollars(pOtherCents) %> per posting per month + GST (<%= pDollars(pOtherCents + pGst(pOtherCents)) %>). The rate is set by the account that pays.</p><% } %>
-          <p class="small muted">Prices in Canadian dollars. GST (5%) applies to all postings. No PST/HST is charged.</p>
         <% } %>
       </div>
     </div>
