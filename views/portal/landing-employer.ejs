@@ -11,9 +11,6 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">For employers</p>
       <h1>Meet the young talent building Canada's next workforce</h1>
       <p class="lead">Post once and reach students, co-op and internship candidates, new graduates, early-career hires and skilled young professionals — live in seconds, cancel any time.</p>
-      <ol class="hire-route" aria-label="How hiring works here">
-        <li>Post</li><li>Reach</li><li>Review</li><li class="is-active">Hire</li>
-      </ol>
       <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/employer">Post a job</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=employer">Employer sign in</a>
@@ -31,17 +28,27 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
   </ul>
 </div>
 
-<section class="section" id="hiring-flow">
+<section class="section hire-pipeline" id="hiring-flow">
   <div class="container">
-    <div class="section__head">
-      <p class="eyebrow">The hiring flow</p>
-      <h2>From blank form to a hire, in four moves</h2>
-    </div>
-    <ol class="workflow-chain workflow-chain--4">
-      <li class="workflow-chain__step"><h3>Post</h3><p>Sign up, add your logo, and fill in a title, every work location, pay, languages and who it's aimed at. Nothing has to be finished in one sitting — drafts save themselves, and it goes live for <%= PRICE_EMP %> + GST.</p></li>
-      <li class="workflow-chain__step"><h3>Reach</h3><p>Postings aimed at students, co-ops, new grads and early-career candidates rank ahead of senior roles by default — and still show up in every search and filter regardless of stage.</p></li>
-      <li class="workflow-chain__step"><h3>Review</h3><p>See every applicant as they come in, download resumes and shortlist candidates. Applicants are notified automatically as their status changes.</p></li>
-      <li class="workflow-chain__step"><h3>Hire</h3><p>Mark the hire, then pause, duplicate or repost within the paid month. The posting renews at <%= TOTAL_EMP %> a month at that same locked-in rate until you say stop.</p></li>
+    <p class="eyebrow">The hiring flow</p>
+    <h2 class="visually-hidden">From blank form to a hire, in four moves</h2>
+    <ol class="hire-pipeline__row">
+      <li class="hire-pipeline__stage hire-pipeline__stage--post">
+        <div class="hire-pipeline__head"><span class="hire-pipeline__num">01</span><h3>Post</h3></div>
+        <p>Sign up, add your logo, and fill in a title, every work location, pay, languages and who it's aimed at. Nothing has to be finished in one sitting — drafts save themselves, and it goes live for <%= PRICE_EMP %> + GST.</p>
+      </li>
+      <li class="hire-pipeline__stage hire-pipeline__stage--reach">
+        <div class="hire-pipeline__head"><span class="hire-pipeline__num">02</span><h3>Reach</h3></div>
+        <p>Postings aimed at students, co-ops, new grads and early-career candidates rank ahead of senior roles by default — and still show up in every search and filter regardless of stage.</p>
+      </li>
+      <li class="hire-pipeline__stage hire-pipeline__stage--review">
+        <div class="hire-pipeline__head"><span class="hire-pipeline__num">03</span><h3>Review</h3></div>
+        <p>See every applicant as they come in, download resumes and shortlist candidates. Applicants are notified automatically as their status changes.</p>
+      </li>
+      <li class="hire-pipeline__stage hire-pipeline__stage--hire">
+        <div class="hire-pipeline__head"><span class="hire-pipeline__num">04</span><h3>Hire</h3></div>
+        <p>Mark the hire, then pause, duplicate or repost within the paid month. The posting renews at <%= TOTAL_EMP %> a month at that same locked-in rate until you say stop.</p>
+      </li>
     </ol>
   </div>
 </section>

@@ -8,10 +8,9 @@
    (loaded before this file) cannot leak in. */
 
 /* ---------- hero: the standard .page-head, no illustration mockup — a stat strip carries the facts instead ---------- */
-/* employer hero — a tiny "Post → Reach → Review → Hire" flow tag, not a dashboard mockup */
-.hire-route { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
-.hire-route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.hire-route .is-active { color: var(--cc-red); }
+/* employer hero: the "Post → Reach → Review → Hire" idea used to live here as a small text tag, plus a second,
+   separate numbered grid further down the page (#hiring-flow / .workflow-chain--4) restating the same four words.
+   Both are gone now — see .hire-pipeline below, which is the one place this page states and visualises the flow. */
 
 /* job seeker hero — a compact "Start → Experience → Career" progress tag (the full 5-stage version lives below in #stages) */
 .career-track { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
@@ -270,3 +269,53 @@
 .cta-band__actions .kds-btn { flex: 1 1 auto; }
 @media (min-width: 640px) { .cta-band__actions .kds-btn { flex: 0 0 auto; } }
 @media (min-width: 768px) { .cta-band { grid-template-columns: minmax(0, 1fr) auto; gap: 32px; } }
+
+/* =====================================================================================================
+   EMPLOYER ONLY — hire pipeline (POST → REACH → REVIEW → HIRE)
+   New, uniquely-named component (`.hire-pipeline*`) so it can't collide with `.workflow-chain`,
+   `.landing-journey`, `.proc-flow`, `.client-switch` or `.network-glyph`, which are shared with, or
+   reserved for, the consultant/job-seeker pages.
+
+   This replaces two things that used to say the same thing twice, in two different visual languages:
+   the small `.hire-route` text tag that lived in the hero, and the separate `#hiring-flow` eyebrow+h2+
+   numbered-grid section further down (the exact same "eyebrow, h2, lead, numbered card row" formula
+   used by every other section on this page). Now the idea has one dominant expression: a single
+   connected bar, immediately under the hero, that visibly narrows and darkens left→right — four stages,
+   one outcome. Flat colour blocks divided by a 2px hairline gap (the same "background-as-divider"
+   technique already used by .workflow-chain and .price-split on this page), not cards, not shadows,
+   not rounded corners — so it reads as one mechanism rather than four separate tiles restating a list.
+   ===================================================================================================== */
+.hire-pipeline .eyebrow { margin-bottom: 4px; }
+.hire-pipeline__row {
+  list-style: none; margin: 24px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--kds-border); border: 1px solid var(--kds-border);
+}
+.hire-pipeline__stage { background: var(--cc-navy-50); padding: 26px 24px; display: grid; gap: 10px; align-content: start; }
+.hire-pipeline__head { display: flex; align-items: baseline; gap: 14px; }
+.hire-pipeline__num { font: 800 1.375rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.hire-pipeline__stage h3 { margin: 0; font-size: 1.3125rem; }
+.hire-pipeline__stage p { margin: 0; color: var(--kds-fg-muted); max-width: 46ch; }
+/* colour escalates stage by stage — light navy → navy → red — so "Hire" reads as the destination,
+   the same "last step goes red" grammar already used by .landing-journey and .workflow-chain above. */
+.hire-pipeline__stage--reach { background: var(--cc-navy-100); }
+.hire-pipeline__stage--review { background: var(--cc-navy); }
+.hire-pipeline__stage--review h3, .hire-pipeline__stage--review .hire-pipeline__num { color: #fff; }
+.hire-pipeline__stage--review p { color: color-mix(in srgb, #fff 76%, transparent); }
+.hire-pipeline__stage--hire { background: var(--cc-red); }
+.hire-pipeline__stage--hire h3, .hire-pipeline__stage--hire .hire-pipeline__num { color: #fff; }
+.hire-pipeline__stage--hire p { color: color-mix(in srgb, #fff 85%, transparent); }
+@media (min-width: 640px) {
+  .hire-pipeline__head { gap: 16px; }
+  .hire-pipeline__stage p { max-width: 52ch; }
+}
+@media (min-width: 900px) {
+  /* the funnel: four unequal columns, each one narrower than the last, so the bar itself tapers
+     toward "Hire" instead of four identical equal-width tiles. */
+  .hire-pipeline__row { flex-direction: row; align-items: stretch; }
+  .hire-pipeline__stage { flex: 1.3 1 0; padding: 32px 28px; }
+  .hire-pipeline__stage--reach { flex: 1.12 1 0; }
+  .hire-pipeline__stage--review { flex: 0.96 1 0; }
+  .hire-pipeline__stage--hire { flex: 0.82 1 0; padding-right: 22px; }
+  .hire-pipeline__stage p { max-width: 40ch; }
+}
