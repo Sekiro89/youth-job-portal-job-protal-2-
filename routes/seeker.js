@@ -196,10 +196,18 @@ router.get('/jobseeker', async (req, res, next) => {
     ['Who gets to see my resume?', 'Only the employer or consultant behind a job you applied to, and only the copy you sent them. It\'s never publicly listed, never searchable, and only reaches signed-in owners of that posting.'],
     ['Changed your mind after applying?', 'While an application is still marked "Submitted" you can withdraw it yourself from your Applications page.'],
   ];
+  // "Need to know" FAQ groups — presentation only (which of the *existing* faqs questions, by index, sits under
+  // which category heading). The FAQ content/order above is never touched; this only groups it for display.
+  const faqGroups = [
+    { label: 'Getting started', indices: [0, 3] },
+    { label: 'Jobs & applications', indices: [5] },
+    { label: 'Resume & alerts', indices: [1, 2] },
+    { label: 'Privacy & accessibility', indices: [4] },
+  ];
   res.render('seeker/landing', {
     title: 'Job Seekers — free profile, one-click apply, job alerts',
     metaDescription: 'Create a free Youth Futures Canada profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills — internships, graduate roles, entry-level jobs and skilled careers.',
-    extraCss: ['/css/seeker.css', '/css/public.css'], extraJs: ['/js/seeker.js', '/js/public.js'], noindex: false, faqs,
+    extraCss: ['/css/seeker.css', '/css/public.css'], extraJs: ['/js/seeker.js', '/js/public.js'], noindex: false, faqs, faqGroups,
     categories, compassPaths,
     jsonLd: [{
       '@context': 'https://schema.org', '@type': 'FAQPage',

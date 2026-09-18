@@ -168,11 +168,7 @@ const toc = [
     </div>
   </section>
 
-  <div class="section section--alt">
-    <div class="container">
-      <%- include('_faq', { faq }) %>
-    </div>
-  </div>
+  <%- include('../portal/partials/landing-faq', { items: faq, groups: faqGroups, audienceLabel: 'the platform', heading: 'Need to know.', intro: 'What people ask about pricing, GST, cancellation, consultants, resumes, alerts, accessibility and privacy.' }) %>
 </div>
 
 <section class="section" aria-labelledby="close-h">

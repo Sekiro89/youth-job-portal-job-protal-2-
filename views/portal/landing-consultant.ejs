@@ -109,7 +109,7 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
 
 <%- include('partials/landing-pricing', { signupHref: '/signup/consultant', audienceLabel: 'consultant', priceCents: CON, otherLabel: 'Employers posting for their own company', otherCents: EMP }) %>
 
-<%- include('partials/landing-faq', { items: faq, audienceLabel: 'consultants' }) %>
+<%- include('partials/landing-faq', { items: faq, groups: faqGroups, audienceLabel: 'consultants', intro: 'What you need to know before you run every client\'s postings from one account.' }) %>
 
 <section class="section section--alt">
   <div class="container">

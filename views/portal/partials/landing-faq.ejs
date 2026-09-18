@@ -1,21 +1,61 @@
 <%#
-  FAQ band — expects: items (array of [question, answer]); optional: audienceLabel ('employers' | 'consultants' | 'job seekers') for the heading.
+  "Need to know" — the one shared FAQ component for Employer, Consultant, Job Seeker and Our Story (About). An
+  editorial, navigable "need to know" section instead of a stack of identical accordion cards: a left-hand
+  category rail (desktop) / horizontal scroller (phone) filters a right-hand column of question rows. Every
+  question still expands with a native <details> — filtering only shows/hides whole categories, it never touches
+  the underlying content, and everything is visible and expandable with JS off (data-faq-group has no hidden
+  attribute in the markup; JS narrows it to one category on init).
+
+  Requires:
+    items      — array of [question, answer] tuples OR {q, a, more?} objects (more = {href, label} follow-up link).
+                 This is exactly the same array every page already passed in — never reshaped here.
+    groups     — array of {label, indices}; indices are positions into `items`. Only categories with >=1 index
+                 render — never invent a question/answer to fill an empty one.
+  Optional:
+    heading    — defaults to "Need to know."
+    intro      — one line under the heading; falls back to a generic line if omitted.
+    audienceLabel — kept for the "Something else?" footer copy ('employers' | 'consultants' | 'job seekers' | 'the platform').
 %>
-<% const faqWho = typeof audienceLabel === 'string' && audienceLabel ? audienceLabel : 'employers'; %>
+<%
+  const faqNorm = (it) => Array.isArray(it) ? { q: it[0], a: it[1] } : it;
+  const faqWho = typeof audienceLabel === 'string' && audienceLabel ? audienceLabel : 'people getting started';
+  const faqHeading = typeof heading === 'string' && heading ? heading : 'Need to know.';
+  const faqIntro = typeof intro === 'string' && intro ? intro : `The questions ${faqWho} ask before they get started.`;
+  const faqGroupList = (Array.isArray(groups) ? groups : [{ label: 'Questions', indices: items.map((_, i) => i) }]).filter(g => g.indices && g.indices.length);
+%>
 <section class="section" id="faq">
-  <div class="container">
-    <div class="section__head">
+  <div class="container needknow" data-faq<% if (faqGroupList.length > 1) { %> data-faq-filterable<% } %>>
+    <div class="needknow__head">
       <p class="eyebrow">FAQ</p>
-      <h2>Questions <%= faqWho %> ask us</h2>
+      <h2><%= faqHeading %></h2>
+      <p class="lead"><%= faqIntro %></p>
+      <% if (faqGroupList.length > 1) { %>
+        <nav class="needknow__cats" aria-label="FAQ categories" data-faq-nav>
+          <% faqGroupList.forEach((g, gi) => { %>
+            <button type="button" class="needknow__cat<%= gi === 0 ? ' is-active' : '' %>" data-faq-cat="<%= gi %>" aria-pressed="<%= gi === 0 ? 'true' : 'false' %>"><%= g.label %></button>
+          <% }) %>
+        </nav>
+      <% } %>
     </div>
-    <div class="landing-faq">
-      <% items.forEach(([q, a], i) => { %>
-        <details class="card landing-faq__item" <%= i === 0 ? 'open' : '' %>>
-          <summary><span><%= q %></span></summary>
-          <div class="landing-faq__body"><p><%= a %></p></div>
-        </details>
+    <div class="needknow__panel">
+      <% faqGroupList.forEach((g, gi) => { %>
+        <div class="needknow__group" data-faq-group="<%= gi %>">
+          <% g.indices.forEach((idx, qi) => { const it = faqNorm(items[idx]); %>
+            <details class="needknow__q" <%= (gi === 0 && qi === 0) ? 'open' : '' %>>
+              <summary>
+                <span class="needknow__q-cat"><%= g.label %></span>
+                <span class="needknow__q-text"><%= it.q %></span>
+                <span class="needknow__q-toggle" aria-hidden="true"></span>
+              </summary>
+              <div class="needknow__a">
+                <p><%= it.a %></p>
+                <% if (it.more) { %><p class="needknow__more"><a href="<%= it.more.href %>"><%= it.more.label %> →</a></p><% } %>
+              </div>
+            </details>
+          <% }) %>
+        </div>
       <% }) %>
     </div>
-    <p class="muted landing-faq__foot">Something else? <a href="/contact">Contact us</a> — our support team replies within one business day.</p>
   </div>
+  <p class="muted needknow__foot container">Something else? <a href="/contact">Contact us</a> — our support team replies within one business day.</p>
 </section>

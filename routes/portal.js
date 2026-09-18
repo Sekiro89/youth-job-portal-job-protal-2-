@@ -102,6 +102,22 @@ const landingFaq = {
   ],
 };
 const faqJsonLd = (items) => ({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
+// "Need to know" FAQ groups — presentation only (which of the *existing* landingFaq questions, by index, sits
+// under which category heading). The FAQ content/order above is never touched; this only groups it for display.
+const landingFaqGroups = {
+  employer: [
+    { label: 'Pricing', indices: [0] },
+    { label: 'Posting', indices: [2] },
+    { label: 'Billing', indices: [1, 5] },
+    { label: 'Hiring & candidates', indices: [3, 4] },
+  ],
+  consultant: [
+    { label: 'Clients', indices: [1, 3] },
+    { label: 'Postings', indices: [4] },
+    { label: 'Pricing & billing', indices: [2, 5] },
+    { label: 'Account', indices: [0] },
+  ],
+};
 
 router.get('/employer', (req, res) => {
   if (req.user && ['employer', 'consultant'].includes(req.user.role)) return res.redirect(baseFor(req.user) + '/dashboard');
@@ -109,7 +125,7 @@ router.get('/employer', (req, res) => {
     title: `Post a Job in Canada for $${$(EP.PRICE)}/month — Employers`,
     metaDescription: `Post a job on Youth Futures Canada for $${$(EP.PRICE)} + GST per month. Reach young talent across Canada — students, graduates, early-career and skilled young professionals. No contracts, cancel any time.`,
     extraCss: ['/css/portal.css'], extraJs: ['/js/portal.js'], bodyClass: 'portal-landing',
-    faq: landingFaq.employer, jsonLd: [faqJsonLd(landingFaq.employer)], ...EP,
+    faq: landingFaq.employer, faqGroups: landingFaqGroups.employer, jsonLd: [faqJsonLd(landingFaq.employer)], ...EP,
   });
 });
 router.get('/consultant', (req, res) => {
@@ -118,7 +134,7 @@ router.get('/consultant', (req, res) => {
     title: 'Third Party Consultants & Recruiters — Post Jobs for All Your Clients',
     metaDescription: `One login, unlimited employer profiles. Recruiters, staffing agencies and immigration consultants post jobs on behalf of any client for $${$(CP.PRICE)} + GST per posting per month.`,
     extraCss: ['/css/portal.css'], extraJs: ['/js/portal.js'], bodyClass: 'portal-landing',
-    faq: landingFaq.consultant, jsonLd: [faqJsonLd(landingFaq.consultant)], ...CP,
+    faq: landingFaq.consultant, faqGroups: landingFaqGroups.consultant, jsonLd: [faqJsonLd(landingFaq.consultant)], ...CP,
   });
 });
 

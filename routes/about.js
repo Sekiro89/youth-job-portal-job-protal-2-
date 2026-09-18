@@ -63,6 +63,15 @@ const FAQ = [
     more: { href: '/contact', label: 'Contact us' } },
 ];
 
+// "Need to know" FAQ groups — presentation only (which of the *existing* FAQ questions, by index, sits under
+// which category heading). The FAQ content/order above is never touched; this only groups it for display.
+const FAQ_GROUPS = [
+  { label: 'About Youth Futures', indices: [0, 1, 9] },
+  { label: "Who it's for", indices: [5, 6] },
+  { label: 'How it works', indices: [2, 3, 4, 7, 8] },
+  { label: 'Privacy & support', indices: [10, 11, 12] },
+];
+
 // Example cities per province, used for the "where we serve" links.
 const CITIES = [
   ['Toronto', 'ON'], ['Vancouver', 'BC'], ['Calgary', 'AB'], ['Montreal', 'QC'],
@@ -179,11 +188,12 @@ router.get('/about', (req, res) => {
   res.render('about/about', {
     title: 'About Us — careers in Canada for young talent',
     metaDescription: `Youth Futures Canada is a Canadian job bank for young people at every career stage: employers post jobs for ${EMP.base} + GST a month, consultants for ${CON.base} + GST; job seekers apply free with matched alerts.`,
-    extraCss: ['/css/about.css'],
+    extraCss: ['/css/about.css', '/css/landing.css'],
     jsonLd: buildJsonLd(PUBLIC_URL),
     bodyClass: 'page-about',
     quick: QUICK_ANSWERS,
     faq: FAQ,
+    faqGroups: FAQ_GROUPS,
     cities: CITIES,
     price: { base: PRICE, gst: GST, total: TOTAL, employer: EMP, consultant: CON },
   });

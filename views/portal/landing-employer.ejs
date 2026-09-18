@@ -65,7 +65,7 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
 
 <%- include('partials/landing-pricing', { signupHref: '/signup/employer', audienceLabel: 'employer', priceCents: EMP, otherLabel: 'Third Party Consultants', otherCents: CON }) %>
 
-<%- include('partials/landing-faq', { items: faq, audienceLabel: 'employers' }) %>
+<%- include('partials/landing-faq', { items: faq, groups: faqGroups, audienceLabel: 'employers', intro: 'What you need to know before you reach the young talent building Canada\'s next workforce.' }) %>
 
 <section class="section section--alt">
   <div class="container">
