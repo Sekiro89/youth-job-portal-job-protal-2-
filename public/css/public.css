@@ -148,14 +148,16 @@
    stacked job-board list (that treatment lives on /jobs). Same job fields as _job-card.ejs, only the
    composition differs. See _featured-row.ejs. Each card is a fixed-width flex item; the running number and
    lead-entry emphasis both still read fine at card width, so _featured-row.ejs markup is untouched. */
-/* a quiet right-edge fade hints there's more to scroll without any JS/scroll-position tracking — it sits on a
-   non-scrolling wrapper so it stays put at the edge while the cards underneath scroll past it. */
+/* a quiet right-edge fade + arrow glyph hints there's more to scroll without any JS/scroll-position tracking —
+   it sits on a non-scrolling wrapper so it stays put at the edge while the cards underneath scroll past it. */
 .feat-directory-wrap { position: relative; }
-.feat-directory-wrap::after { content: ""; position: absolute; top: 4px; right: 0; bottom: 20px; width: 48px; background: linear-gradient(to right, transparent, #fff); pointer-events: none; }
+.feat-directory-wrap::after { content: "→"; position: absolute; top: 4px; right: 0; bottom: 20px; width: 52px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; background: linear-gradient(to right, transparent, #fff 55%); color: var(--cc-red); font: 800 1.25rem/1 var(--cc-font-display); pointer-events: none; }
 @media (min-width: 1024px) { .feat-directory-wrap::after { display: none; } }
 .feat-directory { margin: 8px -16px 0; padding: 4px 16px 20px; display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; }
 @media (min-width: 768px) { .feat-directory { margin-inline: -24px; padding-inline: 24px; } }
-.feat-row { position: relative; flex: 0 0 auto; width: min(78vw, 320px); scroll-snap-align: start; display: grid; row-gap: 10px; padding: 24px 22px; background: #fff; border: 1px solid var(--kds-border); border-radius: 6px; }
+/* a slightly darker-than-page surface (not flat white) so each card reads as its own block against the
+   section's white background, instead of blending into it with only a thin border for definition. */
+.feat-row { position: relative; flex: 0 0 auto; width: min(78vw, 320px); scroll-snap-align: start; display: grid; row-gap: 10px; padding: 24px 22px; background: var(--cc-surface); border: 1px solid var(--kds-border); border-radius: 6px; }
 .feat-row__n { font: 800 .8125rem/1.4 var(--cc-font-display); color: var(--cc-line-strong); letter-spacing: .04em; }
 .feat-row__main { min-width: 0; }
 .feat-row__title { margin: 0 0 6px; font: 800 1.0625rem/1.3 var(--cc-font-display); letter-spacing: -0.01em; }
