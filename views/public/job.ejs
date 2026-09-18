@@ -41,11 +41,17 @@
 <link rel="stylesheet" href="/css/print.css" media="print">
 <% if (typeof mapConfig !== 'undefined' && mapConfig) { %><script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script><% } %>
 
-<%# ---------- 1. Opportunity header (navy) — title dominant, salary + conditions visible, Apply immediate ---------- %>
+<%# ---------- 1. Opportunity hero (navy) — a journey milestone, not a database header. A small sitewide-journey
+     route (Start/Explore/Find/Apply/Move) replaces a generic breadcrumb-only header; "Your next move" frames the
+     title; salary + every "at a glance" fact (type, arrangement, hours, experience, education) live together
+     here as one list, so there's no separate, redundant "At a glance" strip repeating the same facts below. ---------- %>
 <header class="op-hero job-hero">
   <div class="container op-hero__inner">
     <ol class="breadcrumb"><li><a href="/">Home</a></li><li><a href="/jobs">Jobs</a></li><li><a href="/jobs?category=<%= job.category %>"><%= h.categoryName(job.category) %></a></li></ol>
-    <p class="op-hero__stage">01 — This opportunity</p>
+    <ol class="op-hero__route" aria-label="Your Youth Futures journey">
+      <li>Start</li><li>Explore</li><li>Find</li><li class="is-active">Apply</li><li>Move</li>
+    </ol>
+    <p class="op-hero__kicker">Your next move</p>
     <h1 class="op-hero__title"><%= job.title %></h1>
     <p class="op-hero__company">
       <a href="/companies/<%= job.company_slug %>"><%= companyName %></a>
@@ -67,6 +73,7 @@
           <li><%= h.workArrangementName(job.work_arrangement) %></li>
           <% if (hours) { %><li><%= hours %></li><% } %>
           <% if (experienceText) { %><li><%= experienceText %></li><% } %>
+          <% if (educationText) { %><li><%= educationText %></li><% } %>
         </ul>
       </div>
       <div class="op-hero__action">
@@ -115,21 +122,6 @@
 </div>
 <% } %>
 
-<%# ---------- 2. At a glance (white) — a structured snapshot, not the old thin metadata strip ---------- %>
-<section class="op-snapshot" aria-labelledby="glance-h">
-  <div class="container">
-    <p class="eyebrow" id="glance-h">At a glance</p>
-    <dl class="op-snapshot__grid">
-      <div><dt>Salary</dt><dd><%= h.formatSalary(job) %></dd></div>
-      <div><dt>Work type</dt><dd><%= h.jobTypeName(job.job_type) %></dd></div>
-      <div><dt>Arrangement</dt><dd><%= h.workArrangementName(job.work_arrangement) %></dd></div>
-      <% if (hours) { %><div><dt>Hours</dt><dd><%= hours %></dd></div><% } %>
-      <% if (experienceText) { %><div><dt>Experience</dt><dd><%= experienceText %></dd></div><% } %>
-      <% if (educationText) { %><div><dt>Education</dt><dd><%= educationText %></dd></div><% } %>
-    </dl>
-  </div>
-</section>
-
 <%# ---------- 2. Where it takes you (signature section) — address beside a large, prominent map, with a
      location-count stat sitting on the map itself, same "live number on the map" language as the Job Bank's
      discovery map (public/css/jobs-search.css .jsearch__map-stat) so the two pages share one visual identity. ---------- %>
@@ -137,7 +129,11 @@
   <div class="container op-location__grid">
     <div class="op-location__info">
       <p class="eyebrow">02 — Where this opportunity takes you</p>
-      <h2 id="loc-h"><%= h.location(job) %></h2>
+      <h2 id="loc-h" class="visually-hidden">Where this opportunity takes you: <%= h.location(job) %><%= remote ? ', remote across Canada' : '' %></h2>
+      <dl class="op-location__facts">
+        <div><dt>Employer base</dt><dd><%= h.location(job) %></dd></div>
+        <% if (remote) { %><div><dt>Work arrangement</dt><dd>Remote across Canada</dd></div><% } %>
+      </dl>
       <% if (extraLoc > 0) { %><p class="small muted">+<%= extraLoc %> more location<%= extraLoc > 1 ? 's' : '' %></p><% } %>
       <ul class="locations">
         <% locations.forEach((l, i) => { %>
@@ -165,23 +161,25 @@
   </div>
 </section>
 
-<%# ---------- 4. Career brief (white) — a numbered asymmetric grid, not stacked headings with red bars ---------- %>
+<%# ---------- 4. The journey to a decision — three stages a candidate walks through (the work, the fit, the
+     value), connected by a path, not three identical cards or a plain numbered list. Same three fields of
+     content as before (description/requirements/benefits), unchanged. ---------- %>
 <div class="op-brief">
   <div class="container op-brief__list">
     <section class="op-brief__row">
-      <div class="op-brief__num">01</div>
-      <div class="op-brief__body"><h2>What you'll do</h2><div class="prose"><%- h.paragraphs(job.description) %></div></div>
+      <div class="op-brief__marker" aria-hidden="true"><span class="op-brief__num">01</span></div>
+      <div class="op-brief__body"><p class="op-brief__tag">The work</p><h2>What you'll do</h2><div class="prose"><%- h.paragraphs(job.description) %></div></div>
     </section>
     <% if (job.requirements) { %>
       <section class="op-brief__row">
-        <div class="op-brief__num">02</div>
-        <div class="op-brief__body"><h2>What you'll need</h2><div class="prose"><%- h.paragraphs(job.requirements) %></div></div>
+        <div class="op-brief__marker" aria-hidden="true"><span class="op-brief__num">02</span></div>
+        <div class="op-brief__body"><p class="op-brief__tag">The fit</p><h2>What you'll need</h2><div class="prose"><%- h.paragraphs(job.requirements) %></div></div>
       </section>
     <% } %>
     <% if (job.benefits) { %>
       <section class="op-brief__row">
-        <div class="op-brief__num">03</div>
-        <div class="op-brief__body"><h2>What you'll get</h2><div class="prose"><%- h.paragraphs(job.benefits) %></div></div>
+        <div class="op-brief__marker" aria-hidden="true"><span class="op-brief__num">03</span></div>
+        <div class="op-brief__body"><p class="op-brief__tag">The value</p><h2>What you'll get</h2><div class="prose"><%- h.paragraphs(job.benefits) %></div></div>
       </section>
     <% } %>
   </div>
@@ -192,16 +190,17 @@
 <section class="op-skills" aria-labelledby="skills-h">
   <div class="container">
     <p class="eyebrow" id="skills-h">Skills that matter here</p>
+    <p class="op-skills__lead small muted">If some of these are already yours, this could be your next move.</p>
     <ul class="op-skills__grid"><% job.skills.forEach(s => { %><li class="op-skills__item"><%= s %></li><% }) %></ul>
   </div>
 </section>
 <% } %>
 
-<%# ---------- 6. Employer (white) — a horizontal profile, not a grey company card ---------- %>
+<%# ---------- 6. Employer (white) — a horizontal profile, framed as who you'd be working with, not a database block ---------- %>
 <section class="op-employer" aria-labelledby="employer-h">
   <div class="container op-employer__grid">
     <div>
-      <p class="eyebrow">The employer</p>
+      <p class="eyebrow">Who you'll work with</p>
       <h2 id="employer-h"><%= companyName %></h2>
       <% if (legalNote) { %><p class="small muted"><%= legalNote %></p><% } %>
     </div>
@@ -230,8 +229,9 @@
   </div>
 </section>
 
-<%# ---------- 7. Posting details (light neutral) — structured, secondary, scannable ---------- %>
-<section class="op-details" aria-labelledby="details-h">
+<%# ---------- 7. Posting details — deliberately quiet metadata, so it never competes with the title, the
+     journey content, the location or the apply moment. ---------- %>
+<section class="op-details op-details--quiet" aria-labelledby="details-h">
   <div class="container">
     <p class="eyebrow" id="details-h">Posting details</p>
     <dl class="op-details__grid">
@@ -263,7 +263,22 @@
 </section>
 <p class="print-only print-foot"><%= printHost %>/jobs/<%= job.slug %> — printed <%= printedOn %></p>
 
-<%# ---------- 8. More opportunities (light neutral) — editorial JobRows, not a card grid ---------- %>
+<%# ---------- 8. The final apply moment — a strong, restrained close the page has been building toward.
+     Reuses the exact same apply link/condition logic as the hero — no new application functionality. ---------- %>
+<section class="op-final" aria-labelledby="final-h">
+  <div class="container op-final__inner">
+    <h2 id="final-h">Ready for your next move?</h2>
+    <% if (imported) { %>
+      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a>
+    <% } else if (closed) { %>
+      <p class="small op-final__closed">Applications closed on <%= closes %>. <a href="/jobs?category=<%= job.category %>">See other <%= h.categoryName(job.category) %> jobs →</a></p>
+    <% } else { %>
+      <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs/<%= job.slug %>/apply">Apply now →</a>
+    <% } %>
+  </div>
+</section>
+
+<%# ---------- 9. More opportunities (light neutral) — editorial JobRows, not a card grid ---------- %>
 <% if (more.length || similar.length) { %>
 <section class="section section--alt related" aria-label="Related jobs">
   <div class="container">
