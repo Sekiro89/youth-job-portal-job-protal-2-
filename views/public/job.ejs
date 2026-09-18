@@ -129,7 +129,7 @@
   <div class="container op-location__grid">
     <div class="op-location__info">
       <p class="eyebrow">02 — Where this opportunity takes you</p>
-      <h2 id="loc-h" class="visually-hidden">Where this opportunity takes you: <%= h.location(job) %><%= remote ? ', remote across Canada' : '' %></h2>
+      <h2 id="loc-h" class="op-location__title">Where this opportunity takes you: <%= h.location(job) %><%= remote ? ', remote across Canada' : '' %></h2>
       <dl class="op-location__facts">
         <div><dt>Employer base</dt><dd><%= h.location(job) %></dd></div>
         <% if (remote) { %><div><dt>Work arrangement</dt><dd>Remote across Canada</dd></div><% } %>
@@ -267,6 +267,7 @@
      Reuses the exact same apply link/condition logic as the hero — no new application functionality. ---------- %>
 <section class="op-final" aria-labelledby="final-h">
   <div class="container op-final__inner">
+    <p class="op-final__kicker">You've explored the opportunity</p>
     <h2 id="final-h">Ready for your next move?</h2>
     <% if (imported) { %>
       <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs/<%= job.slug %>/go" target="_blank" rel="nofollow noopener">Apply on other platform ↗</a>

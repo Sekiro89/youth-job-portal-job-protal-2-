@@ -350,13 +350,14 @@
    title, then title dominant, salary + every "at a glance" fact on one divided bar, Apply is a header action.
    There is no separate "At a glance" strip any more — every fact it used to repeat (salary, type, arrangement,
    hours, experience, education) lives once, here, in .op-hero__conditions. */
-.op-hero { background: var(--cc-navy); color: #fff; padding-block: 40px 32px; }
+.op-hero { background: var(--cc-navy); color: #fff; padding-block: 48px 40px; }
 .op-hero .breadcrumb, .op-hero .breadcrumb a { color: color-mix(in srgb, #fff 60%, transparent); }
 .op-hero .breadcrumb a:hover { color: #fff; }
-.op-hero__route { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 45%, transparent); }
+.op-hero__route { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 45%, transparent); }
 .op-hero__route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: color-mix(in srgb, #fff 30%, transparent); }
 .op-hero__route .is-active { color: var(--cc-spark, #ffb648); }
-.op-hero__kicker { margin: 14px 0 6px; font: 800 .8125rem/1 var(--cc-font-display); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 70%, transparent); }
+.op-hero__kicker { margin: 26px 0 8px; display: inline-flex; align-items: center; gap: 8px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-spark, #ffb648); }
+.op-hero__kicker::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-spark, #ffb648); flex: none; }
 .op-hero__title { color: #fff; margin: 0 0 10px; font-size: clamp(1.75rem, 1.1rem + 2.6vw, 2.75rem); }
 .op-hero__company { font-size: 1.0625rem; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: color-mix(in srgb, #fff 88%, transparent); }
 .op-hero__company a { font-weight: 700; color: #fff; }
@@ -365,7 +366,7 @@
 .job-head__more { color: color-mix(in srgb, #fff 70%, transparent); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
 .job-head__badges { margin: 12px 0 0; }
 .badge--ref { white-space: normal; text-align: left; line-height: 1.35; display: inline-block; max-width: 100%; }
-.op-hero__bar { margin-top: 24px; padding-top: 20px; border-top: 1px solid color-mix(in srgb, #fff 20%, transparent); display: grid; gap: 16px; }
+.op-hero__bar { margin-top: 28px; padding-top: 22px; border-top: 1px solid color-mix(in srgb, #fff 20%, transparent); display: grid; gap: 18px; }
 .op-hero__facts { min-width: 0; }
 .op-hero__salary { margin: 0 0 8px; font: 800 clamp(1.375rem, 1vw + 1.15rem, 1.75rem)/1 var(--cc-font-display); color: #fff; }
 .op-hero__conditions { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 600 .875rem/1.3 var(--kds-font-sans); color: color-mix(in srgb, #fff 82%, transparent); text-transform: uppercase; letter-spacing: .02em; }
@@ -397,9 +398,10 @@
    stat sits directly on the map (top-right, clear of Leaflet's own top-left zoom control) — the same "a real
    number lives on the map" language as the Job Bank discovery map (public/css/jobs-search.css .jsearch__map-stat)
    so the two pages read as one product, not the map bolted on as an afterthought here. */
-.op-location { padding-block: 40px; }
+.op-location { padding-block: 48px; }
 .op-location--signature { background: var(--cc-navy-50); border-top: 3px solid var(--cc-navy); border-bottom: 1px solid var(--cc-line); }
-.op-location__grid { display: grid; gap: 24px; }
+.op-location__grid { display: grid; gap: 28px; }
+.op-location__title { font: 800 clamp(1.25rem, .6vw + 1.1rem, 1.75rem)/1.25 var(--cc-font-display); color: var(--cc-navy); margin: 6px 0 20px; max-width: 32ch; }
 /* the two facts this section exists to make unmistakable: the map shows where the EMPLOYER is based, and a
    remote role's work arrangement is called out with equal weight — so the map never implies the candidate must
    physically work at the pin. */
@@ -413,10 +415,10 @@
 .locations__item svg { flex: none; color: var(--cc-red); }
 .locations__addr { font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
 .locations__note { margin: 8px 0 0; }
-.op-location__map { position: relative; border-radius: var(--kds-radius-md, 8px); overflow: hidden; border: 1px solid var(--cc-line-strong); box-shadow: 0 8px 28px rgba(9, 43, 82, .1); }
+.op-location__map { position: relative; border-radius: var(--kds-radius-md, 8px); overflow: hidden; }
 .op-location__map .cc-map { border-radius: 0; height: 400px; }
-.op-location__map .map-block__note { margin: 0; padding: 10px 14px; background: #fff; }
-.op-location__stat { position: absolute; z-index: 5; top: 16px; right: 16px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--cc-line-strong); border-radius: var(--kds-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
+.op-location__map .map-block__note { margin: 10px 0 0; padding: 0; background: none; }
+.op-location__stat { position: absolute; z-index: 5; top: 16px; right: 16px; margin: 0; padding: 8px 14px; background: color-mix(in srgb, #fff 88%, transparent); display: flex; align-items: baseline; gap: 8px; }
 .op-location__stat strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .op-location__stat span { font: 600 .75rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
 @media (min-width: 900px) {
@@ -428,7 +430,7 @@
    a line), not a plain numbered list or three identical cards. Same "explicit calc() height, not top+bottom"
    connector technique used elsewhere on this site (e.g. .workflow-chain--vertical), so the line always reaches
    the next node exactly regardless of how tall a row's own content runs. */
-.op-brief { background: #fff; padding-block: 40px; }
+.op-brief { background: #fff; padding-block: 48px; }
 .op-brief__list { display: grid; gap: 0; }
 .op-brief__row { position: relative; display: grid; grid-template-columns: 40px 1fr; column-gap: 20px; padding-bottom: 36px; }
 .op-brief__row:last-child { padding-bottom: 0; }
@@ -447,19 +449,22 @@
 /* 5. skills (light neutral) — a field of statements, not tiny generic pills */
 .op-skills { background: var(--cc-surface); padding-block: 36px; }
 .op-skills__lead { margin: 6px 0 0; }
-.op-skills__grid { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-.op-skills__item { background: #fff; border: 1px solid var(--cc-line-strong); border-radius: 6px; padding: 18px 16px; font: 700 .875rem/1.3 var(--kds-font-sans); letter-spacing: .03em; text-transform: uppercase; color: var(--cc-navy); }
+.op-skills__grid { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.op-skills__item { display: flex; align-items: center; gap: 8px; font: 700 .875rem/1.3 var(--kds-font-sans); letter-spacing: .02em; color: var(--cc-navy); }
+.op-skills__item::before { content: ""; display: block; width: 14px; height: 2px; background: var(--cc-red); flex: none; }
 
-/* 6. who you'll work with (white) — a horizontal profile, not a grey company card */
+/* 6. who you'll work with (white) — a horizontal profile, not a grey company card. Smaller heading scale than
+   the job title / THE WORK-FIT-VALUE h2s, so it stays supporting context rather than competing. */
 .op-employer { background: #fff; padding-block: 40px; }
 .op-employer__grid { display: grid; gap: 16px; }
-.op-employer__grid h2 { font: 800 clamp(1.5rem, 1vw + 1.25rem, 2rem)/1.15 var(--cc-font-display); color: var(--cc-navy); margin: 4px 0 0; }
+.op-employer__grid h2 { font: 800 clamp(1.25rem, .6vw + 1.1rem, 1.625rem)/1.2 var(--cc-font-display); color: var(--cc-navy); margin: 4px 0 0; }
 .op-employer__facts { margin: 12px 0; }
 @media (min-width: 900px) { .op-employer__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 48px; } }
 
 /* 7. posting details — deliberately quiet metadata: smaller type, tighter rhythm, muted colour throughout, so
-   it reads as a reference footer rather than a section competing with the title/story/location/apply moment. */
-.op-details--quiet { padding-block: 28px; }
+   it reads as a reference footer rather than a section competing with the title/story/location/apply moment.
+   A hairline on top separates it from the (also white) employer section above. */
+.op-details--quiet { padding-block: 28px; border-top: 1px solid var(--kds-border); }
 .op-details--quiet .eyebrow { color: var(--kds-fg-faint); }
 .op-details--quiet .eyebrow::before { background: var(--kds-fg-faint); }
 .op-details__grid { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
@@ -473,8 +478,10 @@
 @media (min-width: 1024px) { .op-details__grid { grid-template-columns: repeat(4, 1fr); } }
 
 /* 8. the final apply moment — a strong, restrained close, echoing .op-hero's navy so the page feels bookended */
-.op-final { background: var(--cc-navy); padding-block: 48px; text-align: center; }
+.op-final { background: var(--cc-navy); padding-block: 56px; text-align: center; }
 .op-final__inner { display: grid; justify-items: center; gap: 20px; }
+.op-final__kicker { margin: 0; display: inline-flex; align-items: center; gap: 8px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-spark, #ffb648); }
+.op-final__kicker::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-spark, #ffb648); flex: none; }
 .op-final h2 { margin: 0; color: #fff; max-width: 16ch; }
 .op-final__closed { color: color-mix(in srgb, #fff 80%, transparent); }
 .op-final__closed a { color: #fff; }
