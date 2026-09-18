@@ -11,14 +11,6 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">For Third Party Consultants</p>
       <h1>One login. Every client's next hire.</h1>
       <p class="lead">Recruiters, staffing agencies, HR and immigration consultants: add unlimited employer profiles, post on behalf of any of them, and put every client in front of Canada's next generation of talent from one dashboard.</p>
-      <div class="network-glyph" aria-label="One partner account, branching to multiple clients, each with their own job postings">
-        <p class="network-glyph__root">Your partner account</p>
-        <ul class="network-glyph__clients">
-          <li><b>Client A</b><span>Job postings</span></li>
-          <li><b>Client B</b><span>Job postings</span></li>
-          <li><b>Client C</b><span>Job postings</span></li>
-        </ul>
-      </div>
       <div class="page-head__actions landing-head__cta">
         <a class="kds-btn kds-btn--accent" href="/signup/consultant">Create consultant account</a>
         <a class="kds-btn kds-btn--ghost" href="/login?role=consultant">Consultant sign in</a>
@@ -42,12 +34,33 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
       <p class="eyebrow">Built for agencies</p>
       <h2>Everything you manage, from one place</h2>
     </div>
-    <ol class="workflow-chain workflow-chain--vertical">
-      <li class="workflow-chain__step"><h3>Partner account</h3><p>One login for your whole practice — created once, used for every client you take on.</p></li>
-      <li class="workflow-chain__step"><h3>Clients</h3><p>Add every client as its own company profile — name, logo, location, description. Job seekers see the client as the employer, not you.</p></li>
-      <li class="workflow-chain__step"><h3>Postings</h3><p>The posting form asks "Post as company." Switch between clients with one click on every jobs list and dashboard.</p></li>
-      <li class="workflow-chain__step"><h3>Billing</h3><p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p></li>
-    </ol>
+    <div class="partner-hub" aria-label="Diagram: your partner account branches into clients, and every client's work branches into postings and billing">
+      <div class="partner-hub__root">
+        <h3>Partner account</h3>
+        <p>One login for your whole practice — created once, used for every client you take on.</p>
+      </div>
+      <div class="partner-hub__trunk" aria-hidden="true"></div>
+      <ul class="partner-hub__row partner-hub__row--clients">
+        <li class="partner-hub__node partner-hub__node--chip">Client A</li>
+        <li class="partner-hub__node partner-hub__node--chip">Client B</li>
+        <li class="partner-hub__node partner-hub__node--chip">Client C</li>
+      </ul>
+      <div class="partner-hub__caption">
+        <h3>Clients</h3>
+        <p>Add every client as its own company profile — name, logo, location, description. Job seekers see the client as the employer, not you.</p>
+      </div>
+      <div class="partner-hub__trunk" aria-hidden="true"></div>
+      <ul class="partner-hub__row partner-hub__row--outcomes">
+        <li class="partner-hub__node partner-hub__node--card">
+          <h3>Postings</h3>
+          <p>The posting form asks "Post as company." Switch between clients with one click on every jobs list and dashboard.</p>
+        </li>
+        <li class="partner-hub__node partner-hub__node--card">
+          <h3>Billing</h3>
+          <p>Every subscription and receipt, grouped by client, one place to look — download any of them as a PDF when it's time to bill a client back.</p>
+        </li>
+      </ul>
+    </div>
   </div>
 </section>
 
