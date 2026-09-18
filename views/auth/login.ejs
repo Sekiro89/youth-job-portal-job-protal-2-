@@ -1,5 +1,5 @@
 <% const roles = [['employer', 'Employer'], ['consultant', 'Partner'], ['seeker', 'Job Seeker']]; %>
-<%- include('_head', { h: { h1: 'Welcome back.', lead: 'Pick up where you left off.', split: true, journeyLine: true } }) %>
+<%- include('_head', { h: { eyebrow: 'Your next move', h1: 'Doesn\'t have to start over.', lead: 'Welcome back. Pick up where you left off.', split: true, plainEyebrow: true } }) %>
     <div class="auth__card">
       <% if (roleHint) { %>
       <div class="role-hints" aria-label="Account type">
@@ -25,8 +25,8 @@
         </div>
       </form>
       <div class="auth-newhere">
-        <p class="eyebrow">New here?</p>
-        <a class="auth-cta-link" href="/signup">Choose where you're starting from <span aria-hidden="true">→</span></a>
+        <p class="eyebrow">New to Youth Futures?</p>
+        <a class="auth-cta-link" href="/signup">Create an account <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>

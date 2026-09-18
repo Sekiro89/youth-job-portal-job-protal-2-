@@ -8,10 +8,12 @@
     of this — this partial only opens .auth-shell + a centred/asymmetric intro (closed here) + .auth-shell__form
     (left open); each page's own template supplies the form content and closes the shell with its own trailing
     </div></div>. %>
-<% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', badge: '', progress: null, split: false, journeyLine: false, ...locals.h }; %>
+<% const hd = { eyebrow: '', h1: '', lead: '', leadHtml: '', crumb: '', badge: '', progress: null, split: false, journeyLine: false, plainEyebrow: false, ...locals.h }; %>
 <div class="auth-shell<%= hd.split ? ' auth-shell--split' : '' %>">
   <div class="container auth-hero">
-    <% if (hd.journeyLine) { %>
+    <% if (hd.plainEyebrow) { %>
+      <% if (hd.eyebrow) { %><p class="eyebrow"><%= hd.eyebrow %></p><% } %>
+    <% } else if (hd.journeyLine) { %>
       <p class="eyebrow">Your journey</p>
       <div class="journey-line" aria-hidden="true">
         <span>Start</span>

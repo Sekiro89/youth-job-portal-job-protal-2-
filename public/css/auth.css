@@ -48,7 +48,7 @@
 .auth-shell__form { padding: 0 20px 48px; display: flex; flex-direction: column; align-items: center; }
 .auth-shell__form > * { width: 100%; max-width: 560px; }
 .signup-chooser { display: grid; gap: 20px; }   /* stacks .role-select + .auth__foot with a sensible gap, sign-in always below the options */
-.auth-shell__form > .signup-chooser { max-width: 880px; }
+.auth-shell__form > .signup-chooser { max-width: 1040px; }
 @media (min-width: 640px) {
   .auth-hero { padding-bottom: 40px; }
 }
@@ -97,14 +97,16 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
 .pw__toggle:hover { background: var(--cc-navy-50); }
 
-/* /signup "Choose your starting point" — three entry points divided by thin structural rules, not boxed
-   cards: no per-item border/radius/shadow, just a shared divider between rows (mobile) or columns (desktop).
+/* /signup "Choose your way in" — three horizontal routes divided by thin rules, never boxed cards or
+   equal-width columns: no per-item border/radius/shadow, just a shared top divider between rows at every
+   width, including desktop — a full-width editorial pathway list, not a 3-column account-type grid.
    Real <a> elements (not clickable divs), so focus/keyboard behaviour is native. */
-.role-select { display: grid; grid-template-columns: 1fr; }
-.role-opt { display: grid; gap: 10px; padding: 28px 6px; border-top: 1px solid var(--cc-line); text-decoration: none; color: var(--cc-ink); transition: background-color .15s; }
+.role-select { display: grid; grid-template-columns: 1fr; border-top: 1px solid var(--cc-line); }
+.role-opt { display: grid; grid-template-columns: auto 1fr; column-gap: 20px; row-gap: 8px; padding: 28px 6px; border-top: 1px solid var(--cc-line); text-decoration: none; color: var(--cc-ink); transition: background-color .15s; }
 .role-opt:first-child { border-top: 0; }
 .role-opt:hover, .role-opt:focus-visible { background: var(--cc-red-100); }
-.role-opt__num { font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red); }
+.role-opt__num { grid-row: 1 / span 5; align-self: center; font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red); }
+.role-opt__kicker { font: 800 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
 .role-opt__title { font: 700 1.375rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .role-opt__desc { color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
 .role-opt__meta { font: 700 .875rem/1 var(--kds-font-sans); color: var(--cc-navy); }
@@ -115,9 +117,17 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
   .role-opt:hover .role-opt__cta span, .role-opt:focus-visible .role-opt__cta span { transform: translateX(4px); }
 }
 @media (min-width: 900px) {
-  .role-select { grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--cc-line); }
-  .role-opt { border-top: 0; border-left: 1px solid var(--cc-line); padding: 36px 28px; height: 100%; align-content: start; }
-  .role-opt:first-child { border-left: 0; }
+  /* the same numbered rows, just stretched into a full-width horizontal route: number, kicker + title + desc
+     (stacked across three rows within one column), price and the Enter cue all vertically centred on that
+     block instead of everything stacking top to bottom. */
+  .role-opt { grid-template-columns: 80px minmax(0, 1fr) auto auto; column-gap: 32px; padding: 32px 8px; }
+  .role-opt__num, .role-opt__meta, .role-opt__cta { grid-row: 1 / span 3; align-self: center; }
+  .role-opt__num { font-size: 2.5rem; }
+  .role-opt__kicker { grid-column: 2; }
+  .role-opt__title { grid-column: 2; }
+  .role-opt__desc { grid-column: 2; max-width: 46ch; }
+  .role-opt__meta { grid-column: 3; white-space: nowrap; }
+  .role-opt__cta { grid-column: 4; margin-top: 0; }
 }
 
 /* login role hint chips */
