@@ -3,11 +3,15 @@
    (plus the page-specific jobs-hero / jobs-map-section / jobs-index) so the legacy .jobs-layout / .filters /
    .results rules in public.css + maps.css no longer apply to this page.
 
-   Composition: a light hero (journey indicator + search/filters) → a full-width "Explore Canada" map discovery
-   section → an editorial job index. The map is no longer a sidebar beside the results; it is its own section,
-   shown/hidden by the exact same class toggles as before (.jobs-map-on/off at >=768, .jsearch.is-map on phone) —
-   only what those classes affect has changed. jobs-search.js is untouched: every element it queries by
-   data-attribute or class still exists with the same name.
+   Composition (Discover → Explore → Find → Apply): "01 — Discover" light hero (journey indicator + search/
+   filters) → "02 — Explore" a full-width map discovery section, now with a live count sitting on the map itself
+   (.jsearch__map-stat) rather than a caption underneath it, so the map reads as the page's major moment → "03 —
+   Find" an editorial job index, deliberately calmer than the map section (thin hairline, smaller heading) since
+   it's the secondary layer you land in once you've found something on the map. "Apply" happens on the job page
+   next. The map is no longer a sidebar beside the results; it is its own section, shown/hidden by the exact same
+   class toggles as before (.jobs-map-on/off at >=768, .jsearch.is-map on phone) — only what those classes affect
+   has changed. jobs-search.js is untouched: every element it queries by data-attribute or class still exists
+   with the same name (.jsearch__map-stat is new and purely decorative — jobs-search.js never touches it).
 
    Breakpoints: <768 phone (filters = full-screen drawer, List | Map switch) · 768–1023 tablet (bar + popover,
    map toggle) · >=1024 desktop (bar + popover, map toggle) — the filter bar stays horizontal at every width
@@ -87,9 +91,15 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .jview button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
 .jsearch__map-toggle { display: none; gap: 6px; white-space: nowrap; }
 html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !important; }
-.jsearch__map { min-width: 0; }
+.jsearch__map { position: relative; min-width: 0; }
 .jsearch__canvas { height: 360px; border-radius: var(--yf-radius-md, 8px); border: 1px solid var(--map-border); }
 .jsearch__map-note { margin: 10px 0 0; }
+/* the "signature" touch that ties the map to the discovery narrative: a live count sitting on the map itself,
+   not a caption underneath it. Purely decorative (aria-hidden) — the real, JS-updated status line for screen
+   readers is .jsearch__map-note below, untouched so jobs-search.js can keep rewriting its text on pin loads. */
+.jsearch__map-stat { position: absolute; z-index: 5; top: 16px; left: 16px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--map-border); border-radius: var(--yf-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
+.jsearch__map-stat strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.jsearch__map-stat span { font: 600 .75rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
 
 /* phone: map section fills the viewport under the header when in Map mode; hidden entirely otherwise */
 @media (max-width: 767px) {
@@ -97,13 +107,17 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
   .js .jsearch.is-map .jobs-map-section__head { display: none; }
   .js .jsearch.is-map .jsearch__canvas { height: calc(100dvh - var(--cc-header-h)); min-height: 360px; border-radius: 0; border: 0; }
   .js .jsearch.is-map .jsearch__map-note { display: none; }
+  .js .jsearch.is-map .jsearch__map-stat { display: none; }
   .js .jsearch.is-map .jobs-index { display: none; }
 }
 
 /* ---------- job index: an editorial directory, not a card grid ---------- */
-.jobs-index { padding: var(--sp-8) 0 var(--sp-9); }
-.jobs-index__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px 24px; margin-bottom: var(--sp-5); padding-bottom: var(--sp-5); border-bottom: 2px solid var(--cc-navy); }
-.jobs-index__head h2 { margin: 0; }
+/* the discovery narrative's third, quieter beat — the map above is the "major moment", this index is the
+   secondary layer you land in once you've found something on it. Deliberately calmer than the map section:
+   a thin hairline instead of the old 2px navy rule, a smaller heading. */
+.jobs-index { padding: var(--sp-7) 0 var(--sp-9); }
+.jobs-index__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px 24px; margin-bottom: var(--sp-5); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--kds-border); }
+.jobs-index__head h2 { margin: 0; font-size: clamp(1.125rem, .5vw + 1rem, 1.375rem); }
 .jobs-index__head h2 strong { color: var(--cc-red); }
 .jsearch__sort { display: inline-flex; align-items: center; gap: 8px; }
 .jsearch__sort .input { width: auto; min-width: 150px; }

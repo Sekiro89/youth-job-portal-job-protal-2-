@@ -12,11 +12,12 @@
 <header class="jobs-hero">
   <div class="container">
     <ol class="jobs-hero__route" aria-label="Your journey">
-      <li>01 Start</li>
-      <li class="is-active">02 Explore</li>
-      <li>03 Apply</li>
+      <li class="is-active">01 Discover</li>
+      <li>02 Explore</li>
+      <li>03 Find</li>
+      <li>04 Apply</li>
     </ol>
-    <h1 class="jobs-hero__title">Explore your next move.</h1>
+    <h1 class="jobs-hero__title">Discover your next move.</h1>
     <p class="lead">Find opportunities across Canada and discover where your career could take you.</p>
   </div>
 </header>
@@ -25,6 +26,7 @@
 
   <div class="jobs-hero__search">
     <div class="container">
+      <p class="eyebrow">01 — Discover</p>
       <%- include('_filters', { f, point, chips, total, moreActive, RADII, salaryOptions }) %>
       <% if (chips.length) { %>
         <ul class="jchips" aria-label="Active filters">
@@ -38,7 +40,7 @@
   <section class="jobs-map-section" aria-labelledby="map-h">
     <div class="container jobs-map-section__head">
       <div>
-        <p class="eyebrow">Explore Canada</p>
+        <p class="eyebrow">02 — Explore</p>
         <h2 id="map-h">Your next opportunity could be anywhere.</h2>
       </div>
     </div>
@@ -46,6 +48,7 @@
       <aside class="jsearch__map" id="jobs-map" aria-label="Map of matching jobs" data-map-pane>
         <div class="cc-map jsearch__canvas" data-map data-map-manual data-jobs-map data-empty="No mapped locations for these results yet." role="region" aria-label="Map"
              <% if (hasPoint) { %>data-point-lat="<%= point.lat %>" data-point-lng="<%= point.lng %>" data-point-radius="<%= f.radius_km %>" data-point-label="<%= point.label %>"<% } %>></div>
+        <p class="jsearch__map-stat" aria-hidden="true"><strong><%= total %></strong><span>open position<%= total === 1 ? '' : 's' %></span></p>
         <p class="jsearch__map-note small muted" data-map-note><%= total %> job<%= total === 1 ? '' : 's' %> · pins show each work location (up to 200). Click a pin to find it in the list.</p>
       </aside>
     </div>
@@ -55,8 +58,8 @@
     <div class="container">
       <div class="jobs-index__head">
         <div>
-          <p class="eyebrow">Opportunities</p>
-          <h2 id="results-h"><strong><%= total %></strong> open position<%= total === 1 ? '' : 's' %> across Canada</h2>
+          <p class="eyebrow">03 — Find</p>
+          <h2 id="results-h">Find your next move — <strong><%= total %></strong> option<%= total === 1 ? '' : 's' %></h2>
         </div>
         <div class="jsearch__tools">
           <div class="jview" role="group" aria-label="View as" data-view-switch>
