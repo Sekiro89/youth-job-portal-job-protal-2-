@@ -45,7 +45,7 @@
 <header class="op-hero job-hero">
   <div class="container op-hero__inner">
     <ol class="breadcrumb"><li><a href="/">Home</a></li><li><a href="/jobs">Jobs</a></li><li><a href="/jobs?category=<%= job.category %>"><%= h.categoryName(job.category) %></a></li></ol>
-    <p class="op-hero__stage">02 — Explore</p>
+    <p class="op-hero__stage">01 — This opportunity</p>
     <h1 class="op-hero__title"><%= job.title %></h1>
     <p class="op-hero__company">
       <a href="/companies/<%= job.company_slug %>"><%= companyName %></a>
@@ -130,11 +130,13 @@
   </div>
 </section>
 
-<%# ---------- 3. Location (light neutral) — a major visual section, address beside a large map ---------- %>
-<section class="op-location" aria-labelledby="loc-h">
+<%# ---------- 2. Where it takes you (signature section) — address beside a large, prominent map, with a
+     location-count stat sitting on the map itself, same "live number on the map" language as the Job Bank's
+     discovery map (public/css/jobs-search.css .jsearch__map-stat) so the two pages share one visual identity. ---------- %>
+<section class="op-location op-location--signature" aria-labelledby="loc-h">
   <div class="container op-location__grid">
     <div class="op-location__info">
-      <p class="eyebrow">Where this opportunity takes you</p>
+      <p class="eyebrow">02 — Where this opportunity takes you</p>
       <h2 id="loc-h"><%= h.location(job) %></h2>
       <% if (extraLoc > 0) { %><p class="small muted">+<%= extraLoc %> more location<%= extraLoc > 1 ? 's' : '' %></p><% } %>
       <ul class="locations">
@@ -154,6 +156,7 @@
     <div class="op-location__map">
       <% if (mapMarkers.length) { %>
         <div class="cc-map" data-map data-zoom="14" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of work location<%= mapMarkers.length > 1 ? 's' : '' %>"></div>
+        <p class="op-location__stat" aria-hidden="true"><strong><%= locations.length %></strong><span>work location<%= locations.length === 1 ? '' : 's' %></span></p>
         <p class="map-block__note small muted"><%= mapMarkers.length %> of <%= locations.length %> location<%= locations.length === 1 ? '' : 's' %> shown on the map. Pins are approximate.</p>
       <% } else { %>
         <p class="map-block__note small muted">Map unavailable for this posting — use the “Open in Google Maps” link<%= locations.length > 1 ? 's' : '' %> above.</p>
@@ -167,7 +170,7 @@
   <div class="container op-brief__list">
     <section class="op-brief__row">
       <div class="op-brief__num">01</div>
-      <div class="op-brief__body"><h2>The role</h2><div class="prose"><%- h.paragraphs(job.description) %></div></div>
+      <div class="op-brief__body"><h2>What you'll do</h2><div class="prose"><%- h.paragraphs(job.description) %></div></div>
     </section>
     <% if (job.requirements) { %>
       <section class="op-brief__row">
@@ -178,7 +181,7 @@
     <% if (job.benefits) { %>
       <section class="op-brief__row">
         <div class="op-brief__num">03</div>
-        <div class="op-brief__body"><h2>What's in it for you</h2><div class="prose"><%- h.paragraphs(job.benefits) %></div></div>
+        <div class="op-brief__body"><h2>What you'll get</h2><div class="prose"><%- h.paragraphs(job.benefits) %></div></div>
       </section>
     <% } %>
   </div>

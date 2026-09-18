@@ -394,8 +394,14 @@
 .closed-notice p { margin: 0; }
 .closed-notice__meta { font-size: .9375rem; }
 
-/* 3. location (light neutral) — a major visual section: address beside a large, prominent map */
-.op-location { background: var(--cc-surface); padding-block: 40px; }
+/* 2. "Where this opportunity takes you" (op-location--signature) — this page's signature section: a distinct
+   navy-tinted band (every other section here is white or plain --cc-surface), a red top rule echoing the
+   op-brief numbering's accent, and a bigger, more prominent map than the old plain widget. A live location-count
+   stat sits directly on the map (top-right, clear of Leaflet's own top-left zoom control) — the same "a real
+   number lives on the map" language as the Job Bank discovery map (public/css/jobs-search.css .jsearch__map-stat)
+   so the two pages read as one product, not the map bolted on as an afterthought here. */
+.op-location { padding-block: 40px; }
+.op-location--signature { background: var(--cc-navy-50); border-top: 3px solid var(--cc-navy); border-bottom: 1px solid var(--cc-line); }
 .op-location__grid { display: grid; gap: 24px; }
 .op-location__info h2 { margin: 4px 0 12px; }
 .locations { list-style: none; margin: 0; padding: 0; }
@@ -404,12 +410,15 @@
 .locations__item svg { flex: none; color: var(--cc-red); }
 .locations__addr { font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
 .locations__note { margin: 8px 0 0; }
-.op-location__map { border-radius: var(--kds-radius-md, 8px); overflow: hidden; border: 1px solid var(--cc-line-strong); }
-.op-location__map .cc-map { border-radius: 0; height: 360px; }
+.op-location__map { position: relative; border-radius: var(--kds-radius-md, 8px); overflow: hidden; border: 1px solid var(--cc-line-strong); box-shadow: 0 8px 28px rgba(9, 43, 82, .1); }
+.op-location__map .cc-map { border-radius: 0; height: 400px; }
 .op-location__map .map-block__note { margin: 0; padding: 10px 14px; background: #fff; }
+.op-location__stat { position: absolute; z-index: 5; top: 16px; right: 16px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--cc-line-strong); border-radius: var(--kds-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
+.op-location__stat strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.op-location__stat span { font: 600 .75rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
 @media (min-width: 900px) {
   .op-location__grid { grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: start; }
-  .op-location__map .cc-map { height: 100%; min-height: 420px; }
+  .op-location__map .cc-map { height: 100%; min-height: 520px; }
 }
 
 /* 4. career brief (white) — a numbered asymmetric grid, not stacked headings with red bars */
