@@ -27,13 +27,13 @@
 
 <%
   // "Where are you starting?" — the page's visual centerpiece, moved up right after the hero/facts-band so
-  // it's the first real decision a job seeker is asked to make. A connected vertical path (spine of numbered
-  // nodes + a line), not a bordered-row list: title + description stay real, always-visible text for every
-  // stage (nothing is hover-only — hover/focus/is-active only add emphasis), and each stop is still a real
-  // link to the existing /jobs?stage= filter. Same C.CAREER_STAGES data and copy the shared landing-audiences
-  // partial uses for 'seek' mode. The card for each stop drifts a little further from the spine than the one
-  // before it (>=640px only) so moving down the path also reads as moving forward — the node/line spine itself
-  // stays perfectly straight so it never risks overflow on narrow screens.
+  // it's the first real decision a job seeker is asked to make. A compact rail of connected numbered nodes on
+  // the left selects which stage's detail panel shows on the right (title, a "Start here" tag on the first
+  // stage, description, and a REAL live opportunity count linking to the existing /jobs?stage= filter — same
+  // careerStages data/count query the homepage's "Explore Your Path" cards and the Job Bank's own ?stage=
+  // filter use, routes/seeker.js). Selecting a stage is pure client-side show/hide (public/js/seeker.js) —
+  // every panel is real, always-visible markup with no JS at all (nothing is hidden in the server-rendered
+  // HTML), so a no-JS visitor simply sees all five stages' full detail at once, same as before.
   const STAGE_COPY = { student: 'Part-time and student-friendly work that fits around your studies.', intern_coop: 'Internships and co-ops that turn what you\'re learning into real experience.', graduate: 'Your first full-time role after finishing your studies.', early_career: 'Entry-level and junior roles to build your track record.', skilled: 'Technical, trade and experienced roles that match the skills you\'ve already built.' };
 %>
 <section class="section section--alt" id="starting-point">
@@ -43,18 +43,24 @@
       <h2>Where are you starting?</h2>
       <p class="lead">Youth Futures Canada supports the full journey — not just your first job, but every move after it.</p>
     </div>
-    <ol class="stage-path">
-      <% C.CAREER_STAGES.forEach(([k, n], i) => { %>
-        <li class="stage-path__stop">
-          <a href="/jobs?stage=<%= k %>" class="stage-path__link<%= i === 0 ? ' is-active' : '' %>">
-            <span class="stage-path__node" aria-hidden="true"><%= i + 1 %></span>
-            <span class="stage-path__title"><%= n %></span>
-            <span class="stage-path__desc"><%= STAGE_COPY[k] %></span>
-            <span class="stage-path__arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-      <% }) %>
-    </ol>
+    <div class="stage-picker" data-stage-picker>
+      <ol class="stage-picker__rail">
+        <% careerStages.forEach((s, i) => { %>
+          <li class="stage-picker__stop">
+            <button type="button" class="stage-picker__node<%= i === 0 ? ' is-active' : '' %>" data-stage-btn="<%= i %>" aria-pressed="<%= i === 0 ? 'true' : 'false' %>" aria-controls="stage-panel-<%= i %>"><span aria-hidden="true"><%= i + 1 %></span><span class="visually-hidden"><%= s.name %></span></button>
+          </li>
+        <% }) %>
+      </ol>
+      <div class="stage-picker__panels">
+        <% careerStages.forEach((s, i) => { %>
+          <div class="stage-picker__panel" id="stage-panel-<%= i %>" data-stage-panel="<%= i %>">
+            <p class="stage-picker__title"><%= s.name %><% if (i === 0) { %> <span class="stage-picker__tag">Start here</span><% } %></p>
+            <p class="stage-picker__desc"><%= STAGE_COPY[s.key] %></p>
+            <a class="stage-picker__cta" href="/jobs?stage=<%= s.key %>"><%= s.n %> opportunit<%= s.n === 1 ? 'y' : 'ies' %> →</a>
+          </div>
+        <% }) %>
+      </div>
+    </div>
   </div>
 </section>
 
