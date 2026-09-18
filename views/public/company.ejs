@@ -41,21 +41,28 @@
       </dl>
     </section>
 
-    <%# ---------- Where you could work — the real map, larger and integrated, no bordered card. ---------- %>
+    <%# ---------- Where you could work — an editorial split: the real map (~60%) beside the existing locations
+         as numbered destinations (~40%), not a full-width map with a plain link list underneath. ---------- %>
     <% if (coLocations.length) { %>
+      <% const NUM_WORDS = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']; const placeWord = NUM_WORDS[coLocations.length] || coLocations.length; %>
       <section class="co-where" aria-labelledby="co-loc-h">
         <p class="eyebrow">Where you could work</p>
-        <h2 id="co-loc-h">Location<%= coLocations.length === 1 ? '' : `s (${coLocations.length})` %></h2>
-        <% if (mapMarkers.length) { %>
-          <div class="cc-map co-where__map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
-        <% } else { %>
-          <p class="small muted">Map unavailable — use the links below.</p>
-        <% } %>
-        <ul class="co-locations">
-          <% coLocations.forEach(l => { %>
-            <li><% if (l.label) { %><span class="co-locations__label"><%= l.label %></span><% } %><span><%= h.fullAddress(l) %></span><% if (l.is_default && coLocations.length > 1) { %><span class="small muted">(main)</span><% } %><a class="small" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow">Open in Google Maps ↗</a></li>
-          <% }) %>
-        </ul>
+        <h2 id="co-loc-h"><%= placeWord %> place<%= coLocations.length === 1 ? '' : 's' %> to start.</h2>
+        <div class="co-where__grid">
+          <% if (mapMarkers.length) { %>
+            <div class="cc-map co-where__map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
+          <% } else { %>
+            <p class="small muted">Map unavailable — use the links below.</p>
+          <% } %>
+          <ol class="co-loc-list">
+            <% coLocations.forEach(l => { %>
+              <li>
+                <p class="co-loc-list__addr"><% if (l.label) { %><span class="co-locations__label"><%= l.label %></span><% } %><span><%= h.fullAddress(l) %></span><% if (l.is_default && coLocations.length > 1) { %> <span class="small muted">(main)</span><% } %></p>
+                <a class="co-loc-list__link" href="<%= gmapsUrl(l) %>" target="_blank" rel="noopener nofollow">Open in Google Maps →</a>
+              </li>
+            <% }) %>
+          </ol>
+        </div>
       </section>
     <% } %>
 
@@ -75,10 +82,12 @@
   </div>
 </div>
 
-<%# ---------- Final CTA — the same sitewide "next move" close used on the job detail page (op-final). ---------- %>
-<section class="op-final" aria-labelledby="co-final-h">
+<%# ---------- Final CTA — the same sitewide "next move" close used on the job detail page (op-final), a
+     shorter/compact variant with a company-specific line instead of the job page's kicker. ---------- %>
+<section class="op-final op-final--compact" aria-labelledby="co-final-h">
   <div class="container op-final__inner">
     <h2 id="co-final-h">Ready for your next move?</h2>
-    <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore more opportunities →</a>
+    <p class="op-final__lead">Explore the opportunities waiting at <%= companyName %>.</p>
+    <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore opportunities →</a>
   </div>
 </section>

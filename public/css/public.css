@@ -492,6 +492,10 @@
 .op-final h2 { margin: 0; color: #fff; max-width: 16ch; }
 .op-final__closed { color: color-mix(in srgb, #fff 80%, transparent); }
 .op-final__closed a { color: #fff; }
+/* company page's shorter/compact variant of the same close — a company-specific line instead of the job
+   page's kicker, and less block padding so it reads as a brief, editorial close rather than a full section. */
+.op-final--compact { padding-block: 40px; }
+.op-final__lead { margin: -8px 0 0; max-width: 46ch; color: color-mix(in srgb, #fff 82%, transparent); }
 
 .related__block + .related__block { margin-top: 40px; }
 
@@ -520,17 +524,32 @@ body.has-applybar { padding-bottom: 84px; }
 .co-stack { display: grid; gap: 48px; }
 .co-meet { display: grid; gap: 16px; max-width: 900px; }
 .co-meet__facts { max-width: 640px; padding-top: 20px; border-top: 1px solid var(--kds-border); }
-.co-where { display: grid; gap: 16px; padding-top: 40px; border-top: 1px solid var(--kds-border); }
+.co-where { display: grid; gap: 4px; padding-top: 40px; border-top: 1px solid var(--kds-border); }
 .co-where h2 { margin: 0; }
-.co-where__map { height: 400px; }
-.co-locations { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; font-size: .9375rem; max-width: 640px; }
-.co-locations li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
-.co-locations__label { font-weight: 600; }
+.co-where__grid { display: grid; gap: 24px; margin-top: 20px; }
+.co-where__map { height: 320px; }
+/* numbered destinations beside the map — thin hairline separators, no card, no shadow */
+.co-loc-list { list-style: none; counter-reset: coloc; margin: 0; padding: 0; }
+.co-loc-list li { counter-increment: coloc; position: relative; padding: 16px 0 16px 40px; border-top: 1px solid var(--kds-border); }
+.co-loc-list li:first-child { border-top: 0; padding-top: 0; }
+.co-loc-list li::before { content: counter(coloc, decimal-leading-zero); position: absolute; left: 0; top: 16px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-red); }
+.co-loc-list li:first-child::before { top: 0; }
+.co-loc-list__addr { margin: 0 0 6px; font-size: .9375rem; font-weight: 500; overflow-wrap: anywhere; }
+.co-locations__label { font-weight: 700; color: var(--cc-navy); margin-right: 6px; }
+.co-loc-list__link { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: .875rem; color: var(--cc-red); text-decoration: none; }
+.co-loc-list__link:hover { color: var(--cc-navy); }
 .co-jobs { padding-top: 40px; border-top: 1px solid var(--kds-border); }
 .co-jobs .section__head { margin-bottom: 16px; }
 .co-jobs .section__head h2 strong { color: var(--cc-red); }
 .co-jobs .empty { display: grid; gap: 8px; justify-items: center; }
-@media (min-width: 900px) { .co-where__map { height: 480px; } }
+@media (min-width: 900px) {
+  .co-where__grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; gap: 40px; }
+  .co-where__map { height: 440px; }
+}
+/* the page's own navy CTA is its last section, immediately before the (also navy) shared footer — the
+   sitewide .site-footer margin-top otherwise shows as a stray white seam between the two. Scoped to this page
+   only; the footer's own design/spacing on every other page is untouched. */
+body.page-company .site-footer { margin-top: 0; }
 
 /* ---------- print (the printable sheet itself is /css/print.css, media="print") ---------- */
 .print-only { display: none !important; }
