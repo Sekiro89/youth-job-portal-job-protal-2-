@@ -256,17 +256,24 @@
 .dest-stats { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--sp-6); flex: none; }
 .dest-stats strong { display: block; font: 800 1.75rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .dest-stats span { font-size: .75rem; color: var(--kds-fg-muted); }
-.dest-map { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: var(--map-border); }
-.dest-map li { background: var(--map-bg); }
-.dest-map a { display: flex; align-items: center; gap: var(--sp-3); padding: 16px 18px; text-decoration: none; color: var(--cc-ink); }
-.dest-map__pin { flex: none; width: calc(8px + 10px * var(--weight, 0)); height: calc(8px + 10px * var(--weight, 0)); border-radius: 50%; background: var(--map-marker); }
-.dest-map__pin--empty .dest-map__pin { background: var(--cc-line-strong); }
-.dest-map__name { flex: 1 1 auto; font-weight: 700; color: var(--map-label); }
-.dest-map__count { flex: none; font: 800 .9375rem/1 var(--cc-font-display); color: var(--cc-ink-muted); }
-.dest-map li:hover { background: #fff; }
-.dest-map li:hover .dest-map__pin { background: var(--map-marker-active); }
-@media (min-width: 640px) { .dest-map { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1024px) { .dest-map { grid-template-columns: repeat(5, 1fr); } }
+/* "Build your route" — Start + five career-stage stops, a route not a province grid. Vertical, connected by a
+   thin calc()-height line (mobile); an arrow-separated horizontal route at 900px+ — one ::after pseudo-element
+   doubles as the absolute vertical line on mobile and a static arrow glyph on desktop. */
+.route-path { list-style: none; margin: var(--sp-7) 0 0; padding: 0; display: grid; gap: 0; max-width: 640px; }
+.route-path li { position: relative; display: flex; align-items: center; gap: 14px; padding-bottom: 22px; }
+.route-path li:last-child { padding-bottom: 0; }
+.route-path li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 38px; width: 2px; height: calc(100% - 38px + 22px); background: var(--cc-line-strong); }
+.route-path__marker { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #fff; border: 2px solid var(--cc-line-strong); color: var(--cc-navy); font: 800 .8125rem/1 var(--cc-font-display); }
+.route-path__marker--start { background: var(--cc-navy); border-color: var(--cc-navy); }
+.route-path__label { font: 800 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
+.route-path__name { font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); text-decoration: none; }
+.route-path__name:hover { color: var(--cc-red); }
+.route-path__cta { margin: var(--sp-6) 0 0; }
+@media (min-width: 900px) {
+  .route-path { display: flex; flex-wrap: wrap; align-items: center; max-width: none; }
+  .route-path li { padding-bottom: 0; padding-right: 26px; }
+  .route-path li:not(:last-child)::after { content: "→"; position: static; width: auto; height: auto; margin-left: 12px; background: none; color: var(--cc-line-strong); font: 800 1.125rem/1 var(--cc-font-display); }
+}
 
 .how-h__links { margin: var(--sp-6) 0 0; padding-top: var(--sp-5); border-top: 1px solid var(--kds-border); }
 .how-h__links a { color: var(--cc-navy); font-weight: 600; }

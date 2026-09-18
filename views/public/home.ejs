@@ -114,31 +114,35 @@
   </div>
 </section>
 
-<section class="section" aria-labelledby="dest-h">
+<%# ---------- 03 — Build your route: a career-path route (Start + the same five career stages as "02 —
+     Explore" above), replacing the old province browse-grid. Thin connecting line + numbered stops on mobile;
+     an arrow-separated route on desktop. Same careerStages data/counts — no new query, no province data used. ---------- %>
+<section class="section" aria-labelledby="route-h">
   <div class="container">
     <div class="section__head section__head--split">
       <div>
-        <p class="eyebrow">03 — Discover Canada</p>
-        <h2 id="dest-h">Your next step could be anywhere.</h2>
-        <p class="lead">Every posting shows exactly where the work is — one province, one city at a time.</p>
+        <p class="eyebrow">03 — Build your route</p>
+        <h2 id="route-h">There isn't one way into a career.</h2>
+        <p class="lead">Your first opportunity can lead somewhere completely different. Explore the paths available at every stage of your journey.</p>
       </div>
       <ul class="dest-stats" aria-label="Youth Futures Canada, by the numbers">
         <li><strong>13</strong><span>provinces &amp; territories</span></li>
         <li><strong><%= categories.length %></strong><span>industries hiring</span></li>
       </ul>
     </div>
-    <ul class="dest-map" aria-label="Provinces and territories with open jobs">
-      <% const maxN = Math.max(1, ...provinces.map(p => p.n)); %>
-      <% provinces.slice().sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).forEach(p => { %>
-        <li class="<%= p.n ? '' : 'dest-map__pin--empty' %>" style="--weight: <%= (p.n / maxN).toFixed(2) %>">
-          <a href="/jobs?province=<%= p.key %>">
-            <span class="dest-map__pin" aria-hidden="true"></span>
-            <span class="dest-map__name"><%= p.name %></span>
-            <span class="dest-map__count"><%= p.n %></span>
-          </a>
+    <ol class="route-path" aria-label="Career path stages">
+      <li>
+        <span class="route-path__marker route-path__marker--start" aria-hidden="true"></span>
+        <span class="route-path__label">Start</span>
+      </li>
+      <% careerStages.forEach((s, i) => { %>
+        <li>
+          <span class="route-path__marker" aria-hidden="true"><%= i + 1 %></span>
+          <a class="route-path__name" href="/jobs?stage=<%= s.key %>"><%= s.name %></a>
         </li>
       <% }) %>
-    </ul>
+    </ol>
+    <p class="route-path__cta"><a class="kds-btn kds-btn--accent" href="/jobs">Explore opportunities →</a></p>
   </div>
 </section>
 
