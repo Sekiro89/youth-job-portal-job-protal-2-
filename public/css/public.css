@@ -148,6 +148,11 @@
    stacked job-board list (that treatment lives on /jobs). Same job fields as _job-card.ejs, only the
    composition differs. See _featured-row.ejs. Each card is a fixed-width flex item; the running number and
    lead-entry emphasis both still read fine at card width, so _featured-row.ejs markup is untouched. */
+/* a quiet right-edge fade hints there's more to scroll without any JS/scroll-position tracking — it sits on a
+   non-scrolling wrapper so it stays put at the edge while the cards underneath scroll past it. */
+.feat-directory-wrap { position: relative; }
+.feat-directory-wrap::after { content: ""; position: absolute; top: 4px; right: 0; bottom: 20px; width: 48px; background: linear-gradient(to right, transparent, #fff); pointer-events: none; }
+@media (min-width: 1024px) { .feat-directory-wrap::after { display: none; } }
 .feat-directory { margin: 8px -16px 0; padding: 4px 16px 20px; display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; }
 @media (min-width: 768px) { .feat-directory { margin-inline: -24px; padding-inline: 24px; } }
 .feat-row { position: relative; flex: 0 0 auto; width: min(78vw, 320px); scroll-snap-align: start; display: grid; row-gap: 10px; padding: 24px 22px; background: #fff; border: 1px solid var(--kds-border); border-radius: 6px; }
@@ -249,30 +254,6 @@
 @media (min-width: 900px) {
   .lane__grid { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); grid-template-areas: "head compass" "list compass"; align-items: start; gap: 16px 64px; }
   .lane__compass { align-self: center; }
-}
-
-/* ---------- Canada as a career destination ---------- */
-/* discover canada: pin-weighted province index (map presentation tokens), not a card/list split */
-.dest-stats { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--sp-6); flex: none; }
-.dest-stats strong { display: block; font: 800 1.75rem/1 var(--cc-font-display); color: var(--cc-navy); }
-.dest-stats span { font-size: .75rem; color: var(--kds-fg-muted); }
-/* "Build your route" — Start + five career-stage stops, a route not a province grid. Vertical, connected by a
-   thin calc()-height line (mobile); an arrow-separated horizontal route at 900px+ — one ::after pseudo-element
-   doubles as the absolute vertical line on mobile and a static arrow glyph on desktop. */
-.route-path { list-style: none; margin: var(--sp-7) 0 0; padding: 0; display: grid; gap: 0; max-width: 640px; }
-.route-path li { position: relative; display: flex; align-items: center; gap: 14px; padding-bottom: 22px; }
-.route-path li:last-child { padding-bottom: 0; }
-.route-path li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 38px; width: 2px; height: calc(100% - 38px + 22px); background: var(--cc-line-strong); }
-.route-path__marker { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #fff; border: 2px solid var(--cc-line-strong); color: var(--cc-navy); font: 800 .8125rem/1 var(--cc-font-display); }
-.route-path__marker--start { background: var(--cc-navy); border-color: var(--cc-navy); }
-.route-path__label { font: 800 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
-.route-path__name { font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); text-decoration: none; }
-.route-path__name:hover { color: var(--cc-red); }
-.route-path__cta { margin: var(--sp-6) 0 0; }
-@media (min-width: 900px) {
-  .route-path { display: flex; flex-wrap: wrap; align-items: center; max-width: none; }
-  .route-path li { padding-bottom: 0; padding-right: 26px; }
-  .route-path li:not(:last-child)::after { content: "→"; position: static; width: auto; height: auto; margin-left: 12px; background: none; color: var(--cc-line-strong); font: 800 1.125rem/1 var(--cc-font-display); }
 }
 
 .how-h__links { margin: var(--sp-6) 0 0; padding-top: var(--sp-5); border-top: 1px solid var(--kds-border); }

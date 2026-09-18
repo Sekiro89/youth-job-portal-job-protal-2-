@@ -58,7 +58,6 @@ function jobSummary() { %>
 <div class="container apply-page <%= narrow ? 'container--narrow' : '' %>">
   <header class="app-head">
     <div>
-      <ol class="breadcrumb"><li><a href="/jobs">Find jobs</a></li><li><a href="/jobs/<%= job.slug %>"><%= job.title %></a></li><li>Apply</li></ol>
       <% if (applied) { %>
         <p class="eyebrow">Application sent</p>
         <h1>You already applied for <%= job.title %></h1>

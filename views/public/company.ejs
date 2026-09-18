@@ -4,7 +4,6 @@
 <header class="page-head co-head">
   <div class="container page-head__inner">
     <div>
-      <ol class="breadcrumb"><li><a href="/">Home</a></li><li><a href="/jobs">Jobs</a></li><li aria-current="page"><%= companyName %></li></ol>
       <div class="co-head__row">
         <% if (co.logo_path) { %><img class="co-logo co-logo--img" src="/logos/<%= co.id %>" alt="<%= companyName %> logo" width="64" height="64"><% } else { %><span class="co-logo co-logo--mark" aria-hidden="true"><%= (companyName || '?').trim()[0].toUpperCase() %></span><% } %>
         <div class="co-head__text">
