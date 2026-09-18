@@ -1,5 +1,9 @@
-<%# One full-width result row on /jobs (UX standard §6). Styles: /css/jobs-search.css (.jrow). Marker clicks on the map
-    find the row by data-slug (public/js/jobs-search.js). %>
+<%# One editorial "next move" row — shared by /jobs (UX standard §6) and the job detail page's "More/Similar
+    opportunities". Styles: /css/jobs-search.css (.jrow). Marker clicks on the map find the row by data-slug
+    (public/js/jobs-search.js). Same job fields as before — title, employer, location(+extra), distance, salary,
+    job type, arrangement, hours, category, posted date, posting ID, Job Bank reference badge — only the
+    composition changed: a meta line of plain dot-separated facts instead of chip badges, and an explicit
+    "Explore →" affordance instead of an implicit whole-row click target with no visible cue. %>
 <% const extra = (job.location_count || 1) - 1; const hours = h.formatHours(job); const km = job.distance_km == null ? '' : (job.distance_km < 1 ? '< 1 km' : `≈ ${Math.round(job.distance_km)} km`); const isRef = job.source === 'jobbank'; %>
 <article class="jrow<%= isRef ? ' jrow--ref' : '' %>" data-job-row data-job-id="<%= job.id %>" data-slug="<%= job.slug %>">
   <div class="jrow__main">
@@ -10,15 +14,16 @@
       <span class="jrow__loc"><%= h.location(job) %><% if (extra > 0) { %> <span class="jrow__more">+<%= extra %> more</span><% } %></span>
       <% if (km) { %><span class="jrow__dist" title="Distance to the nearest work location"><%= km %></span><% } %>
     </p>
-    <ul class="jrow__chips" aria-label="Details">
-      <li><span class="badge"><%= h.jobTypeName(job.job_type) %></span></li>
-      <li><span class="badge"><%= h.workArrangementName(job.work_arrangement) %></span></li>
-      <% if (hours) { %><li><span class="badge"><%= hours %></span></li><% } %>
-    </ul>
+    <p class="jrow__tags">
+      <span><%= h.jobTypeName(job.job_type) %></span><span class="jrow__sep" aria-hidden="true">·</span><span><%= h.workArrangementName(job.work_arrangement) %></span>
+      <% if (hours) { %><span class="jrow__sep" aria-hidden="true">·</span><span><%= hours %></span><% } %>
+      <span class="jrow__sep" aria-hidden="true">·</span><span class="jrow__cat"><%= h.categoryName(job.category) %></span>
+      <% if (isRef) { %><span class="jrow__sep" aria-hidden="true">·</span><span class="jrow__ref">Job Bank</span><% } %>
+    </p>
   </div>
   <div class="jrow__side">
     <p class="jrow__salary"><%= h.formatSalary(job) %></p>
-    <p class="jrow__meta"><span>Posted <%= h.timeAgo(job.published_at) %></span><span class="jrow__sep" aria-hidden="true">·</span><span><%= h.categoryName(job.category) %></span></p>
-    <% if (job.public_id) { %><p class="jrow__pid" title="Quote this ID when you contact an employer or our support team">Posting ID <span><%= job.public_id %></span></p><% } %>
+    <p class="jrow__meta">Posted <%= h.timeAgo(job.published_at) %><% if (job.public_id) { %><span class="jrow__sep" aria-hidden="true">·</span><span class="jrow__pid" title="Quote this ID when you contact an employer or our support team">ID <%= job.public_id %></span><% } %></p>
+    <span class="jrow__explore" aria-hidden="true">Explore →</span>
   </div>
 </article>

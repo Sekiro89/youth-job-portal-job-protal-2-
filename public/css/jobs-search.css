@@ -1,17 +1,20 @@
-/* Youth Futures Canada — /jobs (Career Journey redesign). Tokens only, mobile first.
-   Loaded AFTER public.css + maps.css. Every class here is prefixed jsearch / jrow / jchip / jpager / jseg / jview
-   (plus the page-specific jobs-hero / jobs-map-section / jobs-index) so the legacy .jobs-layout / .filters /
-   .results rules in public.css + maps.css no longer apply to this page.
+/* Youth Futures Canada — /jobs, a career-discovery experience (this is the "FIND" stage of Start → Explore →
+   Find → Apply → Move). Tokens only, mobile first. Loaded AFTER public.css + maps.css. Every class here is
+   prefixed jsearch / jrow / jchip / jpager / jseg / jview / career-nav (plus the page-specific jobs-hero /
+   jobs-map-section / jobs-index) so the legacy .jobs-layout / .filters / .results rules in public.css + maps.css
+   no longer apply to this page.
 
-   Composition (Discover → Explore → Find → Apply): "01 — Discover" light hero (journey indicator + search/
-   filters) → "02 — Explore" a full-width map discovery section, now with a live count sitting on the map itself
-   (.jsearch__map-stat) rather than a caption underneath it, so the map reads as the page's major moment → "03 —
-   Find" an editorial job index, deliberately calmer than the map section (thin hairline, smaller heading) since
-   it's the secondary layer you land in once you've found something on the map. "Apply" happens on the job page
-   next. The map is no longer a sidebar beside the results; it is its own section, shown/hidden by the exact same
-   class toggles as before (.jobs-map-on/off at >=768, .jsearch.is-map on phone) — only what those classes affect
-   has changed. jobs-search.js is untouched: every element it queries by data-attribute or class still exists
-   with the same name (.jsearch__map-stat is new and purely decorative — jobs-search.js never touches it).
+   Composition: hero (sitewide journey route + "Find what's next") → the search form, reframed in three tiers —
+   Search (keyword + location, the primary action) → Discover (.career-nav, the five career-compass areas as a
+   navigation layer) → Refine (the existing category/province/more-filters row, now visually quieter and
+   explicitly labelled) → a full-bleed, edge-to-edge map ("Explore Canada" — a discovery canvas, not a bordered
+   widget in a card) with a live count sitting on the map itself (.jsearch__map-stat) → an editorial "Your next
+   moves" job index, deliberately calmer than the map section since it's the secondary layer you land in once
+   you've found something on it. The map is shown/hidden by the exact same class toggles as before (.jobs-map-
+   on/off at >=768, .jsearch.is-map on phone) — only what those classes affect has changed. jobs-search.js is
+   untouched: every element it queries by data-attribute or class still exists with the same name. The career-
+   area tabs are pure client-side show/hide of existing category chips (jobs-search.js, new self-contained
+   block) — every chip is a real, unmodified /jobs?category= link; no filtering logic changed.
 
    Breakpoints: <768 phone (filters = full-screen drawer, List | Map switch) · 768–1023 tablet (bar + popover,
    map toggle) · >=1024 desktop (bar + popover, map toggle) — the filter bar stays horizontal at every width
@@ -25,6 +28,7 @@
 .jobs-hero__title { margin: 0 0 10px; font-size: var(--yf-display-lg); max-width: 14ch; }
 .jobs-hero .lead { margin: 0; max-width: 56ch; }
 .jobs-hero__search { background: #fff; border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); margin-top: var(--sp-6); padding: var(--sp-5) 0; }
+.jobs-hero__search > .container > .eyebrow { margin-bottom: var(--sp-3); }
 .jsearch__total { margin: 0; }
 
 /* ---------- filter bar (the form) ---------- */
@@ -49,6 +53,9 @@
 .jsearch__more-grid { display: grid; gap: 16px; }
 .jsearch__more-foot { display: none; }
 .jsearch__chev { transition: transform .15s; }
+/* "Refine your search" — labels the secondary (distance/category/province/more) row as a distinct, quieter
+   tier under the primary keyword+location search, without touching a single field's name or behaviour. */
+.jsearch__refine-label { margin: 4px 0 0; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
 
 /* phone drawer = the panel, full screen, above the sticky header (z 500) */
 .jsearch__panel { display: none; }
@@ -79,6 +86,22 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .jchip__x { font-size: 1.1rem; line-height: 1; }
 .jchip--clear { background: transparent; border: 1px solid var(--kds-border); color: var(--kds-fg-muted); }
 
+/* ---------- discover: the five career-compass areas (C.CAREER_PATHS, same data/copy as the homepage's "Find
+   your lane") as a navigation layer, not a generic category dropdown. Plain text tabs (never another card
+   grid) filter which of that area's real categories show as chips underneath — client-side only; every chip
+   is an unmodified /jobs?category= link, so JS-off visitors simply see all five groups of chips at once. ---------- */
+.career-nav { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--kds-border); }
+.career-nav__label { margin: 0 0 10px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.career-nav__tabs { display: flex; flex-wrap: wrap; gap: 4px 2px; }
+.career-nav__tab { border: 0; border-bottom: 2px solid transparent; background: none; padding: 8px 12px 8px 0; margin-right: 14px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--kds-fg-muted); cursor: pointer; }
+.career-nav__tab:hover { color: var(--cc-navy); }
+.career-nav__tab.is-active { color: var(--cc-red); border-bottom-color: var(--cc-red); }
+.career-nav__chips { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.career-nav__chips--hidden { display: none; }
+.career-nav__chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 14px; border: 1px solid var(--kds-border); border-radius: 999px; color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; }
+.career-nav__chip:hover { border-color: var(--cc-red); color: var(--cc-red); }
+.career-nav__chip.is-current { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
+
 /* ---------- explore canada: the map as its own full-width discovery section, hidden by the same rules as
    before (jobs-map-on/off at >=768, .jsearch.is-map on phone) — never a small rectangle beside the list. ---------- */
 .jobs-map-section { display: none; background: var(--map-bg); border-bottom: 1px solid var(--kds-border); padding: var(--sp-7) 0; }
@@ -91,13 +114,15 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .jview button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
 .jsearch__map-toggle { display: none; gap: 6px; white-space: nowrap; }
 html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !important; }
+/* full-bleed discovery canvas: no border, no radius, no card. The section's own --map-bg background and the
+   stat overlay below carry all the visual weight instead of a boxed rounded-rectangle widget. */
 .jsearch__map { position: relative; min-width: 0; }
-.jsearch__canvas { height: 360px; border-radius: var(--yf-radius-md, 8px); border: 1px solid var(--map-border); }
-.jsearch__map-note { margin: 10px 0 0; }
+.jsearch__canvas { display: block; width: 100%; height: 360px; }
+.jsearch__map-note { margin: 14px auto 0; padding-top: 0; }
 /* the "signature" touch that ties the map to the discovery narrative: a live count sitting on the map itself,
    not a caption underneath it. Purely decorative (aria-hidden) — the real, JS-updated status line for screen
    readers is .jsearch__map-note below, untouched so jobs-search.js can keep rewriting its text on pin loads. */
-.jsearch__map-stat { position: absolute; z-index: 5; top: 16px; left: 16px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--map-border); border-radius: var(--yf-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
+.jsearch__map-stat { position: absolute; z-index: 5; top: 20px; left: 20px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--map-border); border-radius: var(--yf-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
 .jsearch__map-stat strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .jsearch__map-stat span { font: 600 .75rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
 
@@ -105,7 +130,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 @media (max-width: 767px) {
   .js .jsearch.is-map .jobs-map-section { display: block; position: sticky; top: var(--cc-header-h); z-index: 40; padding: 0; border-bottom: 0; }
   .js .jsearch.is-map .jobs-map-section__head { display: none; }
-  .js .jsearch.is-map .jsearch__canvas { height: calc(100dvh - var(--cc-header-h)); min-height: 360px; border-radius: 0; border: 0; }
+  .js .jsearch.is-map .jsearch__canvas { height: calc(100dvh - var(--cc-header-h)); min-height: 360px; }
   .js .jsearch.is-map .jsearch__map-note { display: none; }
   .js .jsearch.is-map .jsearch__map-stat { display: none; }
   .js .jsearch.is-map .jobs-index { display: none; }
@@ -140,13 +165,19 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow__sep { color: var(--kds-fg-faint); }
 .jrow__more { font-size: .8125rem; white-space: nowrap; }
 .jrow__dist { color: var(--cc-navy); font-weight: 700; font-size: .875rem; white-space: nowrap; }
-.jrow__chips { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 12px; }
-.jrow__chips .badge { background: none; border: 0; padding: 0; color: var(--kds-fg-muted); font-weight: 600; font-size: var(--yf-job-meta-size, .8125rem); text-transform: uppercase; letter-spacing: .04em; }
-.jrow__chips .jrow__ref { background: var(--cc-teal-100); color: #16606a; border-color: transparent; font-weight: 600; text-transform: none; padding: 3px 10px; border-radius: 999px; }
+/* plain dot-separated facts, not chip/badge pills — "PART-TIME · ON-SITE · HEALTHCARE", editorial not database */
+.jrow__tags { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; font: 600 var(--yf-job-meta-size, .8125rem)/1.5 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); }
+.jrow__ref { color: #16606a; font-weight: 700; }
 .jrow__side { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
 .jrow__salary { margin: 0; font: 800 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .jrow__meta { margin: 0; font-size: var(--yf-job-meta-size, .8125rem); color: var(--kds-fg-faint); display: flex; flex-wrap: wrap; gap: 2px 6px; }
-.jrow__arrow { display: none; }
+.jrow__pid { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--kds-fg-muted); }
+/* an explicit "Explore →" affordance, always visible (not hover-only — touch devices have no hover) — the
+   whole row is still the click target (.jrow__title a::after), this just gives that a visible cue */
+.jrow__explore { margin-top: 6px; font: 700 .8125rem/1 var(--cc-font-display); color: var(--cc-red); transition: transform .15s; }
+@media (prefers-reduced-motion: no-preference) {
+  .jrow:hover .jrow__explore, .jrow:focus-within .jrow__explore { transform: translateX(4px); }
+}
 @media (min-width: 640px) {
   .jrow { grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: 20px; }
   .jrow__side { flex-direction: column; align-items: flex-end; text-align: right; gap: 6px; max-width: 240px; }
@@ -171,9 +202,10 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
   /* the panel dissolves: its fields become grid items of the bar */
   .js .jsearch__panel, .js .jsearch__panel.is-open, .jsearch__panel, .jsearch__panel-body { display: contents; }
   .jsearch__panel-head, .jsearch__panel-foot { display: none !important; }
-  .jsearch__form { grid-template-columns: repeat(6, minmax(0, 1fr)) auto; grid-template-areas: "kw kw kw near near near go" "radius radius cat cat prov prov more"; }
+  .jsearch__form { grid-template-columns: repeat(6, minmax(0, 1fr)) auto; grid-template-areas: "kw kw kw near near near go" "refine refine refine refine refine refine refine" "radius radius cat cat prov prov more"; }
   .jsearch__kw { grid-area: kw; }
   .jsearch__near { grid-area: near; }
+  .jsearch__refine-label { grid-area: refine; margin-top: 6px; }
   .jsearch__radius { grid-area: radius; }
   .jsearch__cat { grid-area: cat; }
   .jsearch__prov { grid-area: prov; }
@@ -205,7 +237,3 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 
 /* ---------- print ---------- */
 @media print { .jsearch__form, .jobs-map-section, .jpager { display: none !important; } }
-
-/* Posting ID: small, quotable, never competes with the salary */
-.jrow__pid { margin: 0; font-size: .75rem; color: var(--kds-fg-faint); letter-spacing: .01em; }
-.jrow__pid span { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--kds-fg-muted); }

@@ -234,3 +234,26 @@
 
   applyMapState();
 })();
+
+/* "Discover a career area" (.career-nav): clicking one of the five career-compass area tabs shows only that
+ * area's category chips underneath. Pure client-side show/hide — every chip is a real, unmodified
+ * /jobs?category= link (same filtering as the rest of this page); this never adds, removes or changes what a
+ * chip click does once you get there. Independent of the block above, so it works even if the map/form
+ * lookups up there ever bail out early. */
+(function () {
+  'use strict';
+  var wrap = document.querySelector('[data-career-nav-wrap]');
+  if (!wrap) return;
+  var tabs = Array.prototype.slice.call(wrap.querySelectorAll('[data-career-cat]'));
+  var groups = Array.prototype.slice.call(wrap.querySelectorAll('[data-career-group]'));
+  if (!tabs.length || !groups.length) return;
+  function show(i) {
+    groups.forEach(function (g) { g.classList.toggle('career-nav__chips--hidden', g.getAttribute('data-career-group') !== i); });
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('data-career-cat') === i;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.getAttribute('data-career-cat')); }); });
+})();

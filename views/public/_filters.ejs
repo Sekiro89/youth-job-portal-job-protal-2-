@@ -41,6 +41,8 @@
         <p class="jsearch__near-status small" id="near-status" role="status" aria-live="polite" data-near-status><% if (browserPoint) { %>Using your current location.<% } else if (f.near_unresolved) { %><span class="is-error">We couldn't find “<%= f.near %>” — try a city and province.</span><% } %></p>
       </div>
 
+      <p class="jsearch__refine-label">Refine your search</p>
+
       <div class="field jsearch__radius">
         <label class="jsearch__label" for="f-radius">Distance</label>
         <select class="input" id="f-radius" name="radius_km" aria-label="Search radius">
