@@ -507,17 +507,23 @@ body.has-applybar { padding-bottom: 84px; }
 .co-logo--img { object-fit: contain; background: #fff; border: 1px solid var(--kds-border); padding: 4px; }
 .co-head__legal { margin: 0; }
 .co-head__meta { overflow-wrap: anywhere; }
-.co-stack { display: grid; gap: 24px; }
-.co-about, .co-map { display: grid; gap: 12px; }
-.co-about h2, .co-map h2 { margin: 0; }
-.co-about .facts { padding-top: 12px; }
-.co-locations { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: .9375rem; }
+/* "Meet the employer → where you could work → your opportunities here": open editorial sections (no bordered
+   card around any of them), separated by generous whitespace + a thin rule, echoing the job detail page's
+   chapter rhythm (.op-brief) rather than a stacked-cards company profile. */
+.co-stack { display: grid; gap: 48px; }
+.co-meet { display: grid; gap: 16px; max-width: 900px; }
+.co-meet__facts { max-width: 640px; padding-top: 20px; border-top: 1px solid var(--kds-border); }
+.co-where { display: grid; gap: 16px; padding-top: 40px; border-top: 1px solid var(--kds-border); }
+.co-where h2 { margin: 0; }
+.co-where__map { height: 400px; }
+.co-locations { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; font-size: .9375rem; max-width: 640px; }
 .co-locations li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .co-locations__label { font-weight: 600; }
-.co-jobs { margin-top: 8px; }
-.co-jobs .section__head { margin-bottom: 12px; }
+.co-jobs { padding-top: 40px; border-top: 1px solid var(--kds-border); }
+.co-jobs .section__head { margin-bottom: 16px; }
+.co-jobs .section__head h2 strong { color: var(--cc-red); }
 .co-jobs .empty { display: grid; gap: 8px; justify-items: center; }
-@media (min-width: 768px) { .co-stack { gap: 28px; } }
+@media (min-width: 900px) { .co-where__map { height: 480px; } }
 
 /* ---------- print (the printable sheet itself is /css/print.css, media="print") ---------- */
 .print-only { display: none !important; }

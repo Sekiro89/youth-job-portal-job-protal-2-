@@ -496,7 +496,7 @@ router.get('/companies/:slug', async (req, res, next) => {
     res.render('public/company', {
       title: `${companyName} — jobs and company profile`,
       metaDescription: `${companyName}${industryText ? ' (' + industryText + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Youth Futures Canada. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
-      extraCss: CSS, extraJs: JS, bodyClass: 'page-company',
+      extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS, bodyClass: 'page-company',
       jsonLd: [org],
       co, jobs, url, companyName, address, industryText, coLocations, mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
     });

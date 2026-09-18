@@ -22,11 +22,13 @@
 </header>
 
 <div class="section">
-  <div class="container container--prose co-stack">
-    <section class="card co-about" aria-labelledby="co-about-h">
-      <h2 id="co-about-h">About <%= companyName %></h2>
+  <div class="container co-stack">
+    <%# ---------- Meet the employer — an open editorial section, not a bordered "About" card. ---------- %>
+    <section class="co-meet" aria-labelledby="co-about-h">
+      <p class="eyebrow">Meet the employer</p>
+      <h2 id="co-about-h" class="visually-hidden">About <%= companyName %></h2>
       <% if (co.description) { %><div class="prose"><%- h.paragraphs(co.description) %></div><% } else { %><p class="muted">This employer has not added a description yet.</p><% } %>
-      <dl class="facts facts--cols">
+      <dl class="facts facts--cols co-meet__facts">
         <% if (legalNote) { %>
           <div><dt>Operating name</dt><dd><%= companyName %></dd></div>
           <div><dt>Legal name</dt><dd><%= co.company_name %></dd></div>
@@ -39,11 +41,13 @@
       </dl>
     </section>
 
+    <%# ---------- Where you could work — the real map, larger and integrated, no bordered card. ---------- %>
     <% if (coLocations.length) { %>
-      <section class="card co-map" aria-labelledby="co-loc-h">
+      <section class="co-where" aria-labelledby="co-loc-h">
+        <p class="eyebrow">Where you could work</p>
         <h2 id="co-loc-h">Location<%= coLocations.length === 1 ? '' : `s (${coLocations.length})` %></h2>
         <% if (mapMarkers.length) { %>
-          <div class="cc-map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
+          <div class="cc-map co-where__map" data-map data-zoom="13" data-markers="<%= JSON.stringify(mapMarkers) %>" data-empty="Map unavailable" role="region" aria-label="Map of <%= companyName %> locations"></div>
         <% } else { %>
           <p class="small muted">Map unavailable — use the links below.</p>
         <% } %>
@@ -55,13 +59,26 @@
       </section>
     <% } %>
 
+    <%# ---------- Your opportunities here — the same numbered "next move" editorial row used on /jobs and the
+         job detail page's related jobs (views/public/_job-row.ejs), not grey job cards. ---------- %>
     <section class="co-jobs" aria-labelledby="co-jobs-h">
-      <div class="section__head"><h2 id="co-jobs-h"><%= jobs.length %> open job<%= jobs.length === 1 ? '' : 's' %> at <%= companyName %></h2></div>
+      <div class="section__head">
+        <p class="eyebrow">Your opportunities here</p>
+        <h2 id="co-jobs-h"><strong><%= jobs.length %></strong> opportunit<%= jobs.length === 1 ? 'y' : 'ies' %> at <%= companyName %></h2>
+      </div>
       <% if (jobs.length) { %>
-        <div class="jobs-stack"><% jobs.forEach(job => { %><%- include('_job-card', { job }) %><% }) %></div>
+        <div class="jsearch__list"><% jobs.forEach(job => { %><%- include('_job-row', { job }) %><% }) %></div>
       <% } else { %>
         <div class="empty"><p><%= companyName %> has no open positions right now.</p><a class="kds-btn kds-btn--brand" href="/jobs">Browse all jobs</a></div>
       <% } %>
     </section>
   </div>
 </div>
+
+<%# ---------- Final CTA — the same sitewide "next move" close used on the job detail page (op-final). ---------- %>
+<section class="op-final" aria-labelledby="co-final-h">
+  <div class="container op-final__inner">
+    <h2 id="co-final-h">Ready for your next move?</h2>
+    <a class="kds-btn kds-btn--accent kds-btn--lg" href="/jobs">Explore more opportunities →</a>
+  </div>
+</section>
