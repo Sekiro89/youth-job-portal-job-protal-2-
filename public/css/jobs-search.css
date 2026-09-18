@@ -102,11 +102,17 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .career-nav__chip:hover { border-color: var(--cc-red); color: var(--cc-red); }
 .career-nav__chip.is-current { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 
-/* ---------- explore canada: the map as its own full-width discovery section, hidden by the same rules as
-   before (jobs-map-on/off at >=768, .jsearch.is-map on phone) — never a small rectangle beside the list. ---------- */
-.jobs-map-section { display: none; background: var(--map-bg); border-bottom: 1px solid var(--kds-border); padding: var(--sp-7) 0; }
-.jobs-map-section__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: var(--sp-5); }
-.jobs-map-section__head h2 { margin: 0; max-width: 24ch; }
+/* ---------- explore canada: ONE exploration surface — the map (the geographic layer of the journey) and the
+   results (the opportunities found within it) share a single background and a single heading, instead of
+   reading as a map widget stacked on top of a separate job list. .jobs-map-section is still the exact element
+   the map show/hide toggle targets (jobs-map-on/off at >=768, .jsearch.is-map on phone) — only its own former
+   heading moved out, up into .jobs-explore__head, so hiding the map never hides the section intro or the
+   results underneath it. ---------- */
+.jobs-explore { background: var(--map-bg); border-top: 1px solid var(--kds-border); padding-bottom: var(--sp-8); }
+.jobs-explore__head { padding-top: var(--sp-7); max-width: 68ch; }
+.jobs-explore__head h2 { margin: 4px 0 10px; max-width: 20ch; }
+.jobs-explore__head .lead { margin: 0; }
+.jobs-map-section { display: none; padding-top: var(--sp-6); }
 .jsearch__tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .jview { display: inline-flex; border: 1px solid var(--kds-border); border-radius: 6px; overflow: hidden; background: #fff; }
 .jview button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 0; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); cursor: pointer; }
@@ -114,36 +120,36 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .jview button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
 .jsearch__map-toggle { display: none; gap: 6px; white-space: nowrap; }
 html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !important; }
-/* full-bleed discovery canvas: no border, no radius, no card. The section's own --map-bg background and the
-   stat overlay below carry all the visual weight instead of a boxed rounded-rectangle widget. */
+/* full-bleed discovery canvas: no border, no radius, no card — the shared .jobs-explore background and the
+   quiet stat note below carry the visual weight instead of a boxed rounded-rectangle widget. */
 .jsearch__map { position: relative; min-width: 0; }
 .jsearch__canvas { display: block; width: 100%; height: 360px; }
 .jsearch__map-note { margin: 14px auto 0; padding-top: 0; }
-/* the "signature" touch that ties the map to the discovery narrative: a live count sitting on the map itself,
-   not a caption underneath it. Purely decorative (aria-hidden) — the real, JS-updated status line for screen
-   readers is .jsearch__map-note below, untouched so jobs-search.js can keep rewriting its text on pin loads. */
-.jsearch__map-stat { position: absolute; z-index: 5; top: 20px; left: 20px; margin: 0; padding: 10px 18px; background: color-mix(in srgb, #fff 92%, transparent); backdrop-filter: blur(2px); border: 1px solid var(--map-border); border-radius: var(--yf-radius-md, 8px); display: flex; align-items: baseline; gap: 8px; box-shadow: 0 2px 10px rgba(9, 43, 82, .08); }
-.jsearch__map-stat strong { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-navy); }
-.jsearch__map-stat span { font: 600 .75rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
+/* a live count sitting on the map itself, not a caption underneath it — kept deliberately quiet (no border, no
+   shadow, no pill) so it reads as a light label rather than dashboard chrome. Purely decorative (aria-hidden)
+   — the real, JS-updated status line for screen readers is .jsearch__map-note below, untouched so
+   jobs-search.js can keep rewriting its text on pin loads. */
+.jsearch__map-stat { position: absolute; z-index: 5; top: 20px; left: 20px; margin: 0; padding: 8px 14px; background: color-mix(in srgb, #fff 88%, transparent); display: flex; align-items: baseline; gap: 8px; }
+.jsearch__map-stat strong { font: 800 1.375rem/1 var(--cc-font-display); color: var(--cc-navy); }
+.jsearch__map-stat span { font: 600 .6875rem/1.2 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .04em; color: var(--kds-fg-muted); max-width: 8ch; }
 
 /* phone: map section fills the viewport under the header when in Map mode; hidden entirely otherwise */
 @media (max-width: 767px) {
-  .js .jsearch.is-map .jobs-map-section { display: block; position: sticky; top: var(--cc-header-h); z-index: 40; padding: 0; border-bottom: 0; }
-  .js .jsearch.is-map .jobs-map-section__head { display: none; }
+  .js .jsearch.is-map .jobs-explore__head { display: none; }
+  .js .jsearch.is-map .jobs-map-section { display: block; position: sticky; top: var(--cc-header-h); z-index: 40; padding: 0; }
   .js .jsearch.is-map .jsearch__canvas { height: calc(100dvh - var(--cc-header-h)); min-height: 360px; }
   .js .jsearch.is-map .jsearch__map-note { display: none; }
   .js .jsearch.is-map .jsearch__map-stat { display: none; }
   .js .jsearch.is-map .jobs-index { display: none; }
 }
 
-/* ---------- job index: an editorial directory, not a card grid ---------- */
-/* the discovery narrative's third, quieter beat — the map above is the "major moment", this index is the
-   secondary layer you land in once you've found something on it. Deliberately calmer than the map section:
-   a thin hairline instead of the old 2px navy rule, a smaller heading. */
-.jobs-index { padding: var(--sp-7) 0 var(--sp-9); }
+/* ---------- your next moves: an editorial directory, not a card grid — the second half of the same
+   exploration surface as the map above it (same background, no seam), deliberately calmer than the map:
+   a thin hairline instead of a bold rule, a smaller heading. ---------- */
+.jobs-index { padding: var(--sp-7) 0 var(--sp-8); }
 .jobs-index__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px 24px; margin-bottom: var(--sp-5); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--kds-border); }
-.jobs-index__head h2 { margin: 0; font-size: clamp(1.125rem, .5vw + 1rem, 1.375rem); }
-.jobs-index__head h2 strong { color: var(--cc-red); }
+.jobs-index__head h3 { margin: 0; font-size: clamp(1.125rem, .5vw + 1rem, 1.375rem); }
+.jobs-index__head h3 strong { color: var(--cc-red); }
 .jsearch__sort { display: inline-flex; align-items: center; gap: 8px; }
 .jsearch__sort .input { width: auto; min-width: 150px; }
 
@@ -151,7 +157,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow { counter-increment: jrow; position: relative; display: grid; gap: 10px; padding: var(--yf-job-row-padding, 28px 0); padding-left: 56px; border-bottom: 1px solid var(--yf-job-row-border, var(--cc-line-strong)); transition: background .15s, box-shadow .15s; }
 .jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 18px; top: 30px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--yf-job-number-color, var(--cc-red)); letter-spacing: .04em; }
 .jrow:hover { background: var(--cc-navy-50); box-shadow: inset 4px 0 0 var(--cc-red); }
-.jrow.is-active { background: var(--cc-navy-100); box-shadow: inset 4px 0 0 var(--cc-navy); }
+.jrow.is-active { background: var(--cc-red-100); box-shadow: inset 4px 0 0 var(--cc-red); }
 .jrow--ref { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow--ref:hover { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow__main { min-width: 0; display: grid; gap: 6px; }
