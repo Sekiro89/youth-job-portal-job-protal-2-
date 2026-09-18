@@ -14,7 +14,7 @@ const { PUBLIC_WHERE, PUBLIC_ID_RE } = require('../lib/jobs');
 const geo = require('../lib/geocode');
 
 const router = express.Router();
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const CSS = ['/css/public.css', '/css/maps.css'];
 const JS = ['/js/maps.js', '/js/public.js'];   // deferred scripts run in order: CCMaps must exist before public.js wires "Near me"
 const RADII = [10, 25, 50, 100];

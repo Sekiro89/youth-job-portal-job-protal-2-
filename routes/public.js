@@ -10,7 +10,7 @@ const geo = require('../lib/geocode');
 const jd = require('../lib/job-dates');   // application_deadline (Toronto calendar day) + applications_closed
 
 const router = express.Router();
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const CSS = ['/css/public.css', '/css/maps.css'];
 const JS = ['/js/maps.js', '/js/public.js'];   // deferred scripts run in order: CCMaps must exist before public.js wires the search map
 const RADII = [10, 25, 50, 100];
