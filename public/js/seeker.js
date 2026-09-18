@@ -52,25 +52,4 @@
       if (f.files && f.files[0] && f.files[0].size > 5 * 1024 * 1024) { alert('That file is larger than 5 MB. Please choose a smaller ' + what + '.'); f.value = ''; }
     });
   });
-
-  // "Where are you starting?" stage picker (jobseeker landing): a rail of node buttons selects which stage's
-  // panel shows. Pure enhancement — every panel already has its full real content in the DOM with no JS at
-  // all; this only shows/hides whole panels, it never adds, removes or rewrites any stage's text or count.
-  var picker = document.querySelector('[data-stage-picker]');
-  if (picker) {
-    var stageBtns = Array.prototype.slice.call(picker.querySelectorAll('[data-stage-btn]'));
-    var stagePanels = Array.prototype.slice.call(picker.querySelectorAll('[data-stage-panel]'));
-    if (stageBtns.length && stagePanels.length) {
-      var showStage = function (i) {
-        stagePanels.forEach(function (p) { p.classList.toggle('stage-picker__panel--hidden', p.getAttribute('data-stage-panel') !== i); });
-        stageBtns.forEach(function (b) {
-          var on = b.getAttribute('data-stage-btn') === i;
-          b.classList.toggle('is-active', on);
-          b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        });
-      };
-      stageBtns.forEach(function (b) { b.addEventListener('click', function () { showStage(b.getAttribute('data-stage-btn')); }); });
-      showStage(stageBtns[0].getAttribute('data-stage-btn'));
-    }
-  }
 })();

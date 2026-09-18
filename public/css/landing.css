@@ -100,33 +100,36 @@
 }
 
 /* ============================================================================
-   job-seeker "Where are you starting?" stage picker (2026-09-18 pass). A compact rail of connected, numbered
-   node BUTTONS selects which stage's full detail (title, a "Start here" tag on the first stage, description,
-   and a real live opportunity count) shows in the panel beside it — not five rows all spelling out their own
-   description down the page. Selecting a stage is pure client-side show/hide (public/js/seeker.js,
-   [data-stage-btn]/[data-stage-panel]); every panel already carries its full real content with no JS at
-   all — nothing is invented or hidden in the server-rendered HTML, so a no-JS visitor sees all five stages'
-   complete detail at once (same accessibility bar the row-list this replaces already met). Unique class names
-   (`.stage-picker*`) so this cannot collide with `.workflow-chain`, `.landing-journey`, `.proc-flow`,
+   job-seeker "Where are you starting?" stage path (2026-09-18 refinement). ONE connected vertical path — all
+   five stage titles always visible beside their node — where only the active stage expands in place to reveal
+   its description + real opportunity count. Native <details name="career-stage"> (exclusive accordion group,
+   zero JS): opening one natively closes whichever was open, moving the "flare" — same <details>/<summary>
+   pattern already used sitewide for FAQs, so this needs no client-side script at all. Unique class names
+   (`.stage-path*`) so this cannot collide with `.workflow-chain`, `.landing-journey`, `.proc-flow`,
    `.hire-route`, `.network-glyph` or `.client-switch` used/extended elsewhere. ---------------------------- */
-.stage-picker { margin-top: 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: start; max-width: 760px; }
-.stage-picker__rail { list-style: none; margin: 0; padding: 6px 0 0; }
-.stage-picker__stop { position: relative; padding-bottom: 22px; }
-.stage-picker__stop:last-child { padding-bottom: 0; }
-/* explicit calc() height, not top+bottom (which under-measures against this auto-height list — the same
-   issue already found and fixed once on .workflow-chain--vertical), so the line always reaches the next
-   node exactly. */
-.stage-picker__stop:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 40px; width: 2px; height: calc(100% - 40px + 22px); background: var(--cc-line-strong); }
-.stage-picker__node { position: relative; z-index: 1; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #fff; border: 2px solid var(--cc-line-strong); color: var(--cc-navy); font: 800 1rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
-.stage-picker__node:hover { border-color: var(--cc-navy); }
-.stage-picker__node.is-active { background: var(--cc-red); border-color: var(--cc-red); color: #fff; }
-.stage-picker__panels { position: relative; min-width: 0; padding-top: 6px; }
-.stage-picker__panel--hidden { display: none; }
-.stage-picker__title { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font: 800 1.375rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
-.stage-picker__tag { font: 700 .625rem/1 var(--kds-font-sans); letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--cc-red); padding: 5px 10px; border-radius: 999px; }
-.stage-picker__desc { margin: 10px 0 16px; padding-top: 14px; border-top: 1px solid var(--kds-border); color: var(--kds-fg-muted); max-width: 52ch; }
-.stage-picker__cta { display: inline-flex; align-items: center; min-height: 32px; font: 800 1rem/1 var(--cc-font-display); color: var(--cc-red); text-decoration: none; }
-.stage-picker__cta:hover { color: var(--cc-navy); }
+.stage-path { list-style: none; margin: 28px 0 0; padding: 0; max-width: 640px; }
+.stage-path__stop { position: relative; padding-bottom: 4px; }
+.stage-path__stop:last-child { padding-bottom: 0; }
+/* explicit calc() height, not top+bottom (which under-measures against this auto-height list — the same issue
+   already found and fixed once on .workflow-chain--vertical), so the line always reaches the next node exactly
+   regardless of whether the stage above is expanded or collapsed. */
+.stage-path__stop:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 40px; width: 2px; height: calc(100% - 40px + 4px); background: var(--cc-line-strong); }
+.stage-path__details { border-radius: 4px; }
+.stage-path__details summary { cursor: pointer; list-style: none; }
+.stage-path__details summary::-webkit-details-marker { display: none; }
+.stage-path__row { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 12px 8px 0; border-radius: 4px; transition: background-color .15s; }
+.stage-path__details:not([open]) .stage-path__row:hover { background: var(--cc-surface); }
+.stage-path__details[open] .stage-path__row { background: var(--cc-red-100); }
+.stage-path__node { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #fff; border: 2px solid var(--cc-line-strong); color: var(--cc-navy); font: 800 1rem/1 var(--cc-font-display); transition: background-color .15s, border-color .15s, color .15s; }
+.stage-path__details[open] .stage-path__node { background: var(--cc-red); border-color: var(--cc-red); color: #fff; }
+.stage-path__title { flex: 1 1 auto; min-width: 0; font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); transition: font-weight .15s; }
+.stage-path__details[open] .stage-path__title { font-weight: 800; font-size: 1.1875rem; }
+.stage-path__tag { flex: none; font: 700 .625rem/1 var(--kds-font-sans); letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--cc-red); padding: 5px 10px; border-radius: 999px; }
+.stage-path__details:not([open]) .stage-path__tag { display: none; }
+.stage-path__detail { padding: 2px 12px 20px 72px; }
+.stage-path__desc { margin: 0 0 10px; color: var(--kds-fg-muted); max-width: 48ch; }
+.stage-path__cta { display: inline-flex; align-items: center; min-height: 32px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--cc-red); text-decoration: none; }
+.stage-path__cta:hover { color: var(--cc-navy); }
 
 /* ---------- client switch: "Partner account → Client A/B/C", one active at a time — a relationship system,
    not a marketing card grid. Illustrative only (data-client-switch in landing.js toggles .is-active). ---------- */
@@ -338,7 +341,7 @@
 /* =====================================================================================
    Consultant page only — partner hub-and-spoke (class prefix `partner-hub`, owned by this
    page; does not collide with .workflow-chain / .landing-journey / .proc-flow / .hire-route /
-   .stage-picker / .hire-pipeline / .client-switch, which belong to other pages or other
+   .stage-path / .hire-pipeline / .client-switch, which belong to other pages or other
    sections of this one).
 
    Replaces the old small `.network-glyph` hero widget + the separate `.workflow-chain--vertical`
