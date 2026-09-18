@@ -207,14 +207,14 @@
 
 /* ---------- pricing: a price stat beside a compact fact list — not a checklist card ---------- */
 .price-split { display: grid; gap: 2px; grid-template-columns: 1fr; background: var(--kds-border); }
-.price-split__figure { background: var(--cc-navy); color: #fff; padding: 40px 32px; display: grid; gap: 16px; align-content: start; }
+.price-split__figure { background: var(--cc-navy); color: #fff; padding: 40px 32px; display: grid; gap: 16px; align-content: center; justify-items: center; text-align: center; }
 .price-split__figure .eyebrow { margin-bottom: 4px; color: var(--cc-spark); }
 .price-split__figure .eyebrow::before { background: var(--cc-spark); }
-.price-split__amount { margin: 0; font: 800 2.75rem/1 var(--cc-font-display); color: #fff; }
-.price-split__amount span { display: block; margin-top: 8px; font: 500 .875rem/1.3 var(--kds-font-sans); color: color-mix(in srgb, #fff 65%, transparent); text-transform: none; }
+.price-split__amount { margin: 0; font: 800 clamp(3.5rem, 2vw + 3rem, 5rem)/1 var(--cc-font-display); color: #fff; }
+.price-split__amount span { display: block; margin-top: 10px; font: 500 .9375rem/1.3 var(--kds-font-sans); color: color-mix(in srgb, #fff 65%, transparent); text-transform: none; }
 .price-split__total { margin: 0; font-size: .875rem; color: color-mix(in srgb, #fff 78%, transparent); }
 .price-split__total strong { color: #fff; }
-.price-split__figure .kds-btn { margin-top: 10px; }
+.price-split__figure .kds-btn { margin-top: 10px; justify-self: stretch; }
 .price-split__facts { background: var(--cc-surface); padding: 40px 32px; margin: 0; display: grid; gap: 14px; align-content: start; }
 .price-split__facts > div { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--kds-border); font-size: .9375rem; }
 .price-split__facts dt { color: var(--kds-fg-muted); }
