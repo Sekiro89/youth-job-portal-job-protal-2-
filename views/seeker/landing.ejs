@@ -26,15 +26,10 @@
 </div>
 
 <%
-  // "Where are you starting?" — one connected vertical path, all five stage titles always visible; only the
-  // active stage expands in place to reveal its description + real opportunity count (same careerStages
-  // data/count query the homepage's "Explore Your Path" cards and the Job Bank's own ?stage= filter use,
-  // routes/seeker.js). Native <details name="…"> gives the "only one open, clicking another moves the flare"
-  // behaviour with ZERO JavaScript — the browser itself closes the previously-open stage when you open another
-  // (an exclusive accordion group), same <details>/<summary> pattern already used sitewide for FAQs. Where the
-  // `name` attribute isn't supported, every stage's <details> simply behaves independently (more than one can
-  // stay open) — never broken, just not exclusive. A screen reader or keyboard user gets a normal, native
-  // disclosure control; nothing here depends on JS running at all.
+  // "Where are you starting?" — one connected vertical path; all five stages and their descriptions/opportunity
+  // counts are shown at once (same careerStages data/count query the homepage's "Explore Your Path" cards and
+  // the Job Bank's own ?stage= filter use, routes/seeker.js). Static, non-interactive markup — no <details>,
+  // no click-to-expand — a plain hover tint on each row is the only affordance.
   const STAGE_COPY = { student: 'Part-time and student-friendly work that fits around your studies.', intern_coop: 'Internships and co-ops that turn what you\'re learning into real experience.', graduate: 'Your first full-time role after finishing your studies.', early_career: 'Entry-level and junior roles to build your track record.', skilled: 'Technical, trade and experienced roles that match the skills you\'ve already built.' };
 %>
 <section class="section section--alt" id="starting-point">
@@ -47,17 +42,15 @@
     <ol class="stage-path">
       <% careerStages.forEach((s, i) => { %>
         <li class="stage-path__stop">
-          <details class="stage-path__details" name="career-stage"<%= i === 0 ? ' open' : '' %>>
-            <summary class="stage-path__row">
-              <span class="stage-path__node" aria-hidden="true"><%= i + 1 %></span>
-              <span class="stage-path__title"><%= s.name %></span>
-              <% if (i === 0) { %><span class="stage-path__tag">Start here</span><% } %>
-            </summary>
-            <div class="stage-path__detail">
-              <p class="stage-path__desc"><%= STAGE_COPY[s.key] %></p>
-              <a class="stage-path__cta" href="/jobs?stage=<%= s.key %>"><%= s.n %> opportunit<%= s.n === 1 ? 'y' : 'ies' %> →</a>
-            </div>
-          </details>
+          <div class="stage-path__row">
+            <span class="stage-path__node" aria-hidden="true"><%= i + 1 %></span>
+            <span class="stage-path__title"><%= s.name %></span>
+            <% if (i === 0) { %><span class="stage-path__tag">Start here</span><% } %>
+          </div>
+          <div class="stage-path__detail">
+            <p class="stage-path__desc"><%= STAGE_COPY[s.key] %></p>
+            <a class="stage-path__cta" href="/jobs?stage=<%= s.key %>"><%= s.n %> opportunit<%= s.n === 1 ? 'y' : 'ies' %> →</a>
+          </div>
         </li>
       <% }) %>
     </ol>
