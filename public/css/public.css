@@ -77,7 +77,7 @@
 .hero__journey-stops li { display: flex; align-items: center; gap: 12px; position: relative; padding-left: 2px; }
 .hero__journey-stops li:not(:last-child)::after { content: ""; position: absolute; left: calc(var(--node-size) / 2 - 1px); top: 100%; width: 2px; height: 12px; background: #5F7692; }
 .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; flex: none; }
-.hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); }
+.hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-orange); }
 .hero__stop-label { display: flex; align-items: baseline; gap: 8px; font-size: .8125rem; color: color-mix(in srgb, #fff 60%, transparent); }
 .hero__stop-label strong { font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 88%, transparent); }
 .hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
@@ -91,7 +91,7 @@
   .hero__journey-stops { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
   .hero__journey-stops li { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; gap: 10px; transform: translate(-50%, -50%); }
   .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; border: 2px solid var(--cc-navy); flex: none; }
-  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-red) 22%, transparent), 0 0 0 10px color-mix(in srgb, var(--cc-red) 9%, transparent); }
+  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-orange); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-orange) 30%, transparent), 0 0 0 10px color-mix(in srgb, var(--cc-orange) 14%, transparent); }
   .hero__stop-label { display: grid; font-size: .6875rem; line-height: 1.3; color: color-mix(in srgb, #fff 55%, transparent); white-space: nowrap; }
   .hero__stop-label strong { font: 700 .6875rem/1.3 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 82%, transparent); }
   .hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
@@ -234,14 +234,14 @@
 .compass__hub-ring { fill: none; stroke: var(--cc-line-strong); stroke-width: 1; }
 .compass__center { fill: var(--cc-navy); }
 .compass__node { fill: #fff; stroke: var(--cc-navy); stroke-width: 2; transition: fill .15s, stroke .15s, r .15s, opacity .15s; }
-.compass__node.is-active { fill: var(--cc-red); stroke: var(--cc-red); r: 9; }
+.compass__node.is-active { fill: var(--cc-orange); stroke: var(--cc-orange); r: 9; }
 .compass__labels { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
 /* each label is pulled outward from its own node, away from the hub, so it reads as "this branch leads here"
    rather than sitting in the generic slot below the dot — see the per-path rules below. Offsets are kept modest
    (single-digit/low-teens px) because the compass box itself can be nearly viewport-width on small phones, so a
    wide outward pull on the healthcare/business (left/right) labels would run past the page edge. */
 .compass__label { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, 14px); width: max-content; max-width: 86px; font: 700 .8125rem/1.2 var(--kds-font-sans); color: var(--kds-fg-muted); text-align: center; transition: color .15s, opacity .15s, transform .15s; }
-.compass__label.is-active { color: var(--cc-red-700); font-weight: 800; }
+.compass__label.is-active { color: var(--cc-orange-700); font-weight: 800; }
 .compass__label[data-path="technology"] { transform: translate(-50%, calc(-100% - 14px)); }
 .compass__label[data-path="healthcare"] { top: var(--y); transform: translate(calc(-100% - 14px), -50%); max-width: 64px; text-align: right; }
 .compass__label[data-path="business"] { top: var(--y); transform: translate(14px, -50%); max-width: 64px; text-align: left; }
@@ -270,7 +270,7 @@
 .journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
 .journey__step:nth-child(2) .journey__num { background: var(--cc-red-700); }
 .journey__step:nth-child(3) .journey__num { background: var(--cc-teal); }
-.journey__step:nth-child(4) .journey__num { background: var(--cc-orange-700); }
+.journey__step:nth-child(4) .journey__num { background: var(--cc-orange); color: var(--cc-ink); }
 .journey__step:nth-child(5) .journey__num { background: var(--cc-green); }
 .journey__step:nth-child(6) .journey__num { background: var(--cc-spark); color: var(--cc-ink); }
 .journey__step h3 { margin: 6px 0 4px; }
@@ -427,8 +427,11 @@
 .op-brief__row:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 40px; width: 2px; height: calc(100% - 40px + 36px); background: var(--cc-line-strong); }
 .op-brief__marker { position: relative; z-index: 1; }
 .op-brief__num { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 1.0625rem/1 var(--cc-font-display); }
-.op-brief__row:last-child .op-brief__num { background: var(--cc-red); }
-.op-brief__tag { margin: 2px 0 4px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-red-700); }
+.op-brief__row:first-child .op-brief__num { background: var(--cc-orange); color: var(--cc-ink); }
+.op-brief__row:last-child:not(:first-child) .op-brief__num { background: var(--cc-red-700); }
+.op-brief__tag { margin: 2px 0 4px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-navy); }
+.op-brief__row:first-child .op-brief__tag { color: var(--cc-orange-700); }
+.op-brief__row:last-child:not(:first-child) .op-brief__tag { color: var(--cc-red-700); }
 .op-brief__body h2 { margin: 0 0 12px; }
 @media (min-width: 768px) {
   .op-brief__row { grid-template-columns: 56px 1fr; column-gap: 32px; padding-bottom: 44px; }
@@ -441,7 +444,7 @@
 .op-skills__lead { margin: 6px 0 0; }
 .op-skills__grid { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
 .op-skills__item { display: flex; align-items: center; gap: 8px; font: 700 .875rem/1.3 var(--kds-font-sans); letter-spacing: .02em; color: var(--cc-navy); }
-.op-skills__item::before { content: ""; display: block; width: 14px; height: 2px; background: var(--cc-red); flex: none; }
+.op-skills__item::before { content: ""; display: block; width: 14px; height: 2px; background: var(--cc-spark); flex: none; }
 
 /* 6. who you'll work with (white) — a horizontal profile, not a grey company card. Smaller heading scale than
    the job title / THE WORK-FIT-VALUE h2s, so it stays supporting context rather than competing. */

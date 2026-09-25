@@ -15,7 +15,7 @@
 /* job seeker hero — a compact "Start → Experience → Career" progress tag (the full 5-stage version lives below in #stages) */
 .career-track { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .career-track li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.career-track .is-active { color: var(--cc-red-700); }
+.career-track .is-active { color: var(--cc-orange-700); }
 
 /* partner hero: the small "network glyph" widget that used to live here (one account branching to clients)
    is gone — see .partner-hub below, which is now the page's structural spine, not a small hero aside. */
@@ -49,9 +49,9 @@
 .landing-journey__step:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 44px; width: 2px; height: calc(100% - 44px + 32px); background: var(--cc-line-strong); }
 .landing-journey__num { position: absolute; left: 0; top: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); color: #fff; font: 800 .9375rem/1 var(--cc-font-display); }
 .landing-journey__num::before { content: counter(stage); }
-.landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-navy-700, var(--cc-navy)); }
-.landing-journey__step:nth-child(3) .landing-journey__num { background: var(--cc-navy); }
-.landing-journey__step:nth-child(4) .landing-journey__num { background: var(--cc-navy-700, var(--cc-navy)); }
+/* warm start, calm middle, red close: orange/yellow open the sequence instead of every step reading navy */
+.landing-journey__step:first-child .landing-journey__num { background: var(--cc-orange); color: var(--cc-ink); }
+.landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-spark); color: var(--cc-ink); }
 .landing-journey__step:last-child .landing-journey__num { background: var(--cc-red-700); }
 .landing-journey__step h3 { margin: 6px 0 4px; }
 .landing-journey__step p { margin: 0; color: var(--kds-fg-muted); max-width: 48ch; }
@@ -113,7 +113,12 @@
 .stage-path__stop:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 40px; width: 2px; height: calc(100% - 40px + 4px); background: var(--cc-line-strong); }
 .stage-path__row { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 8px 12px 8px 0; border-radius: 4px; transition: background-color .15s; }
 .stage-path__row:hover { background: var(--cc-red-100); }
-.stage-path__node { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #fff; border: 2px solid var(--cc-line-strong); color: var(--cc-navy); font: 800 1rem/1 var(--cc-font-display); }
+.stage-path__node { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--cc-navy); border: 2px solid var(--cc-navy); color: #fff; font: 800 1rem/1 var(--cc-font-display); }
+/* the 5 career stages get their own place in the warm-to-structure arc instead of one flat navy circle repeated
+   five times — start warm (orange/yellow), settle into navy, close on red/navy like the other journey components */
+.stage-path__stop:nth-child(1) .stage-path__node { background: var(--cc-orange); border-color: var(--cc-orange); color: var(--cc-ink); }
+.stage-path__stop:nth-child(2) .stage-path__node { background: var(--cc-spark); border-color: var(--cc-spark); color: var(--cc-ink); }
+.stage-path__stop:nth-child(4) .stage-path__node { background: var(--cc-red-700); border-color: var(--cc-red-700); }
 .stage-path__title { flex: 1 1 auto; min-width: 0; font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); }
 .stage-path__tag { flex: none; font: 700 .625rem/1 var(--kds-font-sans); letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--cc-red-700); padding: 5px 10px; border-radius: 999px; }
 .stage-path__detail { padding: 2px 12px 20px 72px; }
@@ -236,33 +241,33 @@
 .needknow__cats { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .needknow__cat { display: block; width: 100%; text-align: left; border: 0; border-left: 3px solid transparent; background: none; padding: 10px 0 10px 16px; font: 700 .9375rem/1.3 var(--cc-font-display); color: var(--kds-fg-muted); cursor: pointer; transition: color .15s, border-color .15s; }
 .needknow__cat:hover { color: var(--cc-navy); }
-.needknow__cat.is-active { color: var(--cc-red-700); border-left-color: var(--cc-red-700); }
+.needknow__cat.is-active { color: var(--cc-orange-700); border-left-color: var(--cc-orange); }
 .needknow__panel { min-width: 0; }
 .needknow__group.needknow__group--hidden { display: none; }
 .needknow__q { padding: 0; border-bottom: 1px solid var(--kds-border); }
 .needknow__q:first-child { border-top: 1px solid var(--kds-border); }
 .needknow__q summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px 16px; flex-wrap: wrap; min-height: 44px; padding: 16px 0; }
 .needknow__q summary::-webkit-details-marker { display: none; }
-.needknow__q-cat { flex: 1 1 100%; order: -1; font: 700 .6875rem/1 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .07em; color: var(--cc-red-700); }
+.needknow__q-cat { flex: 1 1 100%; order: -1; font: 700 .6875rem/1 var(--kds-font-sans); text-transform: uppercase; letter-spacing: .07em; color: var(--cc-orange-700); }
 .needknow__q-text { flex: 1 1 auto; min-width: 0; font: 700 1.0625rem/1.4 var(--cc-font-display); color: var(--cc-navy); }
 .needknow__q-toggle { flex: none; position: relative; width: 20px; height: 20px; }
 .needknow__q-toggle::before, .needknow__q-toggle::after { content: ""; position: absolute; top: 50%; left: 50%; background: var(--kds-fg-muted); transition: transform .15s, background-color .15s; }
 .needknow__q-toggle::before { width: 12px; height: 2px; transform: translate(-50%, -50%); }
 .needknow__q-toggle::after { width: 2px; height: 12px; transform: translate(-50%, -50%); }
 .needknow__q[open] .needknow__q-toggle::after { transform: translate(-50%, -50%) rotate(90deg); opacity: 0; }
-.needknow__q summary:hover .needknow__q-toggle::before, .needknow__q summary:hover .needknow__q-toggle::after { background: var(--cc-red); }
+.needknow__q summary:hover .needknow__q-toggle::before, .needknow__q summary:hover .needknow__q-toggle::after { background: var(--cc-orange); }
 .needknow__a { padding: 0 0 20px; max-width: 68ch; color: var(--kds-fg-muted); }
 .needknow__a p { margin: 0 0 .6em; }
 .needknow__a p:last-child { margin-bottom: 0; }
 .needknow__more { font-weight: 600; }
 .needknow__more a { color: var(--cc-navy); }
-.needknow__more a:hover { color: var(--cc-red-700); }
+.needknow__more a:hover { color: var(--cc-orange-700); }
 .needknow__foot { margin: 20px auto 0; }
 @media (max-width: 899px) {
   /* phone/tablet: the category rail becomes a horizontal scroller of plain text tabs, never a card grid */
   .needknow__cats { flex-direction: row; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 4px; margin-top: 20px; padding-bottom: 2px; }
   .needknow__cat { flex: none; width: auto; white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; padding: 10px 14px; }
-  .needknow__cat.is-active { border-left-color: transparent; border-bottom-color: var(--cc-red-700); }
+  .needknow__cat.is-active { border-left-color: transparent; border-bottom-color: var(--cc-orange); }
 }
 @media (min-width: 900px) {
   .needknow { grid-template-columns: minmax(220px, 260px) minmax(0, 1fr); gap: 56px; }
@@ -299,14 +304,15 @@
   display: flex; flex-direction: column; gap: 2px;
   background: var(--kds-border); border: 1px solid var(--kds-border);
 }
-.hire-pipeline__stage { background: var(--cc-navy-50); padding: 26px 24px; display: grid; gap: 10px; align-content: start; }
+.hire-pipeline__stage { background: var(--cc-orange-100); padding: 26px 24px; display: grid; gap: 10px; align-content: start; }
 .hire-pipeline__head { display: flex; align-items: baseline; gap: 14px; }
-.hire-pipeline__num { font: 800 1.375rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
+.hire-pipeline__num { font: 800 1.375rem/1 var(--cc-font-display); color: var(--cc-orange-700); }
 .hire-pipeline__stage h3 { margin: 0; font-size: 1.3125rem; }
 .hire-pipeline__stage p { margin: 0; color: var(--kds-fg-muted); max-width: 46ch; }
-/* colour escalates stage by stage — light navy → navy → red — so "Hire" reads as the destination,
-   the same "last step goes red" grammar already used by .landing-journey and .workflow-chain above. */
-.hire-pipeline__stage--reach { background: var(--cc-navy-100); }
+/* colour moves warm -> calm -> emphasis: orange (post) -> yellow (reach) -> navy (review) -> red (hire), so
+   "Hire" still reads as the destination without every earlier stage defaulting to navy or grey. */
+.hire-pipeline__stage--reach { background: var(--cc-spark-100); }
+.hire-pipeline__stage--reach .hire-pipeline__num { color: var(--cc-spark-700); }
 .hire-pipeline__stage--review { background: var(--cc-navy); }
 .hire-pipeline__stage--review h3, .hire-pipeline__stage--review .hire-pipeline__num { color: #fff; }
 .hire-pipeline__stage--review p { color: color-mix(in srgb, #fff 76%, transparent); }
@@ -364,7 +370,7 @@
 .partner-hub__node--chip { font: 700 .875rem/1 var(--cc-font-display); color: var(--cc-navy); text-align: center; }
 .partner-hub__node--card h3 { margin: 0 0 6px; font-size: 1rem; }
 .partner-hub__node--card p { margin: 0; color: var(--kds-fg-muted); font-size: .875rem; }
-.partner-hub__node--card { border-top: 3px solid var(--cc-navy); }
+.partner-hub__node--card { border-top: 3px solid var(--cc-orange); }
 
 @media (min-width: 768px) {
   .partner-hub__row { flex-direction: row; justify-content: center; align-items: stretch; flex-wrap: nowrap; gap: 20px; padding: 0; border-left: 0; margin-left: 0; }

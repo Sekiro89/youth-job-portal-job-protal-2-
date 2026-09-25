@@ -100,7 +100,7 @@ a { color: var(--cc-navy); text-decoration-thickness: 1px; text-underline-offset
 a:hover { color: var(--cc-red-700); }
 .lead { font-size: 1.125rem; color: var(--kds-fg-muted); }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font: 700 .75rem/1 var(--cc-font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--cc-navy); margin-bottom: .85rem; }
-.eyebrow::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-red); flex: none; }
+.eyebrow::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-orange); flex: none; }
 .muted { color: var(--kds-fg-muted); }
 .small { font-size: .875rem; }
 .container { width: 100%; max-width: var(--cc-container); margin: 0 auto; padding-left: 16px; padding-right: 16px; }
@@ -122,7 +122,7 @@ a:hover { color: var(--cc-red-700); }
 .site-header__tabs { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
 .site-header__tabs a { display: block; padding: 9px 12px; font-size: .8125rem; font-weight: 600; text-decoration: none; color: color-mix(in srgb, #fff 78%, transparent); }
 .site-header__tabs a:hover, .site-header__tabs a.is-active { color: #fff; }
-.site-header__tabs a.is-active { box-shadow: inset 0 -2px 0 var(--cc-red); }
+.site-header__tabs a.is-active { box-shadow: inset 0 -2px 0 var(--cc-orange); }
 .site-header__auth { display: flex; align-items: center; gap: 14px; }
 .site-header__auth a, .site-header__auth button { background: none; border: 0; padding: 9px 0; font: inherit; font-size: .8125rem; font-weight: 600; color: color-mix(in srgb, #fff 78%, transparent); text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .site-header__auth a:hover, .site-header__auth button:hover { color: #fff; }
@@ -140,7 +140,7 @@ a:hover { color: var(--cc-red-700); }
 .site-nav__tabs { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .site-nav__tabs a { display: block; padding: 12px 10px; border-radius: 8px; font-weight: 600; text-decoration: none; color: var(--cc-navy); }
 .site-nav__tabs a:hover { background: var(--cc-navy-50); }
-.site-nav__tabs a.is-active { background: var(--cc-navy-100); color: var(--cc-navy-700); box-shadow: inset 3px 0 0 var(--cc-red); }
+.site-nav__tabs a.is-active { background: var(--cc-navy-100); color: var(--cc-navy-700); box-shadow: inset 3px 0 0 var(--cc-orange); }
 .site-nav__auth { display: flex; gap: 8px; flex-wrap: wrap; }
 .site-nav__auth .kds-btn { flex: 1 1 auto; }
 .avatar { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--cc-teal); color: #fff; font-size: .75rem; font-weight: 700; }
@@ -293,9 +293,13 @@ textarea.input { min-height: 120px; resize: vertical; }
 .jstage::before { content: ""; position: absolute; left: calc((var(--node-size) - var(--route-width)) / 2); top: var(--node-size); bottom: calc(-1 * var(--sp-9)); width: var(--route-width); background: var(--cc-line-strong); }
 .jstage:last-child::before { display: none; }
 .jstage__node { position: absolute; left: 0; top: 3px; width: var(--node-size); height: var(--node-size); border-radius: 50%; background: var(--route-color); }
+.jstage:nth-child(1) .jstage__node { background: var(--cc-orange); }
+.jstage:nth-child(2) .jstage__node { background: var(--cc-spark); }
 .jstage--active .jstage__node, .jstage:hover .jstage__node { background: var(--route-active); width: var(--node-active-size); height: var(--node-active-size); left: calc((var(--node-size) - var(--node-active-size)) / 2); }
 .jstage__label { display: block; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red-700); margin: 0 0 var(--sp-2); }
 .jstage__num { display: block; font: 800 var(--stage-number-size)/1 var(--cc-font-display); color: var(--cc-navy-100); }
+.jstage:nth-child(1) .jstage__num { color: var(--cc-orange-100); }
+.jstage:nth-child(2) .jstage__num { color: var(--cc-spark-100); }
 .jstage__name { font: 800 clamp(1.375rem, 1.6vw + 1rem, 2.125rem)/1.15 var(--cc-font-display); color: var(--cc-navy); margin: var(--sp-2) 0; }
 .jstage__desc { color: var(--kds-fg-muted); max-width: 46ch; margin: 0; font-size: 1.0625rem; }
 .jstage__link { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--sp-3); font-weight: 700; font-size: .9375rem; color: var(--cc-red-700); text-decoration: none; }
@@ -322,7 +326,7 @@ textarea.input { min-height: 120px; resize: vertical; }
   .dash__side { flex-direction: column; overflow: visible; position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; gap: 0; border-left: 2px solid var(--kds-border); }
   .dash__side a { border-radius: 0; border: 0; padding: 11px 16px; margin-left: -2px; border-left: 2px solid transparent; background: none; color: var(--kds-fg-muted); }
   .dash__side a:hover { color: var(--cc-navy); background: var(--cc-navy-50); }
-  .dash__side a.is-active { background: none; color: var(--cc-navy); border-left-color: var(--cc-red-700); font-weight: 800; }
+  .dash__side a.is-active { background: none; color: var(--cc-navy); border-left-color: var(--cc-orange); font-weight: 800; }
 }
 
 /* stats: a flush, numbered-family stat block (accent rule, tinted surface) instead of bordered white KPI cards */
@@ -396,6 +400,9 @@ textarea.input { min-height: 120px; resize: vertical; }
 /* Section rhythm — vertical spacing is the SAME on every page */
 .section { padding: 40px 0; }
 .section--alt { background: var(--cc-surface); border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); }
+/* a single, controlled "warm energy" beat in the section rhythm — used sparingly, once or twice per page,
+   never back-to-back with itself */
+.section--warm { background: linear-gradient(135deg, var(--cc-orange-100), var(--cc-spark-100)); border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); }
 .section__head { margin-bottom: 20px; max-width: 68ch; }
 .section__head .lead { margin: 0; }
 @media (min-width: 768px) { .section { padding: 56px 0; } .section__head { margin-bottom: 28px; } }

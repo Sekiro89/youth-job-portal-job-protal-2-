@@ -105,7 +105,7 @@
 /* status tabs (jobs list): wrap on phones, one scroll-free row from 640 */
 .tabs { display: flex; flex-wrap: wrap; gap: 0 4px; border-bottom: 1px solid var(--kds-border); }
 .tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 12px; text-decoration: none; font-weight: 600; font-size: .9375rem; color: var(--kds-fg-muted); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tab.is-active { color: var(--cc-navy); border-bottom-color: var(--cc-red-700); }
+.tab.is-active { color: var(--cc-navy); border-bottom-color: var(--cc-orange); }
 .tab__count { font-size: .75rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy-700); }
 .card--table > .tabs { padding: 0 12px; }
 @media (max-width: 767px) { .card--table > .tabs { padding: 0; margin-bottom: 12px; } }

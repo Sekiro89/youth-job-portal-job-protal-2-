@@ -44,7 +44,7 @@
    "Start" everywhere else; this is the one page allowed a little more of the career-journey language). */
 .seeker-progress { list-style: none; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-faint); }
 .seeker-progress li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.seeker-progress .is-active { color: var(--cc-red-700); }
+.seeker-progress .is-active { color: var(--cc-orange-700); }
 .auth-shell__form { padding: 0 20px 48px; display: flex; flex-direction: column; align-items: center; }
 .auth-shell__form > * { width: 100%; max-width: 560px; }
 .signup-chooser { display: grid; gap: 20px; }   /* stacks .role-select + .auth__foot with a sensible gap, sign-in always below the options */
@@ -104,14 +104,17 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .role-select { display: grid; grid-template-columns: 1fr; border-top: 1px solid var(--cc-line); }
 .role-opt { display: grid; grid-template-columns: auto 1fr; column-gap: 20px; row-gap: 8px; padding: 28px 6px; border-top: 1px solid var(--cc-line); text-decoration: none; color: var(--cc-ink); transition: background-color .15s; }
 .role-opt:first-child { border-top: 0; }
-.role-opt:hover, .role-opt:focus-visible { background: var(--cc-red-100); }
-.role-opt__num { grid-row: 1 / span 5; align-self: center; font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red-700); }
+.role-opt:hover, .role-opt:focus-visible { background: var(--cc-orange-100); }
+.role-opt__num { grid-row: 1 / span 5; align-self: center; font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-navy); }
 .role-opt__kicker { font: 800 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
 .role-opt__title { font: 700 1.375rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .role-opt__desc { color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
 .role-opt__meta { font: 700 .875rem/1 var(--kds-font-sans); color: var(--cc-navy); }
-.role-opt__meta--free { color: var(--cc-red-700); }
-.role-opt__cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font: 700 .8125rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-red-700); }
+.role-opt__meta--free { color: var(--cc-navy); }
+.role-opt__cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font: 700 .8125rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-navy); }
+/* each role gets its own identity colour instead of every row sharing one red numeral */
+.role-opt:nth-child(1) .role-opt__num, .role-opt:nth-child(1) .role-opt__cta { color: var(--cc-orange-700); }
+.role-opt:nth-child(2) .role-opt__num, .role-opt:nth-child(2) .role-opt__cta { color: var(--cc-spark-700); }
 @media (prefers-reduced-motion: no-preference) {
   .role-opt__cta span { display: inline-block; transition: transform .15s; }
   .role-opt:hover .role-opt__cta span, .role-opt:focus-visible .role-opt__cta span { transform: translateX(4px); }
@@ -169,5 +172,5 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
   .account-nav ul { flex-direction: column; gap: 2px; }
   .account-nav a { border: 0; border-left: 2px solid transparent; border-radius: 0; padding: 8px 0 8px 16px; min-height: 0; color: var(--kds-fg-muted); }
   .account-nav a:hover, .account-nav a:focus-visible { color: var(--cc-navy); }
-  .account-nav a.is-active { background: none; color: var(--cc-red-700); border-left-color: var(--cc-red-700); font-weight: 700; }
+  .account-nav a.is-active { background: none; color: var(--cc-orange-700); border-left-color: var(--cc-orange); font-weight: 700; }
 }

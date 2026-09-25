@@ -24,7 +24,7 @@
 .jobs-hero { background: var(--cc-surface); padding: var(--sp-8) 0 0; }
 .jobs-hero__route { list-style: none; margin: 0 0 var(--sp-4); padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .jobs-hero__route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.jobs-hero__route .is-active { color: var(--cc-red-700); }
+.jobs-hero__route .is-active { color: var(--cc-orange-700); }
 .jobs-hero__title { margin: 0 0 10px; font-size: var(--yf-display-lg); max-width: 14ch; }
 .jobs-hero .lead { margin: 0; max-width: 56ch; }
 .jobs-hero__search { background: #fff; border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); margin-top: var(--sp-6); padding: var(--sp-5) 0; }
@@ -95,7 +95,7 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .career-nav__tabs { display: flex; flex-wrap: wrap; gap: 4px 2px; }
 .career-nav__tab { border: 0; border-bottom: 2px solid transparent; background: none; padding: 8px 12px 8px 0; margin-right: 14px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--kds-fg-muted); cursor: pointer; }
 .career-nav__tab:hover { color: var(--cc-navy); }
-.career-nav__tab.is-active { color: var(--cc-red-700); border-bottom-color: var(--cc-red-700); }
+.career-nav__tab.is-active { color: var(--cc-orange-700); border-bottom-color: var(--cc-orange); }
 .career-nav__chips { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .career-nav__chips--hidden { display: none; }
 .career-nav__chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 14px; border: 1px solid var(--kds-border); border-radius: 999px; color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; }
@@ -155,9 +155,9 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 
 .jsearch__list { display: grid; gap: 0; counter-reset: jrow; }
 .jrow { counter-increment: jrow; position: relative; display: grid; gap: 10px; padding: var(--yf-job-row-padding, 28px 0); padding-left: 56px; border-bottom: 1px solid var(--yf-job-row-border, var(--cc-line-strong)); transition: background .15s, box-shadow .15s; }
-.jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 18px; top: 30px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--yf-job-number-color, var(--cc-red)); letter-spacing: .04em; }
-.jrow:hover { background: var(--cc-navy-50); box-shadow: inset 4px 0 0 var(--cc-red); }
-.jrow.is-active { background: var(--cc-red-100); box-shadow: inset 4px 0 0 var(--cc-red); }
+.jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 18px; top: 30px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--yf-job-number-color, var(--cc-orange-700)); letter-spacing: .04em; }
+.jrow:hover { background: var(--cc-navy-50); box-shadow: inset 4px 0 0 var(--cc-orange); }
+.jrow.is-active { background: var(--cc-spark-100); box-shadow: inset 4px 0 0 var(--cc-spark); }
 .jrow--ref { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow--ref:hover { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow__main { min-width: 0; display: grid; gap: 6px; }
@@ -180,7 +180,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow__pid { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--kds-fg-muted); }
 /* an explicit "Explore →" affordance, always visible (not hover-only — touch devices have no hover) — the
    whole row is still the click target (.jrow__title a::after), this just gives that a visible cue */
-.jrow__explore { margin-top: 6px; font: 700 .8125rem/1 var(--cc-font-display); color: var(--cc-red-700); transition: transform .15s; }
+.jrow__explore { margin-top: 6px; font: 700 .8125rem/1 var(--cc-font-display); color: var(--cc-orange-700); transition: transform .15s; }
 @media (prefers-reduced-motion: no-preference) {
   .jrow:hover .jrow__explore, .jrow:focus-within .jrow__explore { transform: translateX(4px); }
 }

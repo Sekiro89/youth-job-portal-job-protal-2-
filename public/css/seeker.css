@@ -26,7 +26,7 @@
 .seeker-side-wrap.is-scrolled-start::before { opacity: 1; }
 .dash__side a { min-height: 44px; display: inline-flex; align-items: center; }
 .side-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-red-700); color: #fff; font-size: .75rem; font-weight: 700; margin-left: 6px; }
-.dash__side a.is-active .side-badge { background: #fff; color: var(--cc-red-700); }
+.dash__side a.is-active .side-badge { background: #fff; color: var(--cc-orange-700); }
 @media (min-width: 1024px) {
   .seeker-side-wrap::before, .seeker-side-wrap::after { display: none; }
   .seeker-side-wrap { position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; }
