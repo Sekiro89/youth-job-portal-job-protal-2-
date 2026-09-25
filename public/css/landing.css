@@ -311,33 +311,27 @@
   display: flex; flex-direction: column; gap: 2px;
   background: var(--kds-border); border: 1px solid var(--kds-border);
 }
-.hire-pipeline__stage { background: var(--cc-orange-100); padding: 26px 24px; display: grid; gap: 10px; align-content: start; }
+.hire-pipeline__stage { background: #fff; padding: 26px 24px; display: grid; gap: 10px; align-content: start; border-top: 3px solid var(--cc-orange); }
 .hire-pipeline__head { display: flex; align-items: baseline; gap: 14px; }
 .hire-pipeline__num { font: 800 1.375rem/1 var(--cc-font-display); color: var(--cc-orange-700); }
-.hire-pipeline__stage h3 { margin: 0; font-size: 1.3125rem; }
+.hire-pipeline__stage h3 { margin: 0; font-size: 1.3125rem; color: var(--cc-navy); }
 .hire-pipeline__stage p { margin: 0; color: var(--kds-fg-muted); max-width: 46ch; }
-/* colour moves warm -> calm -> emphasis: orange (post) -> yellow (reach) -> navy (review) -> red (hire), so
-   "Hire" still reads as the destination without every earlier stage defaulting to navy or grey. */
-.hire-pipeline__stage--reach { background: var(--cc-spark-100); }
+/* colour moves warm -> calm -> emphasis: orange (post) -> yellow (reach) -> navy (review) -> red (hire) —
+   carried by the top rule + number only, so all four panels share one calm white surface instead of
+   jumping from pale tints straight to fully-saturated blocks. */
+.hire-pipeline__stage--reach { border-top-color: var(--cc-spark); }
 .hire-pipeline__stage--reach .hire-pipeline__num { color: var(--cc-spark-700); }
-.hire-pipeline__stage--review { background: var(--cc-navy); }
-.hire-pipeline__stage--review h3, .hire-pipeline__stage--review .hire-pipeline__num { color: #fff; }
-.hire-pipeline__stage--review p { color: color-mix(in srgb, #fff 76%, transparent); }
-.hire-pipeline__stage--hire { background: var(--cc-red-700); }
-.hire-pipeline__stage--hire h3, .hire-pipeline__stage--hire .hire-pipeline__num { color: #fff; }
-.hire-pipeline__stage--hire p { color: color-mix(in srgb, #fff 85%, transparent); }
+.hire-pipeline__stage--review { border-top-color: var(--cc-navy); }
+.hire-pipeline__stage--review .hire-pipeline__num { color: var(--cc-navy); }
+.hire-pipeline__stage--hire { border-top-color: var(--cc-red); }
+.hire-pipeline__stage--hire .hire-pipeline__num { color: var(--cc-red-700); }
 @media (min-width: 640px) {
   .hire-pipeline__head { gap: 16px; }
   .hire-pipeline__stage p { max-width: 52ch; }
 }
 @media (min-width: 900px) {
-  /* the funnel: four unequal columns, each one narrower than the last, so the bar itself tapers
-     toward "Hire" instead of four identical equal-width tiles. */
   .hire-pipeline__row { flex-direction: row; align-items: stretch; }
-  .hire-pipeline__stage { flex: 1.3 1 0; padding: 32px 28px; }
-  .hire-pipeline__stage--reach { flex: 1.12 1 0; }
-  .hire-pipeline__stage--review { flex: 0.96 1 0; }
-  .hire-pipeline__stage--hire { flex: 0.82 1 0; padding-right: 22px; }
+  .hire-pipeline__stage { flex: 1 1 0; padding: 32px 28px; }
   .hire-pipeline__stage p { max-width: 40ch; }
 }
 

@@ -1,0 +1,56 @@
+/* Tailwind entry point. Compiled to public/css/tailwind.css via "npm run tailwind:build"
+   (or "npm run tailwind:watch" while developing) -- see package.json.
+
+   This does NOT replace theme.css, public.css, etc. Those stay as the sitewide component
+   system. Tailwind is here for new work and ad-hoc polish going forward: utility classes
+   added directly in the EJS templates under views. Load order in views/layout.ejs puts this
+   last, after every other stylesheet, so a utility class added to a template can always
+   override the component CSS underneath it.
+
+   Colors, radius and font below are copied from the --cc- and --kds- custom properties in
+   public/css/theme.css so bg-navy, text-orange-700, etc. stay in lockstep with the brand
+   system instead of drifting into a second, competing palette. If the tokens in theme.css
+   change, update the values here to match. */
+@import "tailwindcss";
+
+@source "../views";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --color-navy: #1C3350;
+  --color-navy-700: #16283F;
+  --color-navy-900: #101E30;
+  --color-navy-100: #E4E7EB;
+  --color-navy-50: #F4F5F7;
+
+  --color-red: #DC4A3D;
+  --color-red-700: #A5382E;
+  --color-red-900: #732720;
+  --color-red-100: #FBEDEC;
+
+  --color-orange: #FF9317;
+  --color-orange-700: #A65700;
+  --color-orange-100: #FFE8D2;
+
+  --color-spark: #FFC01D;
+  --color-spark-700: #8A6200;
+  --color-spark-100: #FFF4D9;
+
+  --color-green: #2E9E5B;
+  --color-green-100: #E4F5EA;
+  --color-teal: #1E8A9A;
+  --color-teal-100: #E1F2F4;
+
+  --color-ivory: #FAF7F2;
+  --color-surface: #F2ECE0;
+  --color-ink: #1C3350;
+  --color-ink-muted: #57616F;
+  --color-ink-faint: #7D8794;
+  --color-line: #E7E1D6;
+  --color-line-strong: #D6CBB8;
+
+  --radius-yc-sm: 8px;
+  --radius-yc-md: 10px;
+  --radius-yc-lg: 12px;
+}

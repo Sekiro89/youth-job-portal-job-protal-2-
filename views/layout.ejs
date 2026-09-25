@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="/css/theme.css">
   <% if (typeof mapConfigInLayout !== 'undefined' && mapConfigInLayout && typeof mapConfig !== 'undefined') { %><script>window.CC_MAPS = <%- JSON.stringify(mapConfig).replace(/</g, '\\u003c') %>;</script><% } %>
   <% extraCss.forEach(href => { %><link rel="stylesheet" href="<%= href %>"><% }) %>
+  <link rel="stylesheet" href="/css/tailwind.css"> <%# utility classes for new work; loaded last so they can override the component CSS above %>
   <% jsonLd.forEach(obj => { %><script type="application/ld+json"><%- JSON.stringify(obj).replace(/</g, '\\u003c') %></script><% }) %>
 </head>
 <body class="<%= bodyClass %>">

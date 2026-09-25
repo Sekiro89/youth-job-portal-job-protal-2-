@@ -1,15 +1,16 @@
 <%# Rendered without public.css (server.js 404/500 handlers pass no extraCss) — theme.css primitives only. %>
 <header class="page-head">
-  <div class="container page-head__inner">
+  <div class="container page-head__inner md:flex md:items-center md:justify-between md:gap-10">
     <div>
       <p class="eyebrow">Error <%= code %></p>
       <h1><%= title %></h1>
       <p class="lead"><%= message %></p>
+      <div class="page-head__actions">
+        <a class="kds-btn kds-btn--accent" href="/jobs">Browse jobs</a>
+        <a class="kds-btn kds-btn--ghost" href="/">Back to home</a>
+      </div>
     </div>
-    <div class="page-head__actions">
-      <a class="kds-btn kds-btn--accent" href="/jobs">Browse jobs</a>
-      <a class="kds-btn kds-btn--ghost" href="/">Back to home</a>
-    </div>
+    <p class="hidden md:block shrink-0 font-sans text-[7rem] font-extrabold leading-none tracking-tight text-navy/10 select-none" aria-hidden="true"><%= code %></p>
   </div>
 </header>
 <section class="section" aria-labelledby="err-h">
