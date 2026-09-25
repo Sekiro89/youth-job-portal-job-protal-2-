@@ -15,7 +15,7 @@
 .cc-popup__title { font-weight: 700; color: var(--cc-navy); text-decoration: none; font-size: .9375rem; }
 .cc-popup__co { font-weight: 500; }
 .cc-popup__addr, .cc-popup__meta { color: var(--kds-fg-muted); font-size: .8125rem; }
-.cc-popup__link { margin-top: 4px; font-weight: 600; color: var(--cc-red); text-decoration: none; }
+.cc-popup__link { margin-top: 4px; font-weight: 600; color: var(--cc-red-700); text-decoration: none; }
 
 /* ---------- job page: work locations + map ---------- */
 .map-block { margin-top: 12px; display: grid; gap: 10px; }

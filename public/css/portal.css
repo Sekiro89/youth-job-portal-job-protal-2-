@@ -13,11 +13,11 @@
 @media (min-width: 768px) { .app-head { grid-template-columns: minmax(0, 1fr) auto; } .app-head__actions { justify-content: flex-end; } }
 
 /* ---------- shared bits ---------- */
-.req { color: var(--cc-red); }
+.req { color: var(--cc-red-700); }
 .list-plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .stack-tight { display: grid; gap: 4px; justify-items: start; }
 .input--sm { min-height: 40px; padding: 8px 10px; font-size: .9rem; }
-.kds-btn--danger-text { color: var(--cc-red); }
+.kds-btn--danger-text { color: var(--cc-red-700); }
 .kds-btn--danger-text:hover { background: var(--cc-red-100); }
 .card--cta { border-color: var(--cc-orange); background: var(--cc-orange-100); }
 .card__head h2, .card__head h3 { font-size: 1.15rem; }
@@ -105,7 +105,7 @@
 /* status tabs (jobs list): wrap on phones, one scroll-free row from 640 */
 .tabs { display: flex; flex-wrap: wrap; gap: 0 4px; border-bottom: 1px solid var(--kds-border); }
 .tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 12px; text-decoration: none; font-weight: 600; font-size: .9375rem; color: var(--kds-fg-muted); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tab.is-active { color: var(--cc-navy); border-bottom-color: var(--cc-red); }
+.tab.is-active { color: var(--cc-navy); border-bottom-color: var(--cc-red-700); }
 .tab__count { font-size: .75rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy-700); }
 .card--table > .tabs { padding: 0 12px; }
 @media (max-width: 767px) { .card--table > .tabs { padding: 0; margin-bottom: 12px; } }

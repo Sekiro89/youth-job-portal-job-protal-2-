@@ -7,7 +7,7 @@
 .contact__message { min-height: 160px; }
 .contact__account { margin-bottom: 4px; }
 .contact__account span { font-size: .9rem; }
-.req { color: var(--cc-red); }
+.req { color: var(--cc-red-700); }
 
 /* honeypot: off-screen, not display:none (some bots skip hidden inputs) */
 .hp { position: absolute !important; left: -9999px; top: -9999px; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
@@ -39,5 +39,5 @@
 /* thanks page */
 .contact-thanks { text-align: center; }
 .contact-thanks__check { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--cc-green-100); color: #2f5d11; display: grid; place-items: center; font-size: 2rem; font-weight: 800; }
-.contact-thanks__ref { color: var(--cc-red); font-family: var(--cc-font-display); }
+.contact-thanks__ref { color: var(--cc-red-700); font-family: var(--cc-font-display); }
 .contact-thanks .form-actions { justify-content: center; margin-top: 16px; }

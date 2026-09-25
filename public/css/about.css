@@ -42,7 +42,7 @@
 .about-quote { padding-top: 8px; }
 .about-quote__inner { display: grid; gap: 24px; }
 .about-quote__lede-col { display: grid; gap: 4px; }
-.about-quote__mark { margin: 0; line-height: .6; font: 800 4.5rem/1 Georgia, serif; color: var(--cc-red); }
+.about-quote__mark { margin: 0; line-height: .6; font: 800 4.5rem/1 Georgia, serif; color: var(--cc-red-700); }
 .about-quote__lede { margin: 0; max-width: 18ch; }
 .about-quote__text { max-width: 62ch; }
 @media (min-width: 1024px) {
@@ -59,9 +59,9 @@
 .about-aud__card { counter-increment: aud; position: relative; display: grid; gap: 8px; align-content: start; background: #fff; border: 0; border-radius: 2px; padding: 22px 20px 18px; transition: background .15s, color .15s; }
 .about-aud__card::before { content: counter(aud, decimal-leading-zero); position: absolute; top: 16px; right: 18px; font: 800 .8125rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
 .about-aud__card--student:hover { background: var(--cc-navy); }
-.about-aud__card--intern_coop:hover { background: var(--cc-red); }
+.about-aud__card--intern_coop:hover { background: var(--cc-red-700); }
 .about-aud__card--graduate:hover { background: var(--cc-teal); }
-.about-aud__card--early_career:hover { background: var(--cc-orange); }
+.about-aud__card--early_career:hover { background: var(--cc-orange-700); }
 .about-aud__card--skilled:hover { background: #a3860a; }
 .about-aud__card:hover::before { color: color-mix(in srgb, #fff 35%, transparent); }
 .about-aud__card:hover h3 a, .about-aud__card:hover p { color: #fff; }
@@ -91,7 +91,7 @@
 }
 #tab-employers:checked ~ .about-tabs__nav label[for="tab-employers"],
 #tab-consultants:checked ~ .about-tabs__nav label[for="tab-consultants"],
-#tab-seekers:checked ~ .about-tabs__nav label[for="tab-seekers"] { color: var(--cc-navy); border-bottom-color: var(--cc-red); }
+#tab-seekers:checked ~ .about-tabs__nav label[for="tab-seekers"] { color: var(--cc-navy); border-bottom-color: var(--cc-red-700); }
 #tab-employers:checked ~ .about-tabs__body .about-tabs__panel--employers,
 #tab-consultants:checked ~ .about-tabs__body .about-tabs__panel--consultants,
 #tab-seekers:checked ~ .about-tabs__body .about-tabs__panel--seekers { display: block; }
@@ -102,7 +102,7 @@
 .about-flow__panel { background: var(--cc-surface); border-radius: 2px; overflow: hidden; }
 .about-flow__panel--alt { background: var(--cc-red-100); }
 .about-flow__head { padding: 16px 24px; font: 800 1.0625rem/1 var(--cc-font-display); color: #fff; background: var(--cc-navy); }
-.about-flow__panel--alt .about-flow__head { background: var(--cc-red); }
+.about-flow__panel--alt .about-flow__head { background: var(--cc-red-700); }
 .about-flow__panel .about-steps__list { padding: 24px; }
 @media (min-width: 768px) { .about-flow__grid { grid-template-columns: repeat(2, 1fr); } }
 
@@ -117,7 +117,7 @@
 .about-commit-tile { position: relative; background: var(--cc-surface); padding: 24px 22px; display: grid; gap: 6px; align-content: start; }
 .about-commit-tile__n { font: 800 1.5rem/1 var(--cc-font-display); color: var(--cc-line-strong); }
 .about-commit-tile--a .about-commit-tile__n { color: var(--cc-navy); opacity: .5; }
-.about-commit-tile--b .about-commit-tile__n { color: var(--cc-red); opacity: .5; }
+.about-commit-tile--b .about-commit-tile__n { color: var(--cc-red-700); opacity: .5; }
 .about-commit-tile--c .about-commit-tile__n { color: var(--cc-teal); opacity: .5; }
 .about-commit-tile--d .about-commit-tile__n { color: var(--cc-orange); opacity: .5; }
 .about-commit-tile h3 { margin: 0; }

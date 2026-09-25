@@ -24,7 +24,7 @@
 .jobs-hero { background: var(--cc-surface); padding: var(--sp-8) 0 0; }
 .jobs-hero__route { list-style: none; margin: 0 0 var(--sp-4); padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .jobs-hero__route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.jobs-hero__route .is-active { color: var(--cc-red); }
+.jobs-hero__route .is-active { color: var(--cc-red-700); }
 .jobs-hero__title { margin: 0 0 10px; font-size: var(--yf-display-lg); max-width: 14ch; }
 .jobs-hero .lead { margin: 0; max-width: 56ch; }
 .jobs-hero__search { background: #fff; border-top: 1px solid var(--kds-border); border-bottom: 1px solid var(--kds-border); margin-top: var(--sp-6); padding: var(--sp-5) 0; }
@@ -40,7 +40,7 @@
 .jsearch__kw-go { position: absolute; right: 3px; bottom: 3px; width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); display: grid; place-items: center; cursor: pointer; }
 .jsearch__kw-go:hover { background: var(--cc-navy-50); }
 .jsearch__open { gap: 8px; white-space: nowrap; padding-left: 14px; padding-right: 14px; }
-.jsearch__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--cc-red); color: #fff; font-size: .75rem; font-weight: 700; line-height: 1; }
+.jsearch__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--cc-red-700); color: #fff; font-size: .75rem; font-weight: 700; line-height: 1; }
 .jsearch__go { display: none; }                          /* phone: the magnifier inside the keyword field submits */
 .jsearch__near-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .jsearch__near-me { gap: 6px; white-space: nowrap; padding-left: 12px; padding-right: 12px; }
@@ -95,11 +95,11 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .career-nav__tabs { display: flex; flex-wrap: wrap; gap: 4px 2px; }
 .career-nav__tab { border: 0; border-bottom: 2px solid transparent; background: none; padding: 8px 12px 8px 0; margin-right: 14px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--kds-fg-muted); cursor: pointer; }
 .career-nav__tab:hover { color: var(--cc-navy); }
-.career-nav__tab.is-active { color: var(--cc-red); border-bottom-color: var(--cc-red); }
+.career-nav__tab.is-active { color: var(--cc-red-700); border-bottom-color: var(--cc-red-700); }
 .career-nav__chips { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .career-nav__chips--hidden { display: none; }
 .career-nav__chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 14px; border: 1px solid var(--kds-border); border-radius: 999px; color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; }
-.career-nav__chip:hover { border-color: var(--cc-red); color: var(--cc-red); }
+.career-nav__chip:hover { border-color: var(--cc-red-700); color: var(--cc-red-700); }
 .career-nav__chip.is-current { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 
 /* ---------- explore canada: ONE exploration surface — the map (the geographic layer of the journey) and the
@@ -149,7 +149,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jobs-index { padding: var(--sp-7) 0 var(--sp-8); }
 .jobs-index__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 16px 24px; margin-bottom: var(--sp-5); padding-bottom: var(--sp-4); border-bottom: 1px solid var(--kds-border); }
 .jobs-index__head h3 { margin: 0; font-size: clamp(1.125rem, .5vw + 1rem, 1.375rem); }
-.jobs-index__head h3 strong { color: var(--cc-red); }
+.jobs-index__head h3 strong { color: var(--cc-red-700); }
 .jsearch__sort { display: inline-flex; align-items: center; gap: 8px; }
 .jsearch__sort .input { width: auto; min-width: 150px; }
 
@@ -165,7 +165,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow:hover .jrow__title { transform: translateX(4px); }
 .jrow__title a { color: var(--cc-navy); text-decoration: none; }
 .jrow__title a::after { content: ""; position: absolute; inset: 0; }   /* whole row is the link target */
-.jrow__title a:hover { color: var(--cc-red); }
+.jrow__title a:hover { color: var(--cc-red-700); }
 .jrow__co { margin: 0; color: var(--kds-fg-muted); font-size: var(--yf-job-company-size, .9375rem); display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; }
 .jrow__company { color: var(--cc-ink); font-weight: 500; }
 .jrow__sep { color: var(--kds-fg-faint); }
@@ -180,7 +180,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow__pid { font-family: var(--kds-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-weight: 600; color: var(--kds-fg-muted); }
 /* an explicit "Explore →" affordance, always visible (not hover-only — touch devices have no hover) — the
    whole row is still the click target (.jrow__title a::after), this just gives that a visible cue */
-.jrow__explore { margin-top: 6px; font: 700 .8125rem/1 var(--cc-font-display); color: var(--cc-red); transition: transform .15s; }
+.jrow__explore { margin-top: 6px; font: 700 .8125rem/1 var(--cc-font-display); color: var(--cc-red-700); transition: transform .15s; }
 @media (prefers-reduced-motion: no-preference) {
   .jrow:hover .jrow__explore, .jrow:focus-within .jrow__explore { transform: translateX(4px); }
 }

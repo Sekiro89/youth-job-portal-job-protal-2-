@@ -8,7 +8,7 @@
    size to its own content, with the footer following right after. */
 .auth-shell { background: var(--cc-surface); padding-block: var(--sp-8) var(--sp-9); }
 .auth-hero { max-width: 640px; margin: 0 auto; text-align: center; padding-bottom: 32px; }
-.auth-journey { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 20px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red); }
+.auth-journey { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 20px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red-700); }
 .auth-journey em { font-style: normal; }
 .auth-journey__line { position: relative; width: 64px; height: 1px; background: var(--cc-line-strong); }
 .auth-journey__line::after { content: "→"; position: absolute; right: -2px; top: 50%; transform: translate(50%, -50%); color: var(--cc-line-strong); font-size: .8125rem; }
@@ -22,7 +22,7 @@
    naturally instead of relying on fragile percentage placement. */
 .journey-line { display: flex; align-items: center; gap: 8px; margin: 0 0 20px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-faint); }
 .journey-line__seg { flex: 1 1 32px; min-width: 20px; height: 1px; background: var(--cc-line-strong); }
-.journey-line__here { display: inline-flex; align-items: center; gap: 6px; color: var(--cc-red); white-space: nowrap; }
+.journey-line__here { display: inline-flex; align-items: center; gap: 6px; color: var(--cc-red-700); white-space: nowrap; }
 .journey-line__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc-red); display: inline-block; flex: none; }
 .journey-line__arrow { color: var(--cc-line-strong); font-size: .8125rem; }
 
@@ -44,7 +44,7 @@
    "Start" everywhere else; this is the one page allowed a little more of the career-journey language). */
 .seeker-progress { list-style: none; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-ink-faint); }
 .seeker-progress li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
-.seeker-progress .is-active { color: var(--cc-red); }
+.seeker-progress .is-active { color: var(--cc-red-700); }
 .auth-shell__form { padding: 0 20px 48px; display: flex; flex-direction: column; align-items: center; }
 .auth-shell__form > * { width: 100%; max-width: 560px; }
 .signup-chooser { display: grid; gap: 20px; }   /* stacks .role-select + .auth__foot with a sensible gap, sign-in always below the options */
@@ -59,7 +59,7 @@
 .auth-newhere { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--cc-line); text-align: center; }
 .auth-newhere .eyebrow { justify-content: center; color: var(--cc-ink-faint); }
 .auth-cta-link { display: inline-flex; align-items: center; gap: 8px; font: 700 1.0625rem/1.3 var(--cc-font-display); color: var(--cc-navy); text-decoration: none; }
-.auth-cta-link span { color: var(--cc-red); }
+.auth-cta-link span { color: var(--cc-red-700); }
 .auth-cta-link:hover, .auth-cta-link:focus-visible { color: var(--cc-red-700); }
 @media (prefers-reduced-motion: no-preference) {
   .auth-cta-link span { display: inline-block; transition: transform .15s; }
@@ -70,10 +70,10 @@
 .auth__foot { text-align: center; margin: 20px 0 0; color: var(--kds-fg-muted); font-size: .9375rem; }
 .auth__note { margin: 0; text-align: center; }
 .auth__stack { gap: 20px; }
-.req { color: var(--cc-red); }   /* required marker — same rule as portal.css; promote to theme.css */
+.req { color: var(--cc-red-700); }   /* required marker — same rule as portal.css; promote to theme.css */
 .auth-links { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .auth-links a { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 10px 14px; border: 1px solid var(--kds-border); border-radius: 10px; text-decoration: none; font-weight: 600; background: var(--cc-surface); }
-.auth-links a::after { content: "→"; color: var(--cc-red); }
+.auth-links a::after { content: "→"; color: var(--cc-red-700); }
 .auth-links a:hover, .auth-links a.is-hint { border-color: var(--cc-navy); background: var(--cc-navy-50); }
 .auth-alert { background: var(--cc-red-100); border: 1px solid #f3b1b1; color: #8a1b1b; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: .9375rem; }
 .auth-alert p { margin: 0; } .auth-alert ul { margin: 6px 0 0; padding-left: 18px; } .auth-alert a { color: inherit; }
@@ -105,13 +105,13 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .role-opt { display: grid; grid-template-columns: auto 1fr; column-gap: 20px; row-gap: 8px; padding: 28px 6px; border-top: 1px solid var(--cc-line); text-decoration: none; color: var(--cc-ink); transition: background-color .15s; }
 .role-opt:first-child { border-top: 0; }
 .role-opt:hover, .role-opt:focus-visible { background: var(--cc-red-100); }
-.role-opt__num { grid-row: 1 / span 5; align-self: center; font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red); }
+.role-opt__num { grid-row: 1 / span 5; align-self: center; font: 800 2.25rem/1 var(--cc-font-display); color: var(--cc-red-700); }
 .role-opt__kicker { font: 800 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
 .role-opt__title { font: 700 1.375rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .role-opt__desc { color: var(--kds-fg-muted); font-size: .9375rem; line-height: 1.5; }
 .role-opt__meta { font: 700 .875rem/1 var(--kds-font-sans); color: var(--cc-navy); }
-.role-opt__meta--free { color: var(--cc-red); }
-.role-opt__cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font: 700 .8125rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-red); }
+.role-opt__meta--free { color: var(--cc-red-700); }
+.role-opt__cta { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font: 700 .8125rem/1 var(--kds-font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--cc-red-700); }
 @media (prefers-reduced-motion: no-preference) {
   .role-opt__cta span { display: inline-block; transition: transform .15s; }
   .role-opt:hover .role-opt__cta span, .role-opt:focus-visible .role-opt__cta span { transform: translateX(4px); }
@@ -156,8 +156,8 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .auth-meta div { display: grid; gap: 2px; align-content: start; min-width: 0; }
 .auth-meta dd { overflow-wrap: anywhere; margin: 0; }
 .auth-meta dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-muted); font-weight: 600; }
-.kds-btn--danger { background: var(--cc-red); color: #fff; }
-.kds-btn--danger:hover { background: var(--cc-red-700); color: #fff; }
+.kds-btn--danger { background: var(--cc-red-700); color: #fff; }
+.kds-btn--danger:hover { background: var(--cc-red-900); color: #fff; }
 
 @media (min-width: 640px) {
   .auth-meta { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; }
@@ -169,5 +169,5 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
   .account-nav ul { flex-direction: column; gap: 2px; }
   .account-nav a { border: 0; border-left: 2px solid transparent; border-radius: 0; padding: 8px 0 8px 16px; min-height: 0; color: var(--kds-fg-muted); }
   .account-nav a:hover, .account-nav a:focus-visible { color: var(--cc-navy); }
-  .account-nav a.is-active { background: none; color: var(--cc-red); border-left-color: var(--cc-red); font-weight: 700; }
+  .account-nav a.is-active { background: none; color: var(--cc-red-700); border-left-color: var(--cc-red-700); font-weight: 700; }
 }

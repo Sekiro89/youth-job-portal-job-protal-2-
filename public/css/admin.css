@@ -20,7 +20,7 @@
 /* ---------- stats ---------- */
 a.stat { text-decoration: none; display: block; transition: border-color .15s, box-shadow .15s; }
 a.stat:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow-2); }
-.stat--alert { border-color: var(--cc-red); background: var(--cc-red-100); }
+.stat--alert { border-color: var(--cc-red-700); background: var(--cc-red-100); }
 .stat--alert .stat__value { color: var(--cc-red-700); }
 
 /* role chips (overview) */
@@ -45,7 +45,7 @@ a.stat:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow
 .card--table .card__head { margin: 6px 0 10px; }
 .card--table .table { font-size: .9rem; }
 .row-title { font-weight: 600; color: var(--cc-ink); text-decoration: none; }
-a.row-title:hover { color: var(--cc-red); }
+a.row-title:hover { color: var(--cc-red-700); }
 .row--new td { background: var(--cc-navy-50); }
 .row--muted { opacity: .6; }
 .btn-danger-text { color: var(--kds-danger); }
@@ -71,7 +71,7 @@ a.row-title:hover { color: var(--cc-red); }
 .list-row:first-child { border-top: 0; padding-top: 0; }
 .list-row:last-child { padding-bottom: 0; }
 .list-row__title { font-weight: 600; text-decoration: none; color: var(--cc-ink); overflow-wrap: anywhere; }
-.list-row__title:hover { color: var(--cc-red); }
+.list-row__title:hover { color: var(--cc-red-700); }
 .list-row__meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
 .grid--admin { align-items: start; }
 

@@ -25,8 +25,8 @@
 .seeker-side-wrap.is-scrolled-end::after { opacity: 0; }
 .seeker-side-wrap.is-scrolled-start::before { opacity: 1; }
 .dash__side a { min-height: 44px; display: inline-flex; align-items: center; }
-.side-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-red); color: #fff; font-size: .75rem; font-weight: 700; margin-left: 6px; }
-.dash__side a.is-active .side-badge { background: #fff; color: var(--cc-red); }
+.side-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--cc-red-700); color: #fff; font-size: .75rem; font-weight: 700; margin-left: 6px; }
+.dash__side a.is-active .side-badge { background: #fff; color: var(--cc-red-700); }
 @media (min-width: 1024px) {
   .seeker-side-wrap::before, .seeker-side-wrap::after { display: none; }
   .seeker-side-wrap { position: sticky; top: calc(var(--cc-header-h) + 20px); align-self: start; }
@@ -36,7 +36,7 @@
 
 /* ---------- shared bits ---------- */
 .h3 { font-size: 1.15rem; font-weight: 700; margin: 0; }          /* an h2 that sits inside a card reads at h3 size */
-.req { color: var(--cc-red); }
+.req { color: var(--cc-red-700); }
 .nowrap { white-space: nowrap; }
 .list-plain { list-style: none; margin: 0; padding: 0; display: grid; }
 .list-plain__item { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px 12px; padding: 12px 0; border-top: 1px solid var(--kds-border); flex-wrap: wrap; }
