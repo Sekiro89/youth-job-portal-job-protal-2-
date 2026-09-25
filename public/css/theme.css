@@ -47,7 +47,7 @@
   --kds-radius-md: 8px;
   --kds-radius-lg: 12px;
   --cc-btn-radius: 10px;
-  --cc-header-h: 92px;
+  --cc-header-h: 84px;
   --cc-container: 1200px;
   --cc-container-xl: 1440px;
   --cc-page-padding: clamp(20px, 4vw, 64px);
@@ -128,7 +128,7 @@ a:hover { color: var(--cc-red-700); }
 .site-header__auth a:hover, .site-header__auth button:hover { color: #fff; }
 .site-header__main { display: flex; align-items: center; justify-content: space-between; min-height: var(--cc-header-h); gap: 12px; border-bottom: 2px solid var(--cc-navy); }
 .site-logo { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; }
-.site-logo img { display: block; height: 72px; width: auto; flex: none; }
+.site-logo img { display: block; height: 62px; width: auto; flex: none; }
 .site-header__jobbank { display: none; }
 .nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: 8px; background: #fff; cursor: pointer; }
 .nav-toggle span { display: block; height: 2px; background: var(--cc-navy); border-radius: 2px; transition: transform .2s, opacity .2s; }
@@ -162,29 +162,32 @@ a:hover { color: var(--cc-red-700); }
 /* ---------- footer: a compact Youth Futures brand conclusion, not a tall generic corporate link grid.
    Brand statement and nav groups sit in ONE row at desktop (not two stacked full-width bands), followed by
    one thin legal/utility row — the whole footer stays well under half the height of the old stacked version. ---------- */
-.site-footer { position: relative; background: var(--cc-navy); margin-top: 24px; padding: 36px 0 0; font-size: .9375rem; color: color-mix(in srgb, #fff 80%, transparent); overflow: hidden; }
+/* Ivory footer, not navy — the supplied logo's wordmark is set in dark navy, so any dark footer needs an
+   opaque light plate behind it to stay legible, which reads as a sticker pasted on rather than a blended
+   mark. An ivory footer lets the logo sit directly on it, exactly as it does in the header, with no plate. */
+.site-footer { position: relative; background: var(--cc-bg); margin-top: 24px; padding: 36px 0 0; font-size: .9375rem; color: var(--kds-fg-muted); border-top: 1px solid var(--kds-border); overflow: hidden; }
 .site-footer .container { padding-left: 24px; padding-right: 24px; }
-.footer-top { display: flex; flex-direction: column; gap: 28px; padding-bottom: 28px; border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent); }
+.footer-top { display: flex; flex-direction: column; gap: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--kds-border); }
 .footer-brand { flex: 0 0 auto; max-width: 320px; }
 .footer-brand__logo { display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 10px; }
-.footer-brand__logo img { display: block; height: 64px; width: auto; background: var(--cc-bg); border-radius: 12px; padding: 10px 14px; } /* the logo's own wordmark is dark navy, so it still needs a light plate on the navy footer — ivory (the site's own page colour) instead of stark white, so it reads as a tag, not a sticker */
-.footer-brand__tagline { margin: 0; font: 800 clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem)/1.25 var(--cc-font-display); color: #fff; letter-spacing: -0.01em; }
+.footer-brand__logo img { display: block; height: 56px; width: auto; }
+.footer-brand__tagline { margin: 0; font: 800 clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem)/1.25 var(--cc-font-display); color: var(--cc-navy); letter-spacing: -0.01em; }
 .footer-nav { position: relative; display: flex; flex-wrap: wrap; gap: 28px 40px; }
 .footer-nav nav { flex: 1 1 160px; min-width: 160px; }
-.site-footer h3 { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 55%, transparent); margin-bottom: 10px; }
+.site-footer h3 { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); margin-bottom: 10px; }
 .site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
-.site-footer a { color: color-mix(in srgb, #fff 82%, transparent); text-decoration: none; }
-.site-footer a:hover { color: #fff; }
-.site-footer .muted { color: color-mix(in srgb, #fff 65%, transparent); }
-.footer-nav__meta { color: color-mix(in srgb, #fff 65%, transparent); }
+.site-footer a { color: var(--cc-navy); text-decoration: none; }
+.site-footer a:hover { color: var(--cc-orange-700); }
+.site-footer .muted { color: var(--kds-fg-muted); }
+.footer-nav__meta { color: var(--kds-fg-muted); }
 .footer-utility { position: relative; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding: 14px 0; font-size: .8125rem; }
 /* ul.footer-utility__links (not just .footer-utility__links) — needs to out-specificity ".site-footer ul"
    above, which was otherwise winning and forcing this into its display:grid single-column stack, exactly the
    "Privacy/Terms/Contact wasting vertical space" bug this row exists to avoid. */
 ul.footer-utility__links { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; }
-.footer-utility__links a { font-weight: 700; color: #fff; }
-.footer-utility__links a:hover { color: var(--cc-spark); }
-.footer-utility__meta { display: grid; gap: 2px; color: color-mix(in srgb, #fff 55%, transparent); text-align: left; }
+.footer-utility__links a { font-weight: 700; color: var(--cc-navy); }
+.footer-utility__links a:hover { color: var(--cc-orange-700); }
+.footer-utility__meta { display: grid; gap: 2px; color: var(--kds-fg-muted); text-align: left; }
 .footer-utility__meta p { margin: 0; }
 @media (min-width: 640px) { .footer-utility__meta { text-align: right; } }
 @media (min-width: 900px) {
@@ -444,7 +447,7 @@ textarea.input { min-height: 120px; resize: vertical; }
    at each usage site for why that surface was chosen there. */
 .surface-ivory { background: var(--cc-bg); }
 .surface-white { background: #fff; }
-.surface-navy { background: var(--cc-navy); color: #fff; }
+.surface-navy { position: relative; overflow: hidden; background: var(--cc-navy); background-image: radial-gradient(circle at 88% 15%, color-mix(in srgb, var(--cc-red) 35%, transparent), transparent 55%); color: #fff; }
 .surface-navy h1, .surface-navy h2, .surface-navy h3, .surface-navy h4 { color: #fff; }
 .surface-navy .eyebrow { color: var(--cc-spark); }
 .surface-navy .eyebrow::before { background: var(--cc-spark); }
