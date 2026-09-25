@@ -60,7 +60,7 @@
 .hero .eyebrow { color: var(--cc-orange-700); }
 .hero .eyebrow::before { background: var(--cc-orange); }
 .hero__title { position: relative; z-index: 1; margin: 18px 0 22px; font-size: var(--yf-display-hero); line-height: .98; color: var(--cc-navy); }
-.hero__title-accent { color: var(--cc-orange-700); }
+.hero__title-accent { color: var(--cc-red-700); }
 .hero__lead { position: relative; z-index: 1; margin: 0 0 28px; max-width: 52ch; font-size: 1.125rem; color: var(--kds-fg-muted); }
 .hero__lead strong { color: var(--cc-navy); }
 .hero__cta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; }

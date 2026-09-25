@@ -70,6 +70,17 @@
   }
 
   // ---------------------------------------------------------------- map
+  // custom pin: an orange-to-red gradient teardrop (brand mark), not Leaflet's/Google's default blue —
+  // hex values match --cc-orange / --cc-red / --cc-navy in theme.css; keep in sync if the palette changes.
+  var PIN_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">' +
+    '<defs><linearGradient id="ccPinGrad" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#FF9317"/><stop offset="100%" stop-color="#DC4A3D"/>' +
+    '</linearGradient></defs>' +
+    '<path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.7 23.3 0 15 0z" fill="url(#ccPinGrad)" stroke="#1C3350" stroke-width="1.5"/>' +
+    '<circle cx="15" cy="15" r="5.5" fill="#fff"/>' +
+    '</svg>';
+  var PIN_URL = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(PIN_SVG);
+
   function popupHtml(m) {
     if (m.html) return m.html;
     var h = '<div class="cc-popup">';
@@ -96,11 +107,12 @@
       var map = L.map(el, { scrollWheelZoom: opts.scrollWheelZoom !== undefined ? opts.scrollWheelZoom : false, zoomControl: true });
       L.tileLayer(tiles.url, { attribution: tiles.attribution, maxZoom: tiles.maxZoom || 19 }).addTo(map);
       var layer = L.layerGroup().addTo(map);
+      var pinIcon = L.icon({ iconUrl: PIN_URL, iconSize: [30, 40], iconAnchor: [15, 40], popupAnchor: [0, -36] });
       var handle = {
         provider: 'osm', map: map, markers: [],
         setMarkers: function (list) {
           layer.clearLayers(); handle.markers = validMarkers(list);
-          handle.markers.forEach(function (m) { var mk = L.marker([m.lat, m.lng], { title: m.title || '' }); mk.bindPopup(popupHtml(m), { maxWidth: 280 }); mk.addTo(layer); });
+          handle.markers.forEach(function (m) { var mk = L.marker([m.lat, m.lng], { title: m.title || '', icon: pinIcon }); mk.bindPopup(popupHtml(m), { maxWidth: 280 }); mk.addTo(layer); });
           noteEmpty(el, handle.markers);
           if (opts.fit !== false) handle.fit();
         },
@@ -128,7 +140,7 @@
         setMarkers: function (list) {
           pins.forEach(function (p) { p.setMap(null); }); pins = []; handle.markers = validMarkers(list);
           handle.markers.forEach(function (m) {
-            var pin = new gm.Marker({ position: { lat: m.lat, lng: m.lng }, map: map, title: m.title || '' });
+            var pin = new gm.Marker({ position: { lat: m.lat, lng: m.lng }, map: map, title: m.title || '', icon: { url: PIN_URL, scaledSize: new gm.Size(30, 40), anchor: new gm.Point(15, 40) } });
             pin.addListener('click', function () { info.setContent(popupHtml(m)); info.open({ map: map, anchor: pin }); });
             pins.push(pin);
           });
