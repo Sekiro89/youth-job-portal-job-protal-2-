@@ -5,13 +5,13 @@
    every size (display down to labels). See docs on the journey component family (.jline / .jnode / .jstage)
    and the map token set below. */
 :root, [data-kds-theme="light"] {
-  --cc-navy: #16283B; --cc-navy-700: #101D2B; --cc-navy-900: #0A1319; --cc-navy-100: #E2E6EB; --cc-navy-50: #F1F3F5;
-  --cc-red: #EF3130;  --cc-red-700: #C41E1D; --cc-red-900: #971716; --cc-red-100: #FCE7E6; /* red-700 is the AA-contrast shade used behind white button text */
+  --cc-navy: #1C3350; --cc-navy-700: #16283F; --cc-navy-900: #101E30; --cc-navy-100: #E4E7EB; --cc-navy-50: #F4F5F7; /* softened from the initial #16283B pass — same family, less near-black */
+  --cc-red: #DC4A3D;  --cc-red-700: #A5382E; --cc-red-900: #732720; --cc-red-100: #FBEDEC; /* softened to a warmer, less neon red; red-700 is the AA-contrast shade used behind white button text */
   --cc-spark: #FFC01D; --cc-spark-700: #8A6200; --cc-spark-100: #FFF4D9;  /* the logo's rising mark — opportunity accent, used sparingly; spark-700 is the AA-contrast shade for text on light surfaces */
   --cc-green: #2E9E5B; --cc-green-100: #E4F5EA;
   --cc-orange: #FF9317; --cc-orange-700: #A65700; --cc-orange-100: #FFE8D2; /* orange-700 is the AA-contrast shade used behind white text */
   --cc-teal: #1E8A9A;  --cc-teal-100: #E1F2F4;
-  --cc-ink: #16283B;   --cc-ink-muted: #55606C; --cc-ink-faint: #7C8793;
+  --cc-ink: #1C3350;   --cc-ink-muted: #57616F; --cc-ink-faint: #7D8794;
   --cc-line: #E7E1D6;  --cc-line-strong: #D6CBB8;
   --cc-bg: #FAF7F2;    --cc-surface: #F2ECE0; --cc-surface-alt: #ECE0CC;
   --cc-grey-100: #F5F3EE; --cc-grey-200: #E7E1D6; --cc-grey-300: #D6CBB8; --cc-grey-400: #B7AA92;
@@ -47,7 +47,7 @@
   --kds-radius-md: 8px;
   --kds-radius-lg: 12px;
   --cc-btn-radius: 10px;
-  --cc-header-h: 84px;
+  --cc-header-h: 92px;
   --cc-container: 1200px;
   --cc-container-xl: 1440px;
   --cc-page-padding: clamp(20px, 4vw, 64px);
@@ -128,7 +128,7 @@ a:hover { color: var(--cc-red-700); }
 .site-header__auth a:hover, .site-header__auth button:hover { color: #fff; }
 .site-header__main { display: flex; align-items: center; justify-content: space-between; min-height: var(--cc-header-h); gap: 12px; border-bottom: 2px solid var(--cc-navy); }
 .site-logo { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; }
-.site-logo img { display: block; height: 60px; width: auto; flex: none; }
+.site-logo img { display: block; height: 72px; width: auto; flex: none; }
 .site-header__jobbank { display: none; }
 .nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: 8px; background: #fff; cursor: pointer; }
 .nav-toggle span { display: block; height: 2px; background: var(--cc-navy); border-radius: 2px; transition: transform .2s, opacity .2s; }
@@ -167,7 +167,7 @@ a:hover { color: var(--cc-red-700); }
 .footer-top { display: flex; flex-direction: column; gap: 28px; padding-bottom: 28px; border-bottom: 1px solid color-mix(in srgb, #fff 14%, transparent); }
 .footer-brand { flex: 0 0 auto; max-width: 320px; }
 .footer-brand__logo { display: inline-flex; align-items: center; text-decoration: none; margin-bottom: 10px; }
-.footer-brand__logo img { display: block; height: 52px; width: auto; background: #fff; border-radius: 10px; padding: 8px 12px; }
+.footer-brand__logo img { display: block; height: 64px; width: auto; background: var(--cc-bg); border-radius: 12px; padding: 10px 14px; } /* the logo's own wordmark is dark navy, so it still needs a light plate on the navy footer — ivory (the site's own page colour) instead of stark white, so it reads as a tag, not a sticker */
 .footer-brand__tagline { margin: 0; font: 800 clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem)/1.25 var(--cc-font-display); color: #fff; letter-spacing: -0.01em; }
 .footer-nav { position: relative; display: flex; flex-wrap: wrap; gap: 28px 40px; }
 .footer-nav nav { flex: 1 1 160px; min-width: 160px; }
@@ -263,8 +263,8 @@ textarea.input { min-height: 120px; resize: vertical; }
 .page-head { position: relative; background: var(--cc-navy); padding: 28px 0; overflow: hidden; border-left: 6px solid var(--cc-red); }
 .page-head::before {
   content: ""; position: absolute; inset: -40% -8% auto auto; width: 30%; aspect-ratio: 1;
-  background: radial-gradient(circle, color-mix(in srgb, var(--cc-red) 45%, transparent), transparent 70%);
-  opacity: .6; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cc-orange) 35%, transparent), transparent 70%);
+  opacity: .45; pointer-events: none;
 }
 .page-head__inner { position: relative; }
 .page-head h1 { margin-bottom: 8px; color: #fff; }
@@ -297,9 +297,9 @@ textarea.input { min-height: 120px; resize: vertical; }
 .jstage:nth-child(2) .jstage__node { background: var(--cc-spark); }
 .jstage--active .jstage__node, .jstage:hover .jstage__node { background: var(--route-active); width: var(--node-active-size); height: var(--node-active-size); left: calc((var(--node-size) - var(--node-active-size)) / 2); }
 .jstage__label { display: block; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--cc-red-700); margin: 0 0 var(--sp-2); }
-.jstage__num { display: block; font: 800 var(--stage-number-size)/1 var(--cc-font-display); color: var(--cc-navy-100); }
-.jstage:nth-child(1) .jstage__num { color: var(--cc-orange-100); }
-.jstage:nth-child(2) .jstage__num { color: var(--cc-spark-100); }
+.jstage__num { display: block; font: 800 var(--stage-number-size)/1 var(--cc-font-display); color: var(--cc-navy); opacity: .3; } /* solid colour at partial opacity reads clearly; the old pale -100 tints were nearly invisible on ivory/white */
+.jstage:nth-child(1) .jstage__num { color: var(--cc-orange); opacity: .45; }
+.jstage:nth-child(2) .jstage__num { color: var(--cc-spark-700); opacity: .55; }
 .jstage__name { font: 800 clamp(1.375rem, 1.6vw + 1rem, 2.125rem)/1.15 var(--cc-font-display); color: var(--cc-navy); margin: var(--sp-2) 0; }
 .jstage__desc { color: var(--kds-fg-muted); max-width: 46ch; margin: 0; font-size: 1.0625rem; }
 .jstage__link { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--sp-3); font-weight: 700; font-size: .9375rem; color: var(--cc-red-700); text-decoration: none; }
