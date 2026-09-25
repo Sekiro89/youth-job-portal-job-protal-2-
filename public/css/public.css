@@ -141,7 +141,7 @@
 .search-band__inner { display: grid; gap: 14px; }
 .search-form { display: grid; gap: 10px; }
 .search-form__field label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--kds-fg-muted); }
-.search-form__submit { width: 100%; min-height: 48px; }
+.search-form__submit { width: 100%; }
 .search-band__popular { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .search-band__popular a { text-decoration: none; font-weight: 600; color: var(--cc-navy); border-bottom: 1px solid var(--cc-line-strong); }
 .search-band__popular a:hover { color: var(--cc-orange-700); border-color: var(--cc-orange); }

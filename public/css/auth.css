@@ -94,7 +94,7 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 /* password show/hide */
 .pw { position: relative; }
 .pw .input { padding-right: 72px; }
-.pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
+.pw__toggle { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); min-width: 60px; min-height: 36px; padding: 0 10px; border: 0; border-radius: var(--cc-btn-radius); background: transparent; color: var(--cc-navy); font: 600 .8125rem/1 var(--kds-font-sans); cursor: pointer; }
 .pw__toggle:hover { background: var(--cc-navy-50); }
 
 /* /signup "Choose your way in" — three horizontal routes divided by thin rules, never boxed cards or
@@ -135,7 +135,7 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 
 /* login role hint chips */
 .role-hints { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
-.role-hint { flex: 1 1 auto; text-align: center; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .8125rem; color: var(--cc-navy); }
+.role-hint { flex: 1 1 auto; text-align: center; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .8125rem; color: var(--cc-navy); }
 .role-hint.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 
 /* ---------- account settings: a two-column workspace (nav + main), not four narrow stacked cards.
@@ -146,7 +146,7 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
 .account-layout { display: grid; gap: 32px; }
 .account-nav__label { margin: 0 0 10px; font: 700 .6875rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .account-nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.account-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); transition: border-color .15s, background-color .15s, color .15s; }
+.account-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); transition: border-color .15s, background-color .15s, color .15s; }
 .account-nav a:hover, .account-nav a:focus-visible { border-color: var(--cc-navy); }
 .account-nav a.is-active { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
 .account-main { max-width: 720px; min-width: 0; }

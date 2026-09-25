@@ -136,7 +136,7 @@
 .client-switch { margin-top: 28px; max-width: 960px; }
 .client-switch__account { margin: 0 0 16px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .client-switch__tabs { display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--kds-border); padding-bottom: 0; }
-.client-switch__tab { min-height: 48px; padding: 0 20px; border: 1px solid var(--kds-border); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--cc-surface); color: var(--cc-navy); font: 700 .9375rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, color .15s; }
+.client-switch__tab { min-height: 48px; padding: 0 20px; border: 1px solid var(--kds-border); border-bottom: 0; border-radius: var(--cc-btn-radius) var(--cc-btn-radius) 0 0; background: var(--cc-surface); color: var(--cc-navy); font: 700 .9375rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, color .15s; }
 .client-switch__tab:hover { color: var(--cc-orange-700); }
 .client-switch__tab.is-active { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
 .client-switch__note { margin: 14px 0 0; }

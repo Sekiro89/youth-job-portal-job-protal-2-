@@ -58,7 +58,7 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
 .check--multi { align-items: flex-start; }
 .check--multi input { margin-top: 3px; }
 .input--file { padding: 9px 12px; cursor: pointer; font-size: .9rem; }
-.input--file::file-selector-button { font: inherit; font-weight: 600; min-height: 32px; margin-right: 12px; padding: 6px 12px; border: 1px solid var(--kds-border-strong); border-radius: 8px; background: var(--cc-navy-50); color: var(--cc-navy); cursor: pointer; }
+.input--file::file-selector-button { font: inherit; font-weight: 600; min-height: 32px; margin-right: 12px; padding: 6px 12px; border: 1px solid var(--kds-border-strong); border-radius: var(--cc-btn-radius); background: var(--cc-navy-50); color: var(--cc-navy); cursor: pointer; }
 .upload-box { padding: 12px; border: 1px dashed var(--kds-border-strong); border-radius: 10px; background: var(--cc-surface); min-width: 0; }
 .upload-box--error { border-color: var(--kds-danger); border-style: solid; }
 .error[role="alert"] { margin: 0; color: var(--kds-danger); font-weight: 600; }

@@ -31,7 +31,7 @@ a.stat:hover { border-color: var(--cc-line-strong); box-shadow: var(--kds-shadow
 /* ---------- filter tabs (status pills, also the Integrations jump strip) + filter bar ---------- */
 .filter-tabs { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
 .filter-tabs::-webkit-scrollbar { display: none; }
-.filter-tabs a { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--kds-border); background: #fff; text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); white-space: nowrap; }
+.filter-tabs a { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 12px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border); background: #fff; text-decoration: none; font-weight: 600; font-size: .875rem; color: var(--cc-navy); white-space: nowrap; }
 .filter-tabs a.is-active { background: var(--cc-navy-100); border-color: var(--cc-navy); color: var(--cc-navy-700); }
 .filter-tabs .count { background: var(--cc-surface); border-radius: 999px; padding: 1px 8px; font-size: .75rem; color: var(--kds-fg-muted); }
 .filter-tabs a.is-active .count { background: #fff; }

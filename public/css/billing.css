@@ -25,7 +25,7 @@
 .bill-renew svg { flex: none; margin-top: 2px; color: var(--cc-teal); }
 .bill-cta { display: grid; gap: 10px; }
 .bill-cta .sticky-bar { margin: 0 -20px; }
-.bill-cta .kds-btn, .bill-pay .kds-btn--lg { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; font-size: 1.0625rem; width: 100%; }
+.bill-cta .kds-btn, .bill-pay .kds-btn--lg { width: 100%; }   /* size/shape come from .kds-btn--lg in theme.css */
 .bill-cta__note { margin: 0; text-align: center; }
 .bill-ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: .9375rem; }
 .bill-ticks li { display: flex; gap: 10px; align-items: flex-start; }

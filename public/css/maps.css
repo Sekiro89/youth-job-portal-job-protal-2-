@@ -26,7 +26,7 @@
 .locations__item { display: grid; grid-template-columns: 18px 1fr; column-gap: 12px; row-gap: 6px; align-items: center; }
 .locations__item svg { grid-row: 1; grid-column: 1; }
 .locations__addr { grid-row: 1; grid-column: 2; flex: initial; }
-.locations__map-link { grid-row: 2; grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--kds-border); background: var(--cc-surface); color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.locations__map-link { grid-row: 2; grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border); background: var(--cc-surface); color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .locations__map-link:hover { border-color: var(--cc-navy); }
 .locations__dist { flex: none; font-size: .8125rem; color: var(--kds-fg-muted); font-weight: 600; }
 
@@ -44,7 +44,7 @@
 
 /* ---------- search: list / map toggle + map pane ---------- */
 .view-toggle { display: inline-flex; border: 1px solid var(--kds-border); border-radius: 10px; overflow: hidden; background: #fff; }
-.view-toggle button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); cursor: pointer; }
+.view-toggle button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--kds-fg-muted); cursor: pointer; }
 .view-toggle button[aria-pressed="true"] { background: var(--cc-navy); color: #fff; }
 .view-toggle button:focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: -2px; }
 .results__map { display: none; min-width: 0; }

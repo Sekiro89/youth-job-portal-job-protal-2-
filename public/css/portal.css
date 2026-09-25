@@ -36,7 +36,7 @@
   .card--table > .card__foot { padding: 4px 0 0; border: 0; }
 }
 /* Touch targets: small buttons grow to 44px where there is no hover pointer (phones, iPads). Narrow screens are covered by theme.css. */
-@media (hover: none) { .portal .kds-btn--sm { min-height: 44px; padding: .55rem .9rem; } .portal .input--sm { min-height: 44px; } }
+@media (hover: none) { .portal .input--sm { min-height: 44px; } }   /* .kds-btn--sm touch size lives in theme.css */
 
 /* Posting ID (X1X1X1) — inline label + mono code, same look everywhere (lists, detail, billing, receipts) */
 .posting-id { display: inline-flex; align-items: center; gap: 5px; font-size: .8125rem; color: var(--kds-fg-muted); white-space: nowrap; }
@@ -98,7 +98,7 @@
 .company-picker__label { font: 700 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-muted); }
 .company-picker__chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .company-picker__chips::-webkit-scrollbar { display: none; }
-.chip { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--kds-border-strong); background: #fff; color: var(--cc-navy); font-weight: 600; font-size: .9rem; text-decoration: none; white-space: nowrap; }
+.chip { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border-strong); background: #fff; color: var(--cc-navy); font-weight: 600; font-size: .9rem; text-decoration: none; white-space: nowrap; }
 .chip.is-active { background: var(--cc-teal); border-color: var(--cc-teal); color: #fff; }
 .chip:hover { border-color: var(--cc-teal); color: var(--cc-navy); }
 

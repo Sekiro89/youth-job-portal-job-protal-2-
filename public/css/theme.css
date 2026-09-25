@@ -108,7 +108,7 @@ a:hover { color: var(--cc-red-700); }
 .section-pad { padding-top: 40px; padding-bottom: 40px; }
 .inline-form { display: inline; margin: 0; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.skip-link { position: absolute; left: -999px; top: 8px; background: var(--cc-navy); color: #fff; padding: 8px 12px; border-radius: 6px; z-index: 2000; }
+.skip-link { position: absolute; left: -999px; top: 8px; background: var(--cc-navy); color: #fff; padding: 8px 12px; border-radius: var(--cc-btn-radius); z-index: 2000; }
 .skip-link:focus { left: 8px; }
 :focus-visible { outline: 2px solid var(--kds-focus-ring); outline-offset: 2px; }
 @media (min-width: 768px) { .container { padding-left: 24px; padding-right: 24px; } .section-pad { padding-top: 56px; padding-bottom: 56px; } }
@@ -131,7 +131,7 @@ a:hover { color: var(--cc-red-700); }
 .site-logo { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; }
 .site-logo img { display: block; height: 62px; width: auto; flex: none; }
 .site-header__jobbank { display: none; }
-.nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: 8px; background: #fff; cursor: pointer; }
+.nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--kds-border); border-radius: var(--cc-btn-radius); background: #fff; cursor: pointer; }
 .nav-toggle span { display: block; height: 2px; background: var(--cc-navy); border-radius: 2px; transition: transform .2s, opacity .2s; }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
@@ -139,7 +139,7 @@ a:hover { color: var(--cc-red-700); }
 .site-nav { display: none; position: absolute; left: 0; right: 0; top: 100%; background: #fff; border-bottom: 1px solid var(--kds-border); box-shadow: 0 16px 32px rgba(15,36,68,.12); padding: 8px 16px 16px; }
 .site-nav.is-open { display: block; }
 .site-nav__tabs { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.site-nav__tabs a { display: block; padding: 12px 10px; border-radius: 8px; font-weight: 600; text-decoration: none; color: var(--cc-navy); }
+.site-nav__tabs a { display: block; padding: 12px 10px; border-radius: var(--cc-btn-radius); font-weight: 600; text-decoration: none; color: var(--cc-navy); }
 .site-nav__tabs a:hover { background: var(--cc-navy-50); }
 .site-nav__tabs a.is-active { background: var(--cc-navy-100); color: var(--cc-navy-700); box-shadow: inset 3px 0 0 var(--cc-orange); }
 .site-nav__auth { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -148,7 +148,7 @@ a:hover { color: var(--cc-red-700); }
 @media (min-width: 1024px) {
   .site-header__utility { display: block; }
   .nav-toggle { display: none; }
-  .site-header__jobbank { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px; background: var(--cc-orange); color: var(--cc-ink); font-weight: 700; font-size: .9375rem; text-decoration: none; }
+  .site-header__jobbank { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: var(--cc-btn-radius); background: var(--cc-orange); color: var(--cc-ink); font-weight: 700; font-size: .9375rem; text-decoration: none; }
   .site-header__jobbank:hover { background: var(--cc-orange-700); color: #fff; }
   .site-nav { display: none !important; }
 }
@@ -242,11 +242,16 @@ textarea.input { min-height: 120px; resize: vertical; }
 .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--cc-navy); flex: none; }
 .check:has(input:checked) { border-color: var(--cc-navy); background: var(--cc-navy-50); }
 .form-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.form-actions .kds-btn { min-height: 44px; }
 
 /* buttons: touch-friendly sizes + brand variants */
-.kds-btn { min-height: 48px; padding-inline: 24px; border-radius: var(--cc-btn-radius); font-weight: 700; }
-.kds-btn--lg { min-height: 56px; }
+/* ONE button structure sitewide. Every button, <a> or <button>, in any variant (brand / accent / ghost / danger)
+   shares the same shape: same radius, weight, line-height, no underline, icon gap, and one of exactly three sizes:
+     --sm  36px (44px on phones and touch screens)  ·  default 48px  ·  --lg 56px
+   Page stylesheets may change a button's WIDTH/flex (full-width on phones, etc.) or its colour on a dark surface,
+   but never its height, padding, radius or font — add a size modifier instead. */
+.kds-btn { min-height: 48px; padding: 0 24px; border-radius: var(--cc-btn-radius); font: 700 var(--kds-text-sm)/1.2 var(--kds-font-sans); text-decoration: none; text-align: center; gap: 8px; }
+.kds-btn:hover { text-decoration: none; }
+.kds-btn--lg { min-height: 56px; padding: 0 32px; font-size: var(--kds-text-md); }
 /* Primary CTA is navy, not red — red as the default button colour across the whole site (every "Explore jobs" /
    "Post a job" / "Apply now" moment) was one of the clearest remnants of the old visual system. Red stays
    reserved for .kds-btn--danger and a handful of deliberate "final stage" accents elsewhere. */
@@ -254,8 +259,8 @@ textarea.input { min-height: 120px; resize: vertical; }
 .kds-btn--accent:hover { background: var(--cc-navy-700); opacity: 1; color: #fff; }
 .kds-btn--ghost:hover { color: var(--kds-fg); }
 .kds-btn--block { width: 100%; }
-.kds-btn--sm { min-height: 36px; padding: .4rem .8rem; }
-@media (max-width: 767px) { .kds-btn--sm { min-height: 44px; } }
+.kds-btn--sm { min-height: 36px; padding: 0 14px; font-size: .8125rem; }
+@media (max-width: 767px), (hover: none) { .kds-btn--sm { min-height: 44px; padding: 0 16px; } }
 
 /* badges */
 .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 600; background: var(--cc-navy-100); color: var(--cc-navy-700); white-space: nowrap; }
@@ -353,7 +358,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 .dash { display: grid; gap: 20px; grid-template-columns: 1fr; padding-top: 20px; padding-bottom: 40px; }
 .dash__side { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; }
 .dash__side::-webkit-scrollbar { display: none; }
-.dash__side a { flex: none; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); background: #fff; white-space: nowrap; }
+.dash__side a { flex: none; padding: 10px 14px; border-radius: var(--cc-btn-radius); border: 1px solid var(--kds-border); text-decoration: none; font-weight: 600; font-size: .9rem; color: var(--cc-navy); background: #fff; white-space: nowrap; }
 .dash__side a.is-active { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
 .dash__main { min-width: 0; display: grid; gap: 20px; align-content: start; }
 @media (min-width: 1024px) {
