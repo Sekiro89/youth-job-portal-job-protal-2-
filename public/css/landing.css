@@ -225,8 +225,8 @@
 .price-split__total { margin: 0; font-size: .875rem; color: color-mix(in srgb, #fff 78%, transparent); }
 .price-split__total strong { color: #fff; }
 .price-split__figure .kds-btn { margin-top: 10px; justify-self: stretch; }
-.price-split__figure .kds-btn--accent { background: #fff; color: var(--cc-navy); }
-.price-split__figure .kds-btn--accent:hover { background: color-mix(in srgb, #fff 85%, transparent); color: var(--cc-navy); }
+.price-split__figure .kds-btn--accent { background: var(--cc-red-700); color: #fff; }
+.price-split__figure .kds-btn--accent:hover { background: var(--cc-red-900); color: #fff; }
 .price-split__facts { background: var(--cc-surface); padding: 40px 32px; margin: 0; display: grid; gap: 14px; align-content: start; }
 .price-split__facts > div { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--kds-border); font-size: .9375rem; }
 .price-split__facts dt { color: var(--kds-fg-muted); }

@@ -5,7 +5,7 @@ const _gst = (c) => Math.round(c * C.PRICING.gst_rate), _d = (c) => '$' + (c / 1
 const EMP = C.priceCentsFor('employer'), CON = C.priceCentsFor('consultant');
 const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON), TOTAL_CON = _d(CON + _gst(CON));
 %>
-<header class="page-head landing-head page-head--warm">
+<header class="page-head landing-head">
   <div class="container page-head__inner">
     <div>
       <p class="eyebrow">For employers</p>

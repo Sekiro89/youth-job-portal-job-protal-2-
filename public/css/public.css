@@ -67,6 +67,8 @@
 .hero__cta .kds-btn { flex: 1 1 auto; }
 .hero__cta .kds-btn--ghost { color: var(--cc-navy); border-color: var(--kds-border-strong); }
 .hero__cta .kds-btn--ghost:hover { background: var(--cc-navy-50); color: var(--cc-navy); }
+.hero__cta .kds-btn--accent { background: var(--cc-red-700); color: #fff; }
+.hero__cta .kds-btn--accent:hover { background: var(--cc-red-900); color: #fff; }
 @media (min-width: 640px) { .hero__cta .kds-btn { flex: 0 0 auto; } }
 
 /* ---------- career journey visual: a deliberate route with 5 labelled stops, each with its own colour

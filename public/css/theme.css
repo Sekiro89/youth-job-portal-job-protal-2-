@@ -269,7 +269,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 /* Ivory is the DEFAULT masthead surface now — a solid navy band on every inner page was one of the biggest
    remnants of the old visual system. .page-head--navy (below) opts specific pages back into navy deliberately,
    for variety, not as the default. */
-.page-head { position: relative; background: var(--cc-bg); padding: 28px 0; overflow: hidden; border-left: 6px solid var(--cc-orange); border-bottom: 1px solid var(--kds-border); }
+.page-head { position: relative; background: linear-gradient(135deg, var(--cc-orange-100), var(--cc-bg) 65%); padding: 28px 0; overflow: hidden; border-left: 6px solid var(--cc-orange); border-bottom: 1px solid var(--kds-border); }
 .page-head::before {
   content: ""; position: absolute; inset: -40% -8% auto auto; width: 30%; aspect-ratio: 1;
   background: radial-gradient(circle, color-mix(in srgb, var(--cc-orange) 30%, transparent), transparent 70%);
@@ -289,9 +289,6 @@ textarea.input { min-height: 120px; resize: vertical; }
 .page-head .kds-btn--brand { background: var(--cc-navy); color: #fff; }
 .page-head .kds-btn--brand:hover { background: var(--cc-navy-700); color: #fff; }
 .page-head .muted { color: var(--kds-fg-muted); }
-
-/* a soft peach/orange-tinted variant — its own hero surface (employer), not the ivory default and not navy */
-.page-head--warm { background: linear-gradient(135deg, var(--cc-orange-100), var(--cc-bg) 65%); border-left-color: var(--cc-orange); }
 
 /* deliberately opted back into navy (job seeker landing) so the site doesn't trade "always navy" for
    "always ivory" — kept as one of several hero treatments, not the default. */
