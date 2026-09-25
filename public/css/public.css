@@ -50,51 +50,60 @@
    (.job-card, .jobs-grid, .section, .card, .kds-btn) from theme.css.
    ====================================================================== */
 
-/* ---------- hero: a full-bleed navy statement band — oversized type + a stat rail, no illustration.
-   Deliberately NOT a two-column text-left/illustration-right split: every element here is typographic. ---------- */
-.hero { position: relative; overflow: hidden; background: var(--cc-navy); padding: var(--sp-9) 0 0; color: #fff; }
+/* ---------- hero: an ivory statement band — oversized navy type + a warm, colourful journey graphic.
+   Deliberately NOT navy: a solid navy hero + red CTA was the single biggest remnant of the old visual
+   system, repeated on nearly every page. Ivory + navy type + the journey graphic doing the colour work
+   is the "calm structure, warm energy" split this brand asks for. ---------- */
+.hero { position: relative; overflow: hidden; background: var(--cc-bg); padding: var(--sp-9) 0 0; color: var(--cc-ink); }
 .hero__inner { position: relative; padding-bottom: var(--sp-8); }
 .hero__copy { min-width: 0; max-width: 34rem; }
-.hero .eyebrow { color: var(--cc-spark); }
-.hero .eyebrow::before { background: var(--cc-spark); }
-.hero__title { position: relative; z-index: 1; margin: 18px 0 22px; font-size: var(--yf-display-hero); line-height: .98; color: #fff; }
-.hero__title-accent { color: var(--cc-red-700); }
-.hero__lead { position: relative; z-index: 1; margin: 0 0 28px; max-width: 52ch; font-size: 1.125rem; color: color-mix(in srgb, #fff 82%, transparent); }
-.hero__lead strong { color: #fff; }
+.hero .eyebrow { color: var(--cc-orange-700); }
+.hero .eyebrow::before { background: var(--cc-orange); }
+.hero__title { position: relative; z-index: 1; margin: 18px 0 22px; font-size: var(--yf-display-hero); line-height: .98; color: var(--cc-navy); }
+.hero__title-accent { color: var(--cc-orange-700); }
+.hero__lead { position: relative; z-index: 1; margin: 0 0 28px; max-width: 52ch; font-size: 1.125rem; color: var(--kds-fg-muted); }
+.hero__lead strong { color: var(--cc-navy); }
 .hero__cta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; }
 .hero__cta .kds-btn { flex: 1 1 auto; }
-.hero__cta .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
-.hero__cta .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
+.hero__cta .kds-btn--ghost { color: var(--cc-navy); border-color: var(--kds-border-strong); }
+.hero__cta .kds-btn--ghost:hover { background: var(--cc-navy-50); color: var(--cc-navy); }
 @media (min-width: 640px) { .hero__cta .kds-btn { flex: 0 0 auto; } }
 
-/* ---------- career journey visual: a deliberate route with 5 labelled stops, an abstract land silhouette
-   behind it, not a random diagonal line. Hidden on phone (section 15: mobile gets its own compact vertical
-   route further down the page rhythm is unchanged — the hero itself stays headline-first on small screens). ---------- */
+/* ---------- career journey visual: a deliberate route with 5 labelled stops, each with its own colour
+   identity (same arc used by every stage component sitewide: orange -> yellow -> navy -> orange -> red)
+   instead of one repeated grey-blue dot with a single orange finish line. Hidden on phone (mobile gets its
+   own compact vertical route further down; the hero itself stays headline-first on small screens). ---------- */
 /* mobile: a compact vertical route (no SVG land/curve — just numbered stops joined by a short line) */
 .hero__journey { margin-top: var(--sp-6); }
 .hero__journey-svg { display: none; }
 .hero__journey-stops { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
 .hero__journey-stops li { display: flex; align-items: center; gap: 12px; position: relative; padding-left: 2px; }
-.hero__journey-stops li:not(:last-child)::after { content: ""; position: absolute; left: calc(var(--node-size) / 2 - 1px); top: 100%; width: 2px; height: 12px; background: #5F7692; }
-.hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; flex: none; }
-.hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-orange); }
-.hero__stop-label { display: flex; align-items: baseline; gap: 8px; font-size: .8125rem; color: color-mix(in srgb, #fff 60%, transparent); }
-.hero__stop-label strong { font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 88%, transparent); }
-.hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
+.hero__journey-stops li:not(:last-child)::after { content: ""; position: absolute; left: calc(var(--node-size) / 2 - 1px); top: 100%; width: 2px; height: 12px; background: var(--cc-line-strong); }
+.hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: var(--cc-navy); border: 2px solid var(--cc-bg); box-shadow: 0 0 0 1.5px var(--cc-line-strong); flex: none; }
+.hero__journey-stops li:nth-child(1) .hero__stop-node { background: var(--cc-orange); }
+.hero__journey-stops li:nth-child(2) .hero__stop-node { background: var(--cc-spark); }
+.hero__journey-stops li:nth-child(4) .hero__stop-node { background: var(--cc-orange); }
+.hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); }
+.hero__stop-label { display: flex; align-items: baseline; gap: 8px; font-size: .8125rem; color: var(--kds-fg-muted); }
+.hero__stop-label strong { font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--cc-navy); }
+.hero__journey-stops li.is-end .hero__stop-label strong { color: var(--cc-red-700); }
 @media (min-width: 900px) {
   .hero__journey { margin-top: 0; position: relative; }
   .hero__journey-svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
-  /* a soft radial glow, not a flat tint — the silhouette fades into the navy instead of reading as a
-     panel with a hard (if wavy) boundary. */
-  .hero__journey-land { fill: url(#heroJourneyGlow); stroke: none; }
-  .hero__journey-route { fill: none; stroke: #5F7692; stroke-width: 2.3; stroke-dasharray: 1.4 9; stroke-linecap: round; }
+  /* a soft warm tint, not a white glow — the silhouette reads as a faint shape on ivory instead of the
+     glow-on-navy treatment this replaces. */
+  .hero__journey-land { fill: color-mix(in srgb, var(--cc-orange) 7%, transparent); stroke: none; }
+  .hero__journey-route { fill: none; stroke: var(--cc-line-strong); stroke-width: 2.3; stroke-dasharray: 1.4 9; stroke-linecap: round; }
   .hero__journey-stops { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
   .hero__journey-stops li { position: absolute; left: var(--x); top: var(--y); display: flex; align-items: center; gap: 10px; transform: translate(-50%, -50%); }
-  .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: #5F7692; border: 2px solid var(--cc-navy); flex: none; }
-  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-orange); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cc-orange) 30%, transparent), 0 0 0 10px color-mix(in srgb, var(--cc-orange) 14%, transparent); }
-  .hero__stop-label { display: grid; font-size: .6875rem; line-height: 1.3; color: color-mix(in srgb, #fff 55%, transparent); white-space: nowrap; }
-  .hero__stop-label strong { font: 700 .6875rem/1.3 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: color-mix(in srgb, #fff 82%, transparent); }
-  .hero__journey-stops li.is-end .hero__stop-label strong { color: #fff; }
+  .hero__stop-node { width: var(--node-size); height: var(--node-size); border-radius: 50%; background: var(--cc-navy); border: 2px solid var(--cc-bg); box-shadow: 0 0 0 1.5px var(--cc-line-strong); flex: none; }
+  .hero__journey-stops li:nth-child(1) .hero__stop-node { background: var(--cc-orange); }
+  .hero__journey-stops li:nth-child(2) .hero__stop-node { background: var(--cc-spark); }
+  .hero__journey-stops li:nth-child(4) .hero__stop-node { background: var(--cc-orange); }
+  .hero__journey-stops li.is-end .hero__stop-node { width: var(--node-active-size); height: var(--node-active-size); background: var(--cc-red); box-shadow: 0 0 0 1.5px var(--cc-bg), 0 0 0 6px color-mix(in srgb, var(--cc-red) 30%, transparent), 0 0 0 11px color-mix(in srgb, var(--cc-red) 14%, transparent); }
+  .hero__stop-label { display: grid; font-size: .6875rem; line-height: 1.3; color: var(--kds-fg-muted); white-space: nowrap; }
+  .hero__stop-label strong { font: 700 .6875rem/1.3 var(--kds-font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--cc-navy); }
+  .hero__journey-stops li.is-end .hero__stop-label strong { color: var(--cc-red-700); }
   @media (prefers-reduced-motion: no-preference) {
     .hero__journey-route { stroke-dashoffset: 1; animation: yf-route-draw 1.8s ease-out both; animation-delay: .2s; }
     .hero__journey-stops li { opacity: 0; animation: yf-stop-in .5s ease-out both; }
@@ -125,7 +134,7 @@
 /* ---------- search band: a bright "next step" panel directly beneath the hero — white, not another dark
    strip, so the transition itself signals progress (dark journey → the bright next action). ---------- */
 .search-band { background: #fff; padding: var(--sp-6) 0; border-bottom: 1px solid var(--kds-border); }
-.search-band__eyebrow { margin: 0 0 6px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-red-700); }
+.search-band__eyebrow { margin: 0 0 6px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-orange-700); }
 .search-band #search-h { margin: 0 0 var(--sp-4); font-size: var(--yf-display-md); color: var(--cc-navy); }
 .search-band__inner { display: grid; gap: 14px; }
 .search-form { display: grid; gap: 10px; }
@@ -133,7 +142,7 @@
 .search-form__submit { width: 100%; min-height: 48px; }
 .search-band__popular { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .search-band__popular a { text-decoration: none; font-weight: 600; color: var(--cc-navy); border-bottom: 1px solid var(--cc-line-strong); }
-.search-band__popular a:hover { color: var(--cc-red-700); border-color: var(--cc-red-700); }
+.search-band__popular a:hover { color: var(--cc-orange-700); border-color: var(--cc-orange); }
 @media (min-width: 640px) {
   .search-form { grid-template-columns: 1fr 1fr; align-items: end; }
   .search-form__submit { grid-column: 1 / -1; }
@@ -320,17 +329,21 @@
 }
 
 /* ---------- final CTA band ---------- */
-.final-cta { background: #fff; background-image: radial-gradient(circle at 88% 12%, var(--cc-red-100), transparent 55%); color: var(--cc-ink); text-align: left; border-top: 1px solid var(--kds-border); }
-.final-cta .eyebrow { color: var(--cc-red-700); }
-.final-cta h2 { color: var(--cc-navy); max-width: 16ch; }
-.final-cta .lead { color: var(--kds-fg-muted); max-width: 48ch; }
+/* the page's one deliberate navy beat, closing the ivory/warm rhythm above it, not another white section */
+.final-cta { background: var(--cc-navy); background-image: radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--cc-orange) 35%, transparent), transparent 55%); color: #fff; text-align: left; }
+.final-cta .eyebrow { color: var(--cc-spark); }
+.final-cta .eyebrow::before { background: var(--cc-spark); }
+.final-cta h2 { color: #fff; max-width: 16ch; }
+.final-cta .lead { color: color-mix(in srgb, #fff 78%, transparent); max-width: 48ch; }
 .final-cta__inner { display: grid; gap: 20px; }
 .final-cta__actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .final-cta__actions .kds-btn { flex: 1 1 auto; }
-.final-cta__actions .kds-btn--ghost { color: var(--cc-navy); border-color: var(--kds-border-strong); }
-.final-cta__actions .kds-btn--ghost:hover { background: var(--cc-navy-50); color: var(--cc-navy); }
-.final-cta__employer { margin: 28px auto 0; color: var(--kds-fg-muted); }
-.final-cta__employer a { color: var(--cc-navy); }
+.final-cta__actions .kds-btn--accent, .final-cta__actions .kds-btn--brand { background: #fff; color: var(--cc-navy); }
+.final-cta__actions .kds-btn--accent:hover, .final-cta__actions .kds-btn--brand:hover { background: color-mix(in srgb, #fff 85%, transparent); color: var(--cc-navy); }
+.final-cta__actions .kds-btn--ghost { color: #fff; border-color: color-mix(in srgb, #fff 40%, transparent); }
+.final-cta__actions .kds-btn--ghost:hover { background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
+.final-cta__employer { margin: 28px auto 0; color: color-mix(in srgb, #fff 70%, transparent); }
+.final-cta__employer a { color: #fff; }
 @media (min-width: 640px) { .final-cta__actions .kds-btn { flex: 0 0 auto; } }
 @media (min-width: 1024px) { .final-cta__inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 40px; } }
 
@@ -340,34 +353,36 @@
    title, then title dominant, salary + every "at a glance" fact on one divided bar, Apply is a header action.
    There is no separate "At a glance" strip any more — every fact it used to repeat (salary, type, arrangement,
    hours, experience, education) lives once, here, in .op-hero__conditions. */
-.op-hero { background: var(--cc-navy); color: #fff; padding-block: 48px 40px; }
-.op-hero .breadcrumb, .op-hero .breadcrumb a { color: color-mix(in srgb, #fff 60%, transparent); }
-.op-hero .breadcrumb a:hover { color: #fff; }
-.op-hero__route { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, #fff 45%, transparent); }
-.op-hero__route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: color-mix(in srgb, #fff 30%, transparent); }
-.op-hero__route .is-active { color: var(--cc-spark, #ffb648); }
-.op-hero__kicker { margin: 26px 0 8px; display: inline-flex; align-items: center; gap: 8px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-spark, #ffb648); }
-.op-hero__kicker::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-spark, #ffb648); flex: none; }
-.op-hero__title { color: #fff; margin: 0 0 10px; font-size: clamp(1.75rem, 1.1rem + 2.6vw, 2.75rem); }
-.op-hero__company { font-size: 1.0625rem; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: color-mix(in srgb, #fff 88%, transparent); }
-.op-hero__company a { font-weight: 700; color: #fff; }
-.op-hero__legal { margin: 0 0 12px; color: color-mix(in srgb, #fff 65%, transparent); }
-.job-head__dot { color: color-mix(in srgb, #fff 50%, transparent); }
-.job-head__more { color: color-mix(in srgb, #fff 70%, transparent); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
+/* ivory hero, matching the homepage/job-bank shift away from navy-hero-by-default; the opportunity story
+   itself (THE WORK / THE FIT / THE VALUE below) carries the editorial navy+warm treatment instead. */
+.op-hero { background: var(--cc-bg); color: var(--cc-ink); padding-block: 48px 40px; border-bottom: 1px solid var(--kds-border); }
+.op-hero .breadcrumb, .op-hero .breadcrumb a { color: var(--kds-fg-muted); }
+.op-hero .breadcrumb a:hover { color: var(--cc-navy); }
+.op-hero__route { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
+.op-hero__route li:not(:last-child)::after { content: "→"; margin-left: 8px; color: var(--cc-line-strong); }
+.op-hero__route .is-active { color: var(--cc-orange-700); }
+.op-hero__kicker { margin: 26px 0 8px; display: inline-flex; align-items: center; gap: 8px; font: 800 .75rem/1 var(--cc-font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--cc-orange-700); }
+.op-hero__kicker::before { content: ""; display: block; width: 20px; height: 3px; background: var(--cc-orange); flex: none; }
+.op-hero__title { color: var(--cc-navy); margin: 0 0 10px; font-size: clamp(1.75rem, 1.1rem + 2.6vw, 2.75rem); }
+.op-hero__company { font-size: 1.0625rem; margin: 0 0 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--kds-fg-muted); }
+.op-hero__company a { font-weight: 700; color: var(--cc-navy); }
+.op-hero__legal { margin: 0 0 12px; color: var(--kds-fg-muted); }
+.job-head__dot { color: var(--kds-fg-faint); }
+.job-head__more { color: var(--kds-fg-muted); font-size: .8125rem; font-weight: 500; white-space: nowrap; }
 .job-head__badges { margin: 12px 0 0; }
 .badge--ref { white-space: normal; text-align: left; line-height: 1.35; display: inline-block; max-width: 100%; }
-.op-hero__bar { margin-top: 28px; padding-top: 22px; border-top: 1px solid color-mix(in srgb, #fff 20%, transparent); display: grid; gap: 18px; }
+.op-hero__bar { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--kds-border); display: grid; gap: 18px; }
 .op-hero__facts { min-width: 0; }
-.op-hero__salary { margin: 0 0 8px; font: 800 clamp(1.375rem, 1vw + 1.15rem, 1.75rem)/1 var(--cc-font-display); color: #fff; }
-.op-hero__conditions { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 600 .875rem/1.3 var(--kds-font-sans); color: color-mix(in srgb, #fff 82%, transparent); text-transform: uppercase; letter-spacing: .02em; }
-.op-hero__conditions li:not(:last-child) { padding-right: 16px; border-right: 1px solid color-mix(in srgb, #fff 25%, transparent); }
+.op-hero__salary { margin: 0 0 8px; font: 800 clamp(1.375rem, 1vw + 1.15rem, 1.75rem)/1 var(--cc-font-display); color: var(--cc-navy); }
+.op-hero__conditions { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font: 600 .875rem/1.3 var(--kds-font-sans); color: var(--kds-fg-muted); text-transform: uppercase; letter-spacing: .02em; }
+.op-hero__conditions li:not(:last-child) { padding-right: 16px; border-right: 1px solid var(--kds-border-strong); }
 .op-hero__action .apply-card__primary { width: 100%; }
-.apply-card__closed { display: grid; gap: 4px; padding: 14px 16px; border-radius: 12px; background: color-mix(in srgb, #fff 12%, transparent); color: #fff; }
+.apply-card__closed { display: grid; gap: 4px; padding: 14px 16px; border-radius: 12px; background: var(--cc-navy-50); color: var(--cc-navy); }
 .apply-card__closed strong { font-family: var(--cc-font-display); font-size: 1.0625rem; }
-.apply-card__closed .small { color: color-mix(in srgb, #fff 80%, transparent); }
+.apply-card__closed .small { color: var(--kds-fg-muted); }
 .op-hero__secondary { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
-.op-hero__link { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; border: 0; background: none; padding: 0; font: 600 .8125rem/1 var(--kds-font-sans); color: color-mix(in srgb, #fff 85%, transparent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.op-hero__link:hover { color: #fff; }
+.op-hero__link { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; border: 0; background: none; padding: 0; font: 600 .8125rem/1 var(--kds-font-sans); color: var(--kds-fg-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.op-hero__link:hover { color: var(--cc-navy); }
 .op-hero__link--btn { text-decoration: none; }
 .apply-card__save { margin: 0; display: contents; }
 .applybar__closed { flex: none; font-size: .875rem; padding: 8px 14px; }
@@ -478,6 +493,8 @@
 .op-final h2 { margin: 0; color: #fff; max-width: 16ch; }
 .op-final__closed { color: color-mix(in srgb, #fff 80%, transparent); }
 .op-final__closed a { color: #fff; }
+.op-final .kds-btn--accent { background: #fff; color: var(--cc-navy); }
+.op-final .kds-btn--accent:hover { background: color-mix(in srgb, #fff 85%, transparent); color: var(--cc-navy); }
 /* company page's shorter/compact variant of the same close — a company-specific line instead of the job
    page's kicker, and less block padding so it reads as a brief, editorial close rather than a full section. */
 .op-final--compact { padding-block: 40px; }

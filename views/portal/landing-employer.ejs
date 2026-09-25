@@ -5,7 +5,7 @@ const _gst = (c) => Math.round(c * C.PRICING.gst_rate), _d = (c) => '$' + (c / 1
 const EMP = C.priceCentsFor('employer'), CON = C.priceCentsFor('consultant');
 const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON), TOTAL_CON = _d(CON + _gst(CON));
 %>
-<header class="page-head landing-head">
+<header class="page-head landing-head page-head--warm">
   <div class="container page-head__inner">
     <div>
       <p class="eyebrow">For employers</p>
@@ -67,7 +67,7 @@ const PRICE_EMP = _d(EMP), TOTAL_EMP = _d(EMP + _gst(EMP)), PRICE_CON = _d(CON),
 
 <%- include('partials/landing-faq', { items: faq, groups: faqGroups, audienceLabel: 'employers', intro: 'What you need to know before you reach the young talent building Canada\'s next workforce.' }) %>
 
-<section class="section section--alt">
+<section class="section surface-navy">
   <div class="container">
     <div class="cta-band">
       <div>

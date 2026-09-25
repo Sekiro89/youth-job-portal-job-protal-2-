@@ -34,6 +34,10 @@
 .landing-facts li:nth-child(2n) { border-right: 0; }
 .landing-facts strong { display: block; font: 800 1.0625rem/1.2 var(--cc-font-display); color: var(--cc-navy); }
 .landing-facts span { font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--kds-fg-muted); }
+/* each stat gets its own colour instead of four identical navy numbers in a row */
+.landing-facts li:nth-child(1) strong { color: var(--cc-orange-700); }
+.landing-facts li:nth-child(2) strong { color: var(--cc-spark-700); }
+.landing-facts li:nth-child(4) strong { color: var(--cc-red-700); }
 @media (min-width: 640px) {
   .landing-facts { flex-wrap: nowrap; padding: 18px 24px; }
   .landing-facts li { flex: 1 1 0; border-right: 1px solid var(--cc-line-strong); padding-right: 20px; }
@@ -52,6 +56,7 @@
 /* warm start, calm middle, red close: orange/yellow open the sequence instead of every step reading navy */
 .landing-journey__step:first-child .landing-journey__num { background: var(--cc-orange); color: var(--cc-ink); }
 .landing-journey__step:nth-child(2) .landing-journey__num { background: var(--cc-spark); color: var(--cc-ink); }
+.landing-journey__step:nth-child(4) .landing-journey__num { background: var(--cc-orange); color: var(--cc-ink); }
 .landing-journey__step:last-child .landing-journey__num { background: var(--cc-red-700); }
 .landing-journey__step h3 { margin: 6px 0 4px; }
 .landing-journey__step p { margin: 0; color: var(--kds-fg-muted); max-width: 48ch; }
@@ -132,7 +137,7 @@
 .client-switch__account { margin: 0 0 16px; font: 700 .75rem/1 var(--kds-font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--kds-fg-faint); }
 .client-switch__tabs { display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid var(--kds-border); padding-bottom: 0; }
 .client-switch__tab { min-height: 48px; padding: 0 20px; border: 1px solid var(--kds-border); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--cc-surface); color: var(--cc-navy); font: 700 .9375rem/1 var(--cc-font-display); cursor: pointer; transition: background-color .15s, color .15s; }
-.client-switch__tab:hover { color: var(--cc-red-700); }
+.client-switch__tab:hover { color: var(--cc-orange-700); }
 .client-switch__tab.is-active { background: var(--cc-navy); color: #fff; border-color: var(--cc-navy); }
 .client-switch__note { margin: 14px 0 0; }
 
@@ -220,6 +225,8 @@
 .price-split__total { margin: 0; font-size: .875rem; color: color-mix(in srgb, #fff 78%, transparent); }
 .price-split__total strong { color: #fff; }
 .price-split__figure .kds-btn { margin-top: 10px; justify-self: stretch; }
+.price-split__figure .kds-btn--accent { background: #fff; color: var(--cc-navy); }
+.price-split__figure .kds-btn--accent:hover { background: color-mix(in srgb, #fff 85%, transparent); color: var(--cc-navy); }
 .price-split__facts { background: var(--cc-surface); padding: 40px 32px; margin: 0; display: grid; gap: 14px; align-content: start; }
 .price-split__facts > div { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--kds-border); font-size: .9375rem; }
 .price-split__facts dt { color: var(--kds-fg-muted); }

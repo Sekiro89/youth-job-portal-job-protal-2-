@@ -81,7 +81,7 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 
 /* active-filter chips, under the search bar */
 .jchips { list-style: none; margin: var(--sp-4) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.jchip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px; border-radius: 999px; background: var(--cc-navy-100); color: var(--cc-navy-700); font-size: .8125rem; font-weight: 600; text-decoration: none; }
+.jchip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px; border-radius: 999px; background: var(--cc-orange-100); color: var(--cc-orange-700); font-size: .8125rem; font-weight: 600; text-decoration: none; }
 .jchip:hover { background: var(--cc-red-100); color: var(--cc-red-700); }
 .jchip__x { font-size: 1.1rem; line-height: 1; }
 .jchip--clear { background: transparent; border: 1px solid var(--kds-border); color: var(--kds-fg-muted); }
@@ -100,7 +100,7 @@ html.jsearch-lock, html.jsearch-lock body { overflow: hidden; }
 .career-nav__chips--hidden { display: none; }
 .career-nav__chip { display: inline-flex; align-items: center; min-height: 36px; padding: 4px 14px; border: 1px solid var(--kds-border); border-radius: 999px; color: var(--cc-navy); font-size: .8125rem; font-weight: 600; text-decoration: none; }
 .career-nav__chip:hover { border-color: var(--cc-red-700); color: var(--cc-red-700); }
-.career-nav__chip.is-current { background: var(--cc-navy); border-color: var(--cc-navy); color: #fff; }
+.career-nav__chip.is-current { background: var(--cc-spark); border-color: var(--cc-spark); color: var(--cc-ink); }
 
 /* ---------- explore canada: ONE exploration surface — the map (the geographic layer of the journey) and the
    results (the opportunities found within it) share a single background and a single heading, instead of
@@ -157,7 +157,7 @@ html:not(.js) .jview, html:not(.js) .jsearch__map-toggle { display: none !import
 .jrow { counter-increment: jrow; position: relative; display: grid; gap: 10px; padding: var(--yf-job-row-padding, 28px 0); padding-left: 56px; border-bottom: 1px solid var(--yf-job-row-border, var(--cc-line-strong)); transition: background .15s, box-shadow .15s; }
 .jrow::before { content: counter(jrow, decimal-leading-zero); position: absolute; left: 18px; top: 30px; font: 800 .9375rem/1 var(--cc-font-display); color: var(--yf-job-number-color, var(--cc-orange-700)); letter-spacing: .04em; }
 .jrow:hover { background: var(--cc-navy-50); box-shadow: inset 4px 0 0 var(--cc-orange); }
-.jrow.is-active { background: var(--cc-spark-100); box-shadow: inset 4px 0 0 var(--cc-spark); }
+.jrow.is-active { background: var(--cc-navy-100); box-shadow: inset 4px 0 0 var(--cc-navy); }
 .jrow--ref { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow--ref:hover { box-shadow: inset 4px 0 0 var(--cc-teal); }
 .jrow__main { min-width: 0; display: grid; gap: 6px; }
