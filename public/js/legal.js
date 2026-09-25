@@ -1,4 +1,4 @@
-/* Youth Futures Canada — legal document pages (privacy, terms) only.
+/* Youth Careers Canada — legal document pages (privacy, terms) only.
    1) Scroll-spy: highlights the current section in the sticky index as you read (desktop).
    2) Jump-to-section: a native <select> that navigates by hash (mobile/tablet — no sticky rail there). */
 (function () {

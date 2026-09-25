@@ -228,7 +228,7 @@ router.get('/jobs', async (req, res, next) => {
     const moreActive = ['city', 'job_type', 'work_arrangement', 'stage'].filter(k => f[k]).length + (f.salary_min ? 1 : 0);
     res.render('public/jobs', {
       title: heading + (f.page > 1 ? ` — page ${f.page}` : ''),
-      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Futures Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
+      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Careers Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
       canonical: canonicalUrl,
       // UX standard §6 (2026-09-10): this page's own layout/JS live in jobs-search.css/js (after public.css + maps.css so they win).
       extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS.concat('/js/jobs-search.js'), bodyClass: 'page-jobs',

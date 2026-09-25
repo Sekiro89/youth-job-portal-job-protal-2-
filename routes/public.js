@@ -110,11 +110,11 @@ router.get('/', async (req, res, next) => {
 
     res.render('public/home', {
       title: 'Canadian jobs for young talent, from anywhere',
-      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Youth Futures Canada helps students, graduates, young professionals and skilled workers around the world find real Canadian career opportunities. Post a job from $${(C.PRICING.consultant_price_cents / 100).toFixed(2)}/month + GST.`,
+      metaDescription: `Search ${totals.jobs} open jobs from Canadian employers. Youth Careers Canada helps students, graduates, young professionals and skilled workers around the world find real Canadian career opportunities. Post a job from $${(C.PRICING.consultant_price_cents / 100).toFixed(2)}/month + GST.`,
       extraCss: CSS, extraJs: JS, bodyClass: 'page-home',
       jsonLd: [
         {
-          '@context': 'https://schema.org', '@type': 'WebSite', name: 'Youth Futures Canada', url: res.locals.PUBLIC_URL + '/',
+          '@context': 'https://schema.org', '@type': 'WebSite', name: 'Youth Careers Canada', url: res.locals.PUBLIC_URL + '/',
           description: 'Canadian job bank connecting young talent everywhere — students, graduates, young professionals and skilled workers — with real Canadian employers.',
           inLanguage: 'en-CA',
           potentialAction: {
@@ -124,7 +124,7 @@ router.get('/', async (req, res, next) => {
           },
         },
         {
-          '@context': 'https://schema.org', '@type': 'Organization', name: 'Youth Futures Canada', url: res.locals.PUBLIC_URL + '/',
+          '@context': 'https://schema.org', '@type': 'Organization', name: 'Youth Careers Canada', url: res.locals.PUBLIC_URL + '/',
           logo: res.locals.PUBLIC_URL + '/img/icon-512.png', slogan: 'Our dreams. Our skills. Our future. Our Canada.',
           areaServed: { '@type': 'Country', name: 'Canada' },
         },
@@ -283,7 +283,7 @@ router.get('/jobs', async (req, res, next) => {
     const moreActive = ['city', 'job_type', 'work_arrangement'].filter(k => f[k]).length + f.audience.length + (f.salary_min ? 1 : 0);
     res.render('public/jobs', {
       title: heading + (f.page > 1 ? ` — page ${f.page}` : ''),
-      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Futures Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
+      metaDescription: `${total} ${heading.charAt(0).toLowerCase() + heading.slice(1)} on Youth Careers Canada. Filter by category, province, city, job type, work arrangement, audience, salary and distance. New postings added daily.`,
       canonical: canonicalUrl,
       // UX standard §6 (2026-09-10): this page's own layout/JS live in jobs-search.css/js (after public.css + maps.css so they win).
       extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS.concat('/js/jobs-search.js'), bodyClass: 'page-jobs',
@@ -495,7 +495,7 @@ router.get('/companies/:slug', async (req, res, next) => {
       mapMarkers.length ? { location: coLocations.filter(l => l.lat != null).map(l => ({ '@type': 'Place', name: l.label || undefined, address: { '@type': 'PostalAddress', streetAddress: l.street_address, addressLocality: l.city, addressRegion: l.province, postalCode: l.postal_code, addressCountry: 'CA' }, geo: { '@type': 'GeoCoordinates', latitude: l.lat, longitude: l.lng } })) } : {});
     res.render('public/company', {
       title: `${companyName} — jobs and company profile`,
-      metaDescription: `${companyName}${industryText ? ' (' + industryText + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Youth Futures Canada. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
+      metaDescription: `${companyName}${industryText ? ' (' + industryText + ')' : ''}${co.city ? ' in ' + h.location(co) : ''} has ${jobs.length} open job${jobs.length === 1 ? '' : 's'} on Youth Careers Canada. ${String(co.description || '').slice(0, 160)}`.slice(0, 300),
       extraCss: CSS.concat('/css/jobs-search.css'), extraJs: JS, bodyClass: 'page-company',
       jsonLd: [org],
       co, jobs, url, companyName, address, industryText, coLocations, mapMarkers, gmapsUrl, mapConfig: await geo.publicMapConfig(),
@@ -534,12 +534,12 @@ router.get('/robots.txt', (req, res) => {
 // ------------------------------------------------------------------ legal
 router.get('/privacy', (req, res) => res.render('public/privacy', {
   title: 'Privacy policy',
-  metaDescription: 'How Youth Futures Canada collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
+  metaDescription: 'How Youth Careers Canada collects, uses, stores and protects personal information under PIPEDA — for job seekers, employers and third-party consultants.',
   extraCss: CSS.concat('/css/legal.css'), extraJs: ['/js/legal.js'], bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 router.get('/terms', (req, res) => res.render('public/terms', {
   title: 'Terms of use',
-  metaDescription: 'The terms that govern use of Youth Futures Canada, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
+  metaDescription: 'The terms that govern use of Youth Careers Canada, including job posting rules, the monthly posting subscription (plus GST), acceptable use and Canadian governing law.',
   extraCss: CSS.concat('/css/legal.css'), extraJs: ['/js/legal.js'], bodyClass: 'page-legal', updated: '2026-09-01T12:00:00Z',
 }));
 

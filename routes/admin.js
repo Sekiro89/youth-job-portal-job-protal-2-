@@ -62,7 +62,7 @@ router.use('/admin', wrap(async (req, res, next) => {
   res.locals.supportName = v.support_name || 'Support';
   res.locals.supportEmails = supportList(v.support_email);
   res.locals.supportEmail = res.locals.supportEmails.join(', ');
-  res.locals.siteName = v.site_name || 'Youth Futures Canada';
+  res.locals.siteName = v.site_name || 'Youth Careers Canada';
   res.locals.publicUrl = (v.public_url || process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 3900}`).replace(/\/$/, '');
   next();
 }));

@@ -199,7 +199,7 @@ router.get('/jobseeker', async (req, res, next) => {
     ['Does it actually cost anything to job hunt here?', 'Nothing. Creating a profile, uploading your resume, applying to jobs and getting alerts are all free, and always will be. Employers pay a small monthly fee to post — you never do.'],
     ['Do I need to upload a resume for every job?', 'Just once. Upload it (PDF, DOC or DOCX, up to 5 MB) and every application uses it automatically — or swap in a different one for a specific role whenever you want.'],
     ['How do I hear about matching jobs first?', 'Your alerts run off your profile: the categories you choose, the provinces you\'ll work in, your keywords and your skills. A match goes live and you get an in-app notification, plus an email if you want one — instantly or as a daily digest.'],
-    ['I\'m new to Canada with no Canadian experience — can I still apply?', 'Yes. Youth Futures Canada is built for young people at every career stage, including those exploring Canadian opportunities for the first time. Filter by career stage — internships, graduate roles, early-career, skilled — to find postings that match where you actually are.'],
+    ['I\'m new to Canada with no Canadian experience — can I still apply?', 'Yes. Youth Careers Canada is built for young people at every career stage, including those exploring Canadian opportunities for the first time. Filter by career stage — internships, graduate roles, early-career, skilled — to find postings that match where you actually are.'],
     ['Who gets to see my resume?', 'Only the employer or consultant behind a job you applied to, and only the copy you sent them. It\'s never publicly listed, never searchable, and only reaches signed-in owners of that posting.'],
     ['Changed your mind after applying?', 'While an application is still marked "Submitted" you can withdraw it yourself from your Applications page.'],
   ];
@@ -213,7 +213,7 @@ router.get('/jobseeker', async (req, res, next) => {
   ];
   res.render('seeker/landing', {
     title: 'Job Seekers — free profile, one-click apply, job alerts',
-    metaDescription: 'Create a free Youth Futures Canada profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills — internships, graduate roles, entry-level jobs and skilled careers.',
+    metaDescription: 'Create a free Youth Careers Canada profile, upload your resume once and apply to Canadian jobs in one click. Get job alerts matched to your skills — internships, graduate roles, entry-level jobs and skilled careers.',
     extraCss: ['/css/seeker.css', '/css/public.css'], extraJs: ['/js/seeker.js', '/js/public.js'], noindex: false, faqs, faqGroups,
     categories, compassPaths, careerStages,
     jsonLd: [{
